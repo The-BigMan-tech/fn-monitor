@@ -9,11 +9,13 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
+import { callListener } from '../langpoint-essentials.ts'
 
 let evaluateOps: any
 
 export default function* evaluate(node: Node, scope: Scope) {
   if (!node) return
+  callListener(node,scope);
 
   // delay initalizing to remove circular reference issue for jest
   if (!evaluateOps) {

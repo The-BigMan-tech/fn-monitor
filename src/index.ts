@@ -9,6 +9,7 @@ import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'
 import evaluate from './evaluate_n/index.ts'
+import { LangListener } from './langpoint-essentials.ts'
 
 export interface SvalOptions {
   ecmaVer?: Options['ecmaVersion']
@@ -49,7 +50,7 @@ export class SvalPlus {
   static version: string = PkgJson.version
 
   private options: Options = { ecmaVersion: 'latest' }
-  private scope = new Scope(null, true)
+  private scope = new Scope(null, true,this)
 
   exports: Record<string, any> = {}
 
@@ -137,7 +138,3 @@ export class SvalPlus {
   public langListener:LangListener | null = null;
 }
 
-export class LangEvent {
-
-}
-export type LangListener = (event:LangEvent)=>void;

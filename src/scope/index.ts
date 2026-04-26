@@ -5,7 +5,7 @@ import { create, define } from '../share/util.ts'
 /**
  * Scope simulation class
  */
-export default class Scope {
+export default class Scope<T = any> {
   /**
    * The parent scope along the scope chain
    * @private
@@ -38,12 +38,16 @@ export default class Scope {
    * @param parent the parent scope along the scope chain (default: null)
    * @param isolated true for function scope or false for block scope (default: false)
    */
+  public interpreter:T | undefined = undefined;
+
   constructor(
-    parent: Scope | null = null,
+    parent: Scope | null,
     isolated: boolean = false,
+    interpreter?:T
   ) {
     this.parent = parent
-    this.isolated = isolated
+    this.isolated = isolated;
+    this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
   }
 
   /**

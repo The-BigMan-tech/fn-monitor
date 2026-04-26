@@ -1,4 +1,5 @@
-import { LangListener, SvalPlus } from "./index.ts";
+import { SvalPlus } from "./index.ts";
+import { LangListener } from "./langpoint-essentials.ts";
 import chalk from "chalk";
 
 type Fn = (...args:any[])=>any;
@@ -38,7 +39,7 @@ export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
             if (err instanceof ReferenceError) {
                 throw new Error(
                     chalk.red.underline(`\nReference Error`) +
-                    Colors.orange(`\n-Functions marked with a langPoint cannot access any global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
+                    Colors.orange(`\n-Functions marked with a langPoint cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
                     chalk.red.underline(`\n\nTrace`) + `\n${err}`
                 )
             }else throw err;
@@ -48,18 +49,20 @@ export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
     interpreter.langListener = listener;
     return newFn as T;
 }
+
 function h() {
     console.log('hello world');
 }
-const internalAdd = (a:number,b:number)=> {
+const internalAdd = (a:number,b:number,h:()=>void)=> {
     h()
     return a + b;
 }
+
 const add = langPoint(internalAdd,()=>{
-    
+    console.log('found a node');
 })
-const result = add(1,2);
+const result = add(1,2,h);
 console.log(result);
 
-const result2 = add(2,3);
+const result2 = add(2,3,h);
 console.log(result2);
