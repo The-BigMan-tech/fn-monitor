@@ -62,10 +62,10 @@ export type Supply = (
 );
 //My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough to narrow down the nodes with just instanceof checks 
 
-export interface Demands {
-    add:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void
+export interface Products {
+    demand:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void
 }
-export type LangListener = (demands:Demands)=>void;
+export type LangListener = (products:Products)=>void;
 
 export interface VariableForEvent {
     value:()=>any
@@ -174,14 +174,14 @@ export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangL
                 }
             }
         }
-        const demands:Demands = {
-            add:(demand,onSupply)=>{
+        const products:Products = {
+            demand:(demand,onSupply)=>{
                 if (node.type === demand) {
                     supplyFromDemand(demand,onSupply,node,scope);
                 }
             }
         }
-        interpreter.langListener(demands)
+        interpreter.langListener(products)
     }
 }
 function supplyFromDemand<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void,node:ESTreeNode,scope:ScopeForEvent) {
