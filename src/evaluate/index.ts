@@ -9,7 +9,7 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { callListener } from '../langpoint-essentials.ts'
+import { callListener } from '../monitored-events.ts'
 
 let evaluateOps: any
 

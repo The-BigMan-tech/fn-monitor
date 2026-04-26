@@ -9,7 +9,7 @@ import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'
 import evaluate from './evaluate_n/index.ts'
-import { LangListener } from './langpoint-essentials.ts'
+import { LangListener } from './monitored-events.ts'
 
 export interface SvalOptions {
   ecmaVer?: Options['ecmaVersion']
@@ -214,7 +214,7 @@ export const monitor = {
             }
             interpreter.fnBeforeMonitoring = fn 
         };
-        
+
         const propToDefine:keyof MonitoredFn<Fn> = "beforeMonitoring";
         Object.defineProperty(newFn,propToDefine, {
             value:fnBeforeMonitoring,
@@ -264,4 +264,4 @@ export {
 
     // Data
     LiteralEvent
-} from "./langpoint-essentials.ts"
+} from "./monitored-events.ts"
