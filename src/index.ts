@@ -134,4 +134,10 @@ export class SvalPlus {
       evaluate(ast, scope)
     }
   }
+  public langListener:LangListener | null = null;
 }
+
+export class LangEvent {
+
+}
+export type LangListener = (event:LangEvent)=>void;

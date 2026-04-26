@@ -1,7 +1,10 @@
 import { LangListener, SvalPlus } from "./index.ts";
+import chalk from "chalk";
 
 type Fn = (...args:any[])=>any;
-
+const Colors = {
+    orange:chalk.hex('#f6c098')
+}
 export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
     const interpreter = new SvalPlus({
         ecmaVer:"latest", // Match your tsconfig target
@@ -28,19 +31,32 @@ export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
     `
     const newFn = (...args: any[]) => {
         interpreter.import({ args });
-        interpreter.run(code);
-        return interpreter.exports.result;
+        try {
+            interpreter.run(code);
+            return interpreter.exports.result;
+        }catch(err) {
+            if (err instanceof ReferenceError) {
+                throw new Error(
+                    chalk.red.underline(`\nReference Error`) +
+                    Colors.orange(`\n-Functions marked with a langPoint cannot access any global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
+                    chalk.red.underline(`\n\nTrace`) + `\n${err}`
+                )
+            }else throw err;
+        }
     };
 
     interpreter.langListener = listener;
     return newFn as T;
 }
-
+function h() {
+    console.log('hello world');
+}
 const internalAdd = (a:number,b:number)=> {
-    return a + b
+    h()
+    return a + b;
 }
 const add = langPoint(internalAdd,()=>{
-
+    
 })
 const result = add(1,2);
 console.log(result);
