@@ -139,12 +139,17 @@ class SvalPlus {
 }
 //*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
 import chalk from "chalk";
-
 type Fn = (...args:any[])=>any;
+
+const langPoints = new WeakSet<Fn>();//to allow for garbage collection
 const Colors = {
     orange:chalk.hex('#f6c098')
 }
+
 export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
+    if (langPoints.has(fn)) {
+        throw new Error(chalk.red(`You cannot mark a function returned from a langPoint`))
+    }
     const interpreter = new SvalPlus({
         ecmaVer:"latest", // Match your tsconfig target
         sandBox: true, // Standard for eDSLs/Sandboxes
@@ -183,7 +188,8 @@ export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
             }else throw err;
         }
     };
-
     interpreter.langListener = listener;
+
+    langPoints.add(newFn)
     return newFn as T;
 }
