@@ -1,5 +1,5 @@
 {
-  "name": "sval",
+  "name": "sval-plus",
   "version": "0.6.12",
   "description": "A javascript interpreter written in javascript",
   "type": "module",
