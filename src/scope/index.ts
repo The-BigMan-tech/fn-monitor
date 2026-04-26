@@ -49,7 +49,9 @@ export default class Scope<T = any> {
     this.isolated = isolated;
     this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
   }
-
+  public hasParent() {
+    return Boolean(this.parent)
+  }
   /**
    * Get global scope
    */

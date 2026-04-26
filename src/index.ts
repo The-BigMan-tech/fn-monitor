@@ -46,7 +46,7 @@ function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): 
   return err
 }
 
-export class SvalPlus {
+class SvalPlus {
   static version: string = PkgJson.version
 
   private options: Options = { ecmaVersion: 'latest' }
@@ -137,4 +137,53 @@ export class SvalPlus {
   }
   public langListener:LangListener | null = null;
 }
+//*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
+import chalk from "chalk";
 
+type Fn = (...args:any[])=>any;
+const Colors = {
+    orange:chalk.hex('#f6c098')
+}
+export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
+    const interpreter = new SvalPlus({
+        ecmaVer:"latest", // Match your tsconfig target
+        sandBox: true, // Standard for eDSLs/Sandboxes
+    });
+
+    const fnString = fn.toString();
+    let fnName = fn.name 
+    let fnAssignment:string = '';
+
+    if (fnName.length === 0) {
+        const anonymous = 'anonymousFn';
+        fnAssignment = `var ${anonymous} = ${fnString}`
+        fnName = anonymous;
+    }else if (!fnName.startsWith('function')) {
+        fnAssignment = `var ${fnName} = ${fnString}`
+    }else {
+        fnAssignment = fnString;
+    }
+
+    const code = `
+        ${fnAssignment};
+        exports.result = ${fnName}(...args);
+    `
+    const newFn = (...args: any[]) => {
+        interpreter.import({ args });
+        try {
+            interpreter.run(code);
+            return interpreter.exports.result;
+        }catch(err) {
+            if (err instanceof ReferenceError) {
+                throw new Error(
+                    chalk.red.underline(`\nReference Error`) +
+                    Colors.orange(`\n-Functions marked with a langPoint cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
+                    chalk.red.underline(`\n\nTrace`) + `\n${err}`
+                )
+            }else throw err;
+        }
+    };
+
+    interpreter.langListener = listener;
+    return newFn as T;
+}
