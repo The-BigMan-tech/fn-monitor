@@ -177,7 +177,7 @@ export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangL
         }
         const products:Products = {
             demand:(demand,onSupply)=>{
-                if (node.type === demand) {
+                if ((demand === "Any") || (node.type === demand)) {
                     supplyFromDemand(demand,onSupply,node,scope);
                 }
             }
