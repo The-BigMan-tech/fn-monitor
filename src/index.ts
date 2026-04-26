@@ -193,3 +193,10 @@ export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
     langPoints.add(newFn)
     return newFn as T;
 }
+export {
+    LangEvent,
+    BinaryExprEvent,
+    type LangListener,
+    type VariableForEvent,
+    type ScopeForEvent
+} from "./langpoint-essentials.ts"
