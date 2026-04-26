@@ -39,7 +39,7 @@ export default class Scope {
    * @param isolated true for function scope or false for block scope (default: false)
    */
   constructor(
-    parent: Scope = null,
+    parent: Scope | null = null,
     isolated: boolean = false,
   ) {
     this.parent = parent
@@ -61,7 +61,7 @@ export default class Scope {
    * Find a variable along scope chain
    * @param name variable identifier name
    */
-  find(name: string): Variable {
+  find(name: string): Variable | null {
     if (this.context[name]) {
       // The variable locates in the scope
       return this.context[name]
@@ -74,7 +74,7 @@ export default class Scope {
     } else {
       // If enter this branch, the scope will be the global scope
       // And the global scope should have window object
-      const win = this.global().find('window').get()
+      const win = this.global().find('window')!.get()
       if (name in win) {
         // Find property in window
         return new Prop(win, name)
@@ -112,7 +112,7 @@ export default class Scope {
     }
 
     if (!scope.parent) {
-      const win = scope.find('window').get()
+      const win = scope.find('window')!.get()
       if (value !== NOINIT) {
         define(win, name, { value, writable: true, enumerable: true })
       }

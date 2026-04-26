@@ -45,7 +45,7 @@ function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): 
   return err
 }
 
-class Sval {
+export class SvalPlus {
   static version: string = PkgJson.version
 
   private options: Options = { ecmaVersion: 'latest' }
@@ -135,5 +135,3 @@ class Sval {
     }
   }
 }
-
-export default Sval

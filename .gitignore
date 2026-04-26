@@ -1,3 +1,6 @@
+dist/
+build/
+
 # Useless directories
 /src/evaluate_n
 
@@ -68,3 +71,4 @@ typings/
 
 # next.js build output
 .next
+
