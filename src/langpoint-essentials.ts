@@ -1,6 +1,14 @@
 import Scope from "./scope/index.ts";
 import { Node } from "acorn";
-import { Node as ESTreeNode,BinaryExpression } from "estree";
+import { Node as ESTreeNode} from "estree";
+import { 
+    Literal ,BinaryExpression, CallExpression, AssignmentExpression, 
+    UpdateExpression, LogicalExpression, MemberExpression, 
+    ReturnStatement,ForStatement, WhileStatement, 
+    DoWhileStatement, ForOfStatement, ForInStatement, 
+    IfStatement,SwitchStatement,TryStatement,ThrowStatement,CatchClause,
+    VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression
+} from "estree";
 
 //My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough to narrow down the nodes with just instanceof checks 
 
@@ -22,10 +30,9 @@ export class LangEvent<NodeType=ESTreeNode> {
     }
 }
 export class BinaryExprEvent extends LangEvent<BinaryExpression> {
-    constructor(node: BinaryExpression,scope:ScopeForEvent) {
-        super(node,scope);
-    }
+    constructor(node: BinaryExpression,scope:ScopeForEvent) { super(node,scope) }
 }
+
 export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangListener | null}>) {
     const interpreter = acornScope.interpreter;
     const node = acornNode as ESTreeNode;
@@ -44,7 +51,6 @@ export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangL
                 }
             }
         }
-
         switch(node.type) {
             case 'BinaryExpression':{
                 event = new BinaryExprEvent(node as BinaryExpression,scope);
