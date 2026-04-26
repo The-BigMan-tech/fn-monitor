@@ -46,7 +46,7 @@ function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): 
   return err
 }
 
-class SvalPlus {
+class Sval {
   static version: string = PkgJson.version
 
   private options: Options = { ecmaVersion: 'latest' }
@@ -135,68 +135,133 @@ class SvalPlus {
       evaluate(ast, scope)
     }
   }
-  public langListener:LangListener | null = null;
 }
 //*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
 import chalk from "chalk";
+
+class SvalPlus extends Sval {
+    public langListener:LangListener | null = null;
+    public fnBeforeMonitoring:Fn | null = null;
+
+    constructor(args:{listener:LangListener,options:SvalOptions}) {
+        super(args.options);
+        this.langListener = args.listener;
+    }
+}
 type Fn = (...args:any[])=>any;
+export type MonitoredFn<T extends Fn> = T & {
+    beforeMonitoring:(fn:(...args:Parameters<T>)=>ReturnType<T>) => void;
+};
 
 const langPoints = new WeakSet<Fn>();//to allow for garbage collection
 const Colors = {
     orange:chalk.hex('#f6c098')
-}
+};
 
-export function langPoint<T extends Fn>(fn:T,listener:LangListener):T {
-    if (langPoints.has(fn)) {
-        throw new Error(chalk.red(`You cannot mark a function returned from a langPoint`))
-    }
-    const interpreter = new SvalPlus({
-        ecmaVer:"latest", // Match your tsconfig target
-        sandBox: true, // Standard for eDSLs/Sandboxes
-    });
-
-    const fnString = fn.toString();
-    let fnName = fn.name 
-    let fnAssignment:string = '';
-
-    if (fnName.length === 0) {
-        const anonymous = 'anonymousFn';
-        fnAssignment = `var ${anonymous} = ${fnString}`
-        fnName = anonymous;
-    }else if (!fnName.startsWith('function')) {
-        fnAssignment = `var ${fnName} = ${fnString}`
-    }else {
-        fnAssignment = fnString;
-    }
-
-    const code = `
-        ${fnAssignment};
-        exports.result = ${fnName}(...args);
-    `
-    const newFn = (...args: any[]) => {
-        interpreter.import({ args });
-        try {
-            interpreter.run(code);
-            return interpreter.exports.result;
-        }catch(err) {
-            if (err instanceof ReferenceError) {
-                throw new Error(
-                    chalk.red.underline(`\nReference Error`) +
-                    Colors.orange(`\n-Functions marked with a langPoint cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
-                    chalk.red.underline(`\n\nTrace`) + `\n${err}`
-                )
-            }else throw err;
+export const monitor = {
+    fn:<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> => {
+        if (langPoints.has(fn)) {
+            throw new Error(chalk.red(`You cannot mark a function returned from a langPoint`))
         }
-    };
-    interpreter.langListener = listener;
+        const interpreter = new SvalPlus({
+            listener,
+            options:{
+                ecmaVer:"latest", // Match your tsconfig target
+                sandBox: true, // Standard for eDSLs/Sandboxes
+            }
+        });
 
-    langPoints.add(newFn)
-    return newFn as T;
+        const fnString = fn.toString();
+        let fnName = fn.name 
+        let fnAssignment:string = '';
+
+        if (fnName.length === 0) {
+            const anonymous = 'anonymousFn';
+            fnAssignment = `var ${anonymous} = ${fnString}`
+            fnName = anonymous;
+        }else if (!fnName.startsWith('function')) {
+            fnAssignment = `var ${fnName} = ${fnString}`
+        }else {
+            fnAssignment = fnString;
+        }
+
+        const code = `
+            ${fnAssignment};
+            exports.result = ${fnName}(...args);
+        `
+        const newFn = ((...args: any[]) => {
+            if (interpreter.fnBeforeMonitoring !== null) {
+                interpreter.fnBeforeMonitoring(...args);
+            }
+            try {
+                interpreter.import({ args });
+                interpreter.run(code);
+                return interpreter.exports.result;
+            }catch(err) {
+                if (err instanceof ReferenceError) {
+                    throw new Error(
+                        chalk.red.underline(`\nReference Error`) +
+                        Colors.orange(`\n-Monitored functions cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
+                        chalk.red.underline(`\n\nTrace`) + `\n${err}`
+                    )
+                }else throw err;
+            }
+        }) as MonitoredFn<T>;
+
+        const fnBeforeMonitoring = (fn:Fn)=>{ 
+            if (interpreter.fnBeforeMonitoring !== null) {
+                throw new Error(chalk.red(`You can only set the function called before monitoring once.`))
+            }
+            interpreter.fnBeforeMonitoring = fn 
+        };
+        
+        const propToDefine:keyof MonitoredFn<Fn> = "beforeMonitoring";
+        Object.defineProperty(newFn,propToDefine, {
+            value:fnBeforeMonitoring,
+            writable: false,     // Prevents reassignment
+            configurable: false, // Prevents deletion or changing attributes later
+            enumerable: true     // Allows it to show up in loops
+        });
+
+        langPoints.add(newFn);
+        return newFn ;
+    }
 }
 export {
     LangEvent,
-    BinaryExprEvent,
     type LangListener,
     type VariableForEvent,
-    type ScopeForEvent
+    type ScopeForEvent,
+
+    // Expressions
+    BinaryExprEvent,
+    CallExprEvent,
+    AssignExprEvent,
+    UpdateExprEvent,
+    LogicalExprEvent,
+    MemberExprEvent,
+    AwaitExprEvent,
+    FuncExprEvent,
+
+    // Statements & Control Flow
+    ReturnStmtEvent,
+    IfStmtEvent,
+    SwitchStmtEvent,
+    ThrowStmtEvent,
+    TryStmtEvent,
+    CatchClauseEvent,
+
+    // Declarations
+    VarDeclEvent,
+    FuncDeclEvent,
+
+    // Iteration
+    ForStmtEvent,
+    WhileStmtEvent,
+    DoWhileStmtEvent,
+    ForOfStmtEvent,
+    ForInStmtEvent,
+
+    // Data
+    LiteralEvent
 } from "./langpoint-essentials.ts"
