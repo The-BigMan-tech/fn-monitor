@@ -1,7 +1,7 @@
 {
   "name": "script-monitor",
   "version": "1.0.0",
-  "description": "A javascript interpreter written in javascript",
+  "description": "",
   "type": "module",
   "main": "dist/sval.min.js",
   "unpkg": "dist/sval.min.js",
