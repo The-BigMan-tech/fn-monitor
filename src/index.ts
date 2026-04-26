@@ -153,14 +153,14 @@ export type MonitoredFn<T extends Fn> = T & {
     beforeMonitoring:(fn:(...args:Parameters<T>)=>void) => void;
 };
 
-const langPoints = new WeakSet<Fn>();//to allow for garbage collection
+const monitoredFns = new WeakSet<Fn>();//to allow for garbage collection
 const Colors = {
     orange:chalk.hex('#f6c098')
 };
 
 export const monitor = {
     fn:<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> => {
-        if (langPoints.has(fn)) {
+        if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
         const interpreter = new SvalPlus({
@@ -223,7 +223,7 @@ export const monitor = {
             enumerable: true     // Allows it to show up in loops
         });
 
-        langPoints.add(newFn);
+        monitoredFns.add(newFn);
         return newFn ;
     }
 }
@@ -233,8 +233,8 @@ export {
     type ScopeForEvent,
     type Demand,
     type Supply,
-    type Demands,
-    
+    type Products,
+
     //Default Event
     LangEvent,
 
