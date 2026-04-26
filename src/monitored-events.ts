@@ -10,9 +10,62 @@ import {
     VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression
 } from "estree";
 
+export type Demand = 
+    | Literal['type']
+    | BinaryExpression['type']
+    | CallExpression['type']
+    | AssignmentExpression['type']
+    | UpdateExpression['type']
+    | LogicalExpression['type']
+    | MemberExpression['type']
+    | AwaitExpression['type']
+    | FunctionExpression['type']
+    | ReturnStatement['type']
+    | IfStatement['type']
+    | SwitchStatement['type']
+    | ThrowStatement['type']
+    | TryStatement['type']
+    | CatchClause['type']
+    | VariableDeclaration['type']
+    | FunctionDeclaration['type']
+    | ForStatement['type']
+    | WhileStatement['type']
+    | DoWhileStatement['type']
+    | ForOfStatement['type']
+    | ForInStatement['type']
+    | 'Any'; // The fallback / default
+
+export type Supply = (
+    Record<Literal['type'], LiteralEvent> &
+    Record<BinaryExpression['type'], BinaryExprEvent> &
+    Record<CallExpression['type'], CallExprEvent> &
+    Record<AssignmentExpression['type'], AssignExprEvent> &
+    Record<UpdateExpression['type'], UpdateExprEvent> &
+    Record<LogicalExpression['type'], LogicalExprEvent> &
+    Record<MemberExpression['type'], MemberExprEvent> &
+    Record<AwaitExpression['type'], AwaitExprEvent> &
+    Record<FunctionExpression['type'], FuncExprEvent> &
+    Record<ReturnStatement['type'], ReturnStmtEvent> &
+    Record<IfStatement['type'], IfStmtEvent> &
+    Record<SwitchStatement['type'], SwitchStmtEvent> &
+    Record<ThrowStatement['type'], ThrowStmtEvent> &
+    Record<TryStatement['type'], TryStmtEvent> &
+    Record<CatchClause['type'], CatchClauseEvent> &
+    Record<VariableDeclaration['type'], VarDeclEvent> &
+    Record<FunctionDeclaration['type'], FuncDeclEvent> &
+    Record<ForStatement['type'], ForStmtEvent> &
+    Record<WhileStatement['type'], WhileStmtEvent> &
+    Record<DoWhileStatement['type'], DoWhileStmtEvent> &
+    Record<ForOfStatement['type'], ForOfStmtEvent> &
+    Record<ForInStatement['type'], ForInStmtEvent> &
+    Record<'Any', LangEvent>
+);
 //My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough to narrow down the nodes with just instanceof checks 
 
-export type LangListener = (event:LangEvent)=>void;
+export interface Demands {
+    add:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void
+}
+export type LangListener = (demands:Demands)=>void;
 
 export interface VariableForEvent {
     value:()=>any
@@ -112,7 +165,6 @@ export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangL
         return;//we dont want to track any action thats not inside the monitored function
     }
     if (interpreter && interpreter.langListener) {
-        let event:LangEvent;
         const scope:ScopeForEvent = {
             find:(name:string):VariableForEvent | null =>{
                 const variable = acornScope.find(name);
@@ -122,100 +174,111 @@ export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangL
                 }
             }
         }
-        switch (node.type) {
-            case 'BinaryExpression': {
-                event = new BinaryExprEvent(node as BinaryExpression, scope);
-                break;
-            }
-            case 'CallExpression': {
-                event = new CallExprEvent(node as CallExpression, scope);
-                break;
-            }
-            case 'AssignmentExpression': {
-                event = new AssignExprEvent(node as AssignmentExpression, scope);
-                break;
-            }
-            case 'UpdateExpression': {
-                event = new UpdateExprEvent(node as UpdateExpression, scope);
-                break;
-            }
-            case 'LogicalExpression': {
-                event = new LogicalExprEvent(node as LogicalExpression, scope);
-                break;
-            }
-            case 'MemberExpression': {
-                event = new MemberExprEvent(node as MemberExpression, scope);
-                break;
-            }
-            case 'AwaitExpression': {
-                event = new AwaitExprEvent(node as AwaitExpression, scope);
-                break;
-            }
-            case 'FunctionExpression': {
-                event = new FuncExprEvent(node as FunctionExpression, scope);
-                break;
-            }
-            case 'ReturnStatement': {
-                event = new ReturnStmtEvent(node as ReturnStatement, scope);
-                break;
-            }
-            case 'IfStatement': {
-                event = new IfStmtEvent(node as IfStatement, scope);
-                break;
-            }
-            case 'SwitchStatement': {
-                event = new SwitchStmtEvent(node as SwitchStatement, scope);
-                break;
-            }
-            case 'ThrowStatement': {
-                event = new ThrowStmtEvent(node as ThrowStatement, scope);
-                break;
-            }
-            case 'TryStatement': {
-                event = new TryStmtEvent(node as TryStatement, scope);
-                break;
-            }
-            case 'CatchClause': {
-                event = new CatchClauseEvent(node as CatchClause, scope);
-                break;
-            }
-            case 'VariableDeclaration': {
-                event = new VarDeclEvent(node as VariableDeclaration, scope);
-                break;
-            }
-            case 'FunctionDeclaration': {
-                event = new FuncDeclEvent(node as FunctionDeclaration, scope);
-                break;
-            }
-            case 'ForStatement': {
-                event = new ForStmtEvent(node as ForStatement, scope);
-                break;
-            }
-            case 'WhileStatement': {
-                event = new WhileStmtEvent(node as WhileStatement, scope);
-                break;
-            }
-            case 'DoWhileStatement': {
-                event = new DoWhileStmtEvent(node as DoWhileStatement, scope);
-                break;
-            }
-            case 'ForOfStatement': {
-                event = new ForOfStmtEvent(node as ForOfStatement, scope);
-                break;
-            }
-            case 'ForInStatement': {
-                event = new ForInStmtEvent(node as ForInStatement, scope);
-                break;
-            }
-            case 'Literal': {
-                event = new LiteralEvent(node as Literal, scope);
-                break;
-            }
-            default: {
-                event = new LangEvent(node, scope);
-                break;
+        const demands:Demands = {
+            add:(demand,onSupply)=>{
+                if (node.type === demand) {
+                    supplyFromDemand(demand,onSupply,node,scope);
+                }
             }
         }
-        interpreter.langListener(event)
+        interpreter.langListener(demands)
     }
+}
+function supplyFromDemand<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void,node:ESTreeNode,scope:ScopeForEvent) {
+    let event:LangEvent | null = null;
+    switch (demand) {
+        case 'BinaryExpression': {
+            event = new BinaryExprEvent(node as BinaryExpression, scope);
+            break;
+        }
+        case 'CallExpression': {
+            event = new CallExprEvent(node as CallExpression, scope);
+            break;
+        }
+        case 'AssignmentExpression': {
+            event = new AssignExprEvent(node as AssignmentExpression, scope);
+            break;
+        }
+        case 'UpdateExpression': {
+            event = new UpdateExprEvent(node as UpdateExpression, scope);
+            break;
+        }
+        case 'LogicalExpression': {
+            event = new LogicalExprEvent(node as LogicalExpression, scope);
+            break;
+        }
+        case 'MemberExpression': {
+            event = new MemberExprEvent(node as MemberExpression, scope);
+            break;
+        }
+        case 'AwaitExpression': {
+            event = new AwaitExprEvent(node as AwaitExpression, scope);
+            break;
+        }
+        case 'FunctionExpression': {
+            event = new FuncExprEvent(node as FunctionExpression, scope);
+            break;
+        }
+        case 'ReturnStatement': {
+            event = new ReturnStmtEvent(node as ReturnStatement, scope);
+            break;
+        }
+        case 'IfStatement': {
+            event = new IfStmtEvent(node as IfStatement, scope);
+            break;
+        }
+        case 'SwitchStatement': {
+            event = new SwitchStmtEvent(node as SwitchStatement, scope);
+            break;
+        }
+        case 'ThrowStatement': {
+            event = new ThrowStmtEvent(node as ThrowStatement, scope);
+            break;
+        }
+        case 'TryStatement': {
+            event = new TryStmtEvent(node as TryStatement, scope);
+            break;
+        }
+        case 'CatchClause': {
+            event = new CatchClauseEvent(node as CatchClause, scope);
+            break;
+        }
+        case 'VariableDeclaration': {
+            event = new VarDeclEvent(node as VariableDeclaration, scope);
+            break;
+        }
+        case 'FunctionDeclaration': {
+            event = new FuncDeclEvent(node as FunctionDeclaration, scope);
+            break;
+        }
+        case 'ForStatement': {
+            event = new ForStmtEvent(node as ForStatement, scope);
+            break;
+        }
+        case 'WhileStatement': {
+            event = new WhileStmtEvent(node as WhileStatement, scope);
+            break;
+        }
+        case 'DoWhileStatement': {
+            event = new DoWhileStmtEvent(node as DoWhileStatement, scope);
+            break;
+        }
+        case 'ForOfStatement': {
+            event = new ForOfStmtEvent(node as ForOfStatement, scope);
+            break;
+        }
+        case 'ForInStatement': {
+            event = new ForInStmtEvent(node as ForInStatement, scope);
+            break;
+        }
+        case 'Literal': {
+            event = new LiteralEvent(node as Literal, scope);
+            break;
+        }
+        case 'Any': default: {
+            event = new LangEvent(node,scope);
+            break;
+        }
+    }
+    onSupply(event as Supply[T]);
 }

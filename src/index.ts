@@ -150,7 +150,7 @@ class SvalPlus extends Sval {
 }
 type Fn = (...args:any[])=>any;
 export type MonitoredFn<T extends Fn> = T & {
-    beforeMonitoring:(fn:(...args:Parameters<T>)=>ReturnType<T>) => void;
+    beforeMonitoring:(fn:(...args:Parameters<T>)=>void) => void;
 };
 
 const langPoints = new WeakSet<Fn>();//to allow for garbage collection
@@ -161,7 +161,7 @@ const Colors = {
 export const monitor = {
     fn:<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> => {
         if (langPoints.has(fn)) {
-            throw new Error(chalk.red(`You cannot mark a function returned from a langPoint`))
+            throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
         const interpreter = new SvalPlus({
             listener,
@@ -201,7 +201,7 @@ export const monitor = {
                 if (err instanceof ReferenceError) {
                     throw new Error(
                         chalk.red.underline(`\nReference Error`) +
-                        Colors.orange(`\n-Monitored functions cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals can be tracked by langlisteners`) +
+                        Colors.orange(`\n-Monitored functions cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals,will be tracked by langListeners`) +
                         chalk.red.underline(`\n\nTrace`) + `\n${err}`
                     )
                 }else throw err;
@@ -228,10 +228,15 @@ export const monitor = {
     }
 }
 export {
-    LangEvent,
     type LangListener,
     type VariableForEvent,
     type ScopeForEvent,
+    type Demand,
+    type Supply,
+    type Demands,
+    
+    //Default Event
+    LangEvent,
 
     // Expressions
     BinaryExprEvent,
