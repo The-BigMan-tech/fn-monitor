@@ -14,6 +14,8 @@ import {
 } from "estree";
 import { Var } from "./scope/variable.ts";
 
+export type Fn = (...args:any[])=>any;
+
 export type Demand = 
     | Literal['type']
     | BinaryExpression['type']
@@ -182,10 +184,31 @@ interface SvalPlus {
     scopeForEvent:ScopeForEvent,
     setSupplyForDemand:(fn:SupplyForDemand<Demand>)=>void
 }
+interface Capture {
+    capturedScope:Record<any,any>;
+}
+export const captures = new WeakMap<SvalPlus,Capture>();
+
 export function callListener(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     const interpreter = svalScope.interpreter;
     const node = acornNode as EsNode;
 
+    if (interpreter && captures.has(interpreter)) {
+        if (svalScope.getDepth() === 1) {//only run this block if the interpreter has captured variables attached to it
+            const capturedScope = captures.get(interpreter)!.capturedScope;
+            let firstKey: string | null = null;
+
+            for (const key in capturedScope) {
+                firstKey = key;
+                break;
+            }
+            if (firstKey && !svalScope.find(firstKey)) {//we dont want to inject const variables that we already have before
+                for (const k in capturedScope) {
+                    svalScope.const(k, capturedScope[k]);
+                }
+            }
+        }
+    }
     if (!svalScope.hasParent()) {
         return;//we dont want to track any action thats not inside the monitored function
     }

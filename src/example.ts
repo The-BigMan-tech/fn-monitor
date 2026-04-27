@@ -44,10 +44,18 @@ const add = monitor.fn(internalAdd, (shop) => {
 monitor.header(add,()=>{
     console.log('Entered the monitored add function');
 })
+
 recordPerf(() => {
     const result = add(arrToAdd, hello);
     console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
 
+const addClosure = monitor.capture({hello})
+    .closure<(a:number,b:number)=>number>((a,b)=>{
+        hello();
+        return a + b;
+    },()=>undefined
+);
 
+console.log(addClosure(1,3));
 

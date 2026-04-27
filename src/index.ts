@@ -140,7 +140,7 @@ class Sval {
 }
 //*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
 import chalk from "chalk";
-import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop } from './monitored-events.ts'
+import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
 class SvalPlus extends Sval {
     public langListener:LangListener | null = null;
@@ -168,15 +168,7 @@ class SvalPlus extends Sval {
             },
             local:()=>this.reusables.svalScope!.getContext()
         },
-        depth:()=>{
-            let d = 0;
-            let currentScope:Scope | null = this.reusables.svalScope!;
-            while (currentScope && currentScope.hasParent()) {
-                d++;
-                currentScope = currentScope.getParent();
-            }
-            return d;
-        }
+        depth:()=>this.reusables.svalScope!.getDepth()
     }
     public shop:SvalShop = {
         sales:0,
@@ -201,11 +193,10 @@ declare const __brand: unique symbol;
 
 // 2. Create a reusable Brand utility
 export type Brand<T, B> = T & { readonly [__brand]:B };
-
-type Fn = (...args:any[])=>any;
 export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>
 
 const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collection
+
 const Colors = {
     orange:chalk.hex('#f6c098')
 };
@@ -270,9 +261,23 @@ export const monitor = {
 
         monitoredFns.set(newFn,interpreter);
         return newFn ;
+    },
+    capture:<T extends Record<any,any>>(variables:T)=> {
+        return new Capture(variables);
     }
 }
+export class Capture {
+    public capturedScope:Record<any,any> = Object.create(null);
 
+    constructor(capturedScope:Record<any,any>) {
+        this.capturedScope = Object.assign(this.capturedScope,capturedScope);
+    }
+    public closure = <T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> => {
+        const monitoredFn = monitor.fn(fn,listener);
+        captures.set(monitoredFns.get(monitoredFn)!,this);
+        return monitoredFn;
+    }
+}
 export { Var } from './scope/variable.ts'
 
 export {

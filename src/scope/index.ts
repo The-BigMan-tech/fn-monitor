@@ -58,6 +58,15 @@ export default class Scope<T = any> {
   public getParent() {
     return this.parent;
   }
+  public getDepth() {
+    let d = 0;
+    let currentScope:Scope | null = this;
+    while (currentScope && currentScope.hasParent()) {
+        d++;
+        currentScope = currentScope.getParent();
+    }
+    return d;
+  }
   /**
    * Get global scope
    */
