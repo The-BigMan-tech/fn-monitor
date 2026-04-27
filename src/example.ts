@@ -41,7 +41,7 @@ const add = monitor.fn(internalAdd, (shop) => {
         })
     }
 });
-monitor.beforeMonitoring(add,()=>{
+monitor.header(add,()=>{
     console.log('Entered the monitored add function');
 })
 recordPerf(() => {

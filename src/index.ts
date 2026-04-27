@@ -196,7 +196,7 @@ const Colors = {
 };
 
 export const monitor = {
-    beforeMonitoring:(fn:MonitoredFn<Fn>,cb:Fn)=>{
+    header:(fn:MonitoredFn<Fn>,cb:Fn)=>{
         if (!monitoredFns.has(fn)) {
             throw new Error(chalk.red(`The beforeMonitoring hook of the monitor can only be used on a monitored function`))
         }
