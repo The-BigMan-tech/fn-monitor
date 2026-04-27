@@ -84,7 +84,7 @@ export interface ScopeForEvent {
     }
     depth:()=>number
 }
-export class LangEvent<NodeType=EsNode> {
+export class LangEvent<NodeType extends EsNode = EsNode> {
     public node:NodeType;
     public scope:ScopeForEvent;
 

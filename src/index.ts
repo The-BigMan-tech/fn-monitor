@@ -66,6 +66,9 @@ class Sval {
 
     this.options.ecmaVersion = ecmaVer as Options['ecmaVersion']
     this.options.sourceType = sourceType
+    this.options.ranges = true;
+    this.options.locations = true;
+    this.options.preserveParens = false;
 
     if (sandBox) {
       // Shallow clone to create a sandbox
@@ -226,7 +229,7 @@ export const monitor = {
             listener,
             options:{
                 ecmaVer:2024, // Match your tsconfig target
-                sandBox: true, // Standard for eDSLs/Sandboxes
+                sandBox: true, // Standard for eDSLs/Sandboxes,
             }
         });
 
