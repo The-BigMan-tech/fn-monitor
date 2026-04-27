@@ -143,6 +143,7 @@ class Sval {
 // the monitor is only very fast because it does zero unnecessary allocations
 
 import chalk from "chalk";
+import { LRUCache } from 'lru-cache'
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
 class SvalPlus extends Sval {
@@ -191,6 +192,7 @@ class SvalPlus extends Sval {
     public setSupplyForDemand = (fn:SupplyForDemand<Demand>)=> {
         this.supplyForDemand = fn;
     }
+
     public static getFnSrc(fn:Fn):FnSrc {
         const fnString = fn.toString();
         let fnName = fn.name 
@@ -207,10 +209,20 @@ class SvalPlus extends Sval {
         }
         return { assignment:fnAssignment,name:fnName };
     }
-    public static getFnAst(fnSrc:FnSrc) {
+
+    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
+
+    public static getFnAst(fnSrc:FnSrc):FnAst {
+        const cachedAst = SvalPlus.fnAstCache.get(fnSrc.assignment)
+        if (cachedAst) return cachedAst;
+        
         const fnAssignmentAst = meriyahParse(fnSrc.assignment,SvalPlus.meriyahParseOptions);
         const fnCallAst = meriyahParse(`exports.result = ${fnSrc.name}(...args);`,SvalPlus.meriyahParseOptions);
-        return {assignment:fnAssignmentAst,fnCall:fnCallAst}
+        
+        const ast = {assignment:fnAssignmentAst as Node,fnCall:fnCallAst as Node};
+        SvalPlus.fnAstCache.set(fnSrc.assignment,ast);
+
+        return ast;
     }
     public static meriyahParseOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
@@ -227,6 +239,10 @@ class SvalPlus extends Sval {
 interface FnSrc {
     assignment:string,
     name:string
+}
+interface FnAst {
+    assignment:Node,
+    fnCall:Node
 }
 declare const __brand: unique symbol;
 
@@ -262,7 +278,7 @@ export const monitor = {
         const fnSrc = SvalPlus.getFnSrc(fn);
         const ast = SvalPlus.getFnAst(fnSrc);
         
-        interpreter.run(ast.assignment as Node);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
+        interpreter.run(ast.assignment);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
         
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
@@ -270,7 +286,7 @@ export const monitor = {
             }
             try {
                 interpreter.import({ args });
-                interpreter.run(ast.fnCall as Node);
+                interpreter.run(ast.fnCall);
                 return interpreter.exports.result;
             }catch(err) {
                 if (err instanceof ReferenceError) {
