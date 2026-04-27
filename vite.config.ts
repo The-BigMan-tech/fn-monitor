@@ -3,6 +3,10 @@ import dts from 'vite-plugin-dts'
 
 export default defineConfig({
   build: {
+    target: 'es2024',
+     rollupOptions: {
+      external: ['chalk'], 
+    },
     lib: {
       name: 'Sval',
       entry: 'src/index.ts',
