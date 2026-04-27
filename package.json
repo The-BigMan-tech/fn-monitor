@@ -1,14 +1,14 @@
 {
   "name": "script-monitor",
-  "version": "1.8.0",
+  "version": "1.8.5",
   "description": "Uses the sval interpreter to monitor functions",
   "type": "module",
   "main": "dist/script-monitor.min.js",
   "unpkg": "dist/script-monitor.min.js",
   "module": "dist/script-monitor.js",
-  "types": "dist/src/index.d.ts",
+  "types": "dist/src/script-monitor.d.ts",
   "exports": {
-    "types": "./dist/src/index.d.ts",
+    "types": "./dist/src/script-monitor.d.ts",
     "import": "./dist/script-monitor.js",
     "require": "./dist/script-monitor.umd.cjs"
   },

@@ -9,7 +9,14 @@ export default defineConfig({
     },
   },
   plugins: [
-    dts(),
+    dts({ 
+        beforeWriteFile: (filePath, content) => {
+            return {
+                filePath: filePath.replace('index.d.ts', 'script-monitor.d.ts'),
+                content
+            }
+        }
+    }),
   ],
   test: {
     environment: 'happy-dom',
