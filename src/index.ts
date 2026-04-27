@@ -240,7 +240,7 @@ export const monitor = {
             fnAssignment = fnString;
         }
 
-        interpreter.run(`${fnAssignment};`);
+        interpreter.run(`${fnAssignment};`);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
         
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
