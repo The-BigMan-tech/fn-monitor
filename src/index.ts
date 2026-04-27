@@ -1,4 +1,4 @@
-import { getOwnNames, createSandBox, globalObj, assign } from './share/util.ts'
+import { getOwnNames, createSandBox, globalObj  } from './share/util.ts'
 import { parse, Options, Node, Program } from 'acorn'
 import { EXPORTS, IMPORT, STRICT } from './share/const.ts'
 import Scope from './scope/index.ts'
@@ -153,14 +153,26 @@ class SvalPlus extends Sval {
         node:null,
     }
     public scopeForEvent:ScopeForEvent = {
-        find:(name:string):VariableForEvent | null =>{
-            const variable = this.reusables.svalScope!.find(name);
-            if (variable === null) return null;
-    
-            const variableForEvent = {
-                value:()=>variable.get()
+        variables:{
+            search:(name:string):VariableForEvent | null =>{
+                const variable = this.reusables.svalScope!.find(name);
+                if (variable === null) return null;
+                
+                const variableForEvent = {
+                    value:()=>variable.get()
+                }
+                return variableForEvent
+            },
+            local:()=>this.reusables.svalScope!.getContext()
+        },
+        depth:()=>{
+            let d = 0;
+            let currentScope:Scope | null = this.reusables.svalScope!;
+            while (currentScope && currentScope.hasParent()) {
+                d++;
+                currentScope = currentScope.getParent();
             }
-            return variableForEvent
+            return d;
         }
     }
     public shop:SvalShop = {
@@ -257,6 +269,9 @@ export const monitor = {
         return newFn ;
     }
 }
+
+export { Var } from './scope/variable.ts'
+
 export {
     type LangListener,
     type VariableForEvent,

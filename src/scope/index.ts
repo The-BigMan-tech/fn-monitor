@@ -52,6 +52,12 @@ export default class Scope<T = any> {
   public hasParent() {
     return Boolean(this.parent)
   }
+  public getContext() {
+    return this.context;
+  }
+  public getParent() {
+    return this.parent;
+  }
   /**
    * Get global scope
    */

@@ -12,6 +12,7 @@ import {
     IfStatement,SwitchStatement,TryStatement,ThrowStatement,CatchClause,
     VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression
 } from "estree";
+import { Var } from "./scope/variable.ts";
 
 export type Demand = 
     | Literal['type']
@@ -77,7 +78,11 @@ export interface VariableForEvent {
     value:()=>any
 }
 export interface ScopeForEvent {
-    find:(name: string)=> VariableForEvent | null
+    variables:{
+        search:(name: string)=> VariableForEvent | null,
+        local:()=>Record<string,Var>
+    }
+    depth:()=>number
 }
 export class LangEvent<NodeType=EsNode> {
     public node:NodeType;
