@@ -9,7 +9,6 @@ import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'
 import evaluate from './evaluate_n/index.ts'
-import { LangListener } from './monitored-events.ts'
 
 export interface SvalOptions {
   ecmaVer?: Options['ecmaVersion']
@@ -138,14 +137,43 @@ class Sval {
 }
 //*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
 import chalk from "chalk";
+import { Demand, LangListener, Products, Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent } from './monitored-events.ts'
 
 class SvalPlus extends Sval {
     public langListener:LangListener | null = null;
     public fnBeforeMonitoring:Fn | null = null;
+    public supplyForDemand:null | SupplyForDemand<Demand> = null;
 
     constructor(args:{listener:LangListener,options:SvalOptions}) {
         super(args.options);
         this.langListener = args.listener;
+    }
+    public reusables:Reusables = {
+        svalScope:null,
+        node:null,
+    }
+    public scopeForEvent:ScopeForEvent = {
+        find:(name:string):VariableForEvent | null =>{
+            const variable = this.reusables.svalScope!.find(name);
+            if (variable === null) return null;
+    
+            const variableForEvent = {
+                value:()=>variable.get()
+            }
+            return variableForEvent
+        }
+    }
+    public products:Products = {
+        demand:(demand,onSupply)=>{
+            const node = this.reusables.node!;
+            if ((demand === "Any") || (node.type === demand)) {
+                const supplyForDemand = this.supplyForDemand! as unknown as SupplyForDemand<typeof demand>
+                supplyForDemand(demand,onSupply,node,this.scopeForEvent);
+            }
+        }
+    }
+    public setSupplyForDemand = (fn:SupplyForDemand<Demand>)=> {
+        this.supplyForDemand = fn;
     }
 }
 type Fn = (...args:any[])=>any;

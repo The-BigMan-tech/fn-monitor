@@ -2,8 +2,8 @@
 //because of the demand and supply architecture,the script-monitor runs as close to the speed of sval as possible.so the overhead is the interpretation step not necessarily the monitor or sval
 
 import Scope from "./scope/index.ts";
-import { Node } from "acorn";
-import { Node as ESTreeNode} from "estree";
+import { Node as AcornNode } from "acorn";
+import { Node as EsNode} from "estree";
 import { 
     Literal ,BinaryExpression, CallExpression, AssignmentExpression, 
     UpdateExpression, LogicalExpression, MemberExpression, 
@@ -74,7 +74,7 @@ export interface VariableForEvent {
 export interface ScopeForEvent {
     find:(name: string)=> VariableForEvent | null
 }
-export class LangEvent<NodeType=ESTreeNode> {
+export class LangEvent<NodeType=EsNode> {
     public node:NodeType;
     public scope:ScopeForEvent;
 
@@ -158,34 +158,39 @@ export class ForInStmtEvent extends LangEvent<ForInStatement> {
 export class LiteralEvent extends LangEvent<Literal> {
     constructor(node: Literal, scope: ScopeForEvent) { super(node, scope) }
 }
-export function callListener(acornNode:Node,acornScope:Scope<{langListener:LangListener | null}>) {
-    const interpreter = acornScope.interpreter;
-    const node = acornNode as ESTreeNode;
+export interface Reusables {
+    svalScope:Scope | null,
+    node:EsNode | null
+}
+export type SupplyForDemand<T extends Demand> = (demand:T,onSupply:(event:Supply[T])=>void,node:EsNode,scope:ScopeForEvent)=>void;
 
-    if (!acornScope.hasParent()) {
+interface SvalPlus {
+    langListener:LangListener | null,
+    reusables:Reusables,
+    products:Products,
+    scopeForEvent:ScopeForEvent,
+    setSupplyForDemand:(fn:SupplyForDemand<Demand>)=>void
+}
+export function callListener(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
+    const interpreter = svalScope.interpreter;
+    const node = acornNode as EsNode;
+
+    if (!svalScope.hasParent()) {
         return;//we dont want to track any action thats not inside the monitored function
     }
     if (interpreter && interpreter.langListener) {
-        const scope:ScopeForEvent = {
-            find:(name:string):VariableForEvent | null =>{
-                const variable = acornScope.find(name);
-                if (variable === null) return null;
-                return {
-                    value:()=>variable.get()
-                }
-            }
+        try {
+            interpreter.reusables.svalScope = svalScope;
+            interpreter.reusables.node = node;
+            interpreter.setSupplyForDemand(supplyForDemand);
+            interpreter.langListener(interpreter.products);
+        }finally {
+            interpreter.reusables.node = null;
+            interpreter.reusables.svalScope = null;
         }
-        const products:Products = {
-            demand:(demand,onSupply)=>{
-                if ((demand === "Any") || (node.type === demand)) {
-                    supplyFromDemand(demand,onSupply,node,scope);
-                }
-            }
-        }
-        interpreter.langListener(products)
     }
 }
-function supplyFromDemand<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void,node:ESTreeNode,scope:ScopeForEvent) {
+const supplyForDemand:SupplyForDemand<Demand> = (demand,onSupply,node,scope)=> {
     let event:LangEvent | null = null;
     switch (demand) {
         case 'BinaryExpression': {
@@ -281,5 +286,5 @@ function supplyFromDemand<T extends Demand>(demand:T,onSupply:(event:Supply[T])=
             break;
         }
     }
-    onSupply(event as Supply[T]);
+    onSupply(event as Supply[Demand]);
 }
