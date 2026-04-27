@@ -176,7 +176,7 @@ class SvalPlus extends Sval {
     }
     public shop:SvalShop = {
         sales:0,
-        demand:(demand,onSupply)=>{
+        demand:(demand,onSupply)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((demand === "Any") || (node.type === demand)) {
                 const supplyForDemand = this.supplyForDemand! as unknown as SupplyForDemand<typeof demand>
@@ -215,7 +215,7 @@ class SvalPlus extends Sval {
     public static getFnAst(fnSrc:FnSrc):FnAst {
         const cachedAst = SvalPlus.fnAstCache.get(fnSrc.assignment)
         if (cachedAst) return cachedAst;
-        
+
         const fnAssignmentAst = meriyahParse(fnSrc.assignment,SvalPlus.meriyahParseOptions);
         const fnCallAst = meriyahParse(`exports.result = ${fnSrc.name}(...args);`,SvalPlus.meriyahParseOptions);
         

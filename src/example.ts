@@ -31,7 +31,6 @@ let count = 0;
 let otherNodes = 0;
 
 const add = monitor.fn(internalAdd, (shop) => {
-    //the monitor will only create the event object for a node if it meets the demand.its an alternative to instanceof checks
     shop.demand('AssignmentExpression', (event) => {
         count += 1;
     });
