@@ -50,12 +50,12 @@ recordPerf(() => {
     console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
 
-const addClosure = monitor.capture({hello})
-    .closure<(a:number,b:number)=>number>((a,b)=>{
-        hello();
-        return a + b;
-    },()=>undefined
-);
+const internalAdd2 = (a:number,b:number):number =>{
+    hello();
+    return a + b;
+}
+const addClosure = monitor.closure({hello},internalAdd2,()=>undefined);
+
 recordPerf(() => {
     const result = addClosure(1,3)
     console.log(result);

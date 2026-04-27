@@ -138,7 +138,9 @@ class Sval {
     }
   }
 }
-//*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
+//*-----------------MY MONITOR-------------------------------------------------------------------------
+// the monitor is only very fast because it does zero unnecessary allocations
+
 import chalk from "chalk";
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
@@ -262,11 +264,12 @@ export const monitor = {
         monitoredFns.set(newFn,interpreter);
         return newFn ;
     },
-    capture:<T extends Record<any,any>>(variables:T)=> {
-        return new Capture(variables);
+    closure:<T extends Record<any,any>,U extends Fn>(variables:T,fn:U,listener:LangListener)=> {
+        const capture = new Capture(variables);
+        return capture.closure(fn,listener);
     }
 }
-export class Capture {
+class Capture {
     public capturedScope:Record<any,any> = Object.create(null);
 
     constructor(capturedScope:Record<any,any>) {
