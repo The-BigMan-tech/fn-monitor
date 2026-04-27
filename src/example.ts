@@ -27,16 +27,19 @@ recordPerf(()=>{
 })
 
 //Monitored function
-const add = monitor.fn(internalAdd,(products)=>{//monitored fns dont modify the original function
-    products.demand('BinaryExpression',(event)=>{
-        
-    })
-})
+let count = 0;
+const add = monitor.fn(internalAdd, (products) => {
+    products.demand('AssignmentExpression', (event) => {
+        count++; // Tiny operation, no I/O
+    });
+});
 add.beforeMonitoring(()=>{
     console.log('Entered the monitored add function');
 })
-recordPerf(()=>{
-    const result = add(arrToAdd,hello);
-    console.log(result);
-})
+recordPerf(() => {
+    const result = add(arrToAdd, hello);
+    console.log('Final Result:', result, 'Interceptions:', count);
+});
+
+
 
