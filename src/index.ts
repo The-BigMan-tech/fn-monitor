@@ -252,7 +252,7 @@ export const monitor = {
                 if (err instanceof ReferenceError) {
                     throw new Error(
                         chalk.red.underline(`\nReference Error`) +
-                        Colors.orange(`\n-Monitored functions cannot access any non-default global variable.It must be passed as an argument.\n-If its a closure,the caller's details but not the internals,will be tracked by langListeners`) +
+                        Colors.orange(`\n-Monitored functions cannot access any non-default global variable.It must be passed as an argument.\n-If its an external closure,the caller's details but not the internals,will be tracked by the monitor.\n-You can use monitored closures if you want to capture any global variable into the monitored function once.`) +
                         chalk.red.underline(`\n\nTrace`) + `\n${err}`
                     )
                 }else throw err;

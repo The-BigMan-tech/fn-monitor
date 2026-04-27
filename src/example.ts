@@ -56,6 +56,9 @@ const addClosure = monitor.capture({hello})
         return a + b;
     },()=>undefined
 );
+recordPerf(() => {
+    const result = addClosure(1,3)
+    console.log(result);
+});
 
-console.log(addClosure(1,3));
 
