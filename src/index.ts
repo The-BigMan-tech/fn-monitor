@@ -137,7 +137,7 @@ class Sval {
 }
 //*-----------------MY LANGPOINT FUNCTION-------------------------------------------------------------------------
 import chalk from "chalk";
-import { Demand, LangListener, Products, Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent } from './monitored-events.ts'
+import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop } from './monitored-events.ts'
 
 class SvalPlus extends Sval {
     public langListener:LangListener | null = null;
@@ -163,30 +163,49 @@ class SvalPlus extends Sval {
             return variableForEvent
         }
     }
-    public products:Products = {
+    public shop:SvalShop = {
+        sales:0,
         demand:(demand,onSupply)=>{
             const node = this.reusables.node!;
             if ((demand === "Any") || (node.type === demand)) {
                 const supplyForDemand = this.supplyForDemand! as unknown as SupplyForDemand<typeof demand>
                 supplyForDemand(demand,onSupply,node,this.scopeForEvent);
+                this.shop.sales += 1;
             }
-        }
+        },
+    }
+    public userShop:UserShop = {
+        demand:this.shop.demand,
+        sales:()=>this.shop.sales
     }
     public setSupplyForDemand = (fn:SupplyForDemand<Demand>)=> {
         this.supplyForDemand = fn;
     }
 }
-type Fn = (...args:any[])=>any;
-export type MonitoredFn<T extends Fn> = T & {
-    beforeMonitoring:(fn:(...args:Parameters<T>)=>void) => void;
-};
+declare const __brand: unique symbol;
 
-const monitoredFns = new WeakSet<Fn>();//to allow for garbage collection
+// 2. Create a reusable Brand utility
+export type Brand<T, B> = T & { readonly [__brand]:B };
+
+type Fn = (...args:any[])=>any;
+export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>
+
+const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collection
 const Colors = {
     orange:chalk.hex('#f6c098')
 };
 
 export const monitor = {
+    beforeMonitoring:(fn:MonitoredFn<Fn>,cb:Fn)=>{
+        if (!monitoredFns.has(fn)) {
+            throw new Error(chalk.red(`The beforeMonitoring hook of the monitor can only be used on a monitored function`))
+        }
+        const interpreter = monitoredFns.get(fn)!
+        if (interpreter.fnBeforeMonitoring !== null) {
+            throw new Error(chalk.red(`You can only set the function called before monitoring once.`))
+        }
+        interpreter.fnBeforeMonitoring = cb;
+    },
     fn<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> {
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
@@ -234,22 +253,7 @@ export const monitor = {
             }
         }) as MonitoredFn<T>;
 
-        const fnBeforeMonitoring = (fn:Fn)=>{ 
-            if (interpreter.fnBeforeMonitoring !== null) {
-                throw new Error(chalk.red(`You can only set the function called before monitoring once.`))
-            }
-            interpreter.fnBeforeMonitoring = fn 
-        };
-
-        const propToDefine:keyof MonitoredFn<Fn> = "beforeMonitoring";
-        Object.defineProperty(newFn,propToDefine, {
-            value:fnBeforeMonitoring,
-            writable: false,     // Prevents reassignment
-            configurable: false, // Prevents deletion or changing attributes later
-            enumerable: true     // Allows it to show up in loops
-        });
-
-        monitoredFns.add(newFn);
+        monitoredFns.set(newFn,interpreter);
         return newFn ;
     }
 }
@@ -259,8 +263,9 @@ export {
     type ScopeForEvent,
     type Demand,
     type Supply,
-    type Products,
+    type UserShop,
 
+    //the reason why i didnt export these as just types is because of instance-of checks
     //Default Event
     LangEvent,
 

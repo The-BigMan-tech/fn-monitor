@@ -63,10 +63,15 @@ export type Supply = (
     Record<ForInStatement['type'], ForInStmtEvent> &
     Record<'Any', LangEvent>
 );
-export interface Products {
-    demand:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void
+export interface UserShop {
+    demand:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void,
+    sales:()=>number
 }
-export type LangListener = (products:Products)=>void;
+export interface SvalShop {
+    demand:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void,
+    sales:number
+}
+export type LangListener = (shop:UserShop)=>void;
 
 export interface VariableForEvent {
     value:()=>any
@@ -167,7 +172,8 @@ export type SupplyForDemand<T extends Demand> = (demand:T,onSupply:(event:Supply
 interface SvalPlus {
     langListener:LangListener | null,
     reusables:Reusables,
-    products:Products,
+    shop:SvalShop,
+    userShop:UserShop,
     scopeForEvent:ScopeForEvent,
     setSupplyForDemand:(fn:SupplyForDemand<Demand>)=>void
 }
@@ -183,10 +189,11 @@ export function callListener(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
             interpreter.reusables.svalScope = svalScope;
             interpreter.reusables.node = node;
             interpreter.setSupplyForDemand(supplyForDemand);
-            interpreter.langListener(interpreter.products);
+            interpreter.langListener(interpreter.userShop);
         }finally {
             interpreter.reusables.node = null;
             interpreter.reusables.svalScope = null;
+            interpreter.shop.sales = 0;
         }
     }
 }

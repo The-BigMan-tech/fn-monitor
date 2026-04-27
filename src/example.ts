@@ -28,17 +28,25 @@ recordPerf(()=>{
 
 //Monitored function
 let count = 0;
-const add = monitor.fn(internalAdd, (products) => {
-    products.demand('AssignmentExpression', (event) => {
-        count++; // Tiny operation, no I/O
+let otherNodes = 0;
+
+const add = monitor.fn(internalAdd, (shop) => {
+    //the monitor will only create the event object for a node if it meets the demand.its an alternative to instanceof checks
+    shop.demand('AssignmentExpression', (event) => {
+        count += 1;
     });
+    if (shop.sales() < 1) {
+        shop.demand('Any',(event)=>{
+            otherNodes += 1;
+        })
+    }
 });
-add.beforeMonitoring(()=>{
+monitor.beforeMonitoring(add,()=>{
     console.log('Entered the monitored add function');
 })
 recordPerf(() => {
     const result = add(arrToAdd, hello);
-    console.log('Final Result:', result, 'Interceptions:', count);
+    console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
 
 
