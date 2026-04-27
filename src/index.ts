@@ -205,18 +205,16 @@ export const monitor = {
 
         if (fnName.length === 0) {
             const anonymous = 'anonymousFn';
-            fnAssignment = `var ${anonymous} = ${fnString}`
+            fnAssignment = `const ${anonymous} = ${fnString}`
             fnName = anonymous;
         }else if (!fnName.startsWith('function')) {
-            fnAssignment = `var ${fnName} = ${fnString}`
+            fnAssignment = `const ${fnName} = ${fnString}`
         }else {
             fnAssignment = fnString;
         }
 
-        const code = `
-            ${fnAssignment};
-            exports.result = ${fnName}(...args);
-        `
+        interpreter.run(`${fnAssignment};`);
+        
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
                 interpreter.fnBeforeMonitoring(...args);

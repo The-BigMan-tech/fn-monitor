@@ -1,41 +1,42 @@
-import { monitor } from "./index.ts";
+import { CallExprEvent, monitor } from "./index.ts";
 import chalk from "chalk";
 
+function recordPerf(fn:(...args:any[])=>void) {
+    const start = performance.now();
+    fn();
+    const end = performance.now();
+    console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
+}
 function hello() {
-    console.log('hello world');
+    console.log('Hello function');
 }
 //Regular function
-const internalAdd = (a:number,b:number,hello:()=>void)=> {
-    console.log('Entered the internal add function');
-    hello()
-    return a + b;
+const arrToAdd = [1,2,3,4,5,6,7,8,9,10];
+
+const internalAdd = (nums:number[],hello:()=>void)=> {
+    hello();
+    let sum:number = 0;
+    for (const num of nums) {
+        sum += num
+    }
+    return sum;
 }
-const start1 = performance.now();
-
-const result = internalAdd(1,2,hello);
-console.log(result);
-
-const end1 = performance.now();
-console.log(chalk.green('\nA:Finished in ',end1-start1,' milliseconds\n'));
-
+recordPerf(()=>{
+    const result = internalAdd(arrToAdd,hello);
+    console.log(result);
+})
 
 //Monitored function
-const add = monitor.fn(internalAdd,(demand)=>{//monitored fns dont modify the original function
-    demand.add('BinaryExpression',(event)=>{
+const add = monitor.fn(internalAdd,(products)=>{//monitored fns dont modify the original function
+    products.demand('BinaryExpression',(event)=>{
         
     })
 })
 add.beforeMonitoring(()=>{
     console.log('Entered the monitored add function');
 })
-
-const start2 = performance.now();
-
-const result2 = add(3,5,hello);
-console.log(result2);
-
-const end2 = performance.now();
-console.log(chalk.green('\nB:Finished in ',end2-start2,' milliseconds'));
-
-
+recordPerf(()=>{
+    const result = add(arrToAdd,hello);
+    console.log(result);
+})
 
