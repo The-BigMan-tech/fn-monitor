@@ -9,6 +9,7 @@ import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'
 import evaluate from './evaluate_n/index.ts'
+import { parse as meriyahParse } from 'meriyah';
 
 export interface SvalOptions {
   ecmaVer?: Options['ecmaVersion']
@@ -190,6 +191,42 @@ class SvalPlus extends Sval {
     public setSupplyForDemand = (fn:SupplyForDemand<Demand>)=> {
         this.supplyForDemand = fn;
     }
+    public static getFnSrc(fn:Fn):FnSrc {
+        const fnString = fn.toString();
+        let fnName = fn.name 
+        let fnAssignment:string = '';
+
+        if (fnName.length === 0) {
+            const anonymous = 'anonymousFn';
+            fnAssignment = `const ${anonymous} = ${fnString}`
+            fnName = anonymous;
+        }else if (!fnName.startsWith('function')) {
+            fnAssignment = `const ${fnName} = ${fnString}`
+        }else {
+            fnAssignment = fnString;
+        }
+        return { assignment:fnAssignment,name:fnName };
+    }
+    public static getFnAst(fnSrc:FnSrc) {
+        const fnAssignmentAst = meriyahParse(fnSrc.assignment,SvalPlus.meriyahParseOptions);
+        const fnCallAst = meriyahParse(`exports.result = ${fnSrc.name}(...args);`,SvalPlus.meriyahParseOptions);
+        return {assignment:fnAssignmentAst,fnCall:fnCallAst}
+    }
+    public static meriyahParseOptions = {
+        module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
+        next: true,      // Modern ES support
+        loc: true,       // Essential for your shop.demand tracking
+        ranges: true,    // Good for error reporting
+        lexical: true    // Helps Sval understand 'let/const' vs 'var'
+    }
+    public static defaultOptions = {
+        ecmaVer:2024, // Match your tsconfig target
+        sandBox: true, // Standard for eDSLs/Sandboxes,
+    } as const;
+}
+interface FnSrc {
+    assignment:string,
+    name:string
 }
 declare const __brand: unique symbol;
 
@@ -220,27 +257,12 @@ export const monitor = {
         }
         const interpreter = new SvalPlus({
             listener,
-            options:{
-                ecmaVer:2024, // Match your tsconfig target
-                sandBox: true, // Standard for eDSLs/Sandboxes,
-            }
+            options:SvalPlus.defaultOptions
         });
-
-        const fnString = fn.toString();
-        let fnName = fn.name 
-        let fnAssignment:string = '';
-
-        if (fnName.length === 0) {
-            const anonymous = 'anonymousFn';
-            fnAssignment = `const ${anonymous} = ${fnString}`
-            fnName = anonymous;
-        }else if (!fnName.startsWith('function')) {
-            fnAssignment = `const ${fnName} = ${fnString}`
-        }else {
-            fnAssignment = fnString;
-        }
-
-        interpreter.run(`${fnAssignment};`);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
+        const fnSrc = SvalPlus.getFnSrc(fn);
+        const ast = SvalPlus.getFnAst(fnSrc);
+        
+        interpreter.run(ast.assignment as Node);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
         
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
@@ -248,7 +270,7 @@ export const monitor = {
             }
             try {
                 interpreter.import({ args });
-                interpreter.run(`exports.result = ${fnName}(...args);`);
+                interpreter.run(ast.fnCall as Node);
                 return interpreter.exports.result;
             }catch(err) {
                 if (err instanceof ReferenceError) {
