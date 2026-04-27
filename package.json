@@ -3,19 +3,19 @@
   "version": "1.0.0",
   "description": "Uses the sval interpreter to monitor functions",
   "type": "module",
-  "main": "dist/sval.min.js",
-  "unpkg": "dist/sval.min.js",
-  "module": "dist/sval.js",
+  "main": "dist/script-monitor.min.js",
+  "unpkg": "dist/script-monitor.min.js",
+  "module": "dist/script-monitor.js",
   "types": "dist/src/index.d.ts",
   "exports": {
     "types": "./dist/src/index.d.ts",
-    "import": "./dist/sval.js",
-    "require": "./dist/sval.umd.cjs"
+    "import": "./dist/script-monitor.js",
+    "require": "./dist/script-monitor.umd.cjs"
   },
   "scripts": {
     "start": "vite",
     "test": "node scripts && vitest run --coverage",
-    "build": "npm test && vite build && node scripts/legacy.js"
+    "build": "vite build && node scripts/legacy.js"
   },
   "repository": {
     "type": "git",

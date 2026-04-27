@@ -6,8 +6,8 @@ import { transformSync } from '@swc/core'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const from = 'dist/sval.umd.cjs'
-const to = 'dist/sval.min.js'
+const from = 'dist/script-monitor.umd.cjs'
+const to = 'dist/script-monitor.min.js'
 const source = fs.readFileSync(path.resolve(__dirname, '..', from), 'utf-8')
 
 const result = transformSync(source, { minify: true })

@@ -187,14 +187,14 @@ const Colors = {
 };
 
 export const monitor = {
-    fn:<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> => {
+    fn<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> {
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
         const interpreter = new SvalPlus({
             listener,
             options:{
-                ecmaVer:"latest", // Match your tsconfig target
+                ecmaVer:2024, // Match your tsconfig target
                 sandBox: true, // Standard for eDSLs/Sandboxes
             }
         });
@@ -223,7 +223,7 @@ export const monitor = {
             }
             try {
                 interpreter.import({ args });
-                interpreter.run(code);
+                interpreter.run(`exports.result = ${fnName}(...args);`);
                 return interpreter.exports.result;
             }catch(err) {
                 if (err instanceof ReferenceError) {
