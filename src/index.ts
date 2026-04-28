@@ -196,31 +196,31 @@ class SvalPlus extends Sval {
     public static getFnSrc(fn:Fn):FnSrc {
         const fnString = fn.toString();
         let fnName = fn.name 
-        let fnAssignment:string = '';
+        let fnCode:string = '';
 
         if (fnName.length === 0) {
             const anonymous = 'anonymousFn';
-            fnAssignment = `const ${anonymous} = ${fnString}`
+            fnCode = `const ${anonymous} = ${fnString}`
             fnName = anonymous;
         }else if (!fnName.startsWith('function')) {
-            fnAssignment = `const ${fnName} = ${fnString}`
+            fnCode = `const ${fnName} = ${fnString}`
         }else {
-            fnAssignment = fnString;
+            fnCode = fnString;
         }
-        return { assignment:fnAssignment,name:fnName };
+        return { fnCode,fnName };
     }
 
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
 
     public static getFnAst(fnSrc:FnSrc):FnAst {
-        const cachedAst = SvalPlus.fnAstCache.get(fnSrc.assignment)
+        const cachedAst = SvalPlus.fnAstCache.get(fnSrc.fnCode)
         if (cachedAst) return cachedAst;
 
-        const fnAssignmentAst = meriyahParse(fnSrc.assignment,SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(`exports.result = ${fnSrc.name}(...args);`,SvalPlus.meriyahParseOptions);
+        const fnCodeAst = meriyahParse(fnSrc.fnCode,SvalPlus.meriyahParseOptions);
+        const fnCallAst = meriyahParse(`exports.result = ${fnSrc.fnName}(...args);`,SvalPlus.meriyahParseOptions);
         
-        const ast = {assignment:fnAssignmentAst as Node,fnCall:fnCallAst as Node};
-        SvalPlus.fnAstCache.set(fnSrc.assignment,ast);
+        const ast = {fnCode:fnCodeAst as Node,fnCall:fnCallAst as Node};
+        SvalPlus.fnAstCache.set(fnSrc.fnCode,ast);
 
         return ast;
     }
@@ -237,11 +237,11 @@ class SvalPlus extends Sval {
     } as const;
 }
 interface FnSrc {
-    assignment:string,
-    name:string
+    fnCode:string,
+    fnName:string
 }
 interface FnAst {
-    assignment:Node,
+    fnCode:Node,
     fnCall:Node
 }
 declare const __brand: unique symbol;
@@ -257,7 +257,7 @@ const Colors = {
 };
 
 export const monitor = {
-    header:(fn:MonitoredFn<Fn>,cb:Fn)=>{
+    preMonitoring:(fn:MonitoredFn<Fn>,cb:Fn)=>{
         if (!monitoredFns.has(fn)) {
             throw new Error(chalk.red(`The beforeMonitoring hook of the monitor can only be used on a monitored function`))
         }
@@ -267,7 +267,7 @@ export const monitor = {
         }
         interpreter.fnBeforeMonitoring = cb;
     },
-    fn<T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> {
+    fn<T extends Fn>(fn:T,listener:LangListener,inlineFns?:Record<string,Fn>):MonitoredFn<T> {
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
@@ -278,7 +278,7 @@ export const monitor = {
         const fnSrc = SvalPlus.getFnSrc(fn);
         const ast = SvalPlus.getFnAst(fnSrc);
         
-        interpreter.run(ast.assignment);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
+        interpreter.run(ast.fnCode);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
         
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
@@ -302,7 +302,7 @@ export const monitor = {
         monitoredFns.set(newFn,interpreter);
         return newFn ;
     },
-    closure:<T extends Record<any,any>,U extends Fn>(variables:T,fn:U,listener:LangListener)=> {
+    closure:<T extends Record<any,any>,U extends Fn>(variables:T,fn:U,listener:LangListener,inlineFns?:Record<string,Fn>)=> {
         const capture = new Capture(variables);
         return capture.closure(fn,listener);
     }
