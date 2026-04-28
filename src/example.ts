@@ -1,7 +1,7 @@
 import { CallExprEvent, monitor } from "./index.ts";
 import chalk from "chalk";
 
-function recordPerf(fn:(...args:any[])=>void) {
+function perf(fn:(...args:any[])=>void) {
     const start = performance.now();
     fn();
     const end = performance.now();
@@ -21,7 +21,7 @@ const internalAdd = (nums:number[],hello:()=>void)=> {
     }
     return sum;
 }
-recordPerf(()=>{
+perf(()=>{
     const result = internalAdd(arrToAdd,hello);
     console.log(result);
 })
@@ -40,11 +40,11 @@ const add = monitor.fn(internalAdd, (shop) => {
         })
     }
 });
-monitor.header(add,()=>{
+monitor.preMonitoring(add,()=>{
     console.log('Entered the monitored add function');
 })
 
-recordPerf(() => {
+perf(() => {
     const result = add(arrToAdd, hello);
     console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
@@ -55,7 +55,7 @@ const internalAdd2 = (a:number,b:number):number =>{
 }
 const addClosure = monitor.closure({hello},internalAdd2,()=>undefined);
 
-recordPerf(() => {
+perf(() => {
     const result = addClosure(1,3)
     console.log(result);
 });

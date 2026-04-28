@@ -303,19 +303,8 @@ export const monitor = {
         return newFn ;
     },
     closure:<T extends Record<any,any>,U extends Fn>(variables:T,fn:U,listener:LangListener,inlineFns?:Record<string,Fn>)=> {
-        const capture = new Capture(variables);
-        return capture.closure(fn,listener);
-    }
-}
-class Capture {
-    public capturedScope:Record<any,any> = Object.create(null);
-
-    constructor(capturedScope:Record<any,any>) {
-        this.capturedScope = Object.assign(this.capturedScope,capturedScope);
-    }
-    public closure = <T extends Fn>(fn:T,listener:LangListener):MonitoredFn<T> => {
         const monitoredFn = monitor.fn(fn,listener);
-        captures.set(monitoredFns.get(monitoredFn)!,this);
+        captures.set(monitoredFns.get(monitoredFn)!,variables);
         return monitoredFn;
     }
 }

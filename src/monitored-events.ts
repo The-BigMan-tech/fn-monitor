@@ -184,10 +184,7 @@ interface SvalPlus {
     scopeForEvent:ScopeForEvent,
     setSupplyForDemand:(fn:SupplyForDemand<Demand>)=>void
 }
-interface Capture {
-    capturedScope:Record<any,any>;
-}
-export const captures = new WeakMap<SvalPlus,Capture>();
+export const captures = new WeakMap<SvalPlus,Record<any,any>>();
 
 export function callListener(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     const interpreter = svalScope.interpreter;
@@ -195,7 +192,7 @@ export function callListener(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
 
     if (interpreter && captures.has(interpreter)) {
         if (svalScope.getDepth() === 1) {//only run this block if the interpreter has captured variables attached to it
-            const capturedScope = captures.get(interpreter)!.capturedScope;
+            const capturedScope = captures.get(interpreter)!;
             let firstKey: string | null = null;
 
             for (const key in capturedScope) {
