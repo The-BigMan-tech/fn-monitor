@@ -197,11 +197,12 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     const interpreter = svalScope.interpreter;
     if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
     
-    if (svalScope.getDepth() === 0) {
+    const atRoot = !svalScope.hasParent();
+    if (atRoot) {
         return;//we dont want to track any action thats not inside the monitored function
     }
+    
     const node = acornNode as EsNode;
-
     if (captures.has(interpreter)) {
         if (!interpreter.injectedCaptures) {//since the monitored fn will always be the first function that's not ran in the root,we can immediately set the captured variables here and lock it.by the time it does call an inline fn,it will be after the capture would have been injected once
             injectCaptures(interpreter,svalScope);
