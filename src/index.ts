@@ -165,9 +165,7 @@ class SvalPlus extends Sval {
                 const variable = this.reusables.svalScope!.find(name);
                 if (variable === null) return null;
                 
-                const variableForEvent = {
-                    value:()=>variable.get()
-                }
+                const variableForEvent = { value:()=>variable.get() }
                 return variableForEvent
             },
             local:()=>this.reusables.svalScope!.getContext()
@@ -209,7 +207,8 @@ class SvalPlus extends Sval {
             fnCode = `const ${fnName} = ${fnString}`
         }
         if (inlineFns !== undefined) {
-            let inlinedLogic = '';
+            let declarations = '';
+            let assignments = '';
 
             for (const name in inlineFns) {
                 const inlineFn = inlineFns[name];
@@ -220,10 +219,11 @@ class SvalPlus extends Sval {
                     ${inlineFnSrc.fnCode}
                     return ${inlineFnSrc.fnName};
                 })()`
-                inlinedLogic += `\nvar ${name} = ${scopedFn}`;
+                declarations += `\nvar ${name};`;
+                assignments += `${name} = ${scopedFn};\n`;
             }
             // Prepend inlined logic so it's available to the main function
-            fnCode = inlinedLogic + fnCode;
+            fnCode = declarations + assignments + fnCode;
         }
         return { fnCode,fnName };
     }
