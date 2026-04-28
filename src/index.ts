@@ -144,7 +144,6 @@ class Sval {
 
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
-import {v4 as uniqueID} from "uuid";
 import * as crypto from "crypto"
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
@@ -188,9 +187,6 @@ class SvalPlus extends Sval {
     public userShop:UserShop = {
         demand:this.shop.demand,
         sales:()=>this.shop.sales
-    }
-    public setSupplyForDemand = (fn:SupplyForDemand<Demand>)=> {
-        this.supplyForDemand = fn;
     }
     public static readonly resultExport:string = 'result';
 
