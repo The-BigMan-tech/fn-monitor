@@ -147,6 +147,7 @@ import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
+
 class SvalPlus extends Sval {
     public langListener:LangListener | null = null;
     public fnBeforeMonitoring:Fn | null = null;
@@ -190,6 +191,13 @@ class SvalPlus extends Sval {
     }
     public static readonly resultExport:string = 'result';
 
+    private static reservedNames = new Set(['args']);
+
+    private static checkIfReserved(name:string) {
+        if (SvalPlus.reservedNames.has(name)) {//Sval will naturally handle duplicate declaration errors but i still chose to explicitly handle the case of colliding with a reserved name 
+            throw new Error(chalk.red(`A monitored or inlined function cannot use a reserved name.Found ${name}`))
+        }
+    }
     public static getFnSrc(fn:Fn):FnSrc  {
         const fnString = fn.toString();
         const isStandardDecl = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
@@ -208,6 +216,7 @@ class SvalPlus extends Sval {
         }else {//handle anonymous fns assigned to a variable
             fnCode = `const ${fnName} = ${fnString};`
         }
+        SvalPlus.checkIfReserved(fnName);
         return { fnCode,fnName };
     }
     public static inlineFunctions(inlineFns:Record<string,Fn> | undefined):string {
@@ -218,6 +227,8 @@ class SvalPlus extends Sval {
             let assignments = '';
 
             for (const name in inlineFns) {
+                SvalPlus.checkIfReserved(name);
+
                 const inlineFn = inlineFns[name];
                 const inlineFnSrc = SvalPlus.getFnSrc(inlineFn);//passing undefined here prevents infinite recursion
 
@@ -230,11 +241,11 @@ class SvalPlus extends Sval {
                 assignments += `\n${name} = ${scopedFn};`;
             }
             // Prepend inlined logic so it's available to the main function
-            fnCode = declarations + assignments + fnCode;
+            fnCode = declarations + assignments;
         }
         return fnCode;
     }
-    public injectedCaptures:boolean = false;
+    public injectedCaptures = {value:false}
 
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
 
@@ -280,7 +291,6 @@ const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collectio
 const Colors = {
     orange:chalk.hex('#f6c098')
 };
-
 export const monitor = {
     preMonitoring:(fn:MonitoredFn<Fn>,cb:Fn)=>{
         if (!monitoredFns.has(fn)) {
@@ -314,7 +324,7 @@ export const monitor = {
             try {
                 interpreter.import({ args });
                 interpreter.run(ast.fnCall);
-                interpreter.injectedCaptures = false;
+                interpreter.injectedCaptures.value = false;
                 return interpreter.exports[SvalPlus.resultExport];
             }catch(err) {
                 if (err instanceof ReferenceError) {
