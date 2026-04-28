@@ -193,19 +193,37 @@ class SvalPlus extends Sval {
         this.supplyForDemand = fn;
     }
 
-    public static getFnSrc(fn:Fn):FnSrc {
+    public static getFnSrc(fn:Fn,inlineFns:Record<string,Fn> | undefined):FnSrc  {
         const fnString = fn.toString();
         let fnName = fn.name 
         let fnCode:string = '';
+        const isStandardDecl = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
 
-        if (fnName.length === 0) {
+        if (fnName.length === 0) {//handle unassigned anonymous functions
             const anonymous = 'anonymousFn';
             fnCode = `const ${anonymous} = ${fnString}`
             fnName = anonymous;
-        }else if (!fnName.startsWith('function')) {
-            fnCode = `const ${fnName} = ${fnString}`
-        }else {
+        }else if (isStandardDecl) {//handle function definition
             fnCode = fnString;
+        }else {//handle anonymous fns assigned to a variable
+            fnCode = `const ${fnName} = ${fnString}`
+        }
+        if (inlineFns !== undefined) {
+            let inlinedLogic = '';
+
+            for (const name in inlineFns) {
+                const inlineFn = inlineFns[name];
+                const inlineFnSrc = SvalPlus.getFnSrc(inlineFn,undefined);//passing undefined here prevents infinite recursion
+
+                //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
+                const scopedFn = `(()=>{ 
+                    ${inlineFnSrc.fnCode}
+                    return ${inlineFnSrc.fnName};
+                })()`
+                inlinedLogic += `\nconst ${name} = ${scopedFn}`;
+            }
+            // Prepend inlined logic so it's available to the main function
+            fnCode = inlinedLogic + fnCode;
         }
         return { fnCode,fnName };
     }
@@ -275,7 +293,7 @@ export const monitor = {
             listener,
             options:SvalPlus.defaultOptions
         });
-        const fnSrc = SvalPlus.getFnSrc(fn);
+        const fnSrc = SvalPlus.getFnSrc(fn,inlineFns);
         const ast = SvalPlus.getFnAst(fnSrc);
         
         interpreter.run(ast.fnCode);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
