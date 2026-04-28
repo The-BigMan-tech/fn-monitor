@@ -182,34 +182,33 @@ interface SvalPlus {
     shop:SvalShop,
     userShop:UserShop,
     scopeForEvent:ScopeForEvent,
+    injectedCaptures:boolean,
     setSupplyForDemand:(fn:SupplyForDemand<Demand>)=>void
 }
 export const captures = new WeakMap<SvalPlus,Record<any,any>>();
 
-export function callListener(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
-    const interpreter = svalScope.interpreter;
-    const node = acornNode as EsNode;
-
-    if (interpreter && captures.has(interpreter)) {
-        if (svalScope.getDepth() === 1) {//only run this block if the interpreter has captured variables attached to it
-            const capturedScope = captures.get(interpreter)!;
-            let firstKey: string | null = null;
-
-            for (const key in capturedScope) {
-                firstKey = key;
-                break;
-            }
-            if (firstKey && !svalScope.find(firstKey)) {//we dont want to inject const variables that we already have before
-                for (const k in capturedScope) {
-                    svalScope.const(k, capturedScope[k]);
-                }
-            }
-        }
+function injectCaptures(interpreter:SvalPlus,svalScope:Scope<SvalPlus>) {
+    const capturedScope = captures.get(interpreter)!;
+    for (const k in capturedScope) {
+        svalScope.const(k, capturedScope[k]);
     }
-    if (!svalScope.hasParent()) {
+}
+export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
+    const interpreter = svalScope.interpreter;
+    if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
+    
+    if (svalScope.getDepth() === 0) {
         return;//we dont want to track any action thats not inside the monitored function
     }
-    if (interpreter && interpreter.langListener) {
+    const node = acornNode as EsNode;
+
+    if (captures.has(interpreter)) {
+        if (!interpreter.injectedCaptures) {//since the monitored fn will always be the first function that's not ran in the root,we can immediately set the captured variables here and lock it.by the time it does call an inline fn,it will be after the capture would have been injected once
+            injectCaptures(interpreter,svalScope);
+            interpreter.injectedCaptures = true;
+        }
+    }
+    if (interpreter.langListener) {
         try {
             interpreter.reusables.svalScope = svalScope;
             interpreter.reusables.node = node;

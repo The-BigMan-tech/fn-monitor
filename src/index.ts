@@ -145,6 +145,7 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {v4 as uniqueID} from "uuid";
+import * as crypto from "crypto"
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
 class SvalPlus extends Sval {
@@ -191,43 +192,53 @@ class SvalPlus extends Sval {
     public setSupplyForDemand = (fn:SupplyForDemand<Demand>)=> {
         this.supplyForDemand = fn;
     }
+    public static readonly resultExport:string = 'result';
 
-    public static getFnSrc(fn:Fn,inlineFns:Record<string,Fn> | undefined):FnSrc  {
+    public static getFnSrc(fn:Fn):FnSrc  {
         const fnString = fn.toString();
-        let fnName = fn.name 
-        let fnCode:string = '';
         const isStandardDecl = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
 
+        let fnName = fn.name 
+        let fnCode:string = '';
+
         if (fnName.length === 0) {//handle unassigned anonymous functions
-            const anonymous = 'anonymousFn_' + uniqueID().replace(/-/g, '');//this prevents name collisions with inlined functions
+            const hash = crypto.createHash('sha256').update(fnString).digest('hex');
+            const anonymous = 'anonymousFn_' + hash;//this prevents name collisions with inlined functions
+            
             fnCode = `const ${anonymous} = ${fnString};`
             fnName = anonymous;
         }else if (isStandardDecl) {//handle function definition
             fnCode = fnString;
         }else {//handle anonymous fns assigned to a variable
-            fnCode = `const ${fnName} = ${fnString}`
+            fnCode = `const ${fnName} = ${fnString};`
         }
+        return { fnCode,fnName };
+    }
+    public static inlineFunctions(inlineFns:Record<string,Fn> | undefined):string {
+        let fnCode:string = '';
+
         if (inlineFns !== undefined) {
             let declarations = '';
             let assignments = '';
 
             for (const name in inlineFns) {
                 const inlineFn = inlineFns[name];
-                const inlineFnSrc = SvalPlus.getFnSrc(inlineFn,undefined);//passing undefined here prevents infinite recursion
+                const inlineFnSrc = SvalPlus.getFnSrc(inlineFn);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
                     ${inlineFnSrc.fnCode}
                     return ${inlineFnSrc.fnName};
-                })()`
+                })();`
                 declarations += `\nvar ${name};`;
-                assignments += `${name} = ${scopedFn};\n`;
+                assignments += `\n${name} = ${scopedFn};`;
             }
             // Prepend inlined logic so it's available to the main function
             fnCode = declarations + assignments + fnCode;
         }
-        return { fnCode,fnName };
+        return fnCode;
     }
+    public injectedCaptures:boolean = false;
 
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
 
@@ -236,9 +247,8 @@ class SvalPlus extends Sval {
         if (cachedAst) return cachedAst;
 
         const fnCodeAst = meriyahParse(fnSrc.fnCode,SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(`exports.result = ${fnSrc.fnName}(...args);`,SvalPlus.meriyahParseOptions);
-        
-        const ast = {fnCode:fnCodeAst as Node,fnCall:fnCallAst as Node};
+        const fnCallAst = meriyahParse(`exports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...args);`,SvalPlus.meriyahParseOptions)
+        const ast = {fnCode:fnCodeAst as Node,fnCall:fnCallAst as Node };
         SvalPlus.fnAstCache.set(fnSrc.fnCode,ast);
 
         return ast;
@@ -257,7 +267,7 @@ class SvalPlus extends Sval {
 }
 interface FnSrc {
     fnCode:string,
-    fnName:string
+    fnName:string 
 }
 interface FnAst {
     fnCode:Node,
@@ -294,10 +304,12 @@ export const monitor = {
             listener,
             options:SvalPlus.defaultOptions
         });
-        const fnSrc = SvalPlus.getFnSrc(fn,inlineFns);
+
+        const fnSrc = SvalPlus.getFnSrc(fn);
+        fnSrc.fnCode += SvalPlus.inlineFunctions(inlineFns);
+
         const ast = SvalPlus.getFnAst(fnSrc);
-        
-        interpreter.run(ast.fnCode);//It only parses the function src once and subsequent calls only parse the call itself.so it means that any acorn overhead is only upon creation
+        interpreter.run(ast.fnCode);
         
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
@@ -306,7 +318,8 @@ export const monitor = {
             try {
                 interpreter.import({ args });
                 interpreter.run(ast.fnCall);
-                return interpreter.exports.result;
+                interpreter.injectedCaptures = false;
+                return interpreter.exports[SvalPlus.resultExport];
             }catch(err) {
                 if (err instanceof ReferenceError) {
                     throw new Error(
@@ -327,6 +340,11 @@ export const monitor = {
         return monitoredFn;
     }
 }
+
+//todo Only insert captures if the called function is the monitored one
+//todo Add capture to the inlined functions
+
+
 export { Var } from './scope/variable.ts'
 
 export {

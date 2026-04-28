@@ -59,5 +59,5 @@ perf(() => {
     const result = addClosure(1,3)
     console.log(result);
 });
-
+console.log(x());
 
