@@ -220,7 +220,7 @@ class SvalPlus extends Sval {
                     ${inlineFnSrc.fnCode}
                     return ${inlineFnSrc.fnName};
                 })()`
-                inlinedLogic += `\nconst ${name} = ${scopedFn}`;
+                inlinedLogic += `\nvar ${name} = ${scopedFn}`;
             }
             // Prepend inlined logic so it's available to the main function
             fnCode = inlinedLogic + fnCode;
