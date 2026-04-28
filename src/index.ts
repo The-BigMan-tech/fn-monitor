@@ -141,6 +141,7 @@ class Sval {
 }
 //*-----------------MY MONITOR-------------------------------------------------------------------------
 // the monitor is only very fast because it does zero unnecessary allocations
+//because the stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the langlistener will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
 
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
@@ -317,6 +318,7 @@ export const monitor = {
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
         
+        console.log(fnSrc.fnCode);
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
                 interpreter.fnBeforeMonitoring(...args);
@@ -333,7 +335,7 @@ export const monitor = {
                         Colors.orange(`\n-Monitored functions cannot access any non-default global variable.It must be passed as an argument.\n-If its an external closure,the caller's details but not the internals,will be tracked by the monitor.\n-You can use monitored closures if you want to capture any global variable into the monitored function once.`) +
                         chalk.red.underline(`\n\nTrace`) + `\n${err}`
                     )
-                }else throw err;
+                }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
             }
         }) as MonitoredFn<T>;
 
@@ -341,7 +343,7 @@ export const monitor = {
         return newFn ;
     },
     closure:<T extends Record<any,any>,U extends Fn>(variables:T,fn:U,listener:LangListener,inlineFns?:Record<string,Fn>)=> {
-        const monitoredFn = monitor.fn(fn,listener);
+        const monitoredFn = monitor.fn(fn,listener,inlineFns);
         captures.set(monitoredFns.get(monitoredFn)!,variables);
         return monitoredFn;
     }
