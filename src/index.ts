@@ -144,6 +144,7 @@ class Sval {
 
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
+import {v4 as uniqueID} from "uuid";
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
 
 class SvalPlus extends Sval {
@@ -198,8 +199,8 @@ class SvalPlus extends Sval {
         const isStandardDecl = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
 
         if (fnName.length === 0) {//handle unassigned anonymous functions
-            const anonymous = 'anonymousFn';
-            fnCode = `const ${anonymous} = ${fnString}`
+            const anonymous = 'anonymousFn_' + uniqueID().replace(/-/g, '');//this prevents name collisions with inlined functions
+            fnCode = `const ${anonymous} = ${fnString};`
             fnName = anonymous;
         }else if (isStandardDecl) {//handle function definition
             fnCode = fnString;
