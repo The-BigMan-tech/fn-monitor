@@ -1,6 +1,6 @@
 {
   "name": "script-monitor",
-  "version": "1.8.6",
+  "version": "2.0.0",
   "description": "Uses the sval interpreter to monitor functions",
   "type": "module",
   "main": "dist/script-monitor.min.js",

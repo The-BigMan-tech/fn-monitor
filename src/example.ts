@@ -53,10 +53,11 @@ perf(() => {
     console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
 
-
+const random = Math.round(Math.random() * 100);
 function hello2() {
-    console.log('Hello function');
+    console.log('Hello random number: ',random);
 }
+
 //CAPTURING
 const internalAdd2 = (a:number,b:number):number =>{
     hello2();
@@ -83,7 +84,7 @@ const addPseudoClosure = monitor.fn(internalAdd2,()=>undefined,
         inlineFns:{
             hello2:{
                 ref:hello2,
-                captures:null
+                captures:{random}
             }
         }
     }
