@@ -2,7 +2,6 @@ import { getOwnNames, createSandBox, globalObj  } from './share/util.ts'
 import { parse, Options, Node, Program } from 'acorn'
 import { EXPORTS, IMPORT, STRICT } from './share/const.ts'
 import Scope from './scope/index.ts'
-import PkgJson from '../package.json' with { type: 'json' }
 
 import { runAsync } from './share/async.ts'
 import { hoist as hoistAsync } from './evaluate/helper.ts'
@@ -47,8 +46,6 @@ function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): 
 }
 
 class Sval {
-  static version: string = PkgJson.version
-
   private options: Options = { ecmaVersion: 'latest' }
   private scope = new Scope(null, true,this)
 

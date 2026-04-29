@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config'
 import dts from 'vite-plugin-dts'
 import { builtinModules } from 'node:module'
-import pkg from './package.json' with { type: 'json' }
+
+import { readFileSync } from 'node:fs';
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 export default defineConfig({
     build: {
@@ -18,13 +20,18 @@ export default defineConfig({
                 ...builtinModules, 
                 ...builtinModules.map(m => `node:${m}`),
                 ...Object.keys(pkg.dependencies || {}),
-            ], // Add crypto here to prevent bundling it
+            ],
             output: {
                 // Prevent Rollup from renaming variables to short names
                 generatedCode: {
                     symbols: true,
                 },
-              preserveModules: true, // Optional: keeps files separate instead of one big bundle
+                preserveModules: true, // Optional: keeps files separate instead of one big bundle
+                preserveModulesRoot: 'src',
+                entryFileNames: '[name].js',// This forces Rollup to keep the original file name and path
+                // Ensures that even chunks keep their original folder structure
+                chunkFileNames: '[name].js',
+                assetFileNames: '[name][extname]',
             },
         },
     },
