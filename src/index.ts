@@ -195,7 +195,7 @@ class SvalPlus extends Sval {
     public static readonly resultExport:string = 'result';
     public static readonly argsVar = SvalPlus.sha256Key('args');
     public static readonly capturesVar = SvalPlus.sha256Key('captures');
-    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
+    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
 
     public static sha256Key(str:string):string {
@@ -260,13 +260,16 @@ class SvalPlus extends Sval {
         return fnCode;
     }
     public static getFnAst(fnSrc:FnSrc):FnAst {
-        const cachedAst = SvalPlus.fnAstCache.get(fnSrc.fnCode)
-        if (cachedAst) return cachedAst;
-
-        const fnCodeAst = meriyahParse(fnSrc.fnCode,SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(`\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`,SvalPlus.meriyahParseOptions)
-        const ast = {fnCode:fnCodeAst as Node,fnCall:fnCallAst as Node };
-        SvalPlus.fnAstCache.set(fnSrc.fnCode,ast);
+        const fnCodeHash = SvalPlus.sha256Key(fnSrc.fnCode);
+        const cached = SvalPlus.fnAstCache.get(fnCodeHash);
+        if (cached) {
+            return cached;
+        }
+        const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
+        const fnCallAst = meriyahParse(`\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`, SvalPlus.meriyahParseOptions);
+        
+        const ast = { fnCode: fnCodeAst as Node, fnCall: fnCallAst as Node };
+        SvalPlus.fnAstCache.set(fnCodeHash, ast);
 
         return ast;
     }
@@ -361,8 +364,6 @@ export const monitor = {
 }
 
 //todo Only insert captures if the called function is the monitored one
-//todo Add capture to the inlined functions
-
 
 export { Var } from './scope/variable.ts'
 

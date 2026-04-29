@@ -1,5 +1,7 @@
-import { CallExprEvent, monitor } from "./index.ts";
+import { monitor } from "./index.ts";
 import chalk from "chalk";
+
+//the perf profiles dont include the parsing step.but thanks to meriyah,this is decently fast and its cached 
 
 function perf(fn:(...args:any[])=>void) {
     const start = performance.now();
@@ -10,7 +12,9 @@ function perf(fn:(...args:any[])=>void) {
 function hello() {
     console.log('Hello function');
 }
-//Regular function
+
+
+//NATIVE FUNCTION
 const arrToAdd = [1,2,3,4,5,6,7,8,9,10];
 
 const internalAdd = (nums:number[],hello:()=>void)=> {
@@ -26,7 +30,7 @@ perf(()=>{
     console.log(result);
 })
 
-//Monitored function
+//MONITORED FUNCTION
 let count = 0;
 let otherNodes = 0;
 
@@ -45,10 +49,12 @@ monitor.preMonitoring(add,()=>{
 })
 
 perf(() => {
-    const result = add(arrToAdd, hello);
+    const result = add(arrToAdd, hello);//passing an external dependency through its arguments
     console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
 
+
+//CAPTURING
 const internalAdd2 = (a:number,b:number):number =>{
     hello();
     return a + b;
@@ -66,6 +72,8 @@ perf(() => {
     console.log(result);
 });
 
+
+//INLINING
 const addPseudoClosure = monitor.fn(internalAdd2,()=>undefined,
     {
         captures:null,
