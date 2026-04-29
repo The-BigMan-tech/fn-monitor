@@ -146,6 +146,7 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
+import jsBeatutify from "js-beautify";
 import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn } from './monitored-events.ts'
 
 
@@ -217,7 +218,7 @@ class SvalPlus extends Sval {
             intermediateFnCode = `\nconst ${intermediateFn} = ${fnString};`
         }  
 
-        const capturedKeys = (capturesVar !== null) ?Object.keys(this.exports[capturesVar]):[];
+        const capturedKeys = (capturesVar !== null) ?Object.keys(this.exports[capturesVar]).sort():[];//i used sort here to increase the cache hit rate
         const storeCaptures = (capturedKeys.length > 0) 
             ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesVar};`
             :'';
@@ -241,7 +242,7 @@ class SvalPlus extends Sval {
             let declarations = '';
             let assignments = '';
 
-            for (const name in inlineFns) {
+            for (const name of Object.keys(inlineFns).sort()) {//used sort here to increase the cache hit rate
                 const inlineFn = inlineFns[name];
                 const inlineFnSrc = this.getFnSrc(inlineFn,null);//passing undefined here prevents infinite recursion
 
@@ -329,7 +330,7 @@ export const monitor = {
         const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);
         fnSrc.fnCode += interpreter.getInlinedFunctions(dependencies?.inlineFns || Object.create(null));
 
-        console.log(fnSrc.fnCode);
+        // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
 
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
