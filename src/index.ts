@@ -371,8 +371,6 @@ export const monitor = {
     },
 }
 
-//todo Only insert captures if the called function is the monitored one
-
 export { Var } from './scope/variable.ts'
 
 export {
