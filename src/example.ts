@@ -54,15 +54,18 @@ perf(() => {
 });
 
 
+function hello2() {
+    console.log('Hello function');
+}
 //CAPTURING
 const internalAdd2 = (a:number,b:number):number =>{
-    hello();
+    hello2();
     return a + b;
 }
 const addClosure = monitor.fn(internalAdd2,
     ()=>undefined,
     {
-        captures:{hello},
+        captures:{ hello2 },
         inlineFns:null
     }
 );
@@ -77,7 +80,12 @@ perf(() => {
 const addPseudoClosure = monitor.fn(internalAdd2,()=>undefined,
     {
         captures:null,
-        inlineFns:{hello}
+        inlineFns:{
+            hello2:{
+                ref:hello2,
+                captures:null
+            }
+        }
     }
 );
 perf(() => {

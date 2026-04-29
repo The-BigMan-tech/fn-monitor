@@ -235,16 +235,20 @@ class SvalPlus extends Sval {
             fnName:finalFnName 
         };
     }
-    public getInlinedFunctions(inlineFns:Record<string,Fn> | undefined):string {
+    public getInlinedFunctions(inlineFns:Record<string,InlineFn> | null | undefined):string {
         let fnCode:string = '';
 
-        if (inlineFns !== undefined) {
+        if ((inlineFns !== null) && (inlineFns !== undefined)) {
             let declarations = '';
             let assignments = '';
 
-            for (const name of Object.keys(inlineFns).sort()) {//used sort here to increase the cache hit rate
+            for (const [index,name] of Object.keys(inlineFns).sort().entries()) {//used sort here to increase the cache hit rate
                 const inlineFn = inlineFns[name];
-                const inlineFnSrc = this.getFnSrc(inlineFn,null);//passing undefined here prevents infinite recursion
+
+                const inlineCapturesVar = SvalPlus.sha256Key(`inlineCaptures_${index}`)
+                this.exports[inlineCapturesVar] = inlineFn.captures || Object.create(null);
+
+                const inlineFnSrc = this.getFnSrc(inlineFn.ref,inlineCapturesVar);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
@@ -299,9 +303,13 @@ declare const __brand: unique symbol;
 export type Brand<T, B> = T & { readonly [__brand]:B };
 export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>;
 
+interface InlineFn {
+    ref:Fn,
+    captures:Record<string,any> | null
+}
 export interface Dependencies {
     captures:Record<string,any> | null,
-    inlineFns:Record<string,Fn> | null
+    inlineFns:Record<string,InlineFn> | null
 }
 
 const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collection
@@ -331,7 +339,7 @@ export const monitor = {
         interpreter.exports[SvalPlus.capturesVar] = dependencies?.captures || Object.create(null);
 
         const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);
-        fnSrc.fnCode += interpreter.getInlinedFunctions(dependencies?.inlineFns || Object.create(null));
+        fnSrc.fnCode += interpreter.getInlinedFunctions(dependencies?.inlineFns);
 
         // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
 
