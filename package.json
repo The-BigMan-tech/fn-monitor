@@ -1,55 +1,34 @@
 {
-  "name": "script-monitor",
-  "version": "2.0.0",
-  "description": "Uses the sval interpreter to monitor functions",
-  "type": "module",
-  "main": "dist/script-monitor.min.js",
-  "unpkg": "dist/script-monitor.min.js",
-  "module": "dist/script-monitor.js",
-  "types": "dist/src/script-monitor.d.ts",
-  "exports": {
-    "types": "./dist/src/script-monitor.d.ts",
-    "import": "./dist/script-monitor.js",
-    "require": "./dist/script-monitor.umd.cjs"
-  },
-  "scripts": {
-    "start": "vite",
-    "test": "node scripts && vitest run --coverage",
-    "build": "vite build && node scripts/legacy.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Siubaak/sval.git"
-  },
-  "keywords": [
-    "sval",
-    "js",
-    "javascript",
-    "eval",
-    "interpreter"
-  ],
-  "author": "baakqiu",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Siubaak/sval/issues"
-  },
-  "homepage": "https://github.com/Siubaak/sval#readme",
-  "dependencies": {
-    "@types/estree": "^1.0.8",
-    "@types/js-beautify": "^1.14.3",
-    "acorn": "^8.14.0",
-    "chalk": "^5.6.2",
-    "js-beautify": "^1.15.4",
-    "lru-cache": "^11.3.5",
-    "meriyah": "^7.1.0"
-  },
-  "devDependencies": {
-    "@swc/core": "^1.11.24",
-    "@types/node": "^22.15.3",
-    "@vitest/coverage-v8": "^3.1.2",
-    "happy-dom": "^20.0.11",
-    "vite": "^6.3.4",
-    "vite-plugin-dts": "^4.5.3",
-    "vitest": "^3.1.2"
-  }
+    "name": "script-monitor",
+    "version": "2.0.0",
+    "description": "An extension of the sval interpreter to monitor functions as they execute",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/src/index.d.ts",
+    "scripts": {
+        "start": "vite",
+        "test": "node scripts && vitest run --coverage",
+        "build": "vite build"
+    },
+    "keywords": [],
+    "author": "",
+
+    "dependencies": {
+        "@types/estree": "^1.0.8",
+        "@types/js-beautify": "^1.14.3",
+        "acorn": "^8.14.0",
+        "chalk": "^5.6.2",
+        "js-beautify": "^1.15.4",
+        "lru-cache": "^11.3.5",
+        "meriyah": "^7.1.0"
+    },
+    "devDependencies": {
+        "@swc/core": "^1.11.24",
+        "@types/node": "^22.15.3",
+        "@vitest/coverage-v8": "^3.1.2",
+        "happy-dom": "^20.0.11",
+        "vite": "^6.3.4",
+        "vite-plugin-dts": "^4.5.3",
+        "vitest": "^3.1.2"
+    }
 }
