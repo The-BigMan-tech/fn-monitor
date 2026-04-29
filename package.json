@@ -1,10 +1,10 @@
 {
     "name": "script-monitor",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "An extension of the sval interpreter to monitor functions as they execute",
     "type": "module",
     "main": "dist/index.js",
-    "types": "dist/src/index.d.ts",
+    "types": "dist/index.d.ts",
     "scripts": {
         "start": "vite",
         "test": "node scripts && vitest run --coverage",
