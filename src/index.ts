@@ -146,7 +146,7 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
-import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn, captures } from './monitored-events.ts'
+import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn } from './monitored-events.ts'
 
 
 class SvalPlus extends Sval {
@@ -190,37 +190,51 @@ class SvalPlus extends Sval {
         demand:this.shop.demand,
         sales:()=>this.shop.sales
     }
+
     public static readonly resultExport:string = 'result';
+    public static readonly argsVar = SvalPlus.sha256Key('args');
+    public static readonly capturesVar = SvalPlus.sha256Key('captures');
+    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
 
-    private static reservedNames = new Set(['args']);
 
-    private static checkIfReserved(name:string) {
-        if (SvalPlus.reservedNames.has(name)) {//Sval will naturally handle duplicate declaration errors but i still chose to explicitly handle the case of colliding with a reserved name 
-            throw new Error(chalk.red(`A monitored or inlined function cannot use a reserved name.Found ${name}`))
-        }
+    public static sha256Key(str:string):string {
+        return 'generated_' + crypto.createHash('sha256').update(str).digest('hex');
     }
-    public static getFnSrc(fn:Fn):FnSrc  {
+    public getFnSrc(fn:Fn,capturesVar:string | null):FnSrc  {
         const fnString = fn.toString();
-        const isStandardDecl = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
+        const hash = SvalPlus.sha256Key(fnString);
+        const isDeclaration = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
 
-        let fnName = fn.name 
-        let fnCode:string = '';
+        const intermediateFn:string = 'intermediateFn_' + hash;
+        let intermediateFnCode:string = '';
 
-        if (fnName.length === 0) {//handle unassigned anonymous functions
-            const hash = crypto.createHash('sha256').update(fnString).digest('hex');
-            const anonymous = 'anonymousFn_' + hash;//this prevents name collisions with inlined functions
-            
-            fnCode = `const ${anonymous} = ${fnString};`
-            fnName = anonymous;
-        }else if (isStandardDecl) {//handle function definition
-            fnCode = fnString;
-        }else {//handle anonymous fns assigned to a variable
-            fnCode = `const ${fnName} = ${fnString};`
-        }
-        SvalPlus.checkIfReserved(fnName);
-        return { fnCode,fnName };
+        if (isDeclaration) {//handle function definition
+            intermediateFnCode = `\nconst ${intermediateFn} = (()=>{
+                ${fnString};
+                return ${fn.name}
+            })();`
+        }else {//handle unassigned anonymous functions
+            intermediateFnCode = `\nconst ${intermediateFn} = ${fnString};`
+        }  
+
+        const capturedKeys = (capturesVar !== null) ?Object.keys(this.exports[capturesVar]):[];
+        const storeCaptures = (capturedKeys.length > 0) 
+            ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesVar};`
+            :'';
+
+        const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
+        const finalFnCode = `\nconst ${finalFnName} = (()=>{
+            ${storeCaptures}
+            ${intermediateFnCode}
+            return ${intermediateFn};
+        })();`
+
+        return { 
+            fnCode:finalFnCode,
+            fnName:finalFnName 
+        };
     }
-    public static inlineFunctions(inlineFns:Record<string,Fn> | undefined):string {
+    public getInlinedFunctions(inlineFns:Record<string,Fn> | undefined):string {
         let fnCode:string = '';
 
         if (inlineFns !== undefined) {
@@ -228,10 +242,8 @@ class SvalPlus extends Sval {
             let assignments = '';
 
             for (const name in inlineFns) {
-                SvalPlus.checkIfReserved(name);
-
                 const inlineFn = inlineFns[name];
-                const inlineFnSrc = SvalPlus.getFnSrc(inlineFn);//passing undefined here prevents infinite recursion
+                const inlineFnSrc = this.getFnSrc(inlineFn,null);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
@@ -246,16 +258,12 @@ class SvalPlus extends Sval {
         }
         return fnCode;
     }
-    public injectedCaptures = {value:false}
-
-    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 100 });
-
     public static getFnAst(fnSrc:FnSrc):FnAst {
         const cachedAst = SvalPlus.fnAstCache.get(fnSrc.fnCode)
         if (cachedAst) return cachedAst;
 
         const fnCodeAst = meriyahParse(fnSrc.fnCode,SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(`exports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...args);`,SvalPlus.meriyahParseOptions)
+        const fnCallAst = meriyahParse(`\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`,SvalPlus.meriyahParseOptions)
         const ast = {fnCode:fnCodeAst as Node,fnCall:fnCallAst as Node };
         SvalPlus.fnAstCache.set(fnSrc.fnCode,ast);
 
@@ -285,7 +293,12 @@ declare const __brand: unique symbol;
 
 // 2. Create a reusable Brand utility
 export type Brand<T, B> = T & { readonly [__brand]:B };
-export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>
+export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>;
+
+export interface Dependencies {
+    captures:Record<string,any> | null,
+    inlineFns:Record<string,Fn> | null
+}
 
 const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collection
 
@@ -303,7 +316,7 @@ export const monitor = {
         }
         interpreter.fnBeforeMonitoring = cb;
     },
-    fn<T extends Fn>(fn:T,listener:LangListener,inlineFns?:Record<string,Fn>):MonitoredFn<T> {
+    fn<T extends Fn>(fn:T,listener:LangListener,dependencies?:Dependencies):MonitoredFn<T> {
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
@@ -311,22 +324,24 @@ export const monitor = {
             listener,
             options:SvalPlus.defaultOptions
         });
+        interpreter.exports[SvalPlus.capturesVar] = dependencies?.captures || Object.create(null);
 
-        const fnSrc = SvalPlus.getFnSrc(fn);
-        fnSrc.fnCode += SvalPlus.inlineFunctions(inlineFns);
+        const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);
+        fnSrc.fnCode += interpreter.getInlinedFunctions(dependencies?.inlineFns || Object.create(null));
+
+        console.log(fnSrc.fnCode);
 
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
+
         
-        console.log(fnSrc.fnCode);
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
                 interpreter.fnBeforeMonitoring(...args);
             }
             try {
-                interpreter.import({ args });
+                interpreter.import({ [SvalPlus.argsVar]:args });
                 interpreter.run(ast.fnCall);
-                interpreter.injectedCaptures.value = false;
                 return interpreter.exports[SvalPlus.resultExport];
             }catch(err) {
                 if (err instanceof ReferenceError) {
@@ -342,11 +357,6 @@ export const monitor = {
         monitoredFns.set(newFn,interpreter);
         return newFn ;
     },
-    closure:<T extends Record<any,any>,U extends Fn>(variables:T,fn:U,listener:LangListener,inlineFns?:Record<string,Fn>)=> {
-        const monitoredFn = monitor.fn(fn,listener,inlineFns);
-        captures.set(monitoredFns.get(monitoredFn)!,variables);
-        return monitoredFn;
-    }
 }
 
 //todo Only insert captures if the called function is the monitored one

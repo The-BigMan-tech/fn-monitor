@@ -182,16 +182,7 @@ interface SvalPlus {
     shop:SvalShop,
     userShop:UserShop,
     scopeForEvent:ScopeForEvent,
-    injectedCaptures:{value:boolean},
     supplyForDemand:null | SupplyForDemand<Demand>
-}
-export const captures = new WeakMap<SvalPlus,Record<any,any>>();
-
-function injectCaptures(interpreter:SvalPlus,svalScope:Scope<SvalPlus>) {
-    const capturedScope = captures.get(interpreter)!;
-    for (const k in capturedScope) {
-        svalScope.const(k, capturedScope[k]);
-    }
 }
 export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     const interpreter = svalScope.interpreter;
@@ -202,17 +193,10 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
         return;//we dont want to track any action thats not inside the monitored function
     }
 
-    const node = acornNode as EsNode;
-    if (captures.has(interpreter)) {
-        if (!interpreter.injectedCaptures.value) {//since the monitored fn will always be the first function that's not ran in the root,we can immediately set the captured variables here and lock it.by the time it does call an inline fn,it will be after the capture would have been injected once
-            injectCaptures(interpreter,svalScope);
-            interpreter.injectedCaptures.value = true;
-        }
-    }
     if (interpreter.langListener) {
         try {
             interpreter.reusables.svalScope = svalScope;
-            interpreter.reusables.node = node;
+            interpreter.reusables.node = acornNode as EsNode
             interpreter.supplyForDemand = supplyForDemand;
             interpreter.langListener(interpreter.userShop);
         }finally {

@@ -53,11 +53,29 @@ const internalAdd2 = (a:number,b:number):number =>{
     hello();
     return a + b;
 }
-const addClosure = monitor.closure({hello},internalAdd2,()=>undefined);
+const addClosure = monitor.fn(internalAdd2,
+    ()=>undefined,
+    {
+        captures:{hello},
+        inlineFns:null
+    }
+);
 
 perf(() => {
     const result = addClosure(1,3)
     console.log(result);
 });
-console.log(x());
+
+const addPseudoClosure = monitor.fn(internalAdd2,()=>undefined,
+    {
+        captures:null,
+        inlineFns:{hello}
+    }
+);
+perf(() => {
+    const result = addPseudoClosure(4,8);
+    console.log(result);
+});
+
+
 
