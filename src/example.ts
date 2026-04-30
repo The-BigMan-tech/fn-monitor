@@ -45,11 +45,11 @@ const add = monitor.fn({
                 otherNodes += 1;
             })
         }
+    },
+    beforeEachCall:()=>{
+        console.log('Entered the monitored add function');
     }
 });
-monitor.preMonitoring(add,()=>{
-    console.log('Entered the monitored add function');
-})
 
 perf(() => {
     const result = add(arrToAdd, hello);//passing an external dependency through its arguments

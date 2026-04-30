@@ -149,11 +149,12 @@ import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, Variable
 
 class SvalPlus extends Sval {
     public langListener:LangListener | null = null;
-    public fnBeforeMonitoring:Fn | null = null;
+    public fnBeforeEachCall:Fn | undefined = undefined;
     public supplyForDemand:null | SupplyForDemand<Demand> = null;
 
-    constructor(args:{listener:LangListener,options:SvalOptions}) {
+    constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
+        this.fnBeforeEachCall = this.fnBeforeEachCall;
         this.langListener = args.listener;
     }
     public reusables:Reusables = {
@@ -315,24 +316,15 @@ const Colors = {
     orange:chalk.hex('#f6c098')
 };
 export const monitor = {
-    preMonitoring:(fn:MonitoredFn<Fn>,cb:Fn)=>{
-        if (!monitoredFns.has(fn)) {
-            throw new Error(chalk.red(`The beforeMonitoring hook of the monitor can only be used on a monitored function`))
-        }
-        const interpreter = monitoredFns.get(fn)!
-        if (interpreter.fnBeforeMonitoring !== null) {
-            throw new Error(chalk.red(`You can only set the function called before monitoring once.`))
-        }
-        interpreter.fnBeforeMonitoring = cb;
-    },
-    fn<T extends Fn>(setup:{fn:T,listener:LangListener,dependencies?:Dependencies}):MonitoredFn<T> {
-        const {fn,listener,dependencies} = setup;
+    fn<T extends Fn>(setup:{fn:T,listener:LangListener,dependencies?:Dependencies,beforeEachCall?:(...args:Parameters<T>)=>void}):MonitoredFn<T> {
+        const {fn,listener,dependencies,beforeEachCall} = setup;
 
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
         const interpreter = new SvalPlus({
             listener,
+            fnBeforeEachCall:beforeEachCall,
             options:SvalPlus.defaultOptions
         });
         interpreter.exports[SvalPlus.capturesVar] = dependencies?.captures || Object.create(null);
@@ -346,8 +338,8 @@ export const monitor = {
         // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
 
         const newFn = ((...args: any[]) => {
-            if (interpreter.fnBeforeMonitoring !== null) {
-                interpreter.fnBeforeMonitoring(...args);
+            if (interpreter.fnBeforeEachCall !== undefined) {
+                interpreter.fnBeforeEachCall(...args);
             }
             try {
                 interpreter.import({ [SvalPlus.argsVar]:args });
