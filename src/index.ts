@@ -305,7 +305,7 @@ export type Brand<T, B> = T & { readonly [__brand]:B };
 export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>;
 
 interface Metadata<T extends Fn> {
-    ref:T,
+    ref:T extends MonitoredFn<Fn> ? never : T,
     captures?:Record<string,any>
 }
 interface MonitorFnSetup<T extends Fn> {

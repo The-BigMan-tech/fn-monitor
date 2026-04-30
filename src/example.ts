@@ -70,7 +70,7 @@ const internalAdd2 = (a:number,b:number):number =>{
 }
 const addClosure = monitor.fn({
     main:{
-        ref:add,
+        ref:internalAdd2,
         captures:{ hello2 },
     },
     listener:()=>undefined,
