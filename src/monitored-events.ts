@@ -11,7 +11,8 @@ import {
     DoWhileStatement, ForOfStatement, ForInStatement, 
     IfStatement,SwitchStatement,TryStatement,ThrowStatement,CatchClause,
     VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression,LabeledStatement,
-    BreakStatement,ContinueStatement,ArrowFunctionExpression,ConditionalExpression,NewExpression
+    BreakStatement,ContinueStatement,ArrowFunctionExpression,ConditionalExpression,NewExpression,
+    YieldExpression
 } from "estree";
 
 import { Var } from "./scope/variable.ts";
@@ -47,6 +48,7 @@ export type Demand =
     | ArrowFunctionExpression['type']
     | ConditionalExpression['type']
     | NewExpression['type']
+    | YieldExpression['type']
     | 'Any'; // The fallback / default
 
 export type Supply = (
@@ -78,6 +80,7 @@ export type Supply = (
     Record<ArrowFunctionExpression['type'],ArrowFnExprEvent> &
     Record<ConditionalExpression['type'],TernaryExprEvent> &
     Record<NewExpression['type'],NewExprEvent> &
+    Record<YieldExpression['type'],YieldExprEvent> &
     Record<'Any', LangEvent>
 );
 type OnSupply<T extends Demand> = (getEvent:()=>Supply[T])=>void;
@@ -167,6 +170,9 @@ export class TernaryExprEvent extends LangEvent<ConditionalExpression> {
 }
 export class NewExprEvent extends LangEvent<NewExpression> {
     constructor(node:NewExpression, scope: ScopeForEvent) { super(node, scope) }
+}
+export class YieldExprEvent extends LangEvent<YieldExpression> {
+    constructor(node:YieldExpression, scope: ScopeForEvent) { super(node, scope) }
 }
 
 // Statements & Control Flow
@@ -374,6 +380,10 @@ const createEvent = <T extends Demand>(demand:T,node:EsNode,scope:ScopeForEvent)
         }
         case 'ConditionalExpression': {
             event = new TernaryExprEvent(node as ConditionalExpression, scope);
+            break;
+        }
+        case 'YieldExpression': {
+            event = new YieldExprEvent(node as YieldExpression, scope);
             break;
         }
         case 'Any': default: {

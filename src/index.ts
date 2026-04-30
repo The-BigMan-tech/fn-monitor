@@ -394,6 +394,7 @@ export {
     NewExprEvent,
     ArrowFnExprEvent,
     TernaryExprEvent,
+    YieldExprEvent,
 
     // Statements & Control Flow
     ReturnStmtEvent,
