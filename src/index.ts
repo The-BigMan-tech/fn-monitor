@@ -287,6 +287,9 @@ class SvalPlus extends Sval {
         sandBox: true, // Standard for eDSLs/Sandboxes,
     } as const;
 }
+const Colors = {
+    orange:chalk.hex('#f6c098')
+};
 interface FnSrc {
     fnCode:string,
     fnName:string 
@@ -305,11 +308,6 @@ interface Metadata<T extends Fn> {
     ref:T,
     captures?:Record<string,any>
 }
-const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collection
-
-const Colors = {
-    orange:chalk.hex('#f6c098')
-};
 interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
     listener:LangListener,
@@ -321,9 +319,6 @@ export const monitor = {
         const {ref:fn,captures} = setup.main;
         const {listener,beforeEachCall,inlineFunctions} = setup;
 
-        if (monitoredFns.has(fn)) {
-            throw new Error(chalk.red(`You cannot monitor a monitored function`))
-        }
         const interpreter = new SvalPlus({
             listener,
             fnBeforeEachCall:beforeEachCall,
@@ -338,7 +333,7 @@ export const monitor = {
         interpreter.run(ast.fnCode);
 
         // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
-        const newFn = ((...args: any[]) => {
+        return ((...args: any[]) => {
             if (interpreter.fnBeforeEachCall !== undefined) {
                 interpreter.fnBeforeEachCall(...args);
             }
@@ -348,17 +343,15 @@ export const monitor = {
                 return interpreter.exports[SvalPlus.resultExport];
             }catch(err) {
                 if (err instanceof ReferenceError) {
-                    throw new Error(
+                    const msg = (
                         chalk.red.underline(`\nReference Error`) +
-                        Colors.orange(`\n-Monitored functions cannot access any non-default global variable.\n-It must be either be passed as an argument on each call,captured as a dependency on creation or inlined as a dependency.\n-If its an external closure,the caller's details but not the internals,will be tracked by the monitor.`) +
+                        Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
                         chalk.red.underline(`\n\nTrace`) + `\n${err}`
                     )
+                    throw new Error(msg)
                 }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
             }
         }) as MonitoredFn<T>;
-
-        monitoredFns.set(newFn,interpreter);
-        return newFn ;
     },
 }
 
