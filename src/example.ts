@@ -35,7 +35,9 @@ let count = 0;
 let otherNodes = 0;
 
 const add = monitor.fn({
-    fn:internalAdd, 
+    main:{
+        ref:internalAdd, 
+    },
     listener:(shop) => {
         shop.demand('AssignmentExpression', (getEvent) => {
             count += 1;
@@ -67,12 +69,11 @@ const internalAdd2 = (a:number,b:number):number =>{
     return a + b;
 }
 const addClosure = monitor.fn({
-    fn:internalAdd2,
-    listener:()=>undefined,
-    dependencies:{
+    main:{
+        ref:internalAdd2,
         captures:{ hello2 },
-        inlineFns:null
-    }
+    },
+    listener:()=>undefined,
 });
 
 perf(() => {
@@ -83,17 +84,17 @@ perf(() => {
 
 //INLINING
 const addPseudoClosure = monitor.fn({
-    fn:internalAdd2,
+    main:{
+        ref:internalAdd2,
+    },
     listener:()=>undefined,
-    dependencies:{
-        captures:null,
-        inlineFns:{
-            hello2:{
-                ref:hello2,
-                captures:{random}
-            }
+    inlineFunctions:{
+        hello2:{
+            ref:hello2,
+            captures:{random}
         }
-    }
+    },
+    
 });
 perf(() => {
     const result = addPseudoClosure(4,8);

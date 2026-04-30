@@ -199,7 +199,7 @@ class SvalPlus extends Sval {
     public static sha256Key(str:string):string {
         return 'generated_' + crypto.createHash('sha256').update(str).digest('hex');
     }
-    public getFnSrc(fn:Fn,capturesVar:string | null):FnSrc  {
+    public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {
         const fnString = fn.toString();
         const hash = SvalPlus.sha256Key(fnString);
         const isDeclaration = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
@@ -233,10 +233,10 @@ class SvalPlus extends Sval {
             fnName:finalFnName 
         };
     }
-    public getInlinedFunctions(inlineFns:Record<string,InlineFn> | null | undefined):string {
+    public getInlinedFunctions(inlineFns:Record<string,Metadata<Fn>> | undefined):string {
         let fnCode:string = '';
 
-        if ((inlineFns !== null) && (inlineFns !== undefined)) {
+        if (inlineFns !== undefined) {
             let declarations = '';
             let assignments = '';
 
@@ -301,23 +301,25 @@ declare const __brand: unique symbol;
 export type Brand<T, B> = T & { readonly [__brand]:B };
 export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>;
 
-interface InlineFn {
-    ref:Fn,
-    captures:Record<string,any> | null
+interface Metadata<T extends Fn> {
+    ref:T,
+    captures?:Record<string,any>
 }
-export interface Dependencies {
-    captures:Record<string,any> | null,
-    inlineFns:Record<string,InlineFn> | null
-}
-
 const monitoredFns = new WeakMap<Fn,SvalPlus>();//to allow for garbage collection
 
 const Colors = {
     orange:chalk.hex('#f6c098')
 };
+interface MonitorFnSetup<T extends Fn> {
+    main:Metadata<T>,
+    listener:LangListener,
+    inlineFunctions?:Record<string,Metadata<Fn>>
+    beforeEachCall?:(...args:Parameters<T>)=>void
+}
 export const monitor = {
-    fn<T extends Fn>(setup:{fn:T,listener:LangListener,dependencies?:Dependencies,beforeEachCall?:(...args:Parameters<T>)=>void}):MonitoredFn<T> {
-        const {fn,listener,dependencies,beforeEachCall} = setup;
+    fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
+        const {ref:fn,captures} = setup.main;
+        const {listener,beforeEachCall,inlineFunctions} = setup;
 
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
@@ -327,16 +329,15 @@ export const monitor = {
             fnBeforeEachCall:beforeEachCall,
             options:SvalPlus.defaultOptions
         });
-        interpreter.exports[SvalPlus.capturesVar] = dependencies?.captures || Object.create(null);
+        interpreter.exports[SvalPlus.capturesVar] = captures || Object.create(null);
 
         const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);
-        fnSrc.fnCode += interpreter.getInlinedFunctions(dependencies?.inlineFns);
+        fnSrc.fnCode += interpreter.getInlinedFunctions(inlineFunctions);
 
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
 
         // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
-
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeEachCall !== undefined) {
                 interpreter.fnBeforeEachCall(...args);
