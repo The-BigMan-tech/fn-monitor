@@ -6,13 +6,14 @@ import { Node as AcornNode } from "acorn";
 import { Node as EsNode} from "estree";
 import { 
     Literal ,BinaryExpression, CallExpression, AssignmentExpression, 
-    UpdateExpression, LogicalExpression, MemberExpression, 
+    UpdateExpression, LogicalExpression, MemberExpression,
     ReturnStatement,ForStatement, WhileStatement, 
     DoWhileStatement, ForOfStatement, ForInStatement, 
     IfStatement,SwitchStatement,TryStatement,ThrowStatement,CatchClause,
     VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression,LabeledStatement,
-    BreakStatement,ContinueStatement
+    BreakStatement,ContinueStatement,ArrowFunctionExpression,ConditionalExpression,NewExpression
 } from "estree";
+
 import { Var } from "./scope/variable.ts";
 
 export type Fn = (...args:any[])=>any;
@@ -43,6 +44,9 @@ export type Demand =
     | LabeledStatement['type']
     | BreakStatement['type']
     | ContinueStatement['type']
+    | ArrowFunctionExpression['type']
+    | ConditionalExpression['type']
+    | NewExpression['type']
     | 'Any'; // The fallback / default
 
 export type Supply = (
@@ -71,6 +75,9 @@ export type Supply = (
     Record<LabeledStatement['type'], LabeledStmtEvent> &
     Record<BreakStatement['type'],BreakStmtEvent> &
     Record<ContinueStatement['type'],ContinueStmtEvent> &
+    Record<ArrowFunctionExpression['type'],ArrowFnExprEvent> &
+    Record<ConditionalExpression['type'],TernaryExprEvent> &
+    Record<NewExpression['type'],NewExprEvent> &
     Record<'Any', LangEvent>
 );
 type OnSupply<T extends Demand> = (getEvent:()=>Supply[T])=>void;
@@ -151,6 +158,15 @@ export class AwaitExprEvent extends LangEvent<AwaitExpression> {
 }
 export class FuncExprEvent extends LangEvent<FunctionExpression> {
     constructor(node: FunctionExpression, scope: ScopeForEvent) { super(node, scope) }
+}
+export class ArrowFnExprEvent extends LangEvent<ArrowFunctionExpression> {
+    constructor(node:ArrowFunctionExpression, scope: ScopeForEvent) { super(node, scope) }
+}
+export class TernaryExprEvent extends LangEvent<ConditionalExpression> {
+    constructor(node:ConditionalExpression, scope: ScopeForEvent) { super(node, scope) }
+}
+export class NewExprEvent extends LangEvent<NewExpression> {
+    constructor(node:NewExpression, scope: ScopeForEvent) { super(node, scope) }
 }
 
 // Statements & Control Flow
@@ -346,6 +362,18 @@ const createEvent = <T extends Demand>(demand:T,node:EsNode,scope:ScopeForEvent)
         }
         case 'ContinueStatement': {
             event = new ContinueStmtEvent(node as ContinueStatement, scope);
+            break;
+        }
+        case 'NewExpression': {
+            event = new NewExprEvent(node as NewExpression, scope);
+            break;
+        }
+        case 'ArrowFunctionExpression': {
+            event = new ArrowFnExprEvent(node as ArrowFunctionExpression, scope);
+            break;
+        }
+        case 'ConditionalExpression': {
+            event = new TernaryExprEvent(node as ConditionalExpression, scope);
             break;
         }
         case 'Any': default: {

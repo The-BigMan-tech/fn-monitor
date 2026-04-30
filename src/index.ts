@@ -391,6 +391,9 @@ export {
     MemberExprEvent,
     AwaitExprEvent,
     FuncExprEvent,
+    NewExprEvent,
+    ArrowFnExprEvent,
+    TernaryExprEvent,
 
     // Statements & Control Flow
     ReturnStmtEvent,
