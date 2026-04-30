@@ -10,7 +10,8 @@ import {
     ReturnStatement,ForStatement, WhileStatement, 
     DoWhileStatement, ForOfStatement, ForInStatement, 
     IfStatement,SwitchStatement,TryStatement,ThrowStatement,CatchClause,
-    VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression
+    VariableDeclaration, FunctionDeclaration, AwaitExpression,FunctionExpression,LabeledStatement,
+    BreakStatement,ContinueStatement
 } from "estree";
 import { Var } from "./scope/variable.ts";
 
@@ -39,6 +40,9 @@ export type Demand =
     | DoWhileStatement['type']
     | ForOfStatement['type']
     | ForInStatement['type']
+    | LabeledStatement['type']
+    | BreakStatement['type']
+    | ContinueStatement['type']
     | 'Any'; // The fallback / default
 
 export type Supply = (
@@ -64,6 +68,9 @@ export type Supply = (
     Record<DoWhileStatement['type'], DoWhileStmtEvent> &
     Record<ForOfStatement['type'], ForOfStmtEvent> &
     Record<ForInStatement['type'], ForInStmtEvent> &
+    Record<LabeledStatement['type'], LabeledStmtEvent> &
+    Record<BreakStatement['type'],BreakStmtEvent> &
+    Record<ContinueStatement['type'],ContinueStmtEvent> &
     Record<'Any', LangEvent>
 );
 export interface UserShop {
@@ -165,6 +172,15 @@ export class ForOfStmtEvent extends LangEvent<ForOfStatement> {
 export class ForInStmtEvent extends LangEvent<ForInStatement> {
     constructor(node: ForInStatement, scope: ScopeForEvent) { super(node, scope) }
 }
+export class LabeledStmtEvent extends LangEvent<LabeledStatement> {
+    constructor(node:LabeledStatement, scope: ScopeForEvent) { super(node, scope) }
+}
+export class BreakStmtEvent extends LangEvent<BreakStatement> {
+    constructor(node:BreakStatement, scope: ScopeForEvent) { super(node, scope) }
+}
+export class ContinueStmtEvent extends LangEvent<ContinueStatement> {
+    constructor(node:ContinueStatement, scope: ScopeForEvent) { super(node, scope) }
+}
 
 // Data
 export class LiteralEvent extends LangEvent<Literal> {
@@ -192,7 +208,6 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     if (atRoot) {
         return;//we dont want to track any action thats not inside the monitored function
     }
-
     if (interpreter.langListener) {
         try {
             interpreter.reusables.svalScope = svalScope;
@@ -295,6 +310,18 @@ const supplyForDemand:SupplyForDemand<Demand> = (demand,onSupply,node,scope)=> {
         }
         case 'Literal': {
             event = new LiteralEvent(node as Literal, scope);
+            break;
+        }
+        case 'LabeledStatement': {
+            event = new LabeledStmtEvent(node as LabeledStatement, scope);
+            break;
+        }
+        case 'BreakStatement': {
+            event = new BreakStmtEvent(node as BreakStatement, scope);
+            break;
+        }
+        case 'ContinueStatement': {
+            event = new ContinueStmtEvent(node as ContinueStatement, scope);
             break;
         }
         case 'Any': default: {

@@ -399,6 +399,9 @@ export {
     ThrowStmtEvent,
     TryStmtEvent,
     CatchClauseEvent,
+    LabeledStmtEvent,
+    BreakStmtEvent,
+    ContinueStmtEvent,
 
     // Declarations
     VarDeclEvent,
