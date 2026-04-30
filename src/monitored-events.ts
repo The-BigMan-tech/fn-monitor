@@ -73,14 +73,36 @@ export type Supply = (
     Record<ContinueStatement['type'],ContinueStmtEvent> &
     Record<'Any', LangEvent>
 );
+type OnSupply<T extends Demand> = (getEvent:()=>Supply[T])=>void;
+
 export interface UserShop {
-    demand:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void,
+    demand:<T extends Demand>(demand:T,onSupply:OnSupply<T>)=>void,
     sales:()=>number
 }
 export interface SvalShop {
-    demand:<T extends Demand>(demand:T,onSupply:(event:Supply[T])=>void)=>void,
+    demand:<T extends Demand>(demand:T,onSupply:OnSupply<T>)=>void,
     sales:number
 }
+export interface Reusables {
+    svalScope:Scope | null,
+    node:EsNode | null
+}
+export type SupplyForDemand<T extends Demand> = (
+    demand:T,
+    onSupply:OnSupply<T>,
+    node:EsNode,
+    scope:ScopeForEvent
+)=>void;
+
+interface SvalPlus {
+    langListener:LangListener | null,
+    reusables:Reusables,
+    shop:SvalShop,
+    userShop:UserShop,
+    scopeForEvent:ScopeForEvent,
+    supplyForDemand:null | SupplyForDemand<Demand>
+}
+
 export type LangListener = (shop:UserShop)=>void;
 
 export interface VariableForEvent {
@@ -93,6 +115,9 @@ export interface ScopeForEvent {
     }
     depth:()=>number
 }
+
+
+
 export class LangEvent<NodeType extends EsNode = EsNode> {
     public node:NodeType;
     public scope:ScopeForEvent;
@@ -181,25 +206,12 @@ export class BreakStmtEvent extends LangEvent<BreakStatement> {
 export class ContinueStmtEvent extends LangEvent<ContinueStatement> {
     constructor(node:ContinueStatement, scope: ScopeForEvent) { super(node, scope) }
 }
-
 // Data
 export class LiteralEvent extends LangEvent<Literal> {
     constructor(node: Literal, scope: ScopeForEvent) { super(node, scope) }
 }
-export interface Reusables {
-    svalScope:Scope | null,
-    node:EsNode | null
-}
-export type SupplyForDemand<T extends Demand> = (demand:T,onSupply:(event:Supply[T])=>void,node:EsNode,scope:ScopeForEvent)=>void;
 
-interface SvalPlus {
-    langListener:LangListener | null,
-    reusables:Reusables,
-    shop:SvalShop,
-    userShop:UserShop,
-    scopeForEvent:ScopeForEvent,
-    supplyForDemand:null | SupplyForDemand<Demand>
-}
+
 export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     const interpreter = svalScope.interpreter;
     if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
@@ -222,6 +234,18 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     }
 }
 const supplyForDemand:SupplyForDemand<Demand> = (demand,onSupply,node,scope)=> {
+    const getEvent = (function() {//by using a getter instead of directly passing the event object,we ensure that we only create the event object only if its used.and by using an IIFE,we ensure that the getter doesnt create unecessary allocations
+        let createdEvent:LangEvent | null = null;
+        return ()=>{
+            if (createdEvent === null) {
+                createdEvent = createEvent(demand,node,scope)
+            }
+            return createdEvent;
+        }
+    })();
+    onSupply(getEvent);
+}
+const createEvent = <T extends Demand>(demand:T,node:EsNode,scope:ScopeForEvent):Supply[T] => {
     let event:LangEvent | null = null;
     switch (demand) {
         case 'BinaryExpression': {
@@ -329,5 +353,5 @@ const supplyForDemand:SupplyForDemand<Demand> = (demand,onSupply,node,scope)=> {
             break;
         }
     }
-    onSupply(event as Supply[Demand]);
+    return event as Supply[T];
 }

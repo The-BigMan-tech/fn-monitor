@@ -35,11 +35,11 @@ let count = 0;
 let otherNodes = 0;
 
 const add = monitor.fn(internalAdd, (shop) => {
-    shop.demand('AssignmentExpression', (event) => {
+    shop.demand('AssignmentExpression', (getEvent) => {
         count += 1;
     });
     if (shop.sales() < 1) {
-        shop.demand('Any',(event)=>{
+        shop.demand('Any',(getEvent)=>{
             otherNodes += 1;
         })
     }
