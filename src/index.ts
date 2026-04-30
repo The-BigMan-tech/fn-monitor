@@ -325,7 +325,9 @@ export const monitor = {
         }
         interpreter.fnBeforeMonitoring = cb;
     },
-    fn<T extends Fn>(fn:T,listener:LangListener,dependencies?:Dependencies):MonitoredFn<T> {
+    fn<T extends Fn>(setup:{fn:T,listener:LangListener,dependencies?:Dependencies}):MonitoredFn<T> {
+        const {fn,listener,dependencies} = setup;
+
         if (monitoredFns.has(fn)) {
             throw new Error(chalk.red(`You cannot monitor a monitored function`))
         }
@@ -338,12 +340,11 @@ export const monitor = {
         const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);
         fnSrc.fnCode += interpreter.getInlinedFunctions(dependencies?.inlineFns);
 
-        // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
-
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
 
-        
+        // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
+
         const newFn = ((...args: any[]) => {
             if (interpreter.fnBeforeMonitoring !== null) {
                 interpreter.fnBeforeMonitoring(...args);

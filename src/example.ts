@@ -34,14 +34,17 @@ perf(()=>{
 let count = 0;
 let otherNodes = 0;
 
-const add = monitor.fn(internalAdd, (shop) => {
-    shop.demand('AssignmentExpression', (getEvent) => {
-        count += 1;
-    });
-    if (shop.sales() < 1) {
-        shop.demand('Any',(getEvent)=>{
-            otherNodes += 1;
-        })
+const add = monitor.fn({
+    fn:internalAdd, 
+    listener:(shop) => {
+        shop.demand('AssignmentExpression', (getEvent) => {
+            count += 1;
+        });
+        if (shop.sales() < 1) {
+            shop.demand('Any',(getEvent)=>{
+                otherNodes += 1;
+            })
+        }
     }
 });
 monitor.preMonitoring(add,()=>{
@@ -63,13 +66,14 @@ const internalAdd2 = (a:number,b:number):number =>{
     hello2();
     return a + b;
 }
-const addClosure = monitor.fn(internalAdd2,
-    ()=>undefined,
-    {
+const addClosure = monitor.fn({
+    fn:internalAdd2,
+    listener:()=>undefined,
+    dependencies:{
         captures:{ hello2 },
         inlineFns:null
     }
-);
+});
 
 perf(() => {
     const result = addClosure(1,3)
@@ -78,8 +82,10 @@ perf(() => {
 
 
 //INLINING
-const addPseudoClosure = monitor.fn(internalAdd2,()=>undefined,
-    {
+const addPseudoClosure = monitor.fn({
+    fn:internalAdd2,
+    listener:()=>undefined,
+    dependencies:{
         captures:null,
         inlineFns:{
             hello2:{
@@ -88,7 +94,7 @@ const addPseudoClosure = monitor.fn(internalAdd2,()=>undefined,
             }
         }
     }
-);
+});
 perf(() => {
     const result = addPseudoClosure(4,8);
     console.log(result);
