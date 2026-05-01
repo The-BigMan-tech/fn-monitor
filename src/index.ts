@@ -144,13 +144,12 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
 import jsBeatutify from "js-beautify";
-import { Demand, LangListener,Reusables, ScopeForEvent,SupplyForDemand, VariableForEvent, SvalShop, UserShop, Fn } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent, SvalShop, UserShop, Fn, createEvent } from './monitored-events.ts'
 
 
 class SvalPlus extends Sval {
     public langListener:LangListener | null = null;
     public fnBeforeEachCall:Fn | undefined = undefined;
-    public supplyForDemand:null | SupplyForDemand<Demand> = null;
 
     constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
@@ -179,8 +178,7 @@ class SvalPlus extends Sval {
         demand:(demand,onSupply)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((demand === "Any") || (node.type === demand)) {
-                const supplyForDemand = this.supplyForDemand! as unknown as SupplyForDemand<typeof demand>
-                supplyForDemand(demand,onSupply,node,this.scopeForEvent);
+                onSupply(createEvent(demand,node,this.scopeForEvent));
                 this.shop.sales += 1;
             }
         },

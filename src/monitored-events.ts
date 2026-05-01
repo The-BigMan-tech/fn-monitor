@@ -83,7 +83,7 @@ export type Supply = (
     Record<YieldExpression['type'],YieldExprEvent> &
     Record<'Any', LangEvent>
 );
-type OnSupply<T extends Demand> = (getEvent:()=>Supply[T])=>void;
+export type OnSupply<T extends Demand> = (event:Supply[T])=>void;
 
 export interface UserShop {
     demand:<T extends Demand>(demand:T,onSupply:OnSupply<T>)=>void,
@@ -97,22 +97,13 @@ export interface Reusables {
     svalScope:Scope | null,
     node:EsNode | null
 }
-export type SupplyForDemand<T extends Demand> = (
-    demand:T,
-    onSupply:OnSupply<T>,
-    node:EsNode,
-    scope:ScopeForEvent
-)=>void;
-
 interface SvalPlus {
     langListener:LangListener | null,
     reusables:Reusables,
     shop:SvalShop,
     userShop:UserShop,
     scopeForEvent:ScopeForEvent,
-    supplyForDemand:null | SupplyForDemand<Demand>
 }
-
 export type LangListener = (shop:UserShop)=>void;
 
 export interface VariableForEvent {
@@ -125,9 +116,6 @@ export interface ScopeForEvent {
     }
     depth:()=>number
 }
-
-
-
 export class LangEvent<NodeType extends EsNode = EsNode> {
     public node:NodeType;
     public scope:ScopeForEvent;
@@ -246,7 +234,6 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
         try {
             interpreter.reusables.svalScope = svalScope;
             interpreter.reusables.node = acornNode as EsNode
-            interpreter.supplyForDemand = supplyForDemand;
             interpreter.langListener(interpreter.userShop);
         }finally {
             interpreter.reusables.node = null;
@@ -255,19 +242,7 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
         }
     }
 }
-const supplyForDemand:SupplyForDemand<Demand> = (demand,onSupply,node,scope)=> {
-    const getEvent = (function() {//by using a getter instead of directly passing the event object,we ensure that we only create the event object only if its used.and by using an IIFE,we ensure that the getter doesnt create unecessary allocations
-        let createdEvent:LangEvent | null = null;
-        return ()=>{
-            if (createdEvent === null) {
-                createdEvent = createEvent(demand,node,scope)
-            }
-            return createdEvent;
-        }
-    })();
-    onSupply(getEvent);
-}
-const createEvent = <T extends Demand>(demand:T,node:EsNode,scope:ScopeForEvent):Supply[T] => {
+export function createEvent<T extends Demand>(demand:T,node:EsNode,scope:ScopeForEvent):Supply[T]  {
     let event:LangEvent | null = null;
     switch (demand) {
         case 'BinaryExpression': {
