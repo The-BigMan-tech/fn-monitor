@@ -39,7 +39,7 @@ const add = monitor.fn({
         ref:internalAdd, 
     },
     listener:(visit) => {
-        visit.is('AssignmentExpression', (event) => {
+        visit.is('Any', (event) => {
             count += 1;
         });
         if (!visit.matched()) {

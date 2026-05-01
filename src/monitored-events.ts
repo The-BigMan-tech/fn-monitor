@@ -97,7 +97,7 @@ export interface Reusables {
     svalScope:Scope | null,
     node:EsNode | null
 }
-interface SvalPlus {
+export interface SvalPlus {
     langListener:LangListener | null,
     reusables:Reusables,
     svalVisit:SvalVisit,

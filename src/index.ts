@@ -144,10 +144,10 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
 import jsBeatutify from "js-beautify";
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract } from './monitored-events.ts'
 
 
-class SvalPlus extends Sval {
+class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
     public fnBeforeEachCall:Fn | undefined = undefined;
 
@@ -184,7 +184,7 @@ class SvalPlus extends Sval {
         },
     }
     public visit = {
-        demand:this.svalVisit.is,
+        is:this.svalVisit.is,
         matched:()=>this.svalVisit.matched
     }
 
