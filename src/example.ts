@@ -39,11 +39,11 @@ const add = monitor.fn({
         ref:internalAdd, 
     },
     listener:(shop) => {
-        shop.demand('AssignmentExpression', (getEvent) => {
+        shop.demand('AssignmentExpression', (event) => {
             count += 1;
         });
         if (shop.sales() < 1) {
-            shop.demand('Any',(getEvent)=>{
+            shop.demand('Any',(event)=>{
                 otherNodes += 1;
             })
         }

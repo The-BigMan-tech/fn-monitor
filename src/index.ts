@@ -273,6 +273,29 @@ class SvalPlus extends Sval {
 
         return ast;
     }
+    public static refErrMsg(err:ReferenceError) {
+        return (
+            chalk.red.underline(`\nReference Error`) +
+            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
+            chalk.red.underline(`\n\nTrace`) + `\n${err}`
+        )
+    }
+    public astInUse:FnAst | null = null;
+
+    public getMonitoredFn = (...args:any[])=>{
+        if (this.fnBeforeEachCall !== undefined) {
+            this.fnBeforeEachCall(...args);
+        }
+        try {
+            this.import({ [SvalPlus.argsVar]:args });
+            this.run(this.astInUse!.fnCall);
+            return this.exports[SvalPlus.resultExport];
+        }catch(err) {
+            if (err instanceof ReferenceError) {
+                throw new Error(SvalPlus.refErrMsg(err))
+            }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
+        };
+    }
     public static meriyahParseOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
         next: true,      // Modern ES support
@@ -312,6 +335,7 @@ interface MonitorFnSetup<T extends Fn> {
     inlineFunctions?:Record<string,Metadata<Fn>>
     beforeEachCall?:(...args:Parameters<T>)=>void
 }
+//the paradigm for monitored functions is one interpreter per function to ensure complete isolation and predictability
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
         const {ref:fn,captures} = setup.main;
@@ -331,25 +355,8 @@ export const monitor = {
         interpreter.run(ast.fnCode);
 
         // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
-        return ((...args: any[]) => {
-            if (interpreter.fnBeforeEachCall !== undefined) {
-                interpreter.fnBeforeEachCall(...args);
-            }
-            try {
-                interpreter.import({ [SvalPlus.argsVar]:args });
-                interpreter.run(ast.fnCall);
-                return interpreter.exports[SvalPlus.resultExport];
-            }catch(err) {
-                if (err instanceof ReferenceError) {
-                    const msg = (
-                        chalk.red.underline(`\nReference Error`) +
-                        Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
-                        chalk.red.underline(`\n\nTrace`) + `\n${err}`
-                    )
-                    throw new Error(msg)
-                }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
-            }
-        }) as MonitoredFn<T>;
+        interpreter.astInUse = ast;
+        return interpreter.getMonitoredFn as MonitoredFn<T>;
     },
 }
 
