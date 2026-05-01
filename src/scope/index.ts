@@ -44,18 +44,18 @@ export default class Scope<T = any> {
     parent: Scope | null,
     isolated: boolean = false,
     interpreter?:T
-  ) {
+  ) { 
     this.parent = parent
     this.isolated = isolated;
     this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
   }
   public hasParent() {
-    return Boolean(this.parent)
+    return this.parent !== null;
   }
-  public getContext() {
+  public get scopeContext() {
     return this.context;
   }
-  public getParent() {
+  public get scopeParent() {
     return this.parent;
   }
   public getDepth() {
@@ -63,7 +63,7 @@ export default class Scope<T = any> {
     let currentScope:Scope | null = this;
     while (currentScope && currentScope.hasParent()) {
         d++;
-        currentScope = currentScope.getParent();
+        currentScope = currentScope.scopeParent;
     }
     return d;
   }
