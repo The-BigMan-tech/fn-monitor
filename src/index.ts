@@ -169,9 +169,9 @@ class SvalPlus extends Sval implements SvalPlusContract {
                 const variableForEvent = { value:()=>variable.get() }
                 return variableForEvent
             },
-            local:this.reusables.svalScope!.scopeContext
+            local:()=>this.reusables.svalScope!.scopeContext
         },
-        parent:this.reusables.svalScope!.scopeParent,
+        parent:()=>this.reusables.svalScope!.scopeParent,//it has to be a method to always use the latest scope
         depth:()=>this.reusables.svalScope!.getDepth()
     }
     public svalVisit:SvalVisit = {

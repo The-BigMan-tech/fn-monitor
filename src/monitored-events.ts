@@ -112,9 +112,9 @@ export interface VariableForEvent {
 export interface ScopeForEvent {
     variables:{
         search:(name: string)=> VariableForEvent | null,
-        local:Record<string,Var>
+        local:()=>Record<string,Var>
     },
-    parent:Scope | null;
+    parent:()=>Scope | null;
     depth:()=>number
 }
 export class LangEvent<NodeType extends EsNode = EsNode> {
