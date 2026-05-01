@@ -38,12 +38,12 @@ const add = monitor.fn({
     main:{
         ref:internalAdd, 
     },
-    listener:(shop) => {
-        shop.demand('AssignmentExpression', (event) => {
+    listener:(visit) => {
+        visit.is('AssignmentExpression', (event) => {
             count += 1;
         });
-        if (shop.sales() < 1) {
-            shop.demand('Any',(event)=>{
+        if (!visit.matched()) {
+            visit.is('Any',(event)=>{
                 otherNodes += 1;
             })
         }
@@ -94,7 +94,6 @@ const addPseudoClosure = monitor.fn({
             captures:{random}
         }
     },
-    
 });
 perf(() => {
     const result = addPseudoClosure(4,8);

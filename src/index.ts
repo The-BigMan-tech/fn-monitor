@@ -144,7 +144,7 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
 import jsBeatutify from "js-beautify";
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent, SvalShop, UserShop, Fn, createEvent } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit } from './monitored-events.ts'
 
 
 class SvalPlus extends Sval {
@@ -173,19 +173,19 @@ class SvalPlus extends Sval {
         },
         depth:()=>this.reusables.svalScope!.getDepth()
     }
-    public shop:SvalShop = {
-        sales:0,
-        demand:(demand,onSupply)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
+    public svalVisit:SvalVisit = {
+        matched:false,
+        is:(query,ifHit)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
-            if ((demand === "Any") || (node.type === demand)) {
-                onSupply(createEvent(demand,node,this.scopeForEvent));
-                this.shop.sales += 1;
+            if ((query === "Any") || (node.type === query)) {
+                ifHit(createEvent(query,node,this.scopeForEvent));
+                this.svalVisit.matched = true;
             }
         },
     }
-    public userShop:UserShop = {
-        demand:this.shop.demand,
-        sales:()=>this.shop.sales
+    public visit = {
+        demand:this.svalVisit.is,
+        matched:()=>this.svalVisit.matched
     }
 
     public static readonly resultExport:string = 'result';
@@ -366,9 +366,9 @@ export {
     type LangListener,
     type VariableForEvent,
     type ScopeForEvent,
-    type Demand,
-    type Supply,
-    type UserShop,
+    type Query,
+    type EventMap,
+    type Visit,
 
     //the reason why i didnt export these as just types is because of instance-of checks
     //Default Event

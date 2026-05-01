@@ -19,7 +19,7 @@ import { Var } from "./scope/variable.ts";
 
 export type Fn = (...args:any[])=>any;
 
-export type Demand = 
+export type Query = 
     | Literal['type']
     | BinaryExpression['type']
     | CallExpression['type']
@@ -51,7 +51,7 @@ export type Demand =
     | YieldExpression['type']
     | 'Any'; // The fallback / default
 
-export type Supply = (
+export type EventMap = (
     Record<Literal['type'], LiteralEvent> &
     Record<BinaryExpression['type'], BinaryExprEvent> &
     Record<CallExpression['type'], CallExprEvent> &
@@ -83,15 +83,15 @@ export type Supply = (
     Record<YieldExpression['type'],YieldExprEvent> &
     Record<'Any', LangEvent>
 );
-export type OnSupply<T extends Demand> = (event:Supply[T])=>void;
+export type IfHit<T extends Query> = (event:EventMap[T])=>void;
 
-export interface UserShop {
-    demand:<T extends Demand>(demand:T,onSupply:OnSupply<T>)=>void,
-    sales:()=>number
+export interface Visit {
+    is:<T extends Query>(query:T,ifHit:IfHit<T>)=>void,
+    matched:()=>boolean
 }
-export interface SvalShop {
-    demand:<T extends Demand>(demand:T,onSupply:OnSupply<T>)=>void,
-    sales:number
+export interface SvalVisit {
+    is:<T extends Query>(query:T,ifHit:IfHit<T>)=>void,
+    matched:boolean
 }
 export interface Reusables {
     svalScope:Scope | null,
@@ -100,11 +100,11 @@ export interface Reusables {
 interface SvalPlus {
     langListener:LangListener | null,
     reusables:Reusables,
-    shop:SvalShop,
-    userShop:UserShop,
+    svalVisit:SvalVisit,
+    visit:Visit,
     scopeForEvent:ScopeForEvent,
 }
-export type LangListener = (shop:UserShop)=>void;
+export type LangListener = (visit:Visit)=>void;
 
 export interface VariableForEvent {
     value:()=>any
@@ -234,17 +234,17 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
         try {
             interpreter.reusables.svalScope = svalScope;
             interpreter.reusables.node = acornNode as EsNode
-            interpreter.langListener(interpreter.userShop);
+            interpreter.langListener(interpreter.visit);
         }finally {
             interpreter.reusables.node = null;
             interpreter.reusables.svalScope = null;
-            interpreter.shop.sales = 0;
+            interpreter.svalVisit.matched = false;
         }
     }
 }
-export function createEvent<T extends Demand>(demand:T,node:EsNode,scope:ScopeForEvent):Supply[T]  {
+export function createEvent<T extends Query>(query:Query,node:EsNode,scope:ScopeForEvent):EventMap[T]  {
     let event:LangEvent | null = null;
-    switch (demand) {
+    switch (query) {
         case 'BinaryExpression': {
             event = new BinaryExprEvent(node as BinaryExpression, scope);
             break;
@@ -366,5 +366,5 @@ export function createEvent<T extends Demand>(demand:T,node:EsNode,scope:ScopeFo
             break;
         }
     }
-    return event as Supply[T];
+    return event as EventMap[T];
 }
