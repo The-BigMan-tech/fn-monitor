@@ -153,7 +153,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
 
     constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
-        this.fnBeforeEachCall = this.fnBeforeEachCall;
+        this.fnBeforeEachCall = args.fnBeforeEachCall;
         this.langListener = args.listener;
     }
     public reusables:Reusables = {
