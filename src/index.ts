@@ -8,7 +8,7 @@ import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'
 import evaluate from './evaluate_n/index.ts'
-import { parse as meriyahParse } from 'meriyah';
+import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
 
 export interface SvalOptions {
   ecmaVer?: Options['ecmaVersion']
@@ -297,17 +297,18 @@ class SvalPlus extends Sval implements SvalPlusContract {
             }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
         };
     }
-    public static meriyahParseOptions = {
+    public static meriyahParseOptions:MeriyahOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
         next: true,      // Modern ES support
         loc: true,       // Essential for your shop.demand tracking
         ranges: true,    // Good for error reporting
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
-    public static defaultOptions = {
+    public static defaultOptions:SvalOptions = {
+        sourceType:"script",//use the normalized and faster evalutor but the user will get promises if the monitor an async function and not the resolved result.
         ecmaVer:2024, // Match your tsconfig target
         sandBox: true, // Standard for eDSLs/Sandboxes,
-    } as const;
+    };
 }
 const Colors = {
     orange:chalk.hex('#f6c098')
