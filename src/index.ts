@@ -300,7 +300,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public static defaultOptions:SvalOptions = {
         sourceType:"script",//use the normalized and faster evalutor but the user will get promises if the monitor an async function and not the resolved result.
-        ecmaVer:2024, // Match your tsconfig target
+        ecmaVer:2024, 
         sandBox: true, // Standard for eDSLs/Sandboxes,
     };
     public static sha256Key(str:string):string {
