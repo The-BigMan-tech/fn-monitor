@@ -1,0 +1,649 @@
+import { define, freeze, getGetter, getSetter, createSymbol, assign, getDptor, callSuper, WINDOW } from '../share/util.ts'
+import { SUPER, NOCTOR, AWAIT, CLSCTOR, NEWTARGET, SUPERCALL, PRIVATE, IMPORT, OPTCHAIN, STRICT, STRICT_FN } from '../share/const.ts'
+import { pattern, createFunc, createClass } from './helper.ts'
+import { Variable, Prop } from '../scope/variable.ts'
+import { Identifier } from './identifier.ts'
+import { Literal } from './literal.ts'
+import Scope from '../scope/index.ts'
+import evaluate from './index.ts'
+import * as acorn from 'acorn'
+
+export function ThisExpression(node: acorn.ThisExpression, scope: Scope) {
+  const superCall = scope.find(SUPERCALL)
+  if (superCall && superCall.get() !== true) {
+    throw new ReferenceError('Must call super constructor in derived class '
+      + 'before accessing \'this\' or returning from derived constructor')
+  } else {
+    return scope.find('this').get()
+  }
+}
+
+export function ArrayExpression(node: acorn.ArrayExpression, scope: Scope) {
+  let results: any[] = []
+  for (let i = 0; i < node.elements.length; i++) {
+    const item = node.elements[i]
+    if (item === null) {
+      results.length++
+    } else if (item.type === 'SpreadElement') {
+      results = results.concat(SpreadElement(item, scope))
+    } else {
+      results.push(evaluate(item, scope))
+    }
+  }
+  return results
+}
+
+export function ObjectExpression(node: acorn.ObjectExpression, scope: Scope) {
+  const object: { [key: string]: any } = {}
+  for (let i = 0; i < node.properties.length; i++) {
+    const property = node.properties[i]
+    if (property.type === 'SpreadElement') {
+      assign(object, SpreadElement(property, scope, { spreadProps: true }))
+    } else {
+      let key: string
+      const propKey = property.key
+      if (property.computed) {
+        key = evaluate(propKey, scope)
+      } else {
+        if (propKey.type === 'Identifier') {
+          key = propKey.name
+        } else {
+          key = '' + (Literal(propKey as acorn.Literal, scope))
+        }
+      }
+  
+      const value = evaluate(property.value, scope)
+  
+      const propKind = property.kind
+      if (propKind === 'init') {
+        object[key] = value
+      } else if (propKind === 'get') {
+        const oriDptor = getDptor(object, key)
+        define(object, key, {
+          get: value,
+          set: oriDptor && oriDptor.set,
+          enumerable: true,
+          configurable: true
+        })
+      } else { // propKind === 'set'
+        const oriDptor = getDptor(object, key)
+        define(object, key, {
+          get: oriDptor && oriDptor.get,
+          set: value,
+          enumerable: true,
+          configurable: true
+        })
+      }
+    }
+  }
+  return object
+}
+
+export function FunctionExpression(node: acorn.FunctionExpression, scope: Scope) {
+  if (node.id && node.id.name) {
+    // it's for accessing function expression by its name inside
+    // e.g. const a = function b() { console.log(b) }
+    const tmpScope = new Scope(scope)
+    const func = createFunc(node, tmpScope)
+    tmpScope.const(node.id.name, func)
+    return func
+  } else {
+    return createFunc(node, scope)
+  }
+}
+
+export function UnaryExpression(node: acorn.UnaryExpression, scope: Scope) {
+  const arg = node.argument
+  switch (node.operator) {
+    case '+': return +(evaluate(arg, scope))
+    case '-': return -(evaluate(arg, scope))
+    case '!': return !(evaluate(arg, scope))
+    case '~': return ~(evaluate(arg, scope))
+    case 'void': return void (evaluate(arg, scope))
+    case 'typeof':
+      if (arg.type === 'Identifier') {
+        return typeof (Identifier(arg, scope, { throwErr: false }))
+      } else {
+        return typeof (evaluate(arg, scope))
+      }
+    case 'delete':
+      if (arg.type === 'MemberExpression') {
+        const variable: Prop = MemberExpression(arg, scope, { getVar: true })
+        return variable.del()
+      } else if (arg.type === 'Identifier') {
+        throw new SyntaxError('Delete of an unqualified identifier in strict mode')
+      } else {
+        evaluate(arg, scope)
+        return true
+      }
+    /* istanbul ignore next */
+    default: throw new SyntaxError(`Unexpected token ${node.operator}`)
+  }
+}
+
+export function UpdateExpression(node: acorn.UpdateExpression, scope: Scope) {
+  const arg = node.argument
+  
+  let variable: Variable
+  if (arg.type === 'Identifier') {
+    variable = Identifier(arg, scope, { getVar: true })
+  } else if (arg.type === 'MemberExpression') {
+    variable = MemberExpression(arg, scope, { getVar: true })
+  } else {
+    /* istanbul ignore next */
+    throw new SyntaxError('Unexpected token')
+  }
+
+  const value = variable.get()
+  if (node.operator === '++') {
+    variable.set(value + 1)
+    return node.prefix ? variable.get() : value
+  } else if (node.operator === '--') {
+    variable.set(value - 1)
+    return node.prefix ? variable.get() : value
+  } else {
+    /* istanbul ignore next */
+    throw new SyntaxError(`Unexpected token ${node.operator}`)
+  }
+}
+
+export function BinaryExpression(node: acorn.BinaryExpression, scope: Scope) {
+  let left: any
+  let right: any
+
+  if (node.left.type === 'PrivateIdentifier') {
+    left = node.left.name
+    right = evaluate(node.right, scope)
+    right = right[PRIVATE] || {} // compatible with checking by "#private in object"
+  } else {
+    left = evaluate(node.left, scope)
+    right = evaluate(node.right, scope)
+  }
+
+  switch (node.operator) {
+    case '==': return left == right
+    case '!=': return left != right
+    case '===': return left === right
+    case '!==': return left !== right
+    case '<': return left < right
+    case '<=': return left <= right
+    case '>': return left > right
+    case '>=': return left >= right
+    case '<<': return left << right
+    case '>>': return left >> right
+    case '>>>': return left >>> right
+    case '+': return left + right
+    case '-': return left - right
+    case '*': return left * right
+    case '**': return left ** right
+    case '/': return left / right
+    case '%': return left % right
+    case '|': return left | right
+    case '^': return left ^ right
+    case '&': return left & right
+    case 'in': return left in right
+    case 'instanceof': return left instanceof right
+    /* istanbul ignore next */
+    default: throw new SyntaxError(`Unexpected token ${node.operator}`)
+  }
+}
+
+export function AssignmentExpression(node: acorn.AssignmentExpression, scope: Scope) {
+  const left = node.left
+  let variable: Variable
+  if (left.type === 'Identifier') {
+    variable = Identifier(left, scope, { getVar: true, throwErr: false })
+    if (!variable) {
+      const strictMode = scope.find(STRICT)
+      if (strictMode && strictMode.get()) {
+        throw new ReferenceError(`${left.name} is not defined`)
+      }
+      const win = scope.global().find('window').get()
+      variable = new Prop(win, left.name)
+    }
+  } else if (left.type === 'MemberExpression') {
+    variable = MemberExpression(left, scope, { getVar: true })
+  } else {
+    const value = evaluate(node.right, scope)
+    return pattern(left, scope, { feed: value })
+  }
+
+  const value = evaluate(node.right, scope)
+  switch (node.operator) {
+    case '=': variable.set(value); return variable.get()
+    case '+=': variable.set(variable.get() + value); return variable.get()
+    case '-=': variable.set(variable.get() - value); return variable.get()
+    case '*=': variable.set(variable.get() * value); return variable.get()
+    case '/=': variable.set(variable.get() / value); return variable.get()
+    case '%=': variable.set(variable.get() % value); return variable.get()
+    case '**=': variable.set(variable.get() ** value); return variable.get()
+    case '<<=': variable.set(variable.get() << value); return variable.get()
+    case '>>=': variable.set(variable.get() >> value); return variable.get()
+    case '>>>=': variable.set(variable.get() >>> value); return variable.get()
+    case '|=': variable.set(variable.get() | value); return variable.get()
+    case '^=': variable.set(variable.get() ^ value); return variable.get()
+    case '&=': variable.set(variable.get() & value); return variable.get()
+    case '??=': variable.set(variable.get() ?? value); return variable.get()
+    case '&&=': variable.set(variable.get() && value); return variable.get()
+    case '||=': variable.set(variable.get() || value); return variable.get()
+    /* istanbul ignore next */
+    default: throw new SyntaxError(`Unexpected token ${node.operator}`)
+  }
+}
+
+export function LogicalExpression(node: acorn.LogicalExpression, scope: Scope) {
+  switch (node.operator) {
+    case '||':
+      return (evaluate(node.left, scope)) || (evaluate(node.right, scope))
+    case '&&':
+      return (evaluate(node.left, scope)) && (evaluate(node.right, scope))
+    case '??':
+      return (evaluate(node.left, scope)) ?? (evaluate(node.right, scope))
+    default:
+      /* istanbul ignore next */
+      throw new SyntaxError(`Unexpected token ${node.operator}`)
+  }
+}
+
+export interface MemberExpressionOptions {
+  getObj?: boolean
+  getVar?: boolean
+}
+
+export function MemberExpression(
+  node: acorn.MemberExpression,
+  scope: Scope,
+  options: MemberExpressionOptions = {},
+) {
+  const { getObj = false, getVar = false } = options
+
+  let object: any
+  if (node.object.type === 'Super') {
+    object = Super(node.object, scope, { getProto: true })
+  } else {
+    object = evaluate(node.object, scope)
+  }
+
+  // propagate optional chain short-circuit
+  if (object === OPTCHAIN) return OPTCHAIN
+
+  if (getObj) return object
+
+  let key: string
+  let priv: boolean = false
+
+  if (node.computed) {
+    key = evaluate(node.property, scope)
+  } else if (node.property.type === 'PrivateIdentifier') {
+    key = node.property.name
+    priv = true
+  } else {
+    key = (node.property as acorn.Identifier).name
+  }
+
+  if (priv) {
+    object = object[PRIVATE]
+  }
+
+  if (getVar) {
+    // left value
+    const setter = getSetter(object, key)
+    if (node.object.type === 'Super' && setter) {
+      // transfer the setter from super to this with a private key
+      const thisObject = scope.find('this').get()
+      const privateKey = createSymbol(key)
+      define(thisObject, privateKey, { set: setter })
+      return new Prop(thisObject, privateKey)
+    } else {
+      return new Prop(object, key)
+    }
+  } else {
+    // right value
+    const getter = getGetter(object, key)
+    if (node.object.type === 'Super' && getter) {
+      const thisObject = scope.find('this').get()
+      // if it's optional chaining, check if this ref is null or undefined, so use ==
+      if (node.optional && thisObject == null) {
+        return OPTCHAIN
+      }
+      return getter.call(thisObject)
+    } else {
+      // if it's optional chaining, check if object is null or undefined, so use ==
+      if (node.optional && object == null) {
+        return OPTCHAIN
+      }
+      return object[key]
+    }
+  }
+}
+
+export function ConditionalExpression(node: acorn.ConditionalExpression, scope: Scope) {
+  return (evaluate(node.test, scope))
+    ? (evaluate(node.consequent, scope))
+    : (evaluate(node.alternate, scope))
+}
+
+function getCalleeDesc(node: acorn.Expression | acorn.Super): string {
+  if (node.type === 'Identifier') {
+    return (node as acorn.Identifier).name
+  } else if (node.type === 'MemberExpression') {
+    const memberNode = node as acorn.MemberExpression
+    const objDesc = getCalleeDesc(memberNode.object)
+    if (!memberNode.computed) {
+      if (memberNode.property.type === 'PrivateIdentifier') {
+        return `${objDesc}.#${(memberNode.property as acorn.PrivateIdentifier).name}`
+      }
+      return `${objDesc}.${(memberNode.property as acorn.Identifier).name}`
+    }
+    const prop = memberNode.property as acorn.Expression
+    if (prop.type === 'Literal') {
+      return `${objDesc}[${(prop as acorn.Literal).raw}]`
+    }
+    if (prop.type === 'Identifier') {
+      return `${objDesc}[${(prop as acorn.Identifier).name}]`
+    }
+    return objDesc
+  } else if (node.type === 'Super') {
+    return 'super'
+  }
+  return '(intermediate value)'
+}
+
+export function CallExpression(node: acorn.CallExpression, scope: Scope) {
+  let func: any
+  let object: any
+
+  if (node.callee.type === 'MemberExpression') {
+    object = MemberExpression(node.callee, scope, { getObj: true })
+
+    // propagate optional chain short-circuit
+    if (object === OPTCHAIN) return OPTCHAIN
+
+    // if it's optional chaining, check if object is null or undefined, so use ==
+    if (node.callee.optional && object == null) {
+      return OPTCHAIN
+    }
+
+    // get key
+    let key: string
+    let priv: boolean = false
+
+    if (node.callee.computed) {
+      key = evaluate(node.callee.property, scope)
+    } else if (node.callee.property.type === 'PrivateIdentifier') {
+      key = node.callee.property.name
+      priv = true
+    } else {
+      key = (node.callee.property as acorn.Identifier).name
+    }
+
+    let obj = object
+
+    if (priv) {
+      obj = obj[PRIVATE]
+    }
+
+    // right value
+    if (node.callee.object.type === 'Super') {
+      const thisObject = scope.find('this').get()
+      func = obj[key].bind(thisObject)
+    } else {
+      func = obj[key]
+    }
+
+    // if it's optional chaining, check if function is null or undefined, so use ==
+    if (node.optional && func == null) {
+      return OPTCHAIN
+    }
+
+    if (typeof func !== 'function') {
+      const calleeDesc = getCalleeDesc(node.callee as acorn.MemberExpression)
+      throw new TypeError(`${calleeDesc} is not a function`)
+    } else if (CLSCTOR in func) {
+      const calleeDesc = getCalleeDesc(node.callee as acorn.MemberExpression)
+      throw new TypeError(`Class constructor ${calleeDesc} cannot be invoked without 'new'`)
+    }
+  } else {
+    func = evaluate(node.callee, scope)
+
+    // propagate optional chain short-circuit
+    if (func === OPTCHAIN) return OPTCHAIN
+
+    // if it's optional chaining, check if function is null or undefined, so use ==
+    if (node.optional && func == null) {
+      return OPTCHAIN
+    }
+
+    if (typeof func !== 'function' || node.callee.type !== 'Super' && CLSCTOR in func) {
+      let name: string
+      if (node.callee.type === 'Identifier') {
+        name = node.callee.name
+      } else {
+        try {
+          name = JSON.stringify(func)
+        } catch (err) {
+          name = '' + func
+        }
+      }
+      if (typeof func !== 'function') {
+        throw new TypeError(`${name} is not a function`)
+      } else {
+        throw new TypeError(`Class constructor ${name} cannot be invoked without 'new'`)
+      }
+    }
+
+    // In strict mode, non-method calls pass undefined as 'this' (no global coercion)
+    if (node.callee.type === 'Super') {
+      object = scope.find('this').get()
+    } else {
+      const isStrictCall = !!(scope.find(STRICT)?.get()) || !!(func && func[STRICT_FN])
+      object = isStrictCall ? undefined : scope.find('this').get()
+    }
+  }
+
+  let args: any[] = []
+  for (let i = 0; i < node.arguments.length; i++) {
+    const arg = node.arguments[i]
+    if (arg.type === 'SpreadElement') {
+      args = args.concat(SpreadElement(arg, scope))
+    } else {
+      args.push(evaluate(arg, scope))
+    }
+  }
+
+  if (node.callee.type === 'Super') {
+    const superCall = scope.find(SUPERCALL)
+    const construct = superCall.get()
+    if (construct === true) {
+      throw new ReferenceError('Super constructor may only be called once')
+    }
+    const inst = callSuper(object, func, args)
+    construct(inst)
+    scope.find('this').set(inst)
+    scope.find(SUPERCALL).set(true)
+    return inst
+  }
+
+  try {
+    return func.apply(object, args)
+  } catch (err) {
+    if (
+      err instanceof TypeError && err.message === 'Illegal invocation'
+      && func.toString().indexOf('[native code]') !== -1
+    ) {
+      // you will get "TypeError: Illegal invocation" if not binding native function with window
+      const win = scope.global().find('window').get()
+      if (win && win[WINDOW]) {
+        return func.apply(win[WINDOW], args)
+      }
+    }
+    throw err
+  }
+}
+
+export function NewExpression(node: acorn.NewExpression, scope: Scope) {
+  const constructor = evaluate(node.callee, scope)
+
+  if (typeof constructor !== 'function') {
+    let name: string
+    if (node.callee.type === 'Identifier') {
+      name = node.callee.name
+    } else {
+      try {
+        name = JSON.stringify(constructor)
+      } catch (err) {
+        name = '' + constructor
+      }
+    }
+    throw new TypeError(`${name} is not a constructor`)
+  } else if (constructor[NOCTOR]) {
+    throw new TypeError(`${constructor.name || '(intermediate value)'} is not a constructor`)
+  }
+
+  let args: any[] = []
+  for (let i = 0; i < node.arguments.length; i++) {
+    const arg = node.arguments[i]
+    if (arg.type === 'SpreadElement') {
+      args = args.concat(SpreadElement(arg, scope))
+    } else {
+      args.push(evaluate(arg, scope))
+    }
+  }
+
+  return new constructor(...args)
+}
+
+export function MetaProperty(node: acorn.MetaProperty, scope: Scope) {
+  if (node.meta.name === 'new' && node.property.name === 'target') {
+    return scope.find(NEWTARGET).get()
+  } else if (node.meta.name === 'import' && node.property.name === 'meta') {
+    return { url: '' }
+  }
+}
+
+export function SequenceExpression(node: acorn.SequenceExpression, scope: Scope) {
+  let result: any
+  for (let i = 0; i < node.expressions.length; i++) {
+    result = evaluate(node.expressions[i], scope)
+  }
+  return result
+}
+
+export function ArrowFunctionExpression(node: acorn.ArrowFunctionExpression, scope: Scope) {
+  return createFunc(node, scope)
+}
+
+export function TemplateLiteral(node: acorn.TemplateLiteral, scope: Scope) {
+  const quasis = node.quasis.slice()
+  const expressions = node.expressions.slice()
+
+  let result = ''
+  let temEl: acorn.TemplateElement
+  let expr: acorn.Expression
+
+  while (temEl = quasis.shift()) {
+    result += TemplateElement(temEl, scope)
+    expr = expressions.shift()
+    if (expr) {
+      result += evaluate(expr, scope)
+    }
+  }
+
+  return result
+}
+
+export function TaggedTemplateExpression(node: acorn.TaggedTemplateExpression, scope: Scope) {
+  const tagFunc = evaluate(node.tag, scope)
+
+  const quasis = node.quasi.quasis
+  const str = quasis.map(v => v.value.cooked)
+  const raw = quasis.map(v => v.value.raw)
+
+  define(str, 'raw', {
+    value: freeze(raw)
+  })
+
+  const expressions = node.quasi.expressions
+
+  const args = []
+  if (expressions) {
+    for (let i = 0; i < expressions.length; i++) {
+      args.push(evaluate(expressions[i], scope))
+    }
+  }
+
+  return tagFunc(freeze(str), ...args)
+}
+
+export function TemplateElement(node: acorn.TemplateElement, scope: Scope) {
+  return node.value.raw
+}
+
+export function ClassExpression(node: acorn.ClassExpression, scope: Scope) {
+  if (node.id && node.id.name) {
+    // it's for accessing class expression by its name inside
+    // e.g. const a = class b { log() { console.log(b) } }
+    const tmpScope = new Scope(scope)
+    const klass = createClass(node, tmpScope)
+    tmpScope.const(node.id.name, klass)
+    return klass
+  } else {
+    return createClass(node, scope)
+  }
+}
+
+export interface SuperOptions {
+  getProto?: boolean
+}
+
+export function Super(node: acorn.Super, scope: Scope, options: SuperOptions = {}) {
+  const { getProto = false } = options
+  const superClass = scope.find(SUPER).get()
+  return getProto ? superClass.prototype: superClass
+}
+
+export interface SpreadOptions {
+  spreadProps?: boolean
+}
+
+export function SpreadElement(node: acorn.SpreadElement, scope: Scope, options: SpreadOptions = {}) {
+  const result = evaluate(node.argument, scope)
+  if (options.spreadProps) {
+    return result
+  }
+  if (typeof Symbol === 'function' && typeof result[Symbol.iterator] !== 'function') {
+    throw new TypeError('Spread syntax requires ...iterable[Symbol.iterator] to be a function')
+  }
+  return [...result]
+}
+
+export function ChainExpression(node: acorn.ChainExpression, scope: Scope) {
+  const result = evaluate(node.expression, scope)
+  return result === OPTCHAIN ? undefined : result
+}
+
+export function ImportExpression(node: acorn.ImportExpression, scope: Scope) {
+  const globalScope = scope.global()
+
+  const source = evaluate(node.source, scope)
+  const module = globalScope.find(IMPORT + source)
+  let value: any
+  if (module) {
+    const result = module.get()
+    if (result) {
+      if (typeof result === 'function') {
+        value = result()
+      } else if (typeof result === 'object') {
+        value = result
+      }
+    }
+  }
+
+  if (!value || typeof value !== 'object') {
+    return Promise.reject(new TypeError(`Failed to resolve module specifier "${source}"`))
+  }
+
+  return Promise.resolve(value)
+}
+
+
