@@ -83,19 +83,25 @@ export type EventMap = (
     Record<YieldExpression['type'],YieldExprEvent> &
     Record<'Any', LangEvent>
 );
-export type IfHit<T extends Query> = (event:EventMap[T])=>void;
+type IfMatched<T extends Query> = (event:EventMap[T])=>void;
 
 export interface Visit {
-    is:<T extends Query>(query:T,ifHit:IfHit<T>)=>void,
-    matched:()=>boolean
+    is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
+    matched:()=>boolean,
+    execute:()=>any 
 }
 export interface SvalVisit {
-    is:<T extends Query>(query:T,ifHit:IfHit<T>)=>void,
+    is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
     matched:boolean
 }
+export const UNASSIGNED = Symbol('UNASSIGNED');
+
 export interface Reusables {
     svalScope:Scope | null,
-    node:EsNode | null
+    node:EsNode | null,
+    result:any | typeof UNASSIGNED,
+    thrown:any | typeof UNASSIGNED,
+    handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any)
 }
 export interface SvalPlus {
     langListener:LangListener | null,
@@ -120,12 +126,10 @@ export interface ScopeForEvent {
 export class LangEvent<NodeType extends EsNode = EsNode> {
     public node:NodeType;
     public scope:ScopeForEvent;
-    #interpreter:SvalPlus 
 
     constructor(node:NodeType,interpreter:SvalPlus) {
         this.node = node;
         this.scope = interpreter.scopeForEvent;
-        this.#interpreter = interpreter;
     }
 }
 // Expressions
@@ -308,7 +312,7 @@ export class LiteralEvent extends LangEvent<Literal> {
 }
 
 
-export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
+export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = svalScope.interpreter;
     if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
     
@@ -319,11 +323,15 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
     if (interpreter.langListener) {
         try {
             interpreter.reusables.svalScope = svalScope;
-            interpreter.reusables.node = acornNode as EsNode
+            interpreter.reusables.node = acornNode as EsNode;
+            interpreter.reusables.handler = handler;
             interpreter.langListener(interpreter.visit);
         }finally {
             interpreter.reusables.node = null;
             interpreter.reusables.svalScope = null;
+            interpreter.reusables.handler = null;
+            interpreter.reusables.result = UNASSIGNED;
+            interpreter.reusables.thrown = UNASSIGNED;
             interpreter.svalVisit.matched = false;
         }
     }

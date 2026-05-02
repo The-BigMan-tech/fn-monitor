@@ -144,7 +144,7 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
 import jsBeatutify from "js-beautify";
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED } from './monitored-events.ts'
 
 
 class SvalPlus extends Sval implements SvalPlusContract {
@@ -159,6 +159,9 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public reusables:Reusables = {
         svalScope:null,
         node:null,
+        result:UNASSIGNED,
+        thrown:UNASSIGNED,
+        handler:null
     }
     public scopeForEvent:ScopeForEvent = {
         variables:{
@@ -186,7 +189,23 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public visit = {
         is:this.svalVisit.is,
-        matched:()=>this.svalVisit.matched
+        matched:()=>this.svalVisit.matched,
+        execute:()=>{
+            const handler = this.reusables.handler;
+            if (handler === null) return;
+            try {
+                if (this.reusables.result !== UNASSIGNED) {
+                    throw new Error(chalk.red(`A node can only be executed once`))
+                }
+                this.reusables.result = handler(this.reusables.node!,this.reusables.svalScope!);
+            }catch(e) {
+                if (e instanceof Error) {
+                    throw e
+                }else {
+                    this.reusables.thrown = e;//this catches throws that arent errors like symbol throwing for domain purposes
+                }
+            }
+        }
     }
 
     public static readonly resultExport:string = 'result';
