@@ -321,19 +321,10 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handle
         return;//we dont want to track any action thats not inside the monitored function
     }
     if (interpreter.langListener) {
-        try {
-            interpreter.reusables.svalScope = svalScope;
-            interpreter.reusables.node = acornNode as EsNode;
-            interpreter.reusables.handler = handler;
-            interpreter.langListener(interpreter.visit);
-        }finally {
-            interpreter.reusables.node = null;
-            interpreter.reusables.svalScope = null;
-            interpreter.reusables.handler = null;
-            interpreter.reusables.result = UNASSIGNED;
-            interpreter.reusables.thrown = UNASSIGNED;
-            interpreter.svalVisit.matched = false;
-        }
+        interpreter.reusables.svalScope = svalScope;
+        interpreter.reusables.node = acornNode as EsNode;
+        interpreter.reusables.handler = handler;
+        interpreter.langListener(interpreter.visit);
     }
 }
 export function createEvent<T extends Query>(query:Query,node:EsNode,interpreter:SvalPlus):EventMap[T]  {

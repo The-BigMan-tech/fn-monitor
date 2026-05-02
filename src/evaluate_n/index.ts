@@ -9,10 +9,23 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { callMonitor,SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { callMonitor, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 
 let evaluateOps: any
 
+function handleResult(node:Node,scope:Scope,handler:any) {
+    if (handler) {
+        const interpreter:SvalPlus = scope.interpreter;
+        if (interpreter.reusables.thrown !== UNASSIGNED) {
+            throw interpreter.reusables.thrown;
+        }
+        return (interpreter.reusables.result !== UNASSIGNED)
+            ?interpreter.reusables.result
+            :handler(node,scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
+    } else {
+        throw new Error(`${node.type} isn't implemented`)
+    }
+}
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
     if (!evaluateOps) {// delay initalizing to remove circular reference issue for jest
@@ -27,19 +40,17 @@ export default function evaluate(node: Node, scope: Scope) {
             program
         )
     }
-
     const handler = evaluateOps[node.type];
-    callMonitor(node,scope,handler);
-
-    if (handler) {
-        const interpreter:SvalPlus = scope.interpreter;
-        if (interpreter.reusables.thrown !== UNASSIGNED) {
-            throw interpreter.reusables.thrown;
-        }
-        return (interpreter.reusables.result !== UNASSIGNED)
-            ?interpreter.reusables.result
-            :handler(node, scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
-    } else {
-        throw new Error(`${node.type} isn't implemented`)
+    const interpreter:SvalPlus = scope.interpreter;
+    try {
+        callMonitor(node,scope,handler);
+        return handleResult(node,scope,handler)
+    }finally {
+        interpreter.reusables.node = null;
+        interpreter.reusables.svalScope = null;
+        interpreter.reusables.result = UNASSIGNED;
+        interpreter.reusables.thrown = UNASSIGNED;
+        interpreter.reusables.handler = null;
+        interpreter.svalVisit.matched = false;
     }
 }

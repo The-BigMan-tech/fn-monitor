@@ -192,9 +192,9 @@ class SvalPlus extends Sval implements SvalPlusContract {
         matched:()=>this.svalVisit.matched,
         execute:()=>{
             const handler = this.reusables.handler;
-            if (handler === null) return;
             try {
                 if (this.reusables.result !== UNASSIGNED) {
+                    console.log('ASSIGNED');
                     throw new Error(chalk.red(`A node can only be executed once`))
                 }
                 this.reusables.result = handler(this.reusables.node!,this.reusables.svalScope!);
@@ -205,6 +205,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
                     this.reusables.thrown = e;//this catches throws that arent errors like symbol throwing for domain purposes
                 }
             }
+            return this.reusables.result;
         }
     }
 
