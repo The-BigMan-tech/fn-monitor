@@ -33,7 +33,8 @@ export default function* evaluate(node: Node, scope: Scope) {
 
   const handler = evaluateOps[node.type]
   if (handler) {
-    return yield* handler(node, scope)
+    const result = yield* handler(node, scope);
+    return result; // Crucial: Return the result so the parent caller gets it
   } else {
     throw new Error(`${node.type} isn't implemented`)
   }
