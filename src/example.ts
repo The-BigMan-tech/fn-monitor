@@ -39,11 +39,11 @@ const add = monitor.fn({
         ref:internalAdd, 
     },
     listener:(visit) => {
-        visit.is('Any', (event) => {
+        visit.is('AssignmentExpression',event => {
             count += 1;
-        });
+        })
         if (!visit.matched()) {
-            visit.is('Any',(event)=>{
+            visit.is('Any',event=>{
                 otherNodes += 1;
             })
         }
