@@ -97,6 +97,7 @@ export interface SvalVisit {
 export const UNASSIGNED = Symbol('UNASSIGNED');
 
 export interface Reusables {
+    evalStack:number,
     svalScope:Scope | null,
     node:EsNode | null,
     result:any | typeof UNASSIGNED,

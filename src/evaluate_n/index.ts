@@ -9,7 +9,7 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { callMonitor, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { callMonitor, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 
 let evaluateOps: any
 
@@ -25,6 +25,26 @@ function handleResult(node:Node,scope:Scope,handler:any) {
     } else {
         throw new Error(`${node.type} isn't implemented`)
     }
+}
+function clearEvalStack(interpreter:SvalPlus) {
+    interpreter.reusables.node = null;
+    interpreter.reusables.svalScope = null;
+    interpreter.reusables.handler = null;
+    interpreter.reusables.result = UNASSIGNED;
+    interpreter.reusables.thrown = UNASSIGNED;
+    interpreter.svalVisit.matched = false;
+}
+interface PrevValues extends Reusables {
+    evalStack:0,
+    matched:boolean
+}
+function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValues) {
+    interpreter.reusables.node = prevReusables.node;
+    interpreter.reusables.svalScope = prevReusables.svalScope;
+    interpreter.reusables.handler = prevReusables.handler;
+    interpreter.reusables.result = prevReusables.result;
+    interpreter.reusables.thrown = prevReusables.thrown;
+    interpreter.svalVisit.matched = prevReusables.matched;
 }
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
@@ -42,15 +62,27 @@ export default function evaluate(node: Node, scope: Scope) {
     }
     const handler = evaluateOps[node.type];
     const interpreter:SvalPlus = scope.interpreter;
+
+    const prevReusables:PrevValues = {
+        evalStack:0,
+        node: interpreter.reusables.node,
+        svalScope:scope,
+        handler: interpreter.reusables.handler,
+        result: interpreter.reusables.result,
+        thrown: interpreter.reusables.thrown,
+        matched: interpreter.svalVisit.matched
+    };
+
     try {
+        interpreter.reusables.evalStack += 1;
         callMonitor(node,scope,handler);
-        return handleResult(node,scope,handler)
+        return handleResult(node,scope,handler);
     }finally {
-        interpreter.reusables.node = null;
-        interpreter.reusables.svalScope = null;
-        interpreter.reusables.result = UNASSIGNED;
-        interpreter.reusables.thrown = UNASSIGNED;
-        interpreter.reusables.handler = null;
-        interpreter.svalVisit.matched = false;
+        interpreter.reusables.evalStack -= 1;
+        if (interpreter.reusables.evalStack === 0) {
+            clearEvalStack(interpreter)
+        }else {
+            restorePrevReusables(interpreter,prevReusables)
+        }
     }
 }

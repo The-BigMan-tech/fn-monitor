@@ -157,6 +157,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         this.langListener = args.listener;
     }
     public reusables:Reusables = {
+        evalStack:0,
         svalScope:null,
         node:null,
         result:UNASSIGNED,
