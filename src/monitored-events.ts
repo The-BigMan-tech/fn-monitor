@@ -103,6 +103,7 @@ export interface SvalPlus {
     svalVisit:SvalVisit,
     visit:Visit,
     scopeForEvent:ScopeForEvent,
+    defersForNode:DeferredFn[];
 }
 export type LangListener = (visit:Visit)=>void;
 
@@ -120,106 +121,196 @@ export interface ScopeForEvent {
 export class LangEvent<NodeType extends EsNode = EsNode> {
     public node:NodeType;
     public scope:ScopeForEvent;
+    #interpreter:SvalPlus 
 
-    constructor(node:NodeType,scope:ScopeForEvent) {
+    constructor(node:NodeType,scope:ScopeForEvent,interpreter:SvalPlus) {
         this.node = node;
         this.scope = scope;
+        this.#interpreter = interpreter;
+    }
+    public defer(cb:DeferredFn) {
+        this.#interpreter.defersForNode.push(cb);
     }
 }
-export class BinaryExprEvent extends LangEvent<BinaryExpression> {
-    constructor(node: BinaryExpression,scope:ScopeForEvent) { super(node,scope) }
-}
+export type DeferredFn = (result:unknown)=>void;
+
 // Expressions
+export class BinaryExprEvent extends LangEvent<BinaryExpression> {
+    constructor(node: BinaryExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
+}
+
 export class CallExprEvent extends LangEvent<CallExpression> {
-    constructor(node: CallExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: CallExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class AssignExprEvent extends LangEvent<AssignmentExpression> {
-    constructor(node: AssignmentExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: AssignmentExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class UpdateExprEvent extends LangEvent<UpdateExpression> {
-    constructor(node: UpdateExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: UpdateExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class LogicalExprEvent extends LangEvent<LogicalExpression> {
-    constructor(node: LogicalExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: LogicalExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class MemberExprEvent extends LangEvent<MemberExpression> {
-    constructor(node: MemberExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: MemberExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class AwaitExprEvent extends LangEvent<AwaitExpression> {
-    constructor(node: AwaitExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: AwaitExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class FuncExprEvent extends LangEvent<FunctionExpression> {
-    constructor(node: FunctionExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: FunctionExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class ArrowFnExprEvent extends LangEvent<ArrowFunctionExpression> {
-    constructor(node:ArrowFunctionExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ArrowFunctionExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class TernaryExprEvent extends LangEvent<ConditionalExpression> {
-    constructor(node:ConditionalExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ConditionalExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class NewExprEvent extends LangEvent<NewExpression> {
-    constructor(node:NewExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: NewExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class YieldExprEvent extends LangEvent<YieldExpression> {
-    constructor(node:YieldExpression, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: YieldExpression, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
 
 // Statements & Control Flow
 export class ReturnStmtEvent extends LangEvent<ReturnStatement> {
-    constructor(node: ReturnStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ReturnStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class IfStmtEvent extends LangEvent<IfStatement> {
-    constructor(node: IfStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: IfStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class SwitchStmtEvent extends LangEvent<SwitchStatement> {
-    constructor(node: SwitchStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: SwitchStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class ThrowStmtEvent extends LangEvent<ThrowStatement> {
-    constructor(node: ThrowStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ThrowStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class TryStmtEvent extends LangEvent<TryStatement> {
-    constructor(node: TryStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: TryStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class CatchClauseEvent extends LangEvent<CatchClause> {
-    constructor(node: CatchClause, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: CatchClause, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
 
 // Declarations
 export class VarDeclEvent extends LangEvent<VariableDeclaration> {
-    constructor(node: VariableDeclaration, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: VariableDeclaration, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class FuncDeclEvent extends LangEvent<FunctionDeclaration> {
-    constructor(node: FunctionDeclaration, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: FunctionDeclaration, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
 
 // Iteration
 export class ForStmtEvent extends LangEvent<ForStatement> {
-    constructor(node: ForStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ForStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class WhileStmtEvent extends LangEvent<WhileStatement> {
-    constructor(node: WhileStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: WhileStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class DoWhileStmtEvent extends LangEvent<DoWhileStatement> {
-    constructor(node: DoWhileStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: DoWhileStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class ForOfStmtEvent extends LangEvent<ForOfStatement> {
-    constructor(node: ForOfStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ForOfStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class ForInStmtEvent extends LangEvent<ForInStatement> {
-    constructor(node: ForInStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ForInStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class LabeledStmtEvent extends LangEvent<LabeledStatement> {
-    constructor(node:LabeledStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: LabeledStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class BreakStmtEvent extends LangEvent<BreakStatement> {
-    constructor(node:BreakStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: BreakStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 export class ContinueStmtEvent extends LangEvent<ContinueStatement> {
-    constructor(node:ContinueStatement, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: ContinueStatement, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
+
 // Data
 export class LiteralEvent extends LangEvent<Literal> {
-    constructor(node: Literal, scope: ScopeForEvent) { super(node, scope) }
+    constructor(node: Literal, scope: ScopeForEvent, interpreter: SvalPlus) { 
+        super(node, scope, interpreter); 
+    }
 }
 
 
@@ -243,127 +334,127 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>) {
         }
     }
 }
-export function createEvent<T extends Query>(query:Query,node:EsNode,scope:ScopeForEvent):EventMap[T]  {
+export function createEvent<T extends Query>(query:Query,node:EsNode,interpreter:SvalPlus):EventMap[T]  {
     let event:LangEvent | null = null;
     switch (query) {
         case 'BinaryExpression': {
-            event = new BinaryExprEvent(node as BinaryExpression, scope);
+            event = new BinaryExprEvent(node as BinaryExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'CallExpression': {
-            event = new CallExprEvent(node as CallExpression, scope);
+            event = new CallExprEvent(node as CallExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'AssignmentExpression': {
-            event = new AssignExprEvent(node as AssignmentExpression, scope);
+            event = new AssignExprEvent(node as AssignmentExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'UpdateExpression': {
-            event = new UpdateExprEvent(node as UpdateExpression, scope);
+            event = new UpdateExprEvent(node as UpdateExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'LogicalExpression': {
-            event = new LogicalExprEvent(node as LogicalExpression, scope);
+            event = new LogicalExprEvent(node as LogicalExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'MemberExpression': {
-            event = new MemberExprEvent(node as MemberExpression, scope);
+            event = new MemberExprEvent(node as MemberExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'AwaitExpression': {
-            event = new AwaitExprEvent(node as AwaitExpression, scope);
+            event = new AwaitExprEvent(node as AwaitExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'FunctionExpression': {
-            event = new FuncExprEvent(node as FunctionExpression, scope);
+            event = new FuncExprEvent(node as FunctionExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ReturnStatement': {
-            event = new ReturnStmtEvent(node as ReturnStatement, scope);
+            event = new ReturnStmtEvent(node as ReturnStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'IfStatement': {
-            event = new IfStmtEvent(node as IfStatement, scope);
+            event = new IfStmtEvent(node as IfStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'SwitchStatement': {
-            event = new SwitchStmtEvent(node as SwitchStatement, scope);
+            event = new SwitchStmtEvent(node as SwitchStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ThrowStatement': {
-            event = new ThrowStmtEvent(node as ThrowStatement, scope);
+            event = new ThrowStmtEvent(node as ThrowStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'TryStatement': {
-            event = new TryStmtEvent(node as TryStatement, scope);
+            event = new TryStmtEvent(node as TryStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'CatchClause': {
-            event = new CatchClauseEvent(node as CatchClause, scope);
+            event = new CatchClauseEvent(node as CatchClause, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'VariableDeclaration': {
-            event = new VarDeclEvent(node as VariableDeclaration, scope);
+            event = new VarDeclEvent(node as VariableDeclaration, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'FunctionDeclaration': {
-            event = new FuncDeclEvent(node as FunctionDeclaration, scope);
+            event = new FuncDeclEvent(node as FunctionDeclaration, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ForStatement': {
-            event = new ForStmtEvent(node as ForStatement, scope);
+            event = new ForStmtEvent(node as ForStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'WhileStatement': {
-            event = new WhileStmtEvent(node as WhileStatement, scope);
+            event = new WhileStmtEvent(node as WhileStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'DoWhileStatement': {
-            event = new DoWhileStmtEvent(node as DoWhileStatement, scope);
+            event = new DoWhileStmtEvent(node as DoWhileStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ForOfStatement': {
-            event = new ForOfStmtEvent(node as ForOfStatement, scope);
+            event = new ForOfStmtEvent(node as ForOfStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ForInStatement': {
-            event = new ForInStmtEvent(node as ForInStatement, scope);
+            event = new ForInStmtEvent(node as ForInStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'Literal': {
-            event = new LiteralEvent(node as Literal, scope);
+            event = new LiteralEvent(node as Literal, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'LabeledStatement': {
-            event = new LabeledStmtEvent(node as LabeledStatement, scope);
+            event = new LabeledStmtEvent(node as LabeledStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'BreakStatement': {
-            event = new BreakStmtEvent(node as BreakStatement, scope);
+            event = new BreakStmtEvent(node as BreakStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ContinueStatement': {
-            event = new ContinueStmtEvent(node as ContinueStatement, scope);
+            event = new ContinueStmtEvent(node as ContinueStatement, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'NewExpression': {
-            event = new NewExprEvent(node as NewExpression, scope);
+            event = new NewExprEvent(node as NewExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ArrowFunctionExpression': {
-            event = new ArrowFnExprEvent(node as ArrowFunctionExpression, scope);
+            event = new ArrowFnExprEvent(node as ArrowFunctionExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'ConditionalExpression': {
-            event = new TernaryExprEvent(node as ConditionalExpression, scope);
+            event = new TernaryExprEvent(node as ConditionalExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'YieldExpression': {
-            event = new YieldExprEvent(node as YieldExpression, scope);
+            event = new YieldExprEvent(node as YieldExpression, interpreter.scopeForEvent, interpreter);
             break;
         }
         case 'Any': default: {
-            event = new LangEvent(node,scope);
+            event = new LangEvent(node, interpreter.scopeForEvent, interpreter);
             break;
         }
     }

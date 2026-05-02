@@ -144,7 +144,7 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import * as crypto from "crypto"
 import jsBeatutify from "js-beautify";
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, DeferredFn } from './monitored-events.ts'
 
 
 class SvalPlus extends Sval implements SvalPlusContract {
@@ -176,10 +176,10 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public svalVisit:SvalVisit = {
         matched:false,
-        is:(query,ifHit)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
+        is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((query === "Any") || (node.type === query)) {
-                ifHit(createEvent(query,node,this.scopeForEvent));
+                cb(createEvent(query,node,this));
                 this.svalVisit.matched = true;
             }
         },
@@ -188,6 +188,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         is:this.svalVisit.is,
         matched:()=>this.svalVisit.matched
     }
+    public defersForNode:DeferredFn[] = []
 
     public static readonly resultExport:string = 'result';
     public static readonly argsVar = SvalPlus.sha256Key('args');
