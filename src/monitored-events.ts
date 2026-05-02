@@ -2,7 +2,6 @@
 //because of the demand and supply architecture,the script-monitor runs as close to the speed of sval as possible.so the overhead is the interpretation step not necessarily the monitor or sval
 
 import Scope from "./scope/index.ts";
-import { Node as AcornNode } from "acorn";
 import { Node as EsNode} from "estree";
 import { 
     Literal ,BinaryExpression, CallExpression, AssignmentExpression, 
@@ -309,26 +308,6 @@ export class ContinueStmtEvent extends LangEvent<ContinueStatement> {
 export class LiteralEvent extends LangEvent<Literal> {
     constructor(node: Literal,interpreter: SvalPlus) { 
         super(node,interpreter); 
-    }
-}
-
-
-export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = svalScope.interpreter;
-    if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
-    
-    const atRoot = !svalScope.hasParent();
-    if (atRoot) {
-        return;//we dont want to track any action thats not inside the monitored function
-    }
-    if (interpreter.langListener) {
-        interpreter.reusables.svalScope = svalScope;
-        interpreter.reusables.node = acornNode as EsNode;
-        interpreter.reusables.handler = handler;
-        interpreter.svalVisit.matched = false;
-        interpreter.reusables.result = UNASSIGNED;
-        interpreter.reusables.thrown = UNASSIGNED;
-        interpreter.langListener(interpreter.visit);
     }
 }
 export function createEvent<T extends Query>(query:Query,node:EsNode,interpreter:SvalPlus):EventMap[T]  {

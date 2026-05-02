@@ -34,6 +34,9 @@ perf(()=>{
 let count = 0;
 let otherNodes = 0;
 
+//pop
+//the evaluate_n update
+
 const add = monitor.fn({
     main:{
         ref:internalAdd, 
@@ -41,6 +44,7 @@ const add = monitor.fn({
     listener:(visit) => {
         visit.is('AssignmentExpression',event => {
             count += 1;
+            console.log('Exec: ',visit.execute());
         })
         if (!visit.matched()) {
             visit.is('Any',event=>{
