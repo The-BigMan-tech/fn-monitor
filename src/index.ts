@@ -193,6 +193,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         matched:()=>this.svalVisit.matched,
         execute:()=>{
             const handler = this.reusables.handler;
+            if (handler === null) return;
             try {
                 if (this.reusables.result !== UNASSIGNED) {
                     console.log('ASSIGNED');

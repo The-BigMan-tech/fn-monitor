@@ -325,6 +325,9 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handle
         interpreter.reusables.svalScope = svalScope;
         interpreter.reusables.node = acornNode as EsNode;
         interpreter.reusables.handler = handler;
+        interpreter.svalVisit.matched = false;
+        interpreter.reusables.result = UNASSIGNED;
+        interpreter.reusables.thrown = UNASSIGNED;
         interpreter.langListener(interpreter.visit);
     }
 }
