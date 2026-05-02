@@ -13,6 +13,10 @@ import { callMonitor, Reusables, SvalPlus, UNASSIGNED } from '../monitored-event
 
 let evaluateOps: any
 
+interface PrevValues extends Reusables {
+    evalStack:0,
+    matched:boolean
+}
 function handleResult(node:Node,scope:Scope,handler:any) {
     if (handler) {
         const interpreter:SvalPlus = scope.interpreter;
@@ -33,10 +37,6 @@ function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.thrown = UNASSIGNED;
     interpreter.svalVisit.matched = false;
-}
-interface PrevValues extends Reusables {
-    evalStack:0,
-    matched:boolean
 }
 function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValues) {
     interpreter.reusables.node = prevReusables.node;
