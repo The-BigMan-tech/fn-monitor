@@ -83,22 +83,35 @@ perf(() => {
 
 
 //INLINING
+async function asyncHello() {
+    console.log('hello world');
+}
 const addPseudoClosure = monitor.fn({
     main:{
-        ref:internalAdd2,
+        ref:async(a: number, b: number)=>{
+            await asyncHello();
+            return internalAdd2(a,b);
+        },
+        captures:{asyncHello}
     },
     listener:()=>undefined,
     inlineFunctions:{
+        internalAdd2:{
+            ref:internalAdd2,
+        },
         hello2:{
             ref:hello2,
             captures:{random}
         }
     },
 });
-perf(() => {
-    const result = addPseudoClosure(4,8);
-    console.log(result);
-});
+const start = performance.now();
+
+const result = await addPseudoClosure(4,8);
+console.log(result);
+
+const end = performance.now();
+console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
 
 
 
