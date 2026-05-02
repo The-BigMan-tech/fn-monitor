@@ -142,10 +142,9 @@ class Sval {
 
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
-import * as crypto from "crypto"
-import jsBeatutify from "js-beautify";
+import {sha256} from "js-sha256"
 import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED } from './monitored-events.ts'
-
+import jsBeatutify from "js-beautify";
 
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
@@ -218,7 +217,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
 
 
     public static sha256Key(str:string):string {
-        return 'generated_' + crypto.createHash('sha256').update(str).digest('hex');
+        return 'generated_' + sha256.create().update(str).hex();
     }
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {
         const fnString = fn.toString();
