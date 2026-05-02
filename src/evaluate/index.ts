@@ -9,33 +9,50 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { callMonitor } from '../monitored-events.ts'
+
+import { SvalPlus } from '../monitored-events.ts'
+import { 
+    callMonitor, 
+    captureReusables, 
+    clearEvalStack, 
+    handleResultGen, // Use the Generator version
+    restorePrevReusables 
+} from '../monitor-functions.ts'
+
 
 let evaluateOps: any
 
 export default function* evaluate(node: Node, scope: Scope) {
-  if (!node) return
-  callMonitor(node,scope);
+    if (!node) return
+    if (!evaluateOps) {
+        evaluateOps = assign(
+            {},
+            declaration,
+            expression,
+            identifier,
+            statement,
+            literal,
+            pattern,
+            program
+        )
+    }
+    const handler = evaluateOps[node.type];
 
-  // delay initalizing to remove circular reference issue for jest
-  if (!evaluateOps) {
-    evaluateOps = assign(
-      {},
-      declaration,
-      expression,
-      identifier,
-      statement,
-      literal,
-      pattern,
-      program
-    )
-  }
+    const interpreter: SvalPlus = scope.interpreter;
+    const prevReusables = captureReusables(interpreter, scope);
 
-  const handler = evaluateOps[node.type]
-  if (handler) {
-    const result = yield* handler(node, scope);
-    return result; // Crucial: Return the result so the parent caller gets it
-  } else {
-    throw new Error(`${node.type} isn't implemented`)
-  }
+    try {
+        interpreter.reusables.evalStack += 1;
+        callMonitor(node, scope, handler);
+        const result = yield* handleResultGen(node, scope, handler);
+        return result;
+    } 
+    finally {
+        interpreter.reusables.evalStack -= 1;
+        if (interpreter.reusables.evalStack === 0) {
+            clearEvalStack(interpreter);
+        } else {
+            restorePrevReusables(interpreter, prevReusables);
+        }
+    }
 }

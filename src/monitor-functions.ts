@@ -12,13 +12,26 @@ export function handleResult(node:AcornNode,scope:Scope,handler:any) {
         const interpreter:SvalPlus = scope.interpreter;
         if (interpreter.reusables.thrown !== UNASSIGNED) {
             throw interpreter.reusables.thrown;
+        }else {
+            return (interpreter.reusables.result !== UNASSIGNED)
+                ?interpreter.reusables.result
+                :handler(node,scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
         }
-        return (interpreter.reusables.result !== UNASSIGNED)
-            ?interpreter.reusables.result
-            :handler(node,scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
-    } else {
-        throw new Error(`${node.type} isn't implemented`)
-    }
+    } 
+    else throw new Error(`${node.type} isn't implemented`)
+}
+export function* handleResultGen(node: AcornNode, scope: Scope, handler: any) {
+    if (handler) {
+        const interpreter: SvalPlus = scope.interpreter;
+        if (interpreter.reusables.thrown !== UNASSIGNED) {
+            throw interpreter.reusables.thrown;
+        }else {
+            return (interpreter.reusables.result !== UNASSIGNED)
+                ? yield* interpreter.reusables.result
+                : yield* handler(node, scope); 
+        }
+    } 
+    else throw new Error(`${node.type} isn't implemented`);
 }
 export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = svalScope.interpreter;

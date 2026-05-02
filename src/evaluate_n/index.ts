@@ -9,7 +9,7 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { SvalPlus } from '../monitored-events.ts'
 import { callMonitor, captureReusables, clearEvalStack, handleResult, restorePrevReusables } from '../monitor-functions.ts'
 
 let evaluateOps: any
@@ -32,12 +32,14 @@ export default function evaluate(node: Node, scope: Scope) {
 
     const interpreter:SvalPlus = scope.interpreter;
     const prevReusables = captureReusables(interpreter,scope)
-    
+
     try {
         interpreter.reusables.evalStack += 1;
         callMonitor(node,scope,handler);
-        return handleResult(node,scope,handler);
-    }finally {
+        const result = handleResult(node,scope,handler);
+        return result;
+    }
+    finally {
         interpreter.reusables.evalStack -= 1;
         if (interpreter.reusables.evalStack === 0) {
             clearEvalStack(interpreter)
