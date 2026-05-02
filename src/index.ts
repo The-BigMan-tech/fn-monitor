@@ -149,6 +149,12 @@ import jsBeatutify from "js-beautify";
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
     public fnBeforeEachCall:Fn | undefined = undefined;
+    public astInUse:FnAst | null = null;
+
+    public static readonly resultExport:string = 'result';
+    public static readonly argsVar = SvalPlus.sha256Key('args');
+    public static readonly capturesVar = SvalPlus.sha256Key('captures');
+    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
     constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
@@ -208,16 +214,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
             }
             return this.reusables.result;
         }
-    }
-
-    public static readonly resultExport:string = 'result';
-    public static readonly argsVar = SvalPlus.sha256Key('args');
-    public static readonly capturesVar = SvalPlus.sha256Key('captures');
-    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
-
-
-    public static sha256Key(str:string):string {
-        return 'generated_' + sha256.create().update(str).hex();
     }
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {
         const fnString = fn.toString();
@@ -281,29 +277,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
         }
         return fnCode;
     }
-    public static getFnAst(fnSrc:FnSrc):FnAst {
-        const fnCodeHash = SvalPlus.sha256Key(fnSrc.fnCode);
-        const cached = SvalPlus.fnAstCache.get(fnCodeHash);
-        if (cached) {
-            return cached;
-        }
-        const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(`\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`, SvalPlus.meriyahParseOptions);
-        
-        const ast = { fnCode: fnCodeAst as Node, fnCall: fnCallAst as Node };
-        SvalPlus.fnAstCache.set(fnCodeHash, ast);
-
-        return ast;
-    }
-    public static refErrMsg(err:ReferenceError) {
-        return (
-            chalk.red.underline(`\nReference Error`) +
-            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
-            chalk.red.underline(`\n\nTrace`) + `\n${err}`
-        )
-    }
-    public astInUse:FnAst | null = null;
-
     public getMonitoredFn = (...args:any[])=>{
         if (this.fnBeforeEachCall !== undefined) {
             this.fnBeforeEachCall(...args);
@@ -330,6 +303,30 @@ class SvalPlus extends Sval implements SvalPlusContract {
         ecmaVer:2024, // Match your tsconfig target
         sandBox: true, // Standard for eDSLs/Sandboxes,
     };
+    public static sha256Key(str:string):string {
+        return 'generated_' + sha256.create().update(str).hex();
+    }
+    public static getFnAst(fnSrc:FnSrc):FnAst {
+        const fnCodeHash = SvalPlus.sha256Key(fnSrc.fnCode);
+        const cached = SvalPlus.fnAstCache.get(fnCodeHash);
+        if (cached) {
+            return cached;
+        }
+        const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
+        const fnCallAst = meriyahParse(`\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`, SvalPlus.meriyahParseOptions);
+        
+        const ast = { fnCode: fnCodeAst as Node, fnCall: fnCallAst as Node };
+        SvalPlus.fnAstCache.set(fnCodeHash, ast);
+
+        return ast;
+    }
+    public static refErrMsg(err:ReferenceError) {
+        return (
+            chalk.red.underline(`\nReference Error`) +
+            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
+            chalk.red.underline(`\n\nTrace`) + `\n${err}`
+        )
+    }
 }
 const Colors = {
     orange:chalk.hex('#f6c098')
