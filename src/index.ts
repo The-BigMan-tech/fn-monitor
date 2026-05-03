@@ -144,8 +144,8 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
 import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE } from './monitored-events.ts'
+import { isGenerator } from './monitor-functions.ts';
 import jsBeatutify from "js-beautify";
-import { isGenerator } from './monitor-functions.ts'
 
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
@@ -360,7 +360,10 @@ interface MonitorFnSetup<T extends Fn> {
     inlineFunctions?:Record<string,Metadata<Fn>>
     beforeEachCall?:(...args:Parameters<T>)=>void
 }
-//the paradigm for monitored functions is one interpreter per function to ensure complete isolation and predictability
+
+//the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
+//The monitor uses an ast walker interpreter to walk cuz a bytecode version will make it impossible to setup step by step monitoring
+
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
         const {ref:fn,captures} = setup.main;
