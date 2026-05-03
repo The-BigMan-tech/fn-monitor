@@ -87,7 +87,7 @@ export const UNASSIGNED = Symbol('UNASSIGNED');
 
 type IfMatched<T extends Query> = (event:EventMap[T])=>void;
 
-export type GenExe = Generator<typeof LAZY_NODE,undefined,undefined>;
+export type GenExe = Generator<typeof LAZY_NODE,undefined,any>;
 
 export interface Visit {
     is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
