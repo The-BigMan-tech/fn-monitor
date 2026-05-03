@@ -194,7 +194,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
             }
         },
     }
-    public visit = {
+    public visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
         is:this.svalVisit.is,
         matched:()=>this.svalVisit.matched,
         execute:()=>{
