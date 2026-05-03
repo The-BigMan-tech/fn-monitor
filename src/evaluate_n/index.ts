@@ -41,9 +41,8 @@ export default function evaluate(node: Node, scope: Scope) {
         const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
-            console.log('Hit this one');
             const next = feedback.next();
-            const result = (interpreter.reusables.result === UNASSIGNED)
+            const result = (interpreter.reusables.result === UNASSIGNED)//must be done after calling next
                 ?handleResult(scope,handler(node,scope))
                 :handleResult(scope,interpreter.reusables.result)
 

@@ -10,7 +10,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { LAZY_NODE, SvalPlus } from '../monitored-events.ts'
+import { LAZY_NODE, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 
     captureReusables, 
@@ -49,21 +49,24 @@ export default function* evaluate(node: Node, scope: Scope) {
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
-            
+            const result = (interpreter.reusables.result === UNASSIGNED)
+                ?yield* handleGeneratorResult(scope,handler(node,scope))
+                :yield* handleGeneratorResult(scope,interpreter.reusables.result)
+
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
                     throw new Error(chalk.red(`For lazy nodes,LangListeners that are generators can only yield that node.`))
                 }
-                const result = yield* handleGeneratorResult(scope,interpreter.reusables.result);
                 const next2 = feedback.next(result);
                 if (!next2.done) {
-                    throw new Error(chalk.red(`LangListeners that are generators can only yield once.`))
+                    throw new Error(chalk.red(`In Lazy Node:LangListeners that are generators can only yield once.`))
                 }
-                return result;
             }
-            return yield* handleGeneratorResult(scope,handler(node,scope));//i didnt lift this to a variable to prevent possible and unexpected side effects
+            return result;
         }
-        return yield* handleGeneratorResult(scope,handler(node,scope));
+        return (interpreter.reusables.result === UNASSIGNED)
+            ?yield* handleGeneratorResult(scope,handler(node,scope))
+            :yield* handleGeneratorResult(scope,interpreter.reusables.result)
     } 
     finally {
         interpreter.reusables.evalStack -= 1;
