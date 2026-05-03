@@ -82,19 +82,24 @@ export type EventMap = (
     Record<YieldExpression['type'],YieldExprEvent> &
     Record<'Any', LangEvent>
 );
+export const LAZY_NODE = Symbol('LAZY_NODE');
+export const UNASSIGNED = Symbol('UNASSIGNED');
+
 type IfMatched<T extends Query> = (event:EventMap[T])=>void;
+
+export type GenExe = Generator<typeof LAZY_NODE,undefined,undefined>;
 
 export interface Visit {
     is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
     matched:()=>boolean,
-    execute:()=>any 
+    execute:<T extends any=any>()=>T 
 }
+export type LangListener = (visit:Visit)=>void | GenExe
+
 export interface SvalVisit {
     is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
     matched:boolean
 }
-export const UNASSIGNED = Symbol('UNASSIGNED');
-
 export interface Reusables {
     evalStack:number,
     svalScope:Scope | null,
@@ -110,8 +115,6 @@ export interface SvalPlus {
     visit:Visit,
     scopeForEvent:ScopeForEvent,
 }
-export type LangListener = (visit:Visit)=>void;
-
 export interface VariableForEvent {
     value:()=>any
 }

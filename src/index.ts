@@ -143,9 +143,9 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE } from './monitored-events.ts'
 import jsBeatutify from "js-beautify";
-import { isGenerator, LAZY_NODE } from './monitor-functions.ts'
+import { isGenerator } from './monitor-functions.ts'
 
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
@@ -199,28 +199,25 @@ class SvalPlus extends Sval implements SvalPlusContract {
         matched:()=>this.svalVisit.matched,
         execute:()=>{
             const handler = this.reusables.handler;
-            if (handler === null) return;
-
-            let resultToRetun:typeof UNASSIGNED | any = UNASSIGNED;
-            try {
-                if (this.reusables.result !== UNASSIGNED) {
-                    console.log('ASSIGNED');
-                    throw new Error(chalk.red(`A node can only be executed once`))
+            if (handler !== null) {
+                let resultToRetun:typeof UNASSIGNED | any = UNASSIGNED;
+                try {
+                    if (this.reusables.result !== UNASSIGNED) {
+                        throw new Error(chalk.red(`A node can only be executed once`))
+                    }
+                    this.reusables.result = handler(this.reusables.node!,this.reusables.svalScope!);
+                    resultToRetun = isGenerator(this.reusables.result)
+                        ?LAZY_NODE
+                        :this.reusables.result
+                }catch(e) {
+                    if (e instanceof Error) {
+                        throw e
+                    }else {
+                        this.reusables.thrown = e;//this catches throws that arent errors like symbol throwing for domain purposes
+                    }
                 }
-                this.reusables.result = handler(this.reusables.node!,this.reusables.svalScope!);
-                if (isGenerator(this.reusables.result)) {
-                    resultToRetun = LAZY_NODE;
-                }else {
-                    resultToRetun = this.reusables.result;
-                }
-            }catch(e) {
-                if (e instanceof Error) {
-                    throw e
-                }else {
-                    this.reusables.thrown = e;//this catches throws that arent errors like symbol throwing for domain purposes
-                }
+                return resultToRetun
             }
-            return resultToRetun
         }
     }
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {

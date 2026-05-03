@@ -10,8 +10,9 @@ interface PrevValues extends Reusables {
 export function isGenerator (obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-export const LAZY_NODE = Symbol('LAZY_NODE');
-
+export function isGeneratorFn(fn:Fn):fn is GeneratorFunction {
+    return Object.prototype.toString.call(fn) === '[object GeneratorFunction]'
+}
 export function handleResult(node:AcornNode,scope:Scope,handler:any) {
     if (handler) {
         const interpreter:SvalPlus = scope.interpreter;
@@ -53,7 +54,7 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handle
         interpreter.svalVisit.matched = false;
         interpreter.reusables.result = UNASSIGNED;
         interpreter.reusables.thrown = UNASSIGNED;
-        interpreter.langListener(interpreter.visit);
+        return interpreter.langListener(interpreter.visit);
     }
 }
 export function clearEvalStack(interpreter:SvalPlus) {
