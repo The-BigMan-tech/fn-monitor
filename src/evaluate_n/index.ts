@@ -29,7 +29,8 @@ export default function evaluate(node: Node, scope: Scope) {
         )
     }
     const handler = evaluateOps[node.type];
-
+    if (!handler) throw new Error(`${node.type} isn't implemented`);
+    
     const interpreter:SvalPlus = scope.interpreter;
     const prevReusables = captureReusables(interpreter,scope)
 

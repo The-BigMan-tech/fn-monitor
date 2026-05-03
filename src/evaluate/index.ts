@@ -10,15 +10,16 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { SvalPlus } from '../monitored-events.ts'
+import { LAZY_NODE, SvalPlus } from '../monitored-events.ts'
 import { 
     callMonitor, 
     captureReusables, 
     clearEvalStack, 
-    handleResultGen, // Use the Generator version
+    handleGeneratorResult, isGenerator, // Use the Generator version
     restorePrevReusables 
 } from '../monitor-functions.ts'
 
+import chalk from 'chalk'
 
 let evaluateOps: any
 
@@ -37,14 +38,30 @@ export default function* evaluate(node: Node, scope: Scope) {
         )
     }
     const handler = evaluateOps[node.type];
+    if (!handler) throw new Error(`${node.type} isn't implemented`);
 
     const interpreter: SvalPlus = scope.interpreter;
     const prevReusables = captureReusables(interpreter, scope);
 
     try {
         interpreter.reusables.evalStack += 1;
-        callMonitor(node, scope, handler);
-        const result = yield* handleResultGen(node, scope, handler);
+        const fallback = handleGeneratorResult(scope,handler(node,scope));
+
+        const feedback = callMonitor(node, scope, handler);
+        const isGen = isGenerator(feedback);
+        
+        let result;
+        if (isGen) {
+            const next = feedback.next();
+            if (!next.done) {
+                if (next.value !== LAZY_NODE) throw new Error(chalk.red(`LangListeners that are generators can only yield lazy nodes.`))
+                result = yield* handleGeneratorResult(scope,interpreter.reusables.result);
+                feedback.next(result);
+            }else {
+                result = yield* fallback;
+            }
+        }
+        else result = yield* fallback;
         return result;
     } 
     finally {

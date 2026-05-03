@@ -10,34 +10,23 @@ interface PrevValues extends Reusables {
 export function isGenerator (obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-export function isGeneratorFn(fn:Fn):fn is GeneratorFunction {
-    return Object.prototype.toString.call(fn) === '[object GeneratorFunction]'
-}
 export function handleResult(node:AcornNode,scope:Scope,handler:any) {
-    if (handler) {
-        const interpreter:SvalPlus = scope.interpreter;
-        if (interpreter.reusables.thrown !== UNASSIGNED) {
-            throw interpreter.reusables.thrown;
-        }else {
-            return (interpreter.reusables.result !== UNASSIGNED)
-                ?interpreter.reusables.result
-                :handler(node,scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
-        }
-    } 
-    else throw new Error(`${node.type} isn't implemented`)
+    const interpreter:SvalPlus = scope.interpreter;
+    if (interpreter.reusables.thrown !== UNASSIGNED) {
+        throw interpreter.reusables.thrown;
+    }else {
+        return (interpreter.reusables.result !== UNASSIGNED)
+            ?interpreter.reusables.result
+            :handler(node,scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
+    }
 }
-export function* handleResultGen(node: AcornNode, scope: Scope, handler: any) {
-    if (handler) {
-        const interpreter: SvalPlus = scope.interpreter;
-        if (interpreter.reusables.thrown !== UNASSIGNED) {
-            throw interpreter.reusables.thrown;
-        }else {
-            return (interpreter.reusables.result !== UNASSIGNED)
-                ? yield* interpreter.reusables.result
-                : yield* handler(node, scope); 
-        }
-    } 
-    else throw new Error(`${node.type} isn't implemented`);
+export function* handleGeneratorResult(scope: Scope,generator:Generator) {
+    const interpreter: SvalPlus = scope.interpreter;
+    if (interpreter.reusables.thrown !== UNASSIGNED) {
+        throw interpreter.reusables.thrown;
+    }else {
+        return yield* generator;
+    }
 }
 export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = svalScope.interpreter;
