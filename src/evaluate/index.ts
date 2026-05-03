@@ -49,7 +49,6 @@ export default function* evaluate(node: Node, scope: Scope) {
         const feedback = callMonitor(node, scope, handler);
         const isGen = isGenerator(feedback);
         
-        const fallback = handleGeneratorResult(scope,handler(node,scope));
         if (isGen) {
             const next = feedback.next();
             if (!next.done) {
@@ -58,9 +57,9 @@ export default function* evaluate(node: Node, scope: Scope) {
                 feedback.next(result);
                 return result;
             }
-            return yield* fallback;
+            return yield* handleGeneratorResult(scope,handler(node,scope));
         }
-        return yield* fallback;
+        return yield* handleGeneratorResult(scope,handler(node,scope));
     } 
     finally {
         interpreter.reusables.evalStack -= 1;
