@@ -96,8 +96,8 @@ const addPseudoClosure = monitor.fn({
         },
         captures:{asyncHello}
     },
-    listener:function (visit) {
-        console.log('NODE EVAL: ',visit.execute());
+    listener:function* (visit):GenExe {
+        console.log('NODE EVAL: ',yield visit.execute());
     },
     inlineFunctions:{
         internalAdd2:{

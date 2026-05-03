@@ -45,24 +45,22 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     try {
         interpreter.reusables.evalStack += 1;
-        const fallback = handleGeneratorResult(scope,handler(node,scope));
 
         const feedback = callMonitor(node, scope, handler);
         const isGen = isGenerator(feedback);
         
-        let result;
+        const fallback = handleGeneratorResult(scope,handler(node,scope));
         if (isGen) {
             const next = feedback.next();
             if (!next.done) {
                 if (next.value !== LAZY_NODE) throw new Error(chalk.red(`LangListeners that are generators can only yield lazy nodes.`))
-                result = yield* handleGeneratorResult(scope,interpreter.reusables.result);
+                const result = yield* handleGeneratorResult(scope,interpreter.reusables.result);
                 feedback.next(result);
-            }else {
-                result = yield* fallback;
+                return result;
             }
+            return yield* fallback;
         }
-        else result = yield* fallback;
-        return result;
+        return yield* fallback;
     } 
     finally {
         interpreter.reusables.evalStack -= 1;
