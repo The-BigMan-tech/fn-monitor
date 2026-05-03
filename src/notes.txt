@@ -5,3 +5,5 @@ This means that each node,scope and execute method passed to a listener will alw
 So many unexpected behaviour of the Industrial Code Monitor(interpreter name) is the actual behaviour of runtime ast monitoring
 
 During code execution,he nodes are always fresh even for the same code to ensure zero interference.so it will be an antipattern to rely on node caching to check if a node existed in the past and to get its scope
+
+so the flow of the icm is to preprocess ur code with generated data based on ur capture and inline dependencies,parse ur code,cache the ast then on each run---it runs a small cached ast to call the fn,encounters a node,calls ur listener with the node,scope and execute fn,then implicitly executes the same mutable node if u already havent
