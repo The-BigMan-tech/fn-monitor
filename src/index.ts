@@ -299,7 +299,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
     public static defaultOptions:SvalOptions = {
-        sourceType:"script",//use the normalized and faster evalutor but the user will get promises if the monitor an async function and not the resolved result.
+        sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont work with modules
         ecmaVer:2024, 
         sandBox: true, // Standard for eDSLs/Sandboxes,
     };

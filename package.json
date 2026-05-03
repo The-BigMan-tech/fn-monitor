@@ -1,6 +1,6 @@
 {
     "name": "industrial-code-monitor",
-    "version": "3.4.0",
+    "version": "3.4.9",
     "description": "An extension of the sval js-in-js interpreter to monitor functions as they execute",
     "type": "module",
     "main": "dist/index.js",
