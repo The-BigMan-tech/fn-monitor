@@ -145,6 +145,7 @@ import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
 import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED } from './monitored-events.ts'
 import jsBeatutify from "js-beautify";
+import { isGenerator, LAZY_NODE } from './monitor-functions.ts'
 
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
@@ -199,12 +200,19 @@ class SvalPlus extends Sval implements SvalPlusContract {
         execute:()=>{
             const handler = this.reusables.handler;
             if (handler === null) return;
+
+            let resultToRetun:typeof UNASSIGNED | any = UNASSIGNED;
             try {
                 if (this.reusables.result !== UNASSIGNED) {
                     console.log('ASSIGNED');
                     throw new Error(chalk.red(`A node can only be executed once`))
                 }
                 this.reusables.result = handler(this.reusables.node!,this.reusables.svalScope!);
+                if (isGenerator(this.reusables.result)) {
+                    resultToRetun = LAZY_NODE;
+                }else {
+                    resultToRetun = this.reusables.result;
+                }
             }catch(e) {
                 if (e instanceof Error) {
                     throw e
@@ -212,7 +220,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
                     this.reusables.thrown = e;//this catches throws that arent errors like symbol throwing for domain purposes
                 }
             }
-            return this.reusables.result;
+            return resultToRetun
         }
     }
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {

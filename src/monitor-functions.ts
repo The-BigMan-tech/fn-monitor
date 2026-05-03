@@ -1,12 +1,17 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
-import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
+import { UNASSIGNED,SvalPlus,Reusables, Fn } from "./monitored-events.ts";
 
 interface PrevValues extends Reusables {
     evalStack:0,
     matched:boolean
 }
+export function isGenerator (obj:unknown):obj is Generator {
+    return Object.prototype.toString.call(obj) === '[object Generator]';
+}
+export const LAZY_NODE = Symbol('LAZY_NODE');
+
 export function handleResult(node:AcornNode,scope:Scope,handler:any) {
     if (handler) {
         const interpreter:SvalPlus = scope.interpreter;
