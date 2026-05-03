@@ -10,14 +10,12 @@ interface PrevValues extends Reusables {
 export function isGenerator (obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-export function handleResult(node:AcornNode,scope:Scope,handler:any) {
+export function handleResult(scope:Scope,result:any) {
     const interpreter:SvalPlus = scope.interpreter;
     if (interpreter.reusables.thrown !== UNASSIGNED) {
         throw interpreter.reusables.thrown;
     }else {
-        return (interpreter.reusables.result !== UNASSIGNED)
-            ?interpreter.reusables.result
-            :handler(node,scope);//if the listener doesnt explicitly execute the node,the interpreter will do it implicitly
+        return result;
     }
 }
 export function* handleGeneratorResult(scope: Scope,generator:Generator) {

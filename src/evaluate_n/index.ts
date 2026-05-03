@@ -9,8 +9,9 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { SvalPlus } from '../monitored-events.ts'
-import { callMonitor, captureReusables, clearEvalStack, handleResult, restorePrevReusables } from '../monitor-functions.ts'
+import { LAZY_NODE, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { callMonitor, captureReusables, clearEvalStack, handleResult, isGenerator, restorePrevReusables } from '../monitor-functions.ts'
+import chalk from 'chalk'
 
 let evaluateOps: any
 
@@ -30,15 +31,36 @@ export default function evaluate(node: Node, scope: Scope) {
     }
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
-    
+
     const interpreter:SvalPlus = scope.interpreter;
     const prevReusables = captureReusables(interpreter,scope)
 
     try {
         interpreter.reusables.evalStack += 1;
-        callMonitor(node,scope,handler);
-        const result = handleResult(node,scope,handler);
-        return result;
+
+        const feedback = callMonitor(node, scope, handler);
+
+        if (isGenerator(feedback)) {
+            console.log('Hit this one');
+            const next = feedback.next();
+            const result = (interpreter.reusables.result === UNASSIGNED)
+                ?handleResult(scope,handler(node,scope))
+                :handleResult(scope,interpreter.reusables.result)
+
+            if (!next.done) {
+                if (next.value !== interpreter.reusables.result) {
+                    throw new Error(chalk.red(`For an eager node,LangListeners that are generators can only yield the result of that node to be consistent.`))
+                }
+                const next2 = feedback.next(result);
+                if (!next2.done) {
+                    throw new Error(chalk.red(`In Eager Node:LangListeners that are generators can only yield once.`))
+                }
+            }
+            return result;
+        }
+        return (interpreter.reusables.result === UNASSIGNED)
+            ?handleResult(scope,handler(node,scope))
+            :handleResult(scope,interpreter.reusables.result)
     }
     finally {
         interpreter.reusables.evalStack -= 1;
