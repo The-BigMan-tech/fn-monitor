@@ -1,5 +1,6 @@
 import { monitor } from "./index.ts";
 import chalk from "chalk";
+import { GenExe, LAZY_NODE } from "./monitored-events.ts";
 
 //the perf profiles dont include the parsing step.but thanks to meriyah,this is decently fast and its cached 
 
@@ -34,9 +35,6 @@ perf(()=>{
 let count = 0;
 let otherNodes = 0;
 
-//pop
-//the evaluate_n update
-
 const add = monitor.fn({
     main:{
         ref:internalAdd, 
@@ -44,7 +42,6 @@ const add = monitor.fn({
     listener:(visit) => {
         visit.is('AssignmentExpression',event => {
             count += 1;
-            console.log('Exec: ',visit.execute());
         })
         if (!visit.matched()) {
             visit.is('Any',event=>{
@@ -85,7 +82,6 @@ perf(() => {
     console.log(result);
 });
 
-
 //INLINING
 async function asyncHello() {
     console.log('hello world');
@@ -94,11 +90,15 @@ const addPseudoClosure = monitor.fn({
     main:{
         ref:async(a: number, b: number)=>{
             await asyncHello();
-            return internalAdd2(a,b);
+            const result = internalAdd2(a,b);
+            console.log('RESULT:',result);
+            return result;
         },
         captures:{asyncHello}
     },
-    listener:()=>undefined,
+    listener:function (visit) {
+        console.log('NODE EVAL: ',visit.execute());
+    },
     inlineFunctions:{
         internalAdd2:{
             ref:internalAdd2,
