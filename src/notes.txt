@@ -1,10 +1,10 @@
 Unlike static analysis,u cant dig into a node to get the child scope nor execute it.the interpreter has to execute each node and discover each scope as they come to keep the program stable as it is also running it simultaneously.so u can only dig into the node to get info about its children as a pure data structure.but u can climb up to get the scope of the parent since that one has been discovered first.and with the parent scope and the name of the node if it exists,u can retrieve any object made in the past
 
-This means that each node,scope and execute method passed to a listener will always belong to the current visited node and not that from a local traversal.
+This means that each node,scope and execute method passed to a listener will always belong to the current visited node and not that from a local traversal.this prevents undefined behaviour .
 
 So many unexpected behaviour of the Industrial Code Monitor(interpreter name) is the actual behaviour of runtime ast monitoring
 
-During code execution,he nodes are always fresh even for the same code to ensure zero interference.so it will be an antipattern to rely on node caching to check if a node existed in the past and to get its scope
+During code execution,the nodes are always fresh even for the same code to ensure zero interference.so it will be an antipattern to rely on node caching to check if a node existed in the past and to get its scope
 
 Also notice that i called the object passed to the listener visit and not visitor.
 
