@@ -110,7 +110,7 @@ const addPseudoClosure = monitor.fn({
         visit.is('Any',()=> {
             seenNode = true;
         });
-        if (seenNode) {
+        if (seenNode) {//using a flag is an important pattern here to use yield visit.execute cuz the callback in visit.is isnt a generator and doesnt work with yield.its an intentional deisgn to prevent yield and function* coloring
             console.log('NODE EVAL: ',yield visit.execute());
         }
     },
