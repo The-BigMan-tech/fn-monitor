@@ -42,6 +42,8 @@ const add = monitor.fn({
     listener:(visit) => {
         visit.is('AssignmentExpression',event => {
             count += 1;
+            console.log('Depth: ',event.scope.depth());
+            console.log('assignment result',visit.execute());
         })
         if (!visit.matched()) {
             visit.is('Any',event=>{
@@ -111,7 +113,7 @@ const addPseudoClosure = monitor.fn({
             seenNode = true;
         });
         if (seenNode) {//using a flag is an important pattern here to use yield visit.execute cuz the callback in visit.is isnt a generator and doesnt work with yield.its an intentional deisgn to prevent yield and function* coloring
-            console.log('NODE EVAL: ',yield visit.execute());
+            console.log('NODE EVAL: ',yield visit.execute());//see the result of deferred nodes like await expressions
         }
     },
 });
