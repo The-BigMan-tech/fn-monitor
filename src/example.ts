@@ -43,7 +43,7 @@ const add = monitor.fn({
         visit.is('AssignmentExpression',event => {
             event.node.operator = "-=";//silently change the operator
             count += 1;
-            console.log('Depth: ',event.scope.depth());
+            console.log('Depth: ',event.scope.depth)
             console.log('assignment result',visit.execute());
         })
         if (!visit.matched()) {

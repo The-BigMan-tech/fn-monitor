@@ -58,7 +58,7 @@ export default class Scope<T = any> {
   public get scopeParent() {
     return this.parent;
   }
-  public getDepth() {
+  public get scopeDepth() {
     let d = 0;
     let currentScope:Scope | null = this;
     while (currentScope && currentScope.hasParent()) {

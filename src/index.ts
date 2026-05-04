@@ -149,6 +149,28 @@ import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent,
 import { isGenerator } from './monitor-functions.ts';
 import jsBeatutify from "js-beautify";
 
+class EventScope implements ScopeForEvent {
+    private scope:Scope
+    public parent:Scope | null;
+    public depth:number;
+    public variables:ScopeForEvent['variables'];
+
+    constructor(interpreter:SvalPlus) {
+        this.scope = interpreter.reusables.svalScope!;
+        this.parent = this.scope.scopeParent;
+        this.depth = this.scope.scopeDepth;
+        this.variables = {
+            search:(name:string):VariableForEvent | null =>{
+                const variable = this.scope.find(name);
+                if (variable === null) return null;
+
+                const variableForEvent = { value:()=>variable.get() }
+                return variableForEvent
+            },
+            local:this.scope.scopeContext
+        }
+    }
+}
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
     public fnBeforeEachCall:Fn | undefined = undefined;
@@ -172,19 +194,8 @@ class SvalPlus extends Sval implements SvalPlusContract {
         thrown:UNASSIGNED,
         handler:null
     }
-    public scopeForEvent:ScopeForEvent = {
-        variables:{
-            search:(name:string):VariableForEvent | null =>{
-                const variable = this.reusables.svalScope!.find(name);
-                if (variable === null) return null;
-                
-                const variableForEvent = { value:()=>variable.get() }
-                return variableForEvent
-            },
-            local:()=>this.reusables.svalScope!.scopeContext
-        },
-        parent:()=>this.reusables.svalScope!.scopeParent,//it has to be a method to always use the latest scope
-        depth:()=>this.reusables.svalScope!.getDepth()
+    public createEventScope = ()=>{
+        return new EventScope(this);
     }
     public svalVisit:SvalVisit = {
         matched:false,

@@ -131,7 +131,7 @@ export interface SvalPlus {
     reusables:Reusables,
     svalVisit:SvalVisit,
     visit:Visit,
-    scopeForEvent:ScopeForEvent,
+    createEventScope:()=>ScopeForEvent,
 }
 export interface VariableForEvent {
     value:()=>any
@@ -139,10 +139,10 @@ export interface VariableForEvent {
 export interface ScopeForEvent {
     variables:{
         search:(name: string)=> VariableForEvent | null,
-        local:()=>Record<string,Var>
+        local:Record<string,Var>
     },
-    parent:()=>Scope | null;
-    depth:()=>number
+    parent:Scope | null;
+    depth:number
 }
 export class LangEvent<NodeType extends EsNode = EsNode> {
     public node:NodeType;
@@ -150,7 +150,7 @@ export class LangEvent<NodeType extends EsNode = EsNode> {
 
     constructor(interpreter:SvalPlus) {//taking the interpreter directly rather than the node and scope separately,heavily simplifies the constructor per sub class
         this.node = interpreter.reusables.node as NodeType;
-        this.scope = interpreter.scopeForEvent;
+        this.scope = interpreter.createEventScope()
     }
 }
 // Expressions
