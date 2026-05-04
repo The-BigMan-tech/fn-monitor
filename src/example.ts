@@ -98,7 +98,9 @@ const addPseudoClosure = monitor.fn({
             console.log('RESULT:',result);
             return result;
         },
-        captures:{asyncHello}
+        captures:{
+            asyncHello
+        }
     },
     inlineFunctions:{
         internalAdd2:{
@@ -106,7 +108,9 @@ const addPseudoClosure = monitor.fn({
         },
         hello2:{
             ref:hello2,
-            captures:{random}
+            captures:{
+                random
+            }
         }
     },
     listener:function* (visit):GenExe {
@@ -118,6 +122,9 @@ const addPseudoClosure = monitor.fn({
             console.log('NODE EVAL: ',yield visit.execute());//see the result of deferred nodes like await expressions
         }
     },
+    beforeEachCall:(a,b)=>{
+        console.log(`Seen the numbers a:${a} and b:${b}`);
+    }
 });
 const start = performance.now();
 
