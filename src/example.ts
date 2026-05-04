@@ -88,6 +88,7 @@ perf(() => {
 //INLINING
 async function asyncHello() {
     console.log('hello world');
+    return 'Was Called'
 }
 const addPseudoClosure = monitor.fn({
     main:{
@@ -110,7 +111,7 @@ const addPseudoClosure = monitor.fn({
     },
     listener:function* (visit):GenExe {
         let seenNode = false
-        visit.is('Any',()=> {
+        visit.is('AwaitExpression',()=> {
             seenNode = true;
         });
         if (seenNode) {//using a flag is an important pattern here to use yield visit.execute cuz the callback in visit.is isnt a generator and doesnt work with yield.its an intentional deisgn to prevent yield and function* coloring
