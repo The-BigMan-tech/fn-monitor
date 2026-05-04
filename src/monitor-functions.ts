@@ -1,11 +1,10 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
-import { UNASSIGNED,SvalPlus,Reusables, Fn } from "./monitored-events.ts";
+import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
 
 interface PrevValues extends Reusables {
     evalStack:0,
-    matched:boolean
 }
 export function isGenerator (obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
@@ -38,9 +37,9 @@ export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,han
         interpreter.reusables.currentScope = currentScope;
         interpreter.reusables.node = acornNode as EsNode;
         interpreter.reusables.handler = handler;
-        interpreter.svalVisit.matched = false;
         interpreter.reusables.result = UNASSIGNED;
         interpreter.reusables.thrown = UNASSIGNED;
+        interpreter.reusables.matchedQuery = false;
         return interpreter.langListener(interpreter.visit);
     }
 }
@@ -50,7 +49,7 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.handler = null;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.thrown = UNASSIGNED;
-    interpreter.svalVisit.matched = false;
+    interpreter.reusables.matchedQuery = false;
 }
 export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValues) {
     interpreter.reusables.node = prevReusables.node;
@@ -58,7 +57,7 @@ export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValu
     interpreter.reusables.handler = prevReusables.handler;
     interpreter.reusables.result = prevReusables.result;
     interpreter.reusables.thrown = prevReusables.thrown;
-    interpreter.svalVisit.matched = prevReusables.matched;
+    interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
 }
 export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
     return {
@@ -68,6 +67,6 @@ export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
         handler: interpreter.reusables.handler,
         result: interpreter.reusables.result,
         thrown: interpreter.reusables.thrown,
-        matched: interpreter.svalVisit.matched
+        matchedQuery: interpreter.reusables.matchedQuery
     };
 }

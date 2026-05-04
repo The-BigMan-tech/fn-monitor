@@ -145,7 +145,7 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalVisit,SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit } from './monitored-events.ts'
 import { isGenerator } from './monitor-functions.ts';
 import jsBeatutify from "js-beautify";
 
@@ -192,24 +192,22 @@ class SvalPlus extends Sval implements SvalPlusContract {
         node:null,
         result:UNASSIGNED,
         thrown:UNASSIGNED,
-        handler:null
+        handler:null,
+        matchedQuery:false
     }
     public createEventScope = ()=>{
         return new EventScope(this);
     }
-    public svalVisit:SvalVisit = {
-        matched:false,
+
+    public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
+        matched:()=>this.reusables.matchedQuery,
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((query === "Any") || (node.type === query)) {
                 cb(createEvent(query,this));
-                this.svalVisit.matched = true;
+                this.reusables.matchedQuery = true;
             }
         },
-    }
-    public visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-        is:this.svalVisit.is,
-        matched:()=>this.svalVisit.matched,
         execute:()=>{
             const handler = this.reusables.handler;
             if (handler !== null) {

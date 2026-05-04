@@ -114,22 +114,18 @@ export interface Visit {
 }
 export type LangListener = (visit:Visit)=>void | GenExe
 
-export interface SvalVisit {
-    is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
-    matched:boolean
-}
 export interface Reusables {
     evalStack:number,
     currentScope:Scope | null,
     node:EsNode | null,
     result:any | typeof UNASSIGNED,
     thrown:any | typeof UNASSIGNED,
-    handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any)
+    handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
+    matchedQuery:boolean
 }
 export interface SvalPlus {
     langListener:LangListener | null,
     reusables:Reusables,
-    svalVisit:SvalVisit,
     visit:Visit,
     createEventScope:()=>ScopeForEvent,
 }
