@@ -191,7 +191,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((query === "Any") || (node.type === query)) {
-                cb(createEvent(query,node,this));
+                cb(createEvent(query,this));
                 this.svalVisit.matched = true;
             }
         },
@@ -407,7 +407,7 @@ export {
     // Expressions
     BinaryExprEvent,
     CallExprEvent,
-    AssignExprEvent,
+    AssignmentExprEvent,
     UpdateExprEvent,
     LogicalExprEvent,
     MemberExprEvent,
@@ -417,6 +417,13 @@ export {
     ArrowFnExprEvent,
     TernaryExprEvent,
     YieldExprEvent,
+
+    ExpressionStmtEvent,
+    ArrayExprEvent,
+    ObjectExprEvent,
+    TemplateLiteralEvent,
+    SequenceExprEvent,
+    UnaryExprEvent,
 
     // Statements & Control Flow
     ReturnStmtEvent,
