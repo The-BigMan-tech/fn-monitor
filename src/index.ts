@@ -156,7 +156,7 @@ class EventScope implements ScopeForEvent {
     public variables:ScopeForEvent['variables'];
 
     constructor(interpreter:SvalPlus) {
-        this.scope = interpreter.reusables.svalScope!;
+        this.scope = interpreter.reusables.currentScope!;
         this.parent = this.scope.scopeParent;
         this.depth = this.scope.scopeDepth;
         this.variables = {
@@ -188,7 +188,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public reusables:Reusables = {
         evalStack:0,
-        svalScope:null,
+        currentScope:null,
         node:null,
         result:UNASSIGNED,
         thrown:UNASSIGNED,
@@ -218,7 +218,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
                     if (this.reusables.result !== UNASSIGNED) {
                         throw new Error(chalk.red(`A node can only be executed once`))
                     }
-                    this.reusables.result = handler(this.reusables.node!,this.reusables.svalScope!);
+                    this.reusables.result = handler(this.reusables.node!,this.reusables.currentScope!);
                     resultToRetun = isGenerator(this.reusables.result)
                         ?LAZY_NODE
                         :this.reusables.result

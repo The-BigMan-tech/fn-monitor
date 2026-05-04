@@ -26,16 +26,16 @@ export function* handleGeneratorResult(scope: Scope,generator:Generator) {
         return yield* generator;
     }
 }
-export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = svalScope.interpreter;
+export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+    const interpreter = currentScope.interpreter;
     if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
     
-    const atRoot = !svalScope.hasParent();
+    const atRoot = !currentScope.hasParent();
     if (atRoot) {
         return;//we dont want to track any action thats not inside the monitored function
     }
     if (interpreter.langListener) {
-        interpreter.reusables.svalScope = svalScope;
+        interpreter.reusables.currentScope = currentScope;
         interpreter.reusables.node = acornNode as EsNode;
         interpreter.reusables.handler = handler;
         interpreter.svalVisit.matched = false;
@@ -46,7 +46,7 @@ export function callMonitor(acornNode:AcornNode,svalScope:Scope<SvalPlus>,handle
 }
 export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.node = null;
-    interpreter.reusables.svalScope = null;
+    interpreter.reusables.currentScope = null;
     interpreter.reusables.handler = null;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.thrown = UNASSIGNED;
@@ -54,7 +54,7 @@ export function clearEvalStack(interpreter:SvalPlus) {
 }
 export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValues) {
     interpreter.reusables.node = prevReusables.node;
-    interpreter.reusables.svalScope = prevReusables.svalScope;
+    interpreter.reusables.currentScope = prevReusables.currentScope;
     interpreter.reusables.handler = prevReusables.handler;
     interpreter.reusables.result = prevReusables.result;
     interpreter.reusables.thrown = prevReusables.thrown;
@@ -64,7 +64,7 @@ export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
     return {
         evalStack:0,
         node: interpreter.reusables.node,
-        svalScope:scope,
+        currentScope:scope,
         handler: interpreter.reusables.handler,
         result: interpreter.reusables.result,
         thrown: interpreter.reusables.thrown,

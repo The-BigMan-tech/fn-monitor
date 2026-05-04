@@ -120,7 +120,7 @@ export interface SvalVisit {
 }
 export interface Reusables {
     evalStack:number,
-    svalScope:Scope | null,
+    currentScope:Scope | null,
     node:EsNode | null,
     result:any | typeof UNASSIGNED,
     thrown:any | typeof UNASSIGNED,
