@@ -3,9 +3,7 @@ import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
 import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
 
-interface PrevValues extends Reusables {
-    evalStack:0,
-}
+
 export function isGenerator (obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
@@ -55,9 +53,8 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.currentEvent = null;
     interpreter.reusables.exeStack.clear();
 }
-export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
+export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {
     return {
-        evalStack:0,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
         node: interpreter.reusables.node,
         currentScope:scope,
         handler: interpreter.reusables.handler,
@@ -66,9 +63,10 @@ export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
         matchedQuery: interpreter.reusables.matchedQuery,
         currentEvent:interpreter.reusables.currentEvent,
         exeStack:interpreter.reusables.exeStack,
+        evalStack:interpreter.reusables.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
     };
 }
-export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValues) {
+export function restorePrevReusables(interpreter:SvalPlus,prevReusables:Reusables) {
     interpreter.reusables.node = prevReusables.node;
     interpreter.reusables.currentScope = prevReusables.currentScope;
     interpreter.reusables.handler = prevReusables.handler;
@@ -77,4 +75,5 @@ export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValu
     interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
     interpreter.reusables.currentEvent = prevReusables.currentEvent;
     interpreter.reusables.exeStack = prevReusables.exeStack;
+    interpreter.reusables.evalStack = prevReusables.evalStack;
 }
