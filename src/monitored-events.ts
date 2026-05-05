@@ -21,6 +21,7 @@ import {
 } from "estree";
 
 import { Var } from "./scope/variable.ts";
+import { QList } from "./q-list.ts";
 
 export type Fn = (...args:any[])=>any;
 
@@ -114,8 +115,13 @@ export interface Visit {
 }
 export type LangListener = (visit:Visit)=>void | GenExe
 
+export interface ExeResult {
+    value:unknown,
+    event:LangEvent
+}
 export interface Reusables {
     evalStack:number,
+    exeStack:QList<ExeResult>
     currentScope:Scope | null,
     node:EsNode | null,
     result:any | typeof UNASSIGNED,

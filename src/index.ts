@@ -148,6 +148,7 @@ import {sha256} from "js-sha256"
 import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit } from './monitored-events.ts'
 import { isGenerator } from './monitor-functions.ts';
 import jsBeatutify from "js-beautify";
+import { QList } from './q-list.ts'
 
 class EventScope implements ScopeForEvent {
     private scope:Scope
@@ -188,6 +189,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public reusables:Reusables = {
         evalStack:0,
+        exeStack:new QList(),
         currentScope:null,
         node:null,
         result:UNASSIGNED,
@@ -400,6 +402,7 @@ export const monitor = {
 }
 
 export { Var } from './scope/variable.ts'
+export {QList} from './q-list.ts';
 
 export {
     type LangListener,
@@ -408,6 +411,7 @@ export {
     type Query,
     type EventMap,
     type Visit,
+
 
     //the reason why i didnt export these as just types is because of instance-of checks
     //Default Event

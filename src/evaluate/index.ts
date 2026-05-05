@@ -49,7 +49,7 @@ export default function* evaluate(node: Node, scope: Scope) {
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
-            const result = (interpreter.reusables.result === UNASSIGNED)
+            const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
                 ?yield* handleGeneratorResult(scope,handler(node,scope))
                 :yield* handleGeneratorResult(scope,interpreter.reusables.result)
 
@@ -64,9 +64,11 @@ export default function* evaluate(node: Node, scope: Scope) {
             }
             return result;
         }
-        return (interpreter.reusables.result === UNASSIGNED)
+        const result = (interpreter.reusables.result === UNASSIGNED)
             ?yield* handleGeneratorResult(scope,handler(node,scope))
             :yield* handleGeneratorResult(scope,interpreter.reusables.result)
+        
+        return result;
     } 
     finally {
         interpreter.reusables.evalStack -= 1;

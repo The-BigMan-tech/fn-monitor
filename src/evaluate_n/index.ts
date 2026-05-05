@@ -37,7 +37,6 @@ export default function evaluate(node: Node, scope: Scope) {
 
     try {
         interpreter.reusables.evalStack += 1;
-
         const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
@@ -57,9 +56,11 @@ export default function evaluate(node: Node, scope: Scope) {
             }
             return result;
         }
-        return (interpreter.reusables.result === UNASSIGNED)
+        const result = (interpreter.reusables.result === UNASSIGNED)
             ?handleResult(scope,handler(node,scope))
             :handleResult(scope,interpreter.reusables.result)
+
+        return result;
     }
     finally {
         interpreter.reusables.evalStack -= 1;
