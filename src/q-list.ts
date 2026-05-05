@@ -38,7 +38,7 @@ export class QList<T> {
         this.start = size;
     }
     public push(element:T):void {//O1
-        this.arr.push(element);
+        this.arr[this.arr.length] = element;
     }
     public unshift(element:T):void {//O(1) with infrequent O(n) thanks to allocating the size of the array
         if (this.start === QList.EDGE_OF_HEAD) {
@@ -65,7 +65,8 @@ export class QList<T> {
     }
     public pop():T | undefined {//O1
         if (this.tailSize() === 0) return undefined
-        const element = this.arr.pop() as T;
+        const element = this.arr[this.arr.length - 1];
+        this.arr.length = this.arr.length - 1; // This physically shrinks the tail
         this.minimize();
         return element;
     }
@@ -78,18 +79,17 @@ export class QList<T> {
         return element
     }
     public clear():void {
-        this.arr = [];
-        this.start = QList.EDGE_OF_HEAD;
-        this.expand(QList.LEAST_ARRAY_LENGTH);//create some headspace
+        this.arr = new Array(QList.LEAST_ARRAY_LENGTH); // pre‑allocate headspace
+        this.start = QList.LEAST_ARRAY_LENGTH;
     }
     
 
     //RANDOM ACCESS
-    private validateIndex(i:number) {
+    private validateIndex(i: number): void {
         const ELEMENTS_IN_TAIL = this.tailSize() - 1;
-        const isValid = ((i >= 0) && (i <= ELEMENTS_IN_TAIL));
+        const isValid = i >= 0 && i <= ELEMENTS_IN_TAIL;
         if (!isValid) {
-            throw new Error(chalk.red(`\nInvalid random access in QList.Index ${i} isnt available`))
+            throw new Error(chalk.red(`\nInvalid random access in QList. Index ${i} not available (length: ${this.tailSize()})`));
         }
     }
     public get(i:number):T {//O1
