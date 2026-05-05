@@ -86,9 +86,8 @@ export class QList<T> {
 
     //RANDOM ACCESS
     private validateIndex(i: number): void {
-        const ELEMENTS_IN_TAIL = this.tailSize() - 1;
-        const isValid = i >= 0 && i <= ELEMENTS_IN_TAIL;
-        if (!isValid) {
+        const TAIL_SIZE = this.tailSize();
+        if (i < 0 || i >= TAIL_SIZE || TAIL_SIZE === 0) {
             throw new Error(chalk.red(`\nInvalid random access in QList. Index ${i} not available (length: ${this.tailSize()})`));
         }
     }
