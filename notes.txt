@@ -4,6 +4,8 @@ This means that each node,scope and execute method passed to a listener will alw
 
 So many unexpected behaviour of the Industrial Code Monitor(interpreter name) is the actual behaviour of runtime ast monitoring
 
+
+
 During code execution,the nodes are always fresh even for the same code to ensure zero interference.so it will be an antipattern to rely on node caching to check if a node existed in the past and to get its scope
 
 Also notice that i called the object passed to the listener visit and not visitor.
