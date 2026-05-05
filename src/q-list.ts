@@ -26,19 +26,16 @@ export class QList<T> {
     }
 
     //ADDING ITEMS
-    private expand(size:number):void {//O(n)
-        if ((this.start === QList.EDGE_OF_HEAD) || (this.arr.length < QList.LEAST_ARRAY_LENGTH)){
-            const TAIL_SIZE = this.tailSize(); // The amount of real data
-            const newArrSize = Math.max(size + TAIL_SIZE, QList.LEAST_ARRAY_LENGTH);
-            const newArr = new Array(newArrSize);
-
-            // Copy only the valid data window
-            for (let i = 0; i < TAIL_SIZE; i++) {
-                newArr[size + i] = this.arr[this.start + i];
-            }
-            this.arr = newArr;
-            this.start = size;
+    private expand(size:number):void {
+        const TAIL_SIZE = this.tailSize(); // The amount of real data
+        const newArrSize = Math.max(size + TAIL_SIZE, QList.LEAST_ARRAY_LENGTH);
+        const newArr = new Array(newArrSize);
+        
+        for (let i = 0; i < TAIL_SIZE; i++) {// Copy only the valid data window
+            newArr[size + i] = this.arr[this.start + i];
         }
+        this.arr = newArr;
+        this.start = size;
     }
     public push(element:T):void {//O1
         this.arr.push(element);
@@ -54,7 +51,7 @@ export class QList<T> {
     }
 
     //REMOVING ITEMS
-    private minimize():void {//O(n)
+    private minimize():void {
         if (this.arr.length > QList.MEDIUM_ARRAY_SIZE) { // Prevent NaN
             const HEAD_SIZE = this.start;
             const TAIL_SIZE = Math.max(this.tailSize(),1);
