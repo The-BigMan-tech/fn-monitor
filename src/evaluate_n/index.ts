@@ -67,7 +67,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
         interpreter.reusables.exeStack.unshift({
             value:result,
-            event:interpreter.reusables.currentEvent!
+            event:interpreter.reusables.currentEvent
         });
         return result;
     }

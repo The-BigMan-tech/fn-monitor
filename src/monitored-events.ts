@@ -118,7 +118,7 @@ export type LangListener = (visit:Visit)=>void | GenExe
 
 export interface ExeResult {
     value:unknown,
-    event:LangEvent 
+    event:LangEvent | null
 }
 export interface Reusables {
     node:EsNode | null,
