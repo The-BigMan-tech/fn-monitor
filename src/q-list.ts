@@ -44,10 +44,11 @@ export class QList<T> {
         this.arr.push(element);
     }
     public unshift(element:T):void {//O(1) with infrequent O(n) thanks to allocating the size of the array
-        const HALF_THE_TAIL_SIZE = this.tailSize() / 2;
-        const EXPANSION_SIZE = Math.max(Math.ceil(HALF_THE_TAIL_SIZE), 1);
-
-        this.expand(EXPANSION_SIZE)
+        if (this.start === QList.EDGE_OF_HEAD) {
+            const HALF_THE_TAIL_SIZE = this.tailSize() / 2;
+            const EXPANSION_SIZE = Math.max(Math.ceil(HALF_THE_TAIL_SIZE), 1);
+            this.expand(EXPANSION_SIZE)
+        }
         this.start += QList.LEFT_SHIFT;
         this.arr[this.start] = element;
     }
@@ -76,11 +77,11 @@ export class QList<T> {
         const element = this.arr[this.start];
         this.arr[this.start] = undefined; // Help garbage collector
         this.start += QList.RIGHT_SHIFT;
-        this.minimize()
+        this.minimize();
         return element
     }
     public clear():void {
-        this.arr.length = 0;
+        this.arr = [];
         this.start = QList.EDGE_OF_HEAD;
         this.expand(QList.LEAST_ARRAY_LENGTH);//create some headspace
     }
