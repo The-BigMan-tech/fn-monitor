@@ -28,15 +28,16 @@ export class QList<T> {
     //ADDING ITEMS
     private expand(size:number):void {//O(n)
         if ((this.start === QList.EDGE_OF_HEAD) || (this.arr.length < QList.LEAST_ARRAY_LENGTH)){
-            const newArrSize = Math.max(size + this.arr.length,QList.LEAST_ARRAY_LENGTH)
+            const TAIL_SIZE = this.tailSize(); // The amount of real data
+            const newArrSize = Math.max(size + TAIL_SIZE, QList.LEAST_ARRAY_LENGTH);
             const newArr = new Array(newArrSize);
-            const EDGE_OF_TAIL = size;
 
-            for (let i=0; i < this.arr.length; i++ ) {
-                newArr[EDGE_OF_TAIL + i] = this.arr[i];
+            // Copy only the valid data window
+            for (let i = 0; i < TAIL_SIZE; i++) {
+                newArr[size + i] = this.arr[this.start + i];
             }
             this.arr = newArr;
-            this.start = EDGE_OF_TAIL;
+            this.start = size;
         }
     }
     public push(element:T):void {//O1
@@ -80,6 +81,7 @@ export class QList<T> {
     }
     public clear():void {
         this.arr.length = 0;
+        this.start = QList.EDGE_OF_HEAD;
         this.expand(QList.LEAST_ARRAY_LENGTH);//create some headspace
     }
     
@@ -105,7 +107,7 @@ export class QList<T> {
 
 
     //GETTERS
-    public* values():Generator<T, void, unknown> {
+    public* [Symbol.iterator]() {
         for (let i = 0; i < this.tailSize(); i++) {
             yield this.get(i);
         }
