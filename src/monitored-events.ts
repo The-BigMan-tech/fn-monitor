@@ -111,13 +111,14 @@ export type GenExe = Generator<typeof LAZY_NODE,undefined,any>;
 export interface Visit {
     is:<T extends Query>(query:T,ifMatched:IfMatched<T>)=>void,
     matched:()=>boolean,
-    execute:<T extends any=any>()=>T 
+    execute:<T extends any=any>()=>T ,
+    exeStack:()=>QList<ExeResult>
 }
 export type LangListener = (visit:Visit)=>void | GenExe
 
 export interface ExeResult {
     value:unknown,
-    event:LangEvent
+    event:LangEvent 
 }
 export interface Reusables {
     node:EsNode | null,

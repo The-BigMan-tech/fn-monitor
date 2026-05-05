@@ -44,6 +44,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     const prevReusables = captureReusables(interpreter, scope);
 
     try {
+        //i know that it looks like im repeating the same code concerning the result but because the timing of when the result is evaluated based on the type of listener is important,i have to do this.Unless i use lazy closures but i dont want js to allocate more memory just for that
         interpreter.reusables.evalStack += 1;
         const feedback = callMonitor(node, scope, handler);
 
@@ -52,6 +53,11 @@ export default function* evaluate(node: Node, scope: Scope) {
             const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
                 ?yield* handleGeneratorResult(scope,handler(node,scope))
                 :yield* handleGeneratorResult(scope,interpreter.reusables.result)
+            
+            interpreter.reusables.exeStack.unshift({
+                value:result,
+                event:interpreter.reusables.currentEvent!
+            });
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
@@ -68,6 +74,10 @@ export default function* evaluate(node: Node, scope: Scope) {
             ?yield* handleGeneratorResult(scope,handler(node,scope))
             :yield* handleGeneratorResult(scope,interpreter.reusables.result)
         
+        interpreter.reusables.exeStack.unshift({
+            value:result,
+            event:interpreter.reusables.currentEvent!
+        });
         return result;
     } 
     finally {

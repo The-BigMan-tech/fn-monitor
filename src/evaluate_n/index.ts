@@ -45,6 +45,11 @@ export default function evaluate(node: Node, scope: Scope) {
                 ?handleResult(scope,handler(node,scope))
                 :handleResult(scope,interpreter.reusables.result)
 
+            interpreter.reusables.exeStack.unshift({
+                value:result,
+                event:interpreter.reusables.currentEvent!
+            });
+
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
                     throw new Error(chalk.red(`For an eager node,LangListeners that are generators can only yield the result of that node to be consistent.`))
@@ -60,6 +65,10 @@ export default function evaluate(node: Node, scope: Scope) {
             ?handleResult(scope,handler(node,scope))
             :handleResult(scope,interpreter.reusables.result)
 
+        interpreter.reusables.exeStack.unshift({
+            value:result,
+            event:interpreter.reusables.currentEvent!
+        });
         return result;
     }
     finally {
