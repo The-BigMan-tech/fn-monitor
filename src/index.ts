@@ -145,10 +145,11 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit, EventMap } from './monitored-events.ts'
 import { isGenerator } from './monitor-functions.ts';
-import jsBeatutify from "js-beautify";
 import { QList } from './q-list.ts'
+import jsBeatutify from "js-beautify";
+
 
 class EventScope implements ScopeForEvent {
     private scope:Scope
@@ -190,6 +191,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public reusables:Reusables = {
         evalStack:0,
         exeStack:new QList(),
+        currentEvent:null,
         currentScope:null,
         node:null,
         result:UNASSIGNED,
@@ -206,7 +208,9 @@ class SvalPlus extends Sval implements SvalPlusContract {
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((query === "Any") || (node.type === query)) {
-                cb(createEvent(query,this));
+                const event:EventMap[typeof query] = createEvent(query,this)
+                cb(event);
+                this.reusables.currentEvent = event;
                 this.reusables.matchedQuery = true;
             }
         },

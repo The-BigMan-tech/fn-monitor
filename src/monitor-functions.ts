@@ -33,13 +33,15 @@ export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,han
     if (atRoot) {
         return;//we dont want to track any action thats not inside the monitored function
     }
+    //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
     if (interpreter.langListener) {
-        interpreter.reusables.currentScope = currentScope;
         interpreter.reusables.node = acornNode as EsNode;
+        interpreter.reusables.currentScope = currentScope;
         interpreter.reusables.handler = handler;
         interpreter.reusables.result = UNASSIGNED;
         interpreter.reusables.thrown = UNASSIGNED;
         interpreter.reusables.matchedQuery = false;
+        interpreter.reusables.currentEvent = null;
         return interpreter.langListener(interpreter.visit);
     }
 }
@@ -50,6 +52,21 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.thrown = UNASSIGNED;
     interpreter.reusables.matchedQuery = false;
+    interpreter.reusables.currentEvent = null;
+    interpreter.reusables.exeStack.clear();
+}
+export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
+    return {
+        evalStack:0,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
+        node: interpreter.reusables.node,
+        currentScope:scope,
+        handler: interpreter.reusables.handler,
+        result: interpreter.reusables.result,
+        thrown: interpreter.reusables.thrown,
+        matchedQuery: interpreter.reusables.matchedQuery,
+        currentEvent:interpreter.reusables.currentEvent,
+        exeStack:interpreter.reusables.exeStack,
+    };
 }
 export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValues) {
     interpreter.reusables.node = prevReusables.node;
@@ -58,15 +75,6 @@ export function restorePrevReusables(interpreter:SvalPlus,prevReusables:PrevValu
     interpreter.reusables.result = prevReusables.result;
     interpreter.reusables.thrown = prevReusables.thrown;
     interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
-}
-export function captureReusables(interpreter:SvalPlus,scope:Scope):PrevValues {
-    return {
-        evalStack:0,
-        node: interpreter.reusables.node,
-        currentScope:scope,
-        handler: interpreter.reusables.handler,
-        result: interpreter.reusables.result,
-        thrown: interpreter.reusables.thrown,
-        matchedQuery: interpreter.reusables.matchedQuery
-    };
+    interpreter.reusables.currentEvent = prevReusables.currentEvent;
+    interpreter.reusables.exeStack = prevReusables.exeStack;
 }

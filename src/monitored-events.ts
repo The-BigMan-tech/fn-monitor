@@ -127,7 +127,8 @@ export interface Reusables {
     result:any | typeof UNASSIGNED,
     thrown:any | typeof UNASSIGNED,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
-    matchedQuery:boolean
+    matchedQuery:boolean,
+    currentEvent:LangEvent | null
 }
 export interface SvalPlus {
     langListener:LangListener | null,

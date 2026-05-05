@@ -14,7 +14,7 @@ export class QList<T> {
     private start:number = QList.EDGE_OF_HEAD;
 
     constructor(init?:T[]) {
-        if (init) {
+        if (init) {//we dont use init's length to allocate memory for this.arr because it will lead to undefined slots when only push is called
             for (const element of init) {
                 this.push(element);
             }
