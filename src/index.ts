@@ -178,7 +178,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public fnBeforeEachCall:Fn | undefined = undefined;
     public astInUse:FnAst | null = null;
 
-    public static readonly resultExport:string = 'result';
+    public static readonly resultExport:string = SvalPlus.sha256Key('result');
     public static readonly argsVar = SvalPlus.sha256Key('args');
     public static readonly capturesVar = SvalPlus.sha256Key('captures');
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
@@ -321,7 +321,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
     public static defaultOptions:SvalOptions = {
-        sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont work with modules
+        sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont work with the modules option
         ecmaVer:2024, 
         sandBox: true, // Standard for eDSLs/Sandboxes,
     };
@@ -334,12 +334,19 @@ class SvalPlus extends Sval implements SvalPlusContract {
         if (cached) {
             return cached;
         }
-        const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(`\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`, SvalPlus.meriyahParseOptions);
-        
-        const ast = { fnCode: fnCodeAst as Node, fnCall: fnCallAst as Node };
-        SvalPlus.fnAstCache.set(fnCodeHash, ast);
+        const fnCallString = 
+            `\n\n//This is the entry code that is ran each time the monitored function is called and the result is streamed through the exports variable.` +
+            `\n\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`;
 
+        const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
+        const fnCallAst = meriyahParse(fnCallString, SvalPlus.meriyahParseOptions);
+        
+        const ast = { 
+            fnCode: fnCodeAst as Node, 
+            fnCall: fnCallAst as Node ,
+            fnCallString
+        };
+        SvalPlus.fnAstCache.set(fnCodeHash, ast);
         return ast;
     }
     public static refErrMsg(err:ReferenceError) {
@@ -359,7 +366,8 @@ interface FnSrc {
 }
 interface FnAst {
     fnCode:Node,
-    fnCall:Node
+    fnCall:Node,
+    fnCallString:string
 }
 declare const __brand: unique symbol;
 
@@ -375,16 +383,17 @@ interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
     listener:LangListener,
     inlineFunctions?:Record<string,Metadata<Fn>>
-    beforeEachCall?:(...args:Parameters<T>)=>void
+    beforeEachCall?:(...args:Parameters<T>)=>void,
+    sendGeneratedCodeTo?:{value:string}
 }
 
 //the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
-//The monitor uses an ast walker interpreter to walk cuz a bytecode version will make it impossible to setup step by step monitoring
+//The monitor uses an ast walker interpreter to execute the code cuz a bytecode version will make it impossible to setup step by step monitoring
 
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
         const {ref:fn,captures} = setup.main;
-        const {listener,beforeEachCall,inlineFunctions} = setup;
+        const {listener,beforeEachCall,inlineFunctions,sendGeneratedCodeTo} = setup;
 
         const interpreter = new SvalPlus({
             listener,
@@ -399,10 +408,12 @@ export const monitor = {
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
 
-        // console.log(jsBeatutify(fnSrc.fnCode,{indent_size:4})); //for debubgging the generated code
+        if (sendGeneratedCodeTo) {
+            sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
+        }
         interpreter.astInUse = ast;
         return interpreter.getMonitoredFn as MonitoredFn<T>;
-    },
+    }
 }
 
 export { Var } from './scope/variable.ts'

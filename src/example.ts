@@ -94,6 +94,7 @@ async function asyncHello() {
 
 const start = performance.now();
 
+const generatedCode = {value:''};
 const addPseudoClosure = monitor.fn({
     main:{
         ref:async(a: number, b: number)=>{
@@ -117,6 +118,8 @@ const addPseudoClosure = monitor.fn({
             }
         }
     },
+    sendGeneratedCodeTo:generatedCode,
+
     listener:function* (visit):GenExe {
         let seenNode = false
         visit.is('AwaitExpression',()=> {
@@ -137,5 +140,7 @@ console.log(result);
 const end = performance.now();
 console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
 
+console.log(chalk.green('\nGenerated code:'));
+console.log(generatedCode.value);
 
 
