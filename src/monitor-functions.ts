@@ -52,6 +52,7 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.matchedQuery = false;
     interpreter.reusables.currentEvent = null;
     interpreter.reusables.exeStack.clear();
+    interpreter.reusables.evalStack = 0;
 }
 export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {
     return {

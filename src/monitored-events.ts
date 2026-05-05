@@ -120,15 +120,15 @@ export interface ExeResult {
     event:LangEvent
 }
 export interface Reusables {
-    evalStack:number,
-    exeStack:QList<ExeResult>
-    currentScope:Scope | null,
     node:EsNode | null,
+    currentScope:Scope | null,
+    handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     result:any | typeof UNASSIGNED,
     thrown:any | typeof UNASSIGNED,
-    handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     matchedQuery:boolean,
-    currentEvent:LangEvent | null
+    currentEvent:LangEvent | null,
+    exeStack:QList<ExeResult>
+    evalStack:number,
 }
 export interface SvalPlus {
     langListener:LangListener | null,

@@ -64,7 +64,7 @@ export default function evaluate(node: Node, scope: Scope) {
     }
     finally {
         interpreter.reusables.evalStack -= 1;
-        if (interpreter.reusables.evalStack === 0) {
+        if (interpreter.reusables.evalStack <= 0) {
             clearEvalStack(interpreter)
         }else {
             restorePrevReusables(interpreter,prevReusables)
