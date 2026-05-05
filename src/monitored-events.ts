@@ -110,7 +110,7 @@ export interface Visit {
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
     matched:()=>boolean,
     execute:<T extends any=any>()=>T ,
-    exeStack:()=>QList<ExeResult>
+    lastExeStack:()=>QList<ExeResult>,
 }
 export type LangListener = (visit:Visit)=>void | GenExe
 
