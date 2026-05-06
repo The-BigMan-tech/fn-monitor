@@ -24,20 +24,14 @@ import chalk from 'chalk'
 let evaluateOps: any
 
 function* handleResult(iterator:Generator,interpreter:SvalPlus,capturedReusables:Reusables):Generator {
-    if (interpreter.reusables.thrown !== UNASSIGNED) {//because its the feedback variable from the call monitor that can set thrown to a value during visit.execute and not in the generators themselves that are used to yield control back to the interpreter,and also given that visut.execute can only be called once,i think it should be at the top right before the yielding
-        throw interpreter.reusables.thrown;
-    }
-    const currentEvent = interpreter.reusables.currentEvent!;
-    // console.log('🚀 => :31 => handleResult => currentEvent:', currentEvent);
+    const currentEvent = interpreter.reusables.currentEvent;
     let result = iterator.next();
 
     while (!result.done) {
-        // console.log("Action between yields!");
         const input = yield result.value; 
-        restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next
+        restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next to ensure that it always continues with the data it had before yielding
         result = iterator.next(input);
     }
-    // console.log('🚀 => :31 => handleResult => currentEvent:', currentEvent);
     interpreter.reusables.exeStack.unshift({
         value:result.value,
         event:currentEvent
@@ -70,15 +64,14 @@ export default function* evaluate(node: Node, scope: Scope) {
     const parentReusables = captureReusables(interpreter, scope);
 
     try {
-        // console.log('EVAL STACK: ',interpreter.reusables.evalStack);
         const feedback = callMonitor(node, scope, handler);
         if (interpreter.reusables.evalStack.value <= 0) {
             console.log('\n\nCLEARED EXE STACK');
             interpreter.reusables.exeStack.clear();
         }
-        
+
         interpreter.reusables.evalStack.value += 1;
-        const localCapturedReusables =  captureReusables(interpreter, scope);
+        const localCapturedReusables = captureReusables(interpreter, scope);
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
@@ -105,7 +98,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     } 
     finally {
         interpreter.reusables.evalStack.value -= 1;
-        // console.log('EVAL STACK: ',interpreter.reusables.evalStack);
+        console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
         if (interpreter.reusables.evalStack.value <= 0) {
             clearEvalStack(interpreter);
         } else {

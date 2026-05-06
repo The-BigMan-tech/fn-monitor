@@ -15,14 +15,8 @@ import chalk from 'chalk'
 
 let evaluateOps: any
 
-export function handleResult(scope:Scope,result:any) {
-    const interpreter:SvalPlus = scope.interpreter;
-    const currentEvent = interpreter.reusables.currentEvent!;
-    // console.log('🚀 => :21 => handleResult => currentEvent:', currentEvent);
-
-    if (interpreter.reusables.thrown !== UNASSIGNED) {
-        throw interpreter.reusables.thrown;
-    }
+export function pushResult(interpreter:SvalPlus,result:any) {
+    const currentEvent = interpreter.reusables.currentEvent;
     interpreter.reusables.exeStack.unshift({
         value:result,
         event:currentEvent
@@ -57,6 +51,7 @@ export default function evaluate(node: Node, scope: Scope) {
     try {
         const feedback = callMonitor(node, scope, handler);
         if (interpreter.reusables.evalStack.value <= 0) {
+            console.log('\n\nCLEARED EXE STACK');
             interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
         }
         interpreter.reusables.evalStack.value += 1;
@@ -64,8 +59,8 @@ export default function evaluate(node: Node, scope: Scope) {
         if (isGenerator(feedback)) {
             const next = feedback.next();
             const result = (interpreter.reusables.result === UNASSIGNED)//must be done after calling next
-                ?handleResult(scope,handler(node,scope))
-                :handleResult(scope,interpreter.reusables.result)
+                ?pushResult(interpreter,handler(node,scope))
+                :pushResult(interpreter,interpreter.reusables.result)
 
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
@@ -79,13 +74,14 @@ export default function evaluate(node: Node, scope: Scope) {
             return result;
         }
         const result = (interpreter.reusables.result === UNASSIGNED)
-            ?handleResult(scope,handler(node,scope))
-            :handleResult(scope,interpreter.reusables.result)
+            ?pushResult(interpreter,handler(node,scope))
+            :pushResult(interpreter,interpreter.reusables.result)
 
         return result;
     }
     finally {
         interpreter.reusables.evalStack.value -= 1;
+        console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
         if (interpreter.reusables.evalStack.value <= 0) {
             clearEvalStack(interpreter)
         }else {

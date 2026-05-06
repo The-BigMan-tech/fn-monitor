@@ -195,7 +195,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
         currentScope:null,
         node:null,
         result:UNASSIGNED,
-        thrown:UNASSIGNED,
         handler:null,
         matchedQuery:false
     }
@@ -206,6 +205,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
         lastExeStack:()=>this.reusables.exeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
         matched:()=>this.reusables.matchedQuery,
+        
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
             const node = this.reusables.node!;
             if ((query === "Any") || (node.type === query)) {
@@ -218,23 +218,11 @@ class SvalPlus extends Sval implements SvalPlusContract {
         execute:()=>{
             const handler = this.reusables.handler;
             if (handler !== null) {
-                let resultToRetun:typeof UNASSIGNED | any = UNASSIGNED;
-                try {
-                    if (this.reusables.result !== UNASSIGNED) {
-                        throw new Error(chalk.red(`A node can only be executed once`))
-                    }
-                    this.reusables.result = handler(this.reusables.node!,this.reusables.currentScope!);
-                    resultToRetun = isGenerator(this.reusables.result)
-                        ?LAZY_NODE
-                        :this.reusables.result
-                }catch(e) {
-                    if (e instanceof Error) {
-                        throw e
-                    }else {
-                        this.reusables.thrown = e;//this catches throws that arent errors like symbol throwing for domain purposes
-                    }
+                if (this.reusables.result !== UNASSIGNED) {
+                    throw new Error(chalk.red(`A node can only be executed once`))
                 }
-                return resultToRetun
+                this.reusables.result = handler(this.reusables.node!,this.reusables.currentScope!);
+                return isGenerator(this.reusables.result)?LAZY_NODE:this.reusables.result
             }
         }
     }

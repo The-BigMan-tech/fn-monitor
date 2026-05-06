@@ -123,7 +123,6 @@ export interface Reusables {
     currentScope:Scope | null,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     result:any | typeof UNASSIGNED,
-    thrown:any | typeof UNASSIGNED,
     matchedQuery:boolean,
     currentEvent:LangEvent | null,
     exeStack:QList<ExeResult>
