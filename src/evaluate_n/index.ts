@@ -10,25 +10,11 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, clearEvalStack,isGenerator, restoreCapturedReusables } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, clearEvalStack,isGenerator, pushResult, refreshExeStack, restoreCapturedReusables } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
 
-function pushResult(interpreter:SvalPlus,result:any) {
-    const currentEvent = interpreter.reusables.currentEvent;
-    interpreter.reusables.exeStack.unshift({
-        value:result,
-        event:currentEvent
-    });
-}
-function refreshExeStack(interpreter:SvalPlus) {
-    const OneNodeLeft = interpreter.reusables.evalStack.value <= 1
-    if (OneNodeLeft) {
-        console.log('\n\nCLEARED EXE STACK');
-        interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
-    }
-}
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
     if (!evaluateOps) {// delay initalizing to remove circular reference issue for jest
@@ -93,10 +79,12 @@ export default function evaluate(node: Node, scope: Scope) {
     finally {
         interpreter.reusables.evalStack.value -= 1;
         console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
-        if (interpreter.reusables.evalStack.value <= 0) {//clear it if they are no nodes left
-            clearEvalStack(interpreter)
-        }else {
-            restoreCapturedReusables(interpreter,parentReusables)
+        
+        const zeroNodesLeft = (interpreter.reusables.evalStack.value <= 0);
+        if (zeroNodesLeft) {
+            clearEvalStack(interpreter);
+        } else {
+            restoreCapturedReusables(interpreter, parentReusables);
         }
     }
 }
