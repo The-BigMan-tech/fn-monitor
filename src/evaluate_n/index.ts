@@ -18,6 +18,7 @@ let evaluateOps: any
 export function handleResult(scope:Scope,result:any) {
     const interpreter:SvalPlus = scope.interpreter;
     const currentEvent = interpreter.reusables.currentEvent!;
+    // console.log('🚀 => :21 => handleResult => currentEvent:', currentEvent);
 
     if (interpreter.reusables.thrown !== UNASSIGNED) {
         throw interpreter.reusables.thrown;
@@ -49,8 +50,11 @@ export default function evaluate(node: Node, scope: Scope) {
     const parentReusables = captureReusables(interpreter,scope)
 
     try {
-        interpreter.reusables.evalStack.value += 1;
         const feedback = callMonitor(node, scope, handler);
+        if (interpreter.reusables.evalStack.value <= 0) {
+            interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
+        }
+        interpreter.reusables.evalStack.value += 1;
 
         if (isGenerator(feedback)) {
             const next = feedback.next();

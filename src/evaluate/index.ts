@@ -15,7 +15,7 @@ import {
     callMonitor, 
     captureReusables, 
     clearEvalStack, 
-    isGenerator, refreshReusables, // Use the Generator version
+    isGenerator, // Use the Generator version
     restoreCapturedReusables 
 } from '../monitor-functions.ts'
 
@@ -28,14 +28,16 @@ function* handleResult(iterator:Generator,interpreter:SvalPlus,capturedReusables
         throw interpreter.reusables.thrown;
     }
     const currentEvent = interpreter.reusables.currentEvent!;
+    // console.log('🚀 => :31 => handleResult => currentEvent:', currentEvent);
     let result = iterator.next();
 
     while (!result.done) {
-        console.log("Action between yields!");
+        // console.log("Action between yields!");
         const input = yield result.value; 
         restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next
         result = iterator.next(input);
     }
+    // console.log('🚀 => :31 => handleResult => currentEvent:', currentEvent);
     interpreter.reusables.exeStack.unshift({
         value:result.value,
         event:currentEvent
@@ -63,11 +65,14 @@ export default function* evaluate(node: Node, scope: Scope) {
     const parentReusables = captureReusables(interpreter, scope);
 
     try {
-        //i know that it looks like im repeating the same code concerning the result but because the timing of when the result is evaluated based on the type of listener is important,i have to do this.Unless i use lazy closures but i dont want js to allocate more memory just for that
-        interpreter.reusables.evalStack.value += 1;
-        console.log('EVAL STACK: ',interpreter.reusables.evalStack);
-
+        // console.log('EVAL STACK: ',interpreter.reusables.evalStack);
         const feedback = callMonitor(node, scope, handler);
+        console.log('\n🚀 => :70 => evaluate => interpreter.reusables.evalStack.value:', interpreter.reusables.evalStack.value);
+        if (interpreter.reusables.evalStack.value <= 0) {
+            console.log('\n\nCLEARED EXE STACK');
+            interpreter.reusables.exeStack.clear();
+        }
+        interpreter.reusables.evalStack.value += 1;
         const localCapturedReusables =  captureReusables(interpreter, scope);
 
         if (isGenerator(feedback)) {
@@ -94,10 +99,10 @@ export default function* evaluate(node: Node, scope: Scope) {
         return result;
     } 
     finally {
-        
         interpreter.reusables.evalStack.value -= 1;
-        console.log('EVAL STACK: ',interpreter.reusables.evalStack);
+        // console.log('EVAL STACK: ',interpreter.reusables.evalStack);
         if (interpreter.reusables.evalStack.value <= 0) {
+            console.log('\n\nCLEARED EVAL STACK');
             clearEvalStack(interpreter);
         } else {
             restoreCapturedReusables(interpreter, parentReusables);

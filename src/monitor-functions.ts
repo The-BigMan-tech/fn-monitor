@@ -7,25 +7,16 @@ import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-export function handleResult(scope:Scope,result:any) {
-    const interpreter:SvalPlus = scope.interpreter;
-    if (interpreter.reusables.thrown !== UNASSIGNED) {
-        throw interpreter.reusables.thrown;
-    }else {
-        return result;
-    }
-}
-
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const atRoot = !currentScope.hasParent();
-    if (atRoot) {
-        return;//we dont want to track any action thats not inside the monitored function
-    }
     //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
     const interpreter = currentScope.interpreter!;
-    if (interpreter.langListener) {
-        refreshReusables(acornNode,currentScope,handler)
-        return interpreter.langListener(interpreter.visit);
+    const depth = currentScope.scopeDepth;
+
+    if (depth >= 2) {//only monitor the user's fn code and not the generated wrappers.
+        if (interpreter.langListener) {
+            refreshReusables(acornNode,currentScope,handler)
+            return interpreter.langListener(interpreter.visit);
+        }
     }
 }
 function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
@@ -47,7 +38,6 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.thrown = UNASSIGNED;
     interpreter.reusables.matchedQuery = false;
     interpreter.reusables.currentEvent = null;
-    interpreter.reusables.exeStack.clear();
     interpreter.reusables.evalStack.value = 0;
 }
 export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {

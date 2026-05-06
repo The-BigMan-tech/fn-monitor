@@ -254,7 +254,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
         }else {//handle unassigned anonymous functions
             intermediateFnCode = `\nconst ${intermediateFn} = ${fnString};`
         }  
-
         const capturedKeys = (capturesVar !== null) ?Object.keys(this.exports[capturesVar]).sort():[];//i used sort here to increase the cache hit rate
         const storeCaptures = (capturedKeys.length > 0) 
             ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesVar};`
