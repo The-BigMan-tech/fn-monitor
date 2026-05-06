@@ -61,17 +61,22 @@ export default function* evaluate(node: Node, scope: Scope) {
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
+    const depth = scope.scopeDepth;
+    if (depth < 2) {//if we are in the generated code wrappers,just skip the extra evaluator logic entirely and send the result
+        return yield* handler(node,scope);
+    }
+
     const interpreter: SvalPlus = scope.interpreter;
     const parentReusables = captureReusables(interpreter, scope);
 
     try {
         // console.log('EVAL STACK: ',interpreter.reusables.evalStack);
         const feedback = callMonitor(node, scope, handler);
-        console.log('\n🚀 => :70 => evaluate => interpreter.reusables.evalStack.value:', interpreter.reusables.evalStack.value);
         if (interpreter.reusables.evalStack.value <= 0) {
             console.log('\n\nCLEARED EXE STACK');
             interpreter.reusables.exeStack.clear();
         }
+        
         interpreter.reusables.evalStack.value += 1;
         const localCapturedReusables =  captureReusables(interpreter, scope);
 
@@ -102,7 +107,6 @@ export default function* evaluate(node: Node, scope: Scope) {
         interpreter.reusables.evalStack.value -= 1;
         // console.log('EVAL STACK: ',interpreter.reusables.evalStack);
         if (interpreter.reusables.evalStack.value <= 0) {
-            console.log('\n\nCLEARED EVAL STACK');
             clearEvalStack(interpreter);
         } else {
             restoreCapturedReusables(interpreter, parentReusables);

@@ -7,16 +7,13 @@ import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
-    const interpreter = currentScope.interpreter!;
-    const depth = currentScope.scopeDepth;
 
-    if (depth >= 2) {//only monitor the user's fn code and not the generated wrappers.
-        if (interpreter.langListener) {
-            refreshReusables(acornNode,currentScope,handler)
-            return interpreter.langListener(interpreter.visit);
-        }
+//we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
+export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+    const interpreter = currentScope.interpreter!;
+    if (interpreter.langListener) {
+        refreshReusables(acornNode,currentScope,handler)
+        return interpreter.langListener(interpreter.visit);
     }
 }
 function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {

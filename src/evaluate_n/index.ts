@@ -46,6 +46,11 @@ export default function evaluate(node: Node, scope: Scope) {
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
+    const depth = scope.scopeDepth;
+    if (depth < 2) {//if we are in the generated code wrappers,just skip the extra evaluator logic entirely and send the result
+        return handler(node,scope);
+    }
+
     const interpreter:SvalPlus = scope.interpreter;
     const parentReusables = captureReusables(interpreter,scope)
 
