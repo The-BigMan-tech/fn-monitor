@@ -9,7 +9,7 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
-import { LAZY_NODE, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { callMonitor, captureReusables, clearEvalStack,isGenerator, restoreCapturedReusables } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
@@ -50,6 +50,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
     try {
         const feedback = callMonitor(node, scope, handler);
+        
         if (interpreter.reusables.evalStack.value <= 0) {
             console.log('\n\nCLEARED EXE STACK');
             interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values

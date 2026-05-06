@@ -72,14 +72,14 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     try {
         const feedback = callMonitor(node, scope, handler);
+        const localCapturedReusables = captureReusables(interpreter, scope);//capture it after the call to the monitor has reassigned them
+        
         if (interpreter.reusables.evalStack.value <= 0) {
             console.log('\n\nCLEARED EXE STACK');
             interpreter.reusables.exeStack.clear();
         }
-
         interpreter.reusables.evalStack.value += 1;
-        const localCapturedReusables = captureReusables(interpreter, scope);
-
+        
         if (isGenerator(feedback)) {
             const next = feedback.next();
             const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator

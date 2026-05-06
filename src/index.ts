@@ -222,7 +222,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
                     throw new Error(chalk.red(`A node can only be executed once`))
                 }
                 this.reusables.result = handler(this.reusables.node!,this.reusables.currentScope!);
-                return isGenerator(this.reusables.result)?LAZY_NODE:this.reusables.result
+                return isGenerator(this.reusables.result)?LAZY_NODE:this.reusables.result;
             }
         }
     }
