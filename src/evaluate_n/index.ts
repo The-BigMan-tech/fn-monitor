@@ -10,11 +10,24 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 import { LAZY_NODE, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, clearEvalStack, handleResult, isGenerator, restoreCapturedReusables } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, clearEvalStack,isGenerator, restoreCapturedReusables } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
 
+export function handleResult(scope:Scope,result:any) {
+    const interpreter:SvalPlus = scope.interpreter;
+    const currentEvent = interpreter.reusables.currentEvent!;
+
+    if (interpreter.reusables.thrown !== UNASSIGNED) {
+        throw interpreter.reusables.thrown;
+    }
+    interpreter.reusables.exeStack.unshift({
+        value:result,
+        event:currentEvent
+    });
+    return result;
+}
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
     if (!evaluateOps) {// delay initalizing to remove circular reference issue for jest
@@ -45,11 +58,6 @@ export default function evaluate(node: Node, scope: Scope) {
                 ?handleResult(scope,handler(node,scope))
                 :handleResult(scope,interpreter.reusables.result)
 
-            interpreter.reusables.exeStack.unshift({
-                value:result,
-                event:interpreter.reusables.currentEvent!
-            });
-
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
                     throw new Error(chalk.red(`For an eager node,LangListeners that are generators can only yield the result of that node to be consistent.`))
@@ -65,10 +73,6 @@ export default function evaluate(node: Node, scope: Scope) {
             ?handleResult(scope,handler(node,scope))
             :handleResult(scope,interpreter.reusables.result)
 
-        interpreter.reusables.exeStack.unshift({
-            value:result,
-            event:interpreter.reusables.currentEvent
-        });
         return result;
     }
     finally {
