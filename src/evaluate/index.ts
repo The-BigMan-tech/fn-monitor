@@ -28,8 +28,15 @@ function* handleResult(iterator:Generator,interpreter:SvalPlus,capturedReusables
     let result = iterator.next();
 
     while (!result.done) {
-        const input = yield result.value; 
-        restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next to ensure that it always continues with the data it had before yielding
+        let input;
+        try {
+            input = yield result.value;// The error from .throw() enters here
+        } catch (e) {
+            restoreCapturedReusables(interpreter, capturedReusables);
+            result = iterator.throw(e);
+            continue;
+        }
+        restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next to ensure that it always continues with the data it had before yielding.i dont use this in the regular evaluator because its not pausable
         result = iterator.next(input);
     }
     interpreter.reusables.exeStack.unshift({
