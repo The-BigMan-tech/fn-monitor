@@ -10,7 +10,8 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { LangEvent, LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import {Node as EsNode} from "estree";
+import { LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 
     captureReusables, 
@@ -86,7 +87,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                 }
             }
             refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
-            pushResult(interpreter,result);
+            pushResult(interpreter,result,(node as EsNode).type);
 
             return result;
         }
@@ -95,7 +96,7 @@ export default function* evaluate(node: Node, scope: Scope) {
             :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
         
         refreshExeStack(interpreter);
-        pushResult(interpreter,result);
+        pushResult(interpreter,result,(node as EsNode).type);
 
         return result;
     } 

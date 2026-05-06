@@ -1,15 +1,16 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
-import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
+import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./monitored-events.ts";
 
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-export function pushResult(interpreter:SvalPlus,result:any) {
+export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
     const currentEvent = interpreter.reusables.currentEvent;
     interpreter.reusables.exeStack.unshift({
         value:result,
+        type:nodeType,
         event:currentEvent
     });
 }
@@ -35,7 +36,7 @@ function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handl
     interpreter.reusables.handler = handler;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.matchedQuery = false;
-    interpreter.reusables.currentEvent = null;
+    interpreter.reusables.currentEvent = NOT_ALLOCATED;
 }
 export function clearEvalStack(interpreter:SvalPlus) {
     console.log('CLEARED EVAL');
@@ -44,7 +45,7 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.handler = null;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.matchedQuery = false;
-    interpreter.reusables.currentEvent = null;
+    interpreter.reusables.currentEvent = NOT_ALLOCATED;
     interpreter.reusables.evalStack.value = 0;
 }
 export function captureReusables(interpreter:SvalPlus):Reusables {

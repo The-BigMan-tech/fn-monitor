@@ -9,6 +9,8 @@ import * as statement from './statement.ts'
 import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
+
+import {Node as EsNode} from "estree";
 import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { callMonitor, captureReusables, clearEvalStack,isGenerator, pushResult, refreshExeStack, restoreCapturedReusables } from '../monitor-functions.ts'
 import chalk from 'chalk'
@@ -61,7 +63,7 @@ export default function evaluate(node: Node, scope: Scope) {
                 }
             }
             refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
-            pushResult(interpreter,result);
+            pushResult(interpreter,result,(node as EsNode).type);
 
             return result;
         }
@@ -71,7 +73,7 @@ export default function evaluate(node: Node, scope: Scope) {
                 :interpreter.reusables.result
 
             refreshExeStack(interpreter);
-            pushResult(interpreter,result);
+            pushResult(interpreter,result,(node as EsNode).type);
 
             return result;
         }

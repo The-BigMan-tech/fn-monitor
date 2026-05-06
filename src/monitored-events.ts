@@ -103,6 +103,7 @@ export type EventMap = (
 );
 export const LAZY_NODE = Symbol('LAZY_NODE');
 export const UNASSIGNED = Symbol('UNASSIGNED');
+export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
 export type GenExe = Generator<typeof LAZY_NODE,undefined,any>;
 
@@ -116,7 +117,8 @@ export type LangListener = (visit:Visit)=>void | GenExe
 
 export interface ExeResult {
     value:unknown,
-    event:LangEvent | null
+    type:EsNode['type'],
+    event:LangEvent | typeof NOT_ALLOCATED,
 }
 export interface Reusables {
     node:EsNode | null,
@@ -124,7 +126,7 @@ export interface Reusables {
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     result:any | typeof UNASSIGNED,
     matchedQuery:boolean,
-    currentEvent:LangEvent | null,
+    currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
     exeStack:QList<ExeResult>
     evalStack:{value:number},
 }

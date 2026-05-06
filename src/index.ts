@@ -145,7 +145,7 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit, EventMap } from './monitored-events.ts'
+import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit, EventMap, NOT_ALLOCATED } from './monitored-events.ts'
 import { isGenerator } from './monitor-functions.ts';
 import { QList } from './q-list.ts'
 import jsBeatutify from "js-beautify";
@@ -191,7 +191,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public reusables:Reusables = {
         evalStack:{value:0},
         exeStack:new QList(),
-        currentEvent:null,
+        currentEvent:NOT_ALLOCATED,
         currentScope:null,
         node:null,
         result:UNASSIGNED,
