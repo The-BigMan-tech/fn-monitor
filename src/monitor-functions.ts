@@ -47,10 +47,10 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.currentEvent = null;
     interpreter.reusables.evalStack.value = 0;
 }
-export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {
+export function captureReusables(interpreter:SvalPlus):Reusables {
     return {
         node: interpreter.reusables.node,
-        currentScope:scope,
+        currentScope:interpreter.reusables.currentScope,
         handler: interpreter.reusables.handler,
         result: interpreter.reusables.result,
         matchedQuery: interpreter.reusables.matchedQuery,

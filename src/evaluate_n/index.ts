@@ -38,7 +38,7 @@ export default function evaluate(node: Node, scope: Scope) {
     }
 
     const interpreter:SvalPlus = scope.interpreter;
-    const parentReusables = captureReusables(interpreter,scope)
+    const parentReusables = captureReusables(interpreter)
 
     try {
         interpreter.reusables.evalStack.value += 1;
