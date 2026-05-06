@@ -28,7 +28,7 @@ export class QList<T> {
     //ADDING ITEMS
     private expand(size:number):void {
         const TAIL_SIZE = this.tailSize(); // The amount of real data
-        const newArrSize = Math.max(size + TAIL_SIZE, QList.LEAST_ARRAY_LENGTH);
+        const newArrSize = size + TAIL_SIZE; 
         const newArr = new Array(newArrSize);
         
         for (let i = 0; i < TAIL_SIZE; i++) {// Copy only the valid data window
@@ -43,7 +43,8 @@ export class QList<T> {
     public unshift(element:T):void {//O(1) with infrequent O(n) thanks to allocating the size of the array
         if (this.start === QList.EDGE_OF_HEAD) {
             const HALF_THE_TAIL_SIZE = this.tailSize() / 2;
-            const EXPANSION_SIZE = Math.max(Math.ceil(HALF_THE_TAIL_SIZE), 1);
+              // Expand by half the list, but at least by the least array length to avoid constant copying
+            const EXPANSION_SIZE = Math.max(Math.ceil(HALF_THE_TAIL_SIZE),QList.LEAST_ARRAY_LENGTH);
             this.expand(EXPANSION_SIZE)
         }
         this.start += QList.LEFT_SHIFT;
