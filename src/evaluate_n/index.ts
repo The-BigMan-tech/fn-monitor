@@ -10,7 +10,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 import { LAZY_NODE, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, clearEvalStack, handleResult, isGenerator, restorePrevReusables } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, clearEvalStack, handleResult, isGenerator, restoreCapturedReusables } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
@@ -33,10 +33,10 @@ export default function evaluate(node: Node, scope: Scope) {
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
     const interpreter:SvalPlus = scope.interpreter;
-    const prevReusables = captureReusables(interpreter,scope)
+    const parentReusables = captureReusables(interpreter,scope)
 
     try {
-        interpreter.reusables.evalStack += 1;
+        interpreter.reusables.evalStack.value += 1;
         const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
@@ -72,11 +72,11 @@ export default function evaluate(node: Node, scope: Scope) {
         return result;
     }
     finally {
-        interpreter.reusables.evalStack -= 1;
-        if (interpreter.reusables.evalStack <= 0) {
+        interpreter.reusables.evalStack.value -= 1;
+        if (interpreter.reusables.evalStack.value <= 0) {
             clearEvalStack(interpreter)
         }else {
-            restorePrevReusables(interpreter,prevReusables)
+            restoreCapturedReusables(interpreter,parentReusables)
         }
     }
 }

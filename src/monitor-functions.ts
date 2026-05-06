@@ -4,7 +4,7 @@ import {Node as EsNode} from "estree";
 import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
 
 
-export function isGenerator (obj:unknown):obj is Generator {
+export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
 export function handleResult(scope:Scope,result:any) {
@@ -15,35 +15,31 @@ export function handleResult(scope:Scope,result:any) {
         return result;
     }
 }
-export function* handleGeneratorResult(scope: Scope,generator:Generator) {
-    const interpreter: SvalPlus = scope.interpreter;
-    if (interpreter.reusables.thrown !== UNASSIGNED) {
-        throw interpreter.reusables.thrown;
-    }else {
-        return yield* generator;
-    }
-}
+
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = currentScope.interpreter;
-    if (!interpreter) return;//this is unlikely to happen since its preserved from parent to children scopes
-    
     const atRoot = !currentScope.hasParent();
     if (atRoot) {
         return;//we dont want to track any action thats not inside the monitored function
     }
     //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
+    const interpreter = currentScope.interpreter!;
     if (interpreter.langListener) {
-        interpreter.reusables.node = acornNode as EsNode;
-        interpreter.reusables.currentScope = currentScope;
-        interpreter.reusables.handler = handler;
-        interpreter.reusables.result = UNASSIGNED;
-        interpreter.reusables.thrown = UNASSIGNED;
-        interpreter.reusables.matchedQuery = false;
-        interpreter.reusables.currentEvent = null;
+        refreshReusables(acornNode,currentScope,handler)
         return interpreter.langListener(interpreter.visit);
     }
 }
+function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+    const interpreter = currentScope.interpreter!;
+    interpreter.reusables.node = acornNode as EsNode;
+    interpreter.reusables.currentScope = currentScope;
+    interpreter.reusables.handler = handler;
+    interpreter.reusables.result = UNASSIGNED;
+    interpreter.reusables.thrown = UNASSIGNED;
+    interpreter.reusables.matchedQuery = false;
+    interpreter.reusables.currentEvent = null;
+}
 export function clearEvalStack(interpreter:SvalPlus) {
+    console.log('CLEARED EVAL');
     interpreter.reusables.node = null;
     interpreter.reusables.currentScope = null;
     interpreter.reusables.handler = null;
@@ -52,7 +48,7 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.matchedQuery = false;
     interpreter.reusables.currentEvent = null;
     interpreter.reusables.exeStack.clear();
-    interpreter.reusables.evalStack = 0;
+    interpreter.reusables.evalStack.value = 0;
 }
 export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {
     return {
@@ -67,7 +63,7 @@ export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {
         evalStack:interpreter.reusables.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
     };
 }
-export function restorePrevReusables(interpreter:SvalPlus,prevReusables:Reusables) {
+export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reusables) {
     interpreter.reusables.node = prevReusables.node;
     interpreter.reusables.currentScope = prevReusables.currentScope;
     interpreter.reusables.handler = prevReusables.handler;
@@ -76,5 +72,5 @@ export function restorePrevReusables(interpreter:SvalPlus,prevReusables:Reusable
     interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
     interpreter.reusables.currentEvent = prevReusables.currentEvent;
     interpreter.reusables.exeStack = prevReusables.exeStack;
-    interpreter.reusables.evalStack = prevReusables.evalStack;
+    interpreter.reusables.evalStack = prevReusables.evalStack
 }

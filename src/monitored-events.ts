@@ -127,7 +127,7 @@ export interface Reusables {
     matchedQuery:boolean,
     currentEvent:LangEvent | null,
     exeStack:QList<ExeResult>
-    evalStack:number,
+    evalStack:{value:number},
 }
 export interface SvalPlus {
     langListener:LangListener | null,

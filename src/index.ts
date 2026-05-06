@@ -189,7 +189,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         this.langListener = args.listener;
     }
     public reusables:Reusables = {
-        evalStack:0,
+        evalStack:{value:0},
         exeStack:new QList(),
         currentEvent:null,
         currentScope:null,

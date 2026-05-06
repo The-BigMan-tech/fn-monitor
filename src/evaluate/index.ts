@@ -10,19 +10,38 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { LAZY_NODE, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 
     captureReusables, 
     clearEvalStack, 
-    handleGeneratorResult, isGenerator, // Use the Generator version
-    restorePrevReusables 
+    isGenerator, refreshReusables, // Use the Generator version
+    restoreCapturedReusables 
 } from '../monitor-functions.ts'
 
 import chalk from 'chalk'
 
 let evaluateOps: any
 
+function* handleResult(iterator:Generator,interpreter:SvalPlus,capturedReusables:Reusables):Generator {
+    if (interpreter.reusables.thrown !== UNASSIGNED) {//because its the feedback variable from the call monitor that can set thrown to a value during visit.execute and not in the generators themselves that are used to yield control back to the interpreter,and also given that visut.execute can only be called once,i think it should be at the top right before the yielding
+        throw interpreter.reusables.thrown;
+    }
+    const currentEvent = interpreter.reusables.currentEvent!;
+    let result = iterator.next();
+
+    while (!result.done) {
+        console.log("Action between yields!");
+        const input = yield result.value; 
+        restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next
+        result = iterator.next(input);
+    }
+    interpreter.reusables.exeStack.unshift({
+        value:result.value,
+        event:currentEvent
+    });
+    return result.value; 
+}
 export default function* evaluate(node: Node, scope: Scope) {
     if (!node) return
     if (!evaluateOps) {
@@ -41,23 +60,21 @@ export default function* evaluate(node: Node, scope: Scope) {
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
     const interpreter: SvalPlus = scope.interpreter;
-    const prevReusables = captureReusables(interpreter, scope);
+    const parentReusables = captureReusables(interpreter, scope);
 
     try {
         //i know that it looks like im repeating the same code concerning the result but because the timing of when the result is evaluated based on the type of listener is important,i have to do this.Unless i use lazy closures but i dont want js to allocate more memory just for that
-        interpreter.reusables.evalStack += 1;
+        interpreter.reusables.evalStack.value += 1;
+        console.log('EVAL STACK: ',interpreter.reusables.evalStack);
+
         const feedback = callMonitor(node, scope, handler);
+        const localCapturedReusables =  captureReusables(interpreter, scope);
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
             const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-                ?yield* handleGeneratorResult(scope,handler(node,scope))
-                :yield* handleGeneratorResult(scope,interpreter.reusables.result)
-            
-            interpreter.reusables.exeStack.unshift({
-                value:result,
-                event:interpreter.reusables.currentEvent!
-            });
+                ?yield* handleResult(handler(node,scope),interpreter,localCapturedReusables)
+                :yield* handleResult(interpreter.reusables.result,interpreter,localCapturedReusables);
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
@@ -70,22 +87,20 @@ export default function* evaluate(node: Node, scope: Scope) {
             }
             return result;
         }
-        const result = (interpreter.reusables.result === UNASSIGNED)
-            ?yield* handleGeneratorResult(scope,handler(node,scope))
-            :yield* handleGeneratorResult(scope,interpreter.reusables.result)
+        const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
+            ?yield* handleResult(handler(node,scope),interpreter,localCapturedReusables)
+            :yield* handleResult(interpreter.reusables.result,interpreter,localCapturedReusables);
         
-        interpreter.reusables.exeStack.unshift({
-            value:result,
-            event:interpreter.reusables.currentEvent
-        });
         return result;
     } 
     finally {
-        interpreter.reusables.evalStack -= 1;
-        if (interpreter.reusables.evalStack <= 0) {
+        
+        interpreter.reusables.evalStack.value -= 1;
+        console.log('EVAL STACK: ',interpreter.reusables.evalStack);
+        if (interpreter.reusables.evalStack.value <= 0) {
             clearEvalStack(interpreter);
         } else {
-            restorePrevReusables(interpreter, prevReusables);
+            restoreCapturedReusables(interpreter, parentReusables);
         }
     }
 }
