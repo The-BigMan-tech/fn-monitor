@@ -15,13 +15,19 @@ import chalk from 'chalk'
 
 let evaluateOps: any
 
-export function pushResult(interpreter:SvalPlus,result:any) {
+function pushResult(interpreter:SvalPlus,result:any) {
     const currentEvent = interpreter.reusables.currentEvent;
     interpreter.reusables.exeStack.unshift({
         value:result,
         event:currentEvent
     });
-    return result;
+}
+function refreshExeStack(interpreter:SvalPlus) {
+    const OneNodeLeft = interpreter.reusables.evalStack.value <= 1
+    if (OneNodeLeft) {
+        console.log('\n\nCLEARED EXE STACK');
+        interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
+    }
 }
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
@@ -49,19 +55,15 @@ export default function evaluate(node: Node, scope: Scope) {
     const parentReusables = captureReusables(interpreter,scope)
 
     try {
-        const feedback = callMonitor(node, scope, handler);
-        
-        if (interpreter.reusables.evalStack.value <= 0) {
-            console.log('\n\nCLEARED EXE STACK');
-            interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
-        }
         interpreter.reusables.evalStack.value += 1;
+        const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
+            
             const result = (interpreter.reusables.result === UNASSIGNED)//must be done after calling next
-                ?pushResult(interpreter,handler(node,scope))
-                :pushResult(interpreter,interpreter.reusables.result)
+                ?handler(node,scope)
+                :interpreter.reusables.result
 
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
@@ -72,18 +74,26 @@ export default function evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Eager Node:LangListeners that are generators can only yield once.`))
                 }
             }
+            refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
+            pushResult(interpreter,result);
+
             return result;
         }
-        const result = (interpreter.reusables.result === UNASSIGNED)
-            ?pushResult(interpreter,handler(node,scope))
-            :pushResult(interpreter,interpreter.reusables.result)
+        else {
+            const result = (interpreter.reusables.result === UNASSIGNED)
+                ?handler(node,scope)
+                :interpreter.reusables.result
 
-        return result;
+            refreshExeStack(interpreter);
+            pushResult(interpreter,result);
+
+            return result;
+        }
     }
     finally {
         interpreter.reusables.evalStack.value -= 1;
         console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
-        if (interpreter.reusables.evalStack.value <= 0) {
+        if (interpreter.reusables.evalStack.value <= 0) {//clear it if they are no nodes left
             clearEvalStack(interpreter)
         }else {
             restoreCapturedReusables(interpreter,parentReusables)

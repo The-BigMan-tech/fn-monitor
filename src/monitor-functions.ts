@@ -3,11 +3,9 @@ import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
 import { UNASSIGNED,SvalPlus,Reusables } from "./monitored-events.ts";
 
-
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
-
 //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
@@ -43,8 +41,8 @@ export function captureReusables(interpreter:SvalPlus,scope:Scope):Reusables {
         result: interpreter.reusables.result,
         matchedQuery: interpreter.reusables.matchedQuery,
         currentEvent:interpreter.reusables.currentEvent,
-        exeStack:interpreter.reusables.exeStack,
         evalStack:interpreter.reusables.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
+        exeStack:interpreter.reusables.exeStack,
     };
 }
 export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reusables) {
@@ -54,6 +52,6 @@ export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reus
     interpreter.reusables.result = prevReusables.result;
     interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
     interpreter.reusables.currentEvent = prevReusables.currentEvent;
+    interpreter.reusables.evalStack = prevReusables.evalStack;
     interpreter.reusables.exeStack = prevReusables.exeStack;
-    interpreter.reusables.evalStack = prevReusables.evalStack
 }

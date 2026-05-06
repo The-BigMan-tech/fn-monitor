@@ -203,7 +203,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
 
     public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-        lastExeStack:()=>this.reusables.exeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
+        lastExeStack:this.reusables.exeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
         matched:()=>this.reusables.matchedQuery,
         
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks

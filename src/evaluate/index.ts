@@ -16,7 +16,8 @@ import {
     captureReusables, 
     clearEvalStack, 
     isGenerator, // Use the Generator version
-    restoreCapturedReusables 
+    restoreCapturedReusables, 
+    stackHeader
 } from '../monitor-functions.ts'
 
 import chalk from 'chalk'
@@ -69,16 +70,11 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     const interpreter: SvalPlus = scope.interpreter;
     const parentReusables = captureReusables(interpreter, scope);
+    let incrementedStack:boolean = false;
 
     try {
         const feedback = callMonitor(node, scope, handler);
         const localCapturedReusables = captureReusables(interpreter, scope);//capture it after the call to the monitor has reassigned them
-        
-        if (interpreter.reusables.evalStack.value <= 0) {
-            console.log('\n\nCLEARED EXE STACK');
-            interpreter.reusables.exeStack.clear();
-        }
-        interpreter.reusables.evalStack.value += 1;
         
         if (isGenerator(feedback)) {
             const next = feedback.next();
@@ -95,16 +91,22 @@ export default function* evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Lazy Node:LangListeners that are generators can only yield once.`))
                 }
             }
+            stackHeader(interpreter);
+            incrementedStack = true;
+
             return result;
         }
         const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
             ?yield* handleResult(handler(node,scope),interpreter,localCapturedReusables)
             :yield* handleResult(interpreter.reusables.result,interpreter,localCapturedReusables);
         
+        stackHeader(interpreter);
+        incrementedStack = true;
+
         return result;
     } 
     finally {
-        interpreter.reusables.evalStack.value -= 1;
+        interpreter.reusables.evalStack.value -= (incrementedStack)?1:0;
         console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
         if (interpreter.reusables.evalStack.value <= 0) {
             clearEvalStack(interpreter);
