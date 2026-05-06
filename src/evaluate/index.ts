@@ -10,24 +10,21 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { LangEvent, LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 
     captureReusables, 
     clearEvalStack, 
-    isGenerator, // Use the Generator version
+    isGenerator, pushResult, refreshExeStack, // Use the Generator version
     restoreCapturedReusables, 
-    stackHeader
 } from '../monitor-functions.ts'
 
 import chalk from 'chalk'
 
 let evaluateOps: any
 
-function* handleResult(iterator:Generator,interpreter:SvalPlus,capturedReusables:Reusables):Generator {
-    const currentEvent = interpreter.reusables.currentEvent;
+function* higherHandler(iterator:Generator,interpreter:SvalPlus,capturedReusables:Reusables):Generator {
     let result = iterator.next();
-
     while (!result.done) {
         let input;
         try {
@@ -40,10 +37,6 @@ function* handleResult(iterator:Generator,interpreter:SvalPlus,capturedReusables
         restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next to ensure that it always continues with the data it had before yielding.i dont use this in the regular evaluator because its not pausable
         result = iterator.next(input);
     }
-    interpreter.reusables.exeStack.unshift({
-        value:result.value,
-        event:currentEvent
-    });
     return result.value; 
 }
 export default function* evaluate(node: Node, scope: Scope) {
@@ -69,18 +62,19 @@ export default function* evaluate(node: Node, scope: Scope) {
     }
 
     const interpreter: SvalPlus = scope.interpreter;
-    const parentReusables = captureReusables(interpreter, scope);
-    let incrementedStack:boolean = false;
+    const parentReusables = captureReusables(interpreter);
 
     try {
+        interpreter.reusables.evalStack.value += 1;
+
         const feedback = callMonitor(node, scope, handler);
-        const localCapturedReusables = captureReusables(interpreter, scope);//capture it after the call to the monitor has reassigned them
-        
+        const localCapturedReusables = captureReusables(interpreter);//capture it after the call to the monitor has reassigned them
+
         if (isGenerator(feedback)) {
             const next = feedback.next();
             const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-                ?yield* handleResult(handler(node,scope),interpreter,localCapturedReusables)
-                :yield* handleResult(interpreter.reusables.result,interpreter,localCapturedReusables);
+                ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
+                :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
@@ -91,24 +85,26 @@ export default function* evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Lazy Node:LangListeners that are generators can only yield once.`))
                 }
             }
-            stackHeader(interpreter);
-            incrementedStack = true;
+            refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
+            pushResult(interpreter,result);
 
             return result;
         }
         const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-            ?yield* handleResult(handler(node,scope),interpreter,localCapturedReusables)
-            :yield* handleResult(interpreter.reusables.result,interpreter,localCapturedReusables);
+            ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
+            :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
         
-        stackHeader(interpreter);
-        incrementedStack = true;
+        refreshExeStack(interpreter);
+        pushResult(interpreter,result);
 
         return result;
     } 
     finally {
-        interpreter.reusables.evalStack.value -= (incrementedStack)?1:0;
+        interpreter.reusables.evalStack.value -= 1;
         console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
-        if (interpreter.reusables.evalStack.value <= 0) {
+
+        const zeroNodesLeft = (interpreter.reusables.evalStack.value <= 0);
+        if (zeroNodesLeft) {
             clearEvalStack(interpreter);
         } else {
             restoreCapturedReusables(interpreter, parentReusables);
