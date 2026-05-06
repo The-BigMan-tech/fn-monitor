@@ -109,9 +109,9 @@ export type GenExe = Generator<typeof LAZY_NODE,undefined,any>;
 
 export interface Visit {
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
-    matched:()=>boolean,
     execute:<T extends any=any>()=>T ,
     lastExeStack:QList<ExeResult>,
+    matched:()=>boolean,//returns true if an is check was satisfied in a listener call
 }
 export type LangListener = (visit:Visit)=>void | GenExe
 
