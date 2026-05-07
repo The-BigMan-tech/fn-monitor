@@ -24,4 +24,9 @@ The normalized evaluator is only called by sval for sync code while the generato
 
 Well formatted logs--with colors,spacing and appropriate details heavily boost debugging if the logs are followed closely to understand the logic
 
-because i made both evaluator versions work for both regular and generator based listeners,the best listener that when u call visit.execute,it will actually execute the code and unshift it to the local exe stack is a generator listener where u yield every visit.execute.it handles all cases equally.but it has generator overhead and the regular evaluator switches from a much faster branch to resume the generator with the result.but if u use a regular fn listener,visit.execute will return lazy node for async code and wont push anything to the local exe stack before u intend to use it afterwards
+because i made both evaluator versions work for both regular and generator based listeners,the best listener that when used to call visit.execute,will actually execute the code and unshift it to the local exe stack at all times is a generator listener where u yield on the visit.execute call.it handles all cases equally.but it has generator overhead and the regular evaluator switches from a much faster branch to resume the generator with the result.but if u use a regular fn listener,visit.execute will return lazy node for async code and wont push anything to the local exe stack before u intend to use it afterwards
+
+so a good rule of thumb is to always try to use regular fn listeners.They can still read and modify nodes before the interpreter executes them and u can crawl the scope to get more info about the node.You can even still use them with visit.execute if u are either not using it to fill the exe stack and only just to peek at the result.But if u still need it to mutate the exe stack while in the listener,u just need to guarantee that the monitored fn will always be synchronous.This also prioritizes performance.If these dont meet ur needs and need all round versatility,then the generator listener is available but costs memory.
+
+*SRC CODE VS LOGS for understanding code
+*Simulation vs Pattern recognition

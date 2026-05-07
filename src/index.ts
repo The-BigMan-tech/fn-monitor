@@ -196,20 +196,20 @@ class SvalPlus extends Sval implements SvalPlusContract {
             result:UNASSIGNED,
             handler:null,
             matchedQuery:false,
-            nonVolatile:{
+            shared:{
                 evalStack:{value:0},
                 exeStack:new QList(),
                 readonlyExeStack:new ReadonlyQList(),
             },
         };
-        this.reusables.nonVolatile.readonlyExeStack.swapSrc(this.reusables.nonVolatile.exeStack);
+        this.reusables.shared.readonlyExeStack.swapSrc(this.reusables.shared.exeStack);
     }
     public createEventScope = ()=>{
         return new EventScope(this);
     }
 
     public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-        localExeStack:()=>this.reusables.nonVolatile.readonlyExeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
+        localExeStack:()=>this.reusables.shared.readonlyExeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
         matched:()=>this.reusables.matchedQuery,
         
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks

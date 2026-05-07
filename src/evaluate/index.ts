@@ -68,7 +68,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     const parentReusables = captureReusables(interpreter);
 
     try {
-        interpreter.reusables.nonVolatile.evalStack.value += 1;
+        interpreter.reusables.shared.evalStack.value += 1;
 
         console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);

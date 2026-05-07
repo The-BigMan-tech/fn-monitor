@@ -127,9 +127,9 @@ export interface Reusables {
     result:any | typeof UNASSIGNED,
     matchedQuery:boolean,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
-    nonVolatile:{
+    shared:{
         exeStack:QList<ExeResult>,
-        readonlyExeStack:ReadonlyQList<ExeResult>
+        readonlyExeStack:ReadonlyQList<ExeResult>,
         evalStack:{value:number},
     }
 }
