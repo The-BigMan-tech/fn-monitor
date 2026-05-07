@@ -92,12 +92,16 @@ export class QList<T> {
             throw new Error(chalk.red(`\nInvalid random access in QList. Index ${i} not available (length: ${this.tailSize()})`));
         }
     }
+    /**Get the element at the specified index.It can accept negative indices like the at method of an array */
     public get(i:number):T {//O1
+        i = (i < 0)?this.length + i:i;//handle negative indices which are expected to work from the back
         this.validateIndex(i);
         const index = this.start + i;
         return this.arr[index] as T;
     }
+    /**Setthe specified index to an element.It can accept negative indices*/
     public set(i:number,element:T):undefined {//O1
+        i = (i < 0)?this.length + i:i
         this.validateIndex(i)
         const index = this.start + i;
         this.arr[index] = element;
