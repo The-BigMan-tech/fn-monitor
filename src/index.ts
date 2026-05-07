@@ -146,7 +146,7 @@ import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
 import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit, EventMap, NOT_ALLOCATED } from './monitored-events.ts'
-import { isGenerator } from './monitor-functions.ts';
+import { isGenerator, pushResult } from './monitor-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 import jsBeatutify from "js-beautify";
 
@@ -228,7 +228,12 @@ class SvalPlus extends Sval implements SvalPlusContract {
                     throw new Error(chalk.red(`A node can only be executed once`))
                 }
                 this.reusables.result = handler(this.reusables.node!,this.reusables.currentScope!);
-                return isGenerator(this.reusables.result)?LAZY_NODE:this.reusables.result;
+                if (isGenerator(this.reusables.result)) {
+                    return LAZY_NODE
+                }else {
+                    pushResult(this,this.reusables.result,this.reusables.node!.type)
+                    return this.reusables.result;
+                }
             }
         }
     }

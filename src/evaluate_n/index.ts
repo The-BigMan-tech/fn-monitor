@@ -12,11 +12,16 @@ import * as program from './program.ts'
 
 import {Node as EsNode} from "estree";
 import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, cleanStack,isGenerator, pushResult, refreshExeStack, restoreCapturedReusables } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushResult } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
 
+function pushHandler(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
+    if (interpreter.reusables.result === UNASSIGNED) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
+        pushResult(interpreter,result,nodeType);
+    }
+}
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
     if (!evaluateOps) {// delay initalizing to remove circular reference issue for jest
@@ -66,7 +71,7 @@ export default function evaluate(node: Node, scope: Scope) {
             console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
-            pushResult(interpreter,result,(node as EsNode).type);
+            pushHandler(interpreter,result,(node as EsNode).type);
 
             return result;
         }
@@ -78,7 +83,7 @@ export default function evaluate(node: Node, scope: Scope) {
             console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);
-            pushResult(interpreter,result,(node as EsNode).type);
+            pushHandler(interpreter,result,(node as EsNode).type);
 
             return result;
         }
