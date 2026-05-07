@@ -8,10 +8,10 @@ export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
 export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
-    interpreter.reusables.evalStack.value -= 1;
-    console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
+    interpreter.reusables.nonVolatile.evalStack.value -= 1;
+    console.log('EVAL STACK: ',interpreter.reusables.nonVolatile.evalStack.value);
 
-    const zeroNodesLeft = (interpreter.reusables.evalStack.value <= 0);
+    const zeroNodesLeft = (interpreter.reusables.nonVolatile.evalStack.value <= 0);
     if (zeroNodesLeft) {
         clearEvalStack(interpreter);
     } else {
@@ -20,17 +20,17 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
 }
 export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
     const currentEvent = interpreter.reusables.currentEvent;
-    interpreter.reusables.exeStack.unshift({
+    interpreter.reusables.nonVolatile.exeStack.unshift({
         value:result,
         type:nodeType,
         event:currentEvent
     });
 }
 export function refreshExeStack(interpreter:SvalPlus) {
-    const OneNodeLeft = interpreter.reusables.evalStack.value <= 1
+    const OneNodeLeft = interpreter.reusables.nonVolatile.evalStack.value <= 1
     if (OneNodeLeft) {
         console.log('\nCLEARED EXE STACK');
-        interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
+        interpreter.reusables.nonVolatile.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
     }
 }
 //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
@@ -58,7 +58,7 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.matchedQuery = false;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
-    interpreter.reusables.evalStack.value = 0;
+    interpreter.reusables.nonVolatile.evalStack.value = 0;
 }
 export function captureReusables(interpreter:SvalPlus):Reusables {
     return {
@@ -68,9 +68,11 @@ export function captureReusables(interpreter:SvalPlus):Reusables {
         result: interpreter.reusables.result,
         matchedQuery: interpreter.reusables.matchedQuery,
         currentEvent:interpreter.reusables.currentEvent,
-        evalStack:interpreter.reusables.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
-        exeStack:interpreter.reusables.exeStack,
-        readonlyExeStack:interpreter.reusables.readonlyExeStack
+        nonVolatile:{
+            evalStack:interpreter.reusables.nonVolatile.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
+            exeStack:interpreter.reusables.nonVolatile.exeStack,
+            readonlyExeStack:interpreter.reusables.nonVolatile.readonlyExeStack
+        }
     };
 }
 export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reusables) {
@@ -80,7 +82,7 @@ export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reus
     interpreter.reusables.result = prevReusables.result;
     interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
     interpreter.reusables.currentEvent = prevReusables.currentEvent;
-    interpreter.reusables.evalStack = prevReusables.evalStack;
-    interpreter.reusables.exeStack = prevReusables.exeStack;
-    interpreter.reusables.readonlyExeStack = prevReusables.readonlyExeStack;
+    interpreter.reusables.nonVolatile.evalStack = prevReusables.nonVolatile.evalStack;
+    interpreter.reusables.nonVolatile.exeStack = prevReusables.nonVolatile.exeStack;
+    interpreter.reusables.nonVolatile.readonlyExeStack = prevReusables.nonVolatile.readonlyExeStack;
 }

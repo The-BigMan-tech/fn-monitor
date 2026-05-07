@@ -127,9 +127,11 @@ export interface Reusables {
     result:any | typeof UNASSIGNED,
     matchedQuery:boolean,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
-    exeStack:QList<ExeResult>,
-    readonlyExeStack:ReadonlyQList<ExeResult>
-    evalStack:{value:number},
+    nonVolatile:{
+        exeStack:QList<ExeResult>,
+        readonlyExeStack:ReadonlyQList<ExeResult>
+        evalStack:{value:number},
+    }
 }
 export interface SvalPlus {
     langListener:LangListener | null,
