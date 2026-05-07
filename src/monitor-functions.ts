@@ -9,7 +9,7 @@ export function isGenerator(obj:unknown):obj is Generator {
 }
 export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
     interpreter.reusables.shared.evalStack.value -= 1;
-    console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
+    // console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
 
     const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
     if (zeroNodesLeft) {
@@ -34,7 +34,7 @@ export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type
 export function refreshExeStack(interpreter:SvalPlus) {
     const OneNodeLeft = interpreter.reusables.shared.evalStack.value <= 1
     if (OneNodeLeft) {
-        console.log('\nCLEARED EXE STACK');
+        // console.log('\nCLEARED EXE STACK');
         interpreter.reusables.shared.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
     }
 }
@@ -56,7 +56,7 @@ function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handl
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
 }
 export function clearEvalStack(interpreter:SvalPlus) {
-    console.log('CLEARED EVAL');
+    // console.log('CLEARED EVAL');
     interpreter.reusables.node = null;
     interpreter.reusables.currentScope = null;
     interpreter.reusables.handler = null;

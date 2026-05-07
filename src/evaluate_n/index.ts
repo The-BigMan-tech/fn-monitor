@@ -44,7 +44,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
     try {
         interpreter.reusables.shared.evalStack.value += 1;
-        console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
+        // console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
@@ -63,7 +63,7 @@ export default function evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Eager Node:LangListeners that are generators can only yield once.`))
                 }
             }
-            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
             pushHandler(interpreter,result,(node as EsNode).type);
@@ -75,7 +75,7 @@ export default function evaluate(node: Node, scope: Scope) {
                 ?handler(node,scope)
                 :interpreter.reusables.result
 
-            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);
             pushHandler(interpreter,result,(node as EsNode).type);
@@ -83,7 +83,7 @@ export default function evaluate(node: Node, scope: Scope) {
             return result;
         }
     }finally {
-        console.log('called finally');
+        // console.log('called finally');
         cleanStack(interpreter,parentReusables)
     }
 }

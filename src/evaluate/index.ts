@@ -69,7 +69,7 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     try {
         interpreter.reusables.shared.evalStack.value += 1;
-        console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
+        // console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
@@ -87,7 +87,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Lazy Node:LangListeners that are generators can only yield once.`))
                 }
             }
-            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
             pushHandler(interpreter,result,(node as EsNode).type);
@@ -99,7 +99,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                 ?yield* higherHandler(handler(node,scope),interpreter)
                 :yield* higherHandler(interpreter.reusables.result,interpreter);
             
-            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
             
             refreshExeStack(interpreter);
             pushHandler(interpreter,result,(node as EsNode).type);
@@ -108,7 +108,7 @@ export default function* evaluate(node: Node, scope: Scope) {
         }
     } 
     finally {
-        console.log('called finally');
+        // console.log('called finally');
         cleanStack(interpreter,parentReusables)
     }
 }
