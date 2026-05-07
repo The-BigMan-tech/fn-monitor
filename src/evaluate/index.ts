@@ -15,6 +15,7 @@ import { LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.
 import { 
     callMonitor, 
     captureReusables, 
+    cleanStack, 
     clearEvalStack, 
     isGenerator, pushResult, refreshExeStack, // Use the Generator version
     restoreCapturedReusables, 
@@ -40,6 +41,7 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus,capturedReusable
     }
     return result.value; 
 }
+
 export default function* evaluate(node: Node, scope: Scope) {
     if (!node) return
     if (!evaluateOps) {
@@ -68,6 +70,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     try {
         interpreter.reusables.evalStack.value += 1;
 
+        console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);
         const localCapturedReusables = captureReusables(interpreter);//capture it after the call to the monitor has reassigned them
 
@@ -91,24 +94,21 @@ export default function* evaluate(node: Node, scope: Scope) {
 
             return result;
         }
-        const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-            ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
-            :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
-        
-        refreshExeStack(interpreter);
-        pushResult(interpreter,result,(node as EsNode).type);
+        else {
+            const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
+                ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
+                :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
+            
+            console.log(`\nRESULT OF "${node.type}" :`, result);
+            
+            refreshExeStack(interpreter);
+            pushResult(interpreter,result,(node as EsNode).type);
 
-        return result;
+            return result;
+        }
     } 
     finally {
-        interpreter.reusables.evalStack.value -= 1;
-        console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
-
-        const zeroNodesLeft = (interpreter.reusables.evalStack.value <= 0);
-        if (zeroNodesLeft) {
-            clearEvalStack(interpreter);
-        } else {
-            restoreCapturedReusables(interpreter, parentReusables);
-        }
+        console.log('called finally');
+        cleanStack(interpreter,parentReusables)
     }
 }

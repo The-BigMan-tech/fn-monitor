@@ -29,7 +29,7 @@ export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type
 export function refreshExeStack(interpreter:SvalPlus) {
     const OneNodeLeft = interpreter.reusables.evalStack.value <= 1
     if (OneNodeLeft) {
-        console.log('\n\nCLEARED EXE STACK');
+        console.log('\nCLEARED EXE STACK');
         interpreter.reusables.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
     }
 }
