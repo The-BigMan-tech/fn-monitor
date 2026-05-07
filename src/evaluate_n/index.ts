@@ -73,7 +73,7 @@ export default function evaluate(node: Node, scope: Scope) {
                 ?handler(node,scope)
                 :interpreter.reusables.result
 
-            console.log(`\nRESULT OF "${node.type}" :`, result);
+            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);
             pushResult(interpreter,result,(node as EsNode).type);

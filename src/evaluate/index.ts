@@ -31,7 +31,7 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus,capturedReusable
         let input;
         try {
             input = yield result.value;// The error from .throw() enters here
-        } catch (e) {
+        }catch (e) {
             restoreCapturedReusables(interpreter, capturedReusables);
             result = iterator.throw(e);
             continue;
@@ -99,7 +99,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                 ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
                 :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
             
-            console.log(`\nRESULT OF "${node.type}" :`, result);
+            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
             
             refreshExeStack(interpreter);
             pushResult(interpreter,result,(node as EsNode).type);
