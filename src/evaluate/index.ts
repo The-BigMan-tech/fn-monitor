@@ -89,6 +89,8 @@ export default function* evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Lazy Node:LangListeners that are generators can only yield once.`))
                 }
             }
+            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+
             refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
             pushResult(interpreter,result,(node as EsNode).type);
 

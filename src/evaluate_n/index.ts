@@ -63,6 +63,8 @@ export default function evaluate(node: Node, scope: Scope) {
                     throw new Error(chalk.red(`In Eager Node:LangListeners that are generators can only yield once.`))
                 }
             }
+            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+
             refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
             pushResult(interpreter,result,(node as EsNode).type);
 
