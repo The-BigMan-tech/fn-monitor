@@ -18,6 +18,11 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
         restoreCapturedReusables(interpreter, parentReusables);
     }
 }
+export function pushHandler(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
+    if (interpreter.reusables.result === UNASSIGNED) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
+        pushResult(interpreter,result,nodeType);
+    }
+}
 export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
     const currentEvent = interpreter.reusables.currentEvent;
     interpreter.reusables.shared.exeStack.unshift({

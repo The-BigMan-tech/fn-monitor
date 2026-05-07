@@ -16,30 +16,30 @@ import {
     callMonitor, 
     captureReusables, 
     cleanStack, 
-    clearEvalStack, 
-    isGenerator, pushResult, refreshExeStack, // Use the Generator version
-    restoreCapturedReusables, 
+    isGenerator, pushHandler, pushResult, refreshExeStack, // Use the Generator version
 } from '../monitor-functions.ts'
 
 import chalk from 'chalk'
 
 let evaluateOps: any
 
-function* higherHandler(iterator:Generator,interpreter:SvalPlus,capturedReusables:Reusables):Generator {
+function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
     let result = iterator.next();
     while (!result.done) {
         let input;
         try {
             input = yield result.value;// The error from .throw() enters here
         }catch (e) {
-            restoreCapturedReusables(interpreter, capturedReusables);
             result = iterator.throw(e);
             continue;
         }
-        restoreCapturedReusables(interpreter,capturedReusables)//call after the yield but before calling next to ensure that it always continues with the data it had before yielding.i dont use this in the regular evaluator because its not pausable
         result = iterator.next(input);
     }
-    return result.value; 
+    const final = result.value;
+    if (interpreter.reusables.result !== UNASSIGNED) {//this is true if visit.execute was called
+        pushResult(interpreter,final,interpreter.reusables.node!.type)//the node cant be null during an evaluator call
+    }
+    return final; 
 }
 
 export default function* evaluate(node: Node, scope: Scope) {
@@ -69,16 +69,14 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     try {
         interpreter.reusables.shared.evalStack.value += 1;
-
         console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);
-        const localCapturedReusables = captureReusables(interpreter);//capture it after the call to the monitor has reassigned them
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
             const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-                ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
-                :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
+                ?yield* higherHandler(handler(node,scope),interpreter)
+                :yield* higherHandler(interpreter.reusables.result,interpreter);
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
@@ -92,19 +90,19 @@ export default function* evaluate(node: Node, scope: Scope) {
             console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
-            pushResult(interpreter,result,(node as EsNode).type);
+            pushHandler(interpreter,result,(node as EsNode).type);
 
             return result;
         }
         else {
             const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-                ?yield* higherHandler(handler(node,scope),interpreter,localCapturedReusables)
-                :yield* higherHandler(interpreter.reusables.result,interpreter,localCapturedReusables);
+                ?yield* higherHandler(handler(node,scope),interpreter)
+                :yield* higherHandler(interpreter.reusables.result,interpreter);
             
             console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
             
             refreshExeStack(interpreter);
-            pushResult(interpreter,result,(node as EsNode).type);
+            pushHandler(interpreter,result,(node as EsNode).type);
 
             return result;
         }

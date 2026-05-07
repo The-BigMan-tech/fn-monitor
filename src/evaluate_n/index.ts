@@ -12,16 +12,11 @@ import * as program from './program.ts'
 
 import {Node as EsNode} from "estree";
 import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushResult } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
 
-function pushHandler(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
-    if (interpreter.reusables.result === UNASSIGNED) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
-        pushResult(interpreter,result,nodeType);
-    }
-}
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) return;
     if (!evaluateOps) {// delay initalizing to remove circular reference issue for jest
