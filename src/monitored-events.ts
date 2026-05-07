@@ -21,7 +21,7 @@ import {
 } from "estree";
 
 import { Var } from "./scope/variable.ts";
-import { QList } from "./q-list.ts";
+import { QList,ReadonlyQList } from "./q-list.ts";
 
 export type Fn = (...args:any[])=>any;
 
@@ -107,10 +107,10 @@ export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
 export type GenExe = Generator<typeof LAZY_NODE,undefined,any>;
 
-export interface Visit {
+export interface Visit {//its composed of methods so that it always uses the latest values from the reusables even if a ref may be stable
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
     execute:<T extends any=any>()=>T ,
-    lastExeStack:QList<ExeResult>,
+    lastExeStack:()=>ReadonlyQList<ExeResult>,
     matched:()=>boolean,//returns true if an is check was satisfied in a listener call
 }
 export type LangListener = (visit:Visit)=>void | GenExe
@@ -127,7 +127,8 @@ export interface Reusables {
     result:any | typeof UNASSIGNED,
     matchedQuery:boolean,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
-    exeStack:QList<ExeResult>
+    exeStack:QList<ExeResult>,
+    readonlyExeStack:ReadonlyQList<ExeResult>
     evalStack:{value:number},
 }
 export interface SvalPlus {

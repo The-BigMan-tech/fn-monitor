@@ -3,8 +3,20 @@ import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
 import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./monitored-events.ts";
 
+
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
+}
+export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
+    interpreter.reusables.evalStack.value -= 1;
+    console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
+
+    const zeroNodesLeft = (interpreter.reusables.evalStack.value <= 0);
+    if (zeroNodesLeft) {
+        clearEvalStack(interpreter);
+    } else {
+        restoreCapturedReusables(interpreter, parentReusables);
+    }
 }
 export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
     const currentEvent = interpreter.reusables.currentEvent;
@@ -58,6 +70,7 @@ export function captureReusables(interpreter:SvalPlus):Reusables {
         currentEvent:interpreter.reusables.currentEvent,
         evalStack:interpreter.reusables.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
         exeStack:interpreter.reusables.exeStack,
+        readonlyExeStack:interpreter.reusables.readonlyExeStack
     };
 }
 export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reusables) {
@@ -69,4 +82,5 @@ export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reus
     interpreter.reusables.currentEvent = prevReusables.currentEvent;
     interpreter.reusables.evalStack = prevReusables.evalStack;
     interpreter.reusables.exeStack = prevReusables.exeStack;
+    interpreter.reusables.readonlyExeStack = prevReusables.readonlyExeStack;
 }

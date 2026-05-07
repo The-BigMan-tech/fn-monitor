@@ -119,3 +119,36 @@ export class QList<T> {
         return this.tailSize()
     }
 }
+/**A sub-version of the QList that removes mutation. */
+export class ReadonlyQList<T> {
+    private qList:QList<T> | undefined;
+
+    constructor(qList?:QList<T>) {
+        this.qList = qList
+    }
+    private getQList() {
+        if (this.qList === undefined) {
+            throw new Error(chalk.red(`ReadonlyQList Error:Cannot use this method because the object was not given a src qList.`))
+        }
+        return this.qList;
+    }
+    public swapSrc(newQList:QList<T>) {
+        this.qList = newQList;
+    }
+    public get(i:number):T {//O1
+        const qList = this.getQList();
+        return qList.get(i)
+    }
+    public* [Symbol.iterator]() {
+        const qList = this.getQList();
+        yield* qList;
+    }
+    public* entries():Generator<[number,T], void, unknown> {
+        const qList = this.getQList();
+        yield* qList.entries()
+    }
+    public get length():number {//O1
+        const qList = this.getQList();
+        return qList.length
+    }
+}

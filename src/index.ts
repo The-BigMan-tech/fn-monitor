@@ -147,7 +147,7 @@ import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
 import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit, EventMap, NOT_ALLOCATED } from './monitored-events.ts'
 import { isGenerator } from './monitor-functions.ts';
-import { QList } from './q-list.ts'
+import { QList, ReadonlyQList } from './q-list.ts'
 import jsBeatutify from "js-beautify";
 
 
@@ -183,27 +183,31 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public static readonly capturesVar = SvalPlus.sha256Key('captures');
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
+    public reusables:Reusables;
+
     constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
         this.fnBeforeEachCall = args.fnBeforeEachCall;
         this.langListener = args.listener;
-    }
-    public reusables:Reusables = {
-        evalStack:{value:0},
-        exeStack:new QList(),
-        currentEvent:NOT_ALLOCATED,
-        currentScope:null,
-        node:null,
-        result:UNASSIGNED,
-        handler:null,
-        matchedQuery:false
+        this.reusables = {
+            evalStack:{value:0},
+            exeStack:new QList(),
+            readonlyExeStack:new ReadonlyQList(),
+            currentEvent:NOT_ALLOCATED,
+            currentScope:null,
+            node:null,
+            result:UNASSIGNED,
+            handler:null,
+            matchedQuery:false
+        };
+        this.reusables.readonlyExeStack.swapSrc(this.reusables.exeStack);
     }
     public createEventScope = ()=>{
         return new EventScope(this);
     }
 
     public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-        lastExeStack:this.reusables.exeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
+        lastExeStack:()=>this.reusables.readonlyExeStack,//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
         matched:()=>this.reusables.matchedQuery,
         
         is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
@@ -405,7 +409,10 @@ export const monitor = {
 }
 
 export { Var } from './scope/variable.ts'
-export {QList} from './q-list.ts';
+export {
+    QList,
+    ReadonlyQList
+} from './q-list.ts';
 
 export {
     type LangListener,

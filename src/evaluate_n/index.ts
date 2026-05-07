@@ -12,7 +12,7 @@ import * as program from './program.ts'
 
 import {Node as EsNode} from "estree";
 import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, clearEvalStack,isGenerator, pushResult, refreshExeStack, restoreCapturedReusables } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, cleanStack, clearEvalStack,isGenerator, pushResult, refreshExeStack, restoreCapturedReusables } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
@@ -77,16 +77,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
             return result;
         }
-    }
-    finally {
-        interpreter.reusables.evalStack.value -= 1;
-        console.log('EVAL STACK: ',interpreter.reusables.evalStack.value);
-        
-        const zeroNodesLeft = (interpreter.reusables.evalStack.value <= 0);
-        if (zeroNodesLeft) {
-            clearEvalStack(interpreter);
-        } else {
-            restoreCapturedReusables(interpreter, parentReusables);
-        }
+    }finally {
+        cleanStack(interpreter,parentReusables)
     }
 }
