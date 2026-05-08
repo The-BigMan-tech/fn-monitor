@@ -56,9 +56,6 @@ export default function evaluate(node: Node, scope: Scope) {
                 :handler(node,scope)//must be done after calling next
             interpreter.reusables.result = SEEN;
             
-            const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe(result);//call this before resuming the generator.
-
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
                     throw new Error(chalk.red(`For an eager node,LangListeners that are generators can only yield the result of that node to be consistent.`))
@@ -74,6 +71,9 @@ export default function evaluate(node: Node, scope: Scope) {
             const pushedManually = executedManually && !wasCleared
             pushHandler({interpreter,result,nodeType:(node as EsNode).type,pushedManually});
 
+            const perExe = interpreter.reusables.shared.perExe;
+            if (perExe) perExe();//call this after the executed result has been pushed
+
             return result;
         }
         else {
@@ -85,12 +85,13 @@ export default function evaluate(node: Node, scope: Scope) {
             interpreter.reusables.result = SEEN;
 
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
-            const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe(result);
 
             const wasCleared = refreshExeStack(interpreter);
             const pushedManually = executedManually && !wasCleared
             pushHandler({interpreter,result,nodeType:(node as EsNode).type,pushedManually});
+
+            const perExe = interpreter.reusables.shared.perExe;
+            if (perExe) perExe();
 
             return result;
         }
