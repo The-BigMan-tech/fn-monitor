@@ -1,7 +1,7 @@
 import { monitor } from "./index.ts";
 import chalk from "chalk";
-import { GenExe, LAZY_NODE } from "./monitored-events.ts";
-
+import { LAZY_NODE } from "./monitored-events.ts";
+import {Node as EsNode} from "estree";
 //the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
 
 function perf(fn:(...args:any[])=>void) {
@@ -24,7 +24,7 @@ const internalAdd = (nums:number[],hello:()=>void)=> {
     for (const num of nums) {
         sum += num
     }
-    return sum;
+    return {sum:sum};
 }
 perf(()=>{
     const result = internalAdd(arrToAdd,hello);
@@ -42,13 +42,20 @@ perf(() => {
             ref:internalAdd, 
         },
         listener:(visit) => {
+            let matched = false;
+
             visit.is('AssignmentExpression',event => {
                 event.node.operator = "-=";//silently change the operator
                 count += 1;
                 console.log('Depth: ',event.scope.depth)
                 console.log('assignment result',visit.execute());
+                matched = true;
             })
-            if (!visit.matched()) {
+            visit.is('ReturnStatement',event=>{
+                const result = visit.execute();
+                result.RES.sum = 'I CHANGED THE VALUE';
+            })
+            if (!matched) {
                 visit.is('Any',event=>{
                     otherNodes += 1;
                 })
@@ -87,60 +94,52 @@ perf(() => {
 });
 
 //INLINING
-async function asyncHello() {
-    console.log('hello world');
+function log(...args:any[]) {
+    console.log(...args);
     return 'Was Called'
 }
 
 const start = performance.now();
-
 const generatedCode = {value:''};
+
 const addPseudoClosure = monitor.fn({
     main:{
-        ref:async(a: number, b: number)=>{
-            await asyncHello();
-            const result = internalAdd2(a,b);
-            console.log('RESULT:',result);
-            return result;
+        ref:(a: number, b: number)=>{
+            log('hello',a,b);
+            return 14
         },
         captures:{
-            asyncHello
+            log
         }
     },
-    inlineFunctions:{
-        internalAdd2:{
-            ref:internalAdd2,
-        },
-        hello2:{
-            ref:hello2,
-            captures:{
-                random
-            }
-        }
-    },
-    sendGeneratedCodeTo:generatedCode,
+    listener:function (visit) {
+        visit.is('CallExpression',event=>{
+            visit.perExe(()=>{
+                const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
+                const element = stack.get(0);
+                if (element.node === event.node.callee) {
+                    console.log('found callee: ',element.node);
+                }
+                // console.log('RESULT: ',element);
 
-    listener:function* (visit):GenExe {
-        let seenNode = false
-        visit.is('AwaitExpression',()=> {
-            seenNode = true;
-        });
-        if (seenNode) {//using a flag is an important pattern here to use yield visit.execute cuz the callback in visit.is isnt a generator and doesnt work with yield.its an intentional deisgn to prevent yield and function* coloring
-            console.log('NODE EVAL: ',yield visit.execute());//see the result of deferred nodes like await expressions
-        }
+            })
+            visit.execute();
+            // console.log('\nFULL EXECUTION TRACE:',[...visit.localExeStack()]);
+        })
     },
     beforeEachCall:(a,b)=>{
         console.log(`Seen the numbers a:${a} and b:${b}`);
-    }
+    },
+    sendGeneratedCodeTo:generatedCode,
 });
 
-const result = await addPseudoClosure(4,8);
+const result = addPseudoClosure(4,8);
 console.log(result);
 
 const end = performance.now();
 console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
 
-console.log(chalk.green('\nGenerated code:'));
-console.log(generatedCode.value);
+// console.log(chalk.green('\nGenerated code:'));
+// console.log(generatedCode.value);
 
 

@@ -83,7 +83,7 @@ export default function evaluate(node: Node, scope: Scope) {
                 :handler(node,scope)//must be done after calling next
             interpreter.reusables.result = SEEN;
 
-            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             const wasCleared = refreshExeStack(interpreter);
             const pushedManually = executedManually && !wasCleared

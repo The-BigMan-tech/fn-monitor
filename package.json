@@ -1,7 +1,7 @@
 {
     "name": "javascript-code-monitor",
     "version": "3.9.0",
-    "description": "A direct modification of the sval js-in-js interpreter to monitor functions as they execute",
+    "description": "A deep modification of the sval js-in-js interpreter to monitor functions as they execute",
     "type": "module",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
