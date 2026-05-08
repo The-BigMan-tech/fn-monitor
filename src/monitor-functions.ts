@@ -18,17 +18,20 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
         restoreCapturedReusables(interpreter, parentReusables);
     }
 }
-export function pushHandler(args:{interpreter:SvalPlus,result:any,pushedManually:boolean,nodeType:EsNode['type']}) {
+export function pushHandler(args:{interpreter:SvalPlus,result:any,pushedManually:boolean,node:EsNode}) {
     if (!args.pushedManually) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
-        pushResult(args.interpreter,args.result,args.nodeType);
+        pushResult(args.interpreter,args.result,args.node);
     }
 }
-export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
+export function pushResult(interpreter:SvalPlus,result:any,node:EsNode) {
     const currentEvent = interpreter.reusables.currentEvent;
     interpreter.reusables.shared.exeStack.unshift({
         value:result,
-        type:nodeType,
-        event:currentEvent
+        type:node.type,
+        node,
+        scope:(currentEvent === NOT_ALLOCATED)
+            ?NOT_ALLOCATED:
+            currentEvent.scope
     });
 }
 /**It returns true if it was refreshed and false if it wasnt */

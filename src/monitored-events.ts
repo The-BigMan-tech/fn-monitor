@@ -121,7 +121,8 @@ export type LangListener = (visit:Visit)=> void | ListenerGenerator
 export interface ExeResult {
     value:unknown,
     type:EsNode['type'],
-    event:LangEvent | typeof NOT_ALLOCATED,
+    node:EsNode,//this will always be available as the nodes are always created before the evaluator is called
+    scope:ScopeForEvent | typeof NOT_ALLOCATED;//this is the scope specifically created for each event object.since the event object may not be alloacted,this object too may not also be allocated
 }
 export interface Reusables {
     node:EsNode | null,

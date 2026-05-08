@@ -28,5 +28,10 @@ because i made both evaluator versions work for both regular and generator based
 
 so a good rule of thumb is to always try to use regular fn listeners.They can still read and modify nodes before the interpreter executes them and u can crawl the scope to get more info about the node.You can even still use them with visit.execute if u are either not using it to fill the exe stack and only just to peek at the result.But if u still need it to mutate the exe stack while in the listener,u just need to guarantee that the monitored fn will always be synchronous.This also prioritizes performance.If these dont meet ur needs and need all round versatility,then the generator listener is available but costs memory.
 
+the node in event.node is a direct ref to the node passed to the evaluator.but the scope is a new wrapper object i made explcitly for the event object to only expose read only properies like the depth,the parent and the variables in the scope.i didnt expose scope.let,.const,etc.This means that u can mutate the node however u like but only use the scope for queries.I did this to maximize both control and stability
+
+so the interpreter prioritizes control but also stability when giving that control.like how a node is always executed implicitly if its not done explicitly by the listener
+
 *SRC CODE VS LOGS for understanding code
 *Simulation vs Pattern recognition
+

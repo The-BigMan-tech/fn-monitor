@@ -230,7 +230,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
                 if (isGenerator(this.reusables.result)) {
                     return LAZY_NODE;
                 }else {
-                    pushResult(this,this.reusables.result,this.reusables.node!.type)
+                    pushResult(this,this.reusables.result,this.reusables.node!);
                     return this.reusables.result;
                 }
             }
