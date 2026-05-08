@@ -1,7 +1,6 @@
-import { monitor } from "./index.ts";
+import { monitor,EsNode } from "./index.ts";
 import chalk from "chalk";
-import { LAZY_NODE } from "./monitored-events.ts";
-import {Node as EsNode} from "estree";
+
 //the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
 
 function perf(fn:(...args:any[])=>void) {
@@ -94,7 +93,7 @@ perf(() => {
 });
 
 //INLINING
-function log(...args:any[]) {
+const log = (...args:any[])=> {
     console.log(...args);
     return 'Was Called'
 }
@@ -105,7 +104,7 @@ const generatedCode = {value:''};
 const addPseudoClosure = monitor.fn({
     main:{
         ref:(a: number, b: number)=>{
-            log('hello',a,b);
+            console.log('hello',Math.sqrt(4),a,b);
             return 14
         },
         captures:{
@@ -114,15 +113,19 @@ const addPseudoClosure = monitor.fn({
     },
     listener:function (visit) {
         visit.is('CallExpression',event=>{
-            visit.perExe(()=>{
-                const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
-                const element = stack.get(0);
-                if (element.node === event.node.callee) {
-                    console.log('found callee: ',element.node);
-                }
-                // console.log('RESULT: ',element);
+            const calleeIndex = visit.localExeStack().length;
+            const callees = new Set()
 
-            })
+            visit.perExe = ()=>{
+                const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
+                const element = stack.get(-(calleeIndex + 1));
+                console.log('RESULT:',stack.get(0).evaluation);
+                if (!callees.has(element)) {
+                    // console.log('Callee:',element);
+                    callees.add(element);
+                    return
+                }
+            }
             visit.execute();
             // console.log('\nFULL EXECUTION TRACE:',[...visit.localExeStack()]);
         })
@@ -139,7 +142,7 @@ console.log(result);
 const end = performance.now();
 console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
 
-// console.log(chalk.green('\nGenerated code:'));
-// console.log(generatedCode.value);
+console.log(chalk.green('\nGenerated code:'));
+console.log(generatedCode.value);
 
 
