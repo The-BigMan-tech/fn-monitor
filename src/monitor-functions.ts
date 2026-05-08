@@ -7,6 +7,17 @@ import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./monitored-events
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
+export function callPerExe(interpreter:SvalPlus) {
+    const perExe = interpreter.reusables.shared.perExe;
+    const node = interpreter.reusables.node!;
+
+    if (perExe) {
+        perExe.fn();//call this after the executed result has been pushed
+        if (perExe.owner === node) {
+            interpreter.reusables.shared.perExe = null;
+        }
+    }
+}
 export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
     interpreter.reusables.shared.evalStack.value -= 1;
     // console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
@@ -18,13 +29,15 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
         restoreCapturedReusables(interpreter, parentReusables);
     }
 }
-export function pushHandler(args:{interpreter:SvalPlus,result:any,pushedManually:boolean,node:EsNode}) {
-    if (!args.pushedManually) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
-        pushResult(args.interpreter,args.result,args.node);
+export function pushHandler(interpreter:SvalPlus,result:any,pushedManually:boolean) {
+    if (!pushedManually) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
+        pushResult(interpreter,result);
     }
 }
-export function pushResult(interpreter:SvalPlus,result:any,node:EsNode) {
+export function pushResult(interpreter:SvalPlus,result:any) {
     const currentEvent = interpreter.reusables.currentEvent;
+    const node = interpreter.reusables.node!;
+
     interpreter.reusables.shared.exeStack.unshift({
         value:result,
         type:node.type,

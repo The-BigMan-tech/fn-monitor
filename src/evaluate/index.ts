@@ -14,6 +14,7 @@ import {Node as EsNode} from "estree";
 import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 
+    callPerExe, 
     captureReusables, 
     cleanStack, 
     isGenerator, pushHandler, pushResult, refreshExeStack, // Use the Generator version
@@ -37,7 +38,7 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
     }
     const final = result.value;
     if (interpreter.reusables.result !== UNASSIGNED) {//this is true if visit.execute was called
-        pushResult(interpreter,final,interpreter.reusables.node!)//the node cant be null during an evaluator call
+        pushResult(interpreter,final)//the node cant be null during an evaluator call
     }
     return final; 
 }
@@ -94,10 +95,9 @@ export default function* evaluate(node: Node, scope: Scope) {
 
             const wasCleared = refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
             const pushedManually = executedManually && !wasCleared
-            pushHandler({interpreter,result,node:node as EsNode,pushedManually});
-
-            const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe();//call the perExe callback once the entire execution is complete
+            
+            pushHandler(interpreter,result,pushedManually);
+            callPerExe(interpreter);
 
             return result;
         }
@@ -112,10 +112,9 @@ export default function* evaluate(node: Node, scope: Scope) {
 
             const wasCleared = refreshExeStack(interpreter);
             const pushedManually = executedManually && !wasCleared
-            pushHandler({interpreter,result,node:node as EsNode,pushedManually});
-
-            const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe();//call the perExe callback once the entire execution is complete
+            
+            pushHandler(interpreter,result,pushedManually);
+            callPerExe(interpreter);
 
             return result;
         }

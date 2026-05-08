@@ -230,13 +230,16 @@ class SvalPlus extends Sval implements SvalPlusContract {
                 if (isGenerator(this.reusables.result)) {
                     return LAZY_NODE;
                 }else {
-                    pushResult(this,this.reusables.result,this.reusables.node!);
+                    pushResult(this,this.reusables.result);
                     return this.reusables.result;
                 }
             }
         },
-        perExe:(perExe:null | PerExe)=>{
-            this.reusables.shared.perExe = perExe;
+        perExe:(perExe:PerExe)=>{
+            this.reusables.shared.perExe = {
+                fn:perExe,
+                owner:this.reusables.node!
+            }
         }
     }
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {

@@ -12,7 +12,7 @@ import * as program from './program.ts'
 
 import {Node as EsNode} from "estree";
 import { SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
@@ -69,10 +69,9 @@ export default function evaluate(node: Node, scope: Scope) {
 
             const wasCleared = refreshExeStack(interpreter);//call this only after the listener sees the latest exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
             const pushedManually = executedManually && !wasCleared
-            pushHandler({interpreter,result,node:node as EsNode,pushedManually});
-
-            const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe();//call this after the executed result has been pushed
+            
+            pushHandler(interpreter,result,pushedManually);
+            callPerExe(interpreter);
 
             return result;
         }
@@ -84,14 +83,13 @@ export default function evaluate(node: Node, scope: Scope) {
                 :handler(node,scope)//must be done after calling next
             interpreter.reusables.result = SEEN;
 
-            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             const wasCleared = refreshExeStack(interpreter);
             const pushedManually = executedManually && !wasCleared
-            pushHandler({interpreter,result,node:node as EsNode,pushedManually});
-
-            const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe();
+            
+            pushHandler(interpreter,result,pushedManually);
+            callPerExe(interpreter);
 
             return result;
         }
