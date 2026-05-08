@@ -79,11 +79,12 @@ export default function* evaluate(node: Node, scope: Scope) {
             const result = executedManually//this result variable must be called strictly after resuming the generator if the listener is a generator
                 ?yield* higherHandler(interpreter.reusables.result,interpreter)
                 :yield* higherHandler(handler(node,scope),interpreter);
+
             interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
-                    throw new Error(chalk.red(`For lazy nodes,LangListeners that are generators can only yield that node.`))
+                    throw new Error(chalk.red(`For a lazy node,LangListeners that are generators can only yield that lazy node but saw ${String((next as IteratorResult<any>).value)}.`))
                 }
                 const next2 = feedback.next(result);
                 if (!next2.done) {

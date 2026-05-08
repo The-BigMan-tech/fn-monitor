@@ -11,8 +11,8 @@ export function useModifiedEvaluator(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
     const inUserCode = scope.scopeDepth >= 2;//its only the generated code thats at depth 1 and 0.
     const availableListener = (typeof interpreter.langListener === "function");
-    
-    return ((interpreter.stage === 'MONITORING') && inUserCode && availableListener)
+    const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableListener);
+    return use;
 }
 export function callPerExe(interpreter:SvalPlus) {
     const perExe = interpreter.reusables.shared.perExe;
