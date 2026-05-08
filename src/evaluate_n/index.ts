@@ -11,7 +11,7 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import {Node as EsNode} from "estree";
-import { SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
@@ -49,11 +49,13 @@ export default function evaluate(node: Node, scope: Scope) {
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
-            
-            const result = (interpreter.reusables.result === UNASSIGNED)//must be done after calling next
-                ?handler(node,scope)
-                :interpreter.reusables.result
+            const executedManually = (interpreter.reusables.result !== UNASSIGNED);
 
+            const result = executedManually
+                ?interpreter.reusables.result
+                :handler(node,scope)//must be done after calling next
+            interpreter.reusables.result = SEEN;
+            
             const perExe = interpreter.reusables.shared.perExe;
             if (perExe) perExe(result);
 
@@ -69,21 +71,24 @@ export default function evaluate(node: Node, scope: Scope) {
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
-            pushHandler(interpreter,result,(node as EsNode).type);
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
 
             return result;
         }
         else {
-            const result = (interpreter.reusables.result === UNASSIGNED)
-                ?handler(node,scope)
-                :interpreter.reusables.result
+            const executedManually = (interpreter.reusables.result !== UNASSIGNED);
+
+            const result = executedManually
+                ?interpreter.reusables.result
+                :handler(node,scope)//must be done after calling next
+            interpreter.reusables.result = SEEN;
 
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
             const perExe = interpreter.reusables.shared.perExe;
             if (perExe) perExe(result);
 
             refreshExeStack(interpreter);
-            pushHandler(interpreter,result,(node as EsNode).type);
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
 
             return result;
         }

@@ -11,7 +11,7 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import {Node as EsNode} from "estree";
-import { LAZY_NODE, Reusables, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 
     captureReusables, 
@@ -74,13 +74,16 @@ export default function* evaluate(node: Node, scope: Scope) {
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
-            const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-                ?yield* higherHandler(handler(node,scope),interpreter)
-                :yield* higherHandler(interpreter.reusables.result,interpreter);
+            const executedManually = (interpreter.reusables.result !== UNASSIGNED);
+
+            const result = executedManually//this result variable must be called strictly after resuming the generator if the listener is a generator
+                ?yield* higherHandler(interpreter.reusables.result,interpreter)
+                :yield* higherHandler(handler(node,scope),interpreter);
+            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash
 
             const perExe = interpreter.reusables.shared.perExe;
             if (perExe) perExe(result);//since this needs to be called with the result of each execution,we need to call it after we have the result but before the exe stack is refreshed so that the callback can query the stack and also before resuming the generator with the final result.
-            
+
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
                     throw new Error(chalk.red(`For lazy nodes,LangListeners that are generators can only yield that node.`))
@@ -93,21 +96,23 @@ export default function* evaluate(node: Node, scope: Scope) {
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
-            pushHandler(interpreter,result,(node as EsNode).type);
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
 
             return result;
         }
         else {
-            const result = (interpreter.reusables.result === UNASSIGNED)//this result variable must be called strictly after resuming the generator if the listener is a generator
-                ?yield* higherHandler(handler(node,scope),interpreter)
-                :yield* higherHandler(interpreter.reusables.result,interpreter);
+            const executedManually = (interpreter.reusables.result !== UNASSIGNED);
+            const result = executedManually
+                ?yield* higherHandler(interpreter.reusables.result,interpreter)
+                :yield* higherHandler(handler(node,scope),interpreter);
+            interpreter.reusables.result = SEEN
             
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
             const perExe = interpreter.reusables.shared.perExe;
             if (perExe) perExe(result);
 
             refreshExeStack(interpreter);
-            pushHandler(interpreter,result,(node as EsNode).type);
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
 
             return result;
         }

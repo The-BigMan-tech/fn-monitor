@@ -18,9 +18,9 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
         restoreCapturedReusables(interpreter, parentReusables);
     }
 }
-export function pushHandler(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {
-    if (interpreter.reusables.result === UNASSIGNED) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
-        pushResult(interpreter,result,nodeType);
+export function pushHandler(args:{interpreter:SvalPlus,result:any,executedManually:boolean,nodeType:EsNode['type']}) {
+    if (!args.executedManually) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
+        pushResult(args.interpreter,args.result,args.nodeType);
     }
 }
 export function pushResult(interpreter:SvalPlus,result:any,nodeType:EsNode['type']) {

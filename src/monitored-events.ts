@@ -103,6 +103,7 @@ export type EventMap = (
 );
 export const LAZY_NODE = Symbol('LAZY_NODE');
 export const UNASSIGNED = Symbol('UNASSIGNED');
+export const SEEN = Symbol('SEEN');
 export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
 export type ListenerGenerator = Generator<typeof LAZY_NODE,undefined,any>;
@@ -127,7 +128,7 @@ export interface Reusables {
     node:EsNode | null,
     currentScope:Scope | null,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
-    result:any | typeof UNASSIGNED,
+    result:any | typeof UNASSIGNED | typeof SEEN,
     matchedQuery:boolean,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
     shared:{
