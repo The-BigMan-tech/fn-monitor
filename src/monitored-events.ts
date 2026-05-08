@@ -112,7 +112,6 @@ export type PerExe = ()=>void;
 
 export interface Visit {//its composed of methods so that it always uses the latest values from the reusables even if a ref may be stable
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
-    matched:()=>boolean,//returns true if an is check was satisfied in a listener call
     perExe:(perExe:null | PerExe)=>void,
     execute:<T extends any=any>()=>T,
     localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the listener was called
@@ -129,7 +128,6 @@ export interface Reusables {
     currentScope:Scope | null,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     result:any | typeof UNASSIGNED | typeof SEEN,
-    matchedQuery:boolean,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
     shared:{
         exeStack:QList<ExeResult>,

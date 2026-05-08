@@ -55,7 +55,6 @@ function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handl
     interpreter.reusables.currentScope = currentScope;
     interpreter.reusables.handler = handler;
     interpreter.reusables.result = UNASSIGNED;
-    interpreter.reusables.matchedQuery = false;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
 }
 export function clearEvalStack(interpreter:SvalPlus) {
@@ -64,7 +63,6 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.currentScope = null;
     interpreter.reusables.handler = null;
     interpreter.reusables.result = UNASSIGNED;
-    interpreter.reusables.matchedQuery = false;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
     interpreter.reusables.shared.evalStack.value = 0;
 }
@@ -74,7 +72,6 @@ export function captureReusables(interpreter:SvalPlus):Reusables {
         currentScope:interpreter.reusables.currentScope,
         handler: interpreter.reusables.handler,
         result: interpreter.reusables.result,
-        matchedQuery: interpreter.reusables.matchedQuery,
         currentEvent:interpreter.reusables.currentEvent,
         shared:{
             evalStack:interpreter.reusables.shared.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
@@ -89,7 +86,6 @@ export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reus
     interpreter.reusables.currentScope = prevReusables.currentScope;
     interpreter.reusables.handler = prevReusables.handler;
     interpreter.reusables.result = prevReusables.result;
-    interpreter.reusables.matchedQuery = prevReusables.matchedQuery;
     interpreter.reusables.currentEvent = prevReusables.currentEvent;
     interpreter.reusables.shared.evalStack = prevReusables.shared.evalStack;
     interpreter.reusables.shared.exeStack = prevReusables.shared.exeStack;

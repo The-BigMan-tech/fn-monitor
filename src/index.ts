@@ -195,7 +195,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
             node:null,
             result:UNASSIGNED,
             handler:null,
-            matchedQuery:false,
             shared:{
                 evalStack:{value:0},
                 exeStack:new QList(),
@@ -211,18 +210,14 @@ class SvalPlus extends Sval implements SvalPlusContract {
 
     public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
         localExeStack:()=>{
-            return this.reusables.shared.readonlyExeStack;//because the listeners only ever see the exe stack of the previous expression/statement because of the timing when they are called,i named the property last exe stack to make the intent clearer
+            return this.reusables.shared.readonlyExeStack;
         },
-        matched:()=>{
-            return this.reusables.matchedQuery;
-        },
-        is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.using this method is an alternative to instanceof checks
+        is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.
             const node = this.reusables.node!;
             if ((query === "Any") || (node.type === query)) {
                 const event:EventMap[typeof query] = createEvent(query,this)
                 cb(event);
                 this.reusables.currentEvent = event;
-                this.reusables.matchedQuery = true;
             }
         },
         execute:()=>{
