@@ -138,9 +138,10 @@ class Sval {
 }
 //*-----------------THE MONITOR-------------------------------------------------------------------------
 //!!Many of the design decisions were intentional.So make sure u carefully verify what you are doing before changing the monitor
+//!!The project uses an ast-walker interpreter underneath and will continue that way.Its still very memory efficient and performant and it does its main pupose very well.So i dont plan to ever rewrite this to use a bytecode vm for the sake of a few ms of extra speed
 
 // the monitor is only very fast because it does zero unnecessary allocations
-//because the stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the langlistener will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
+//because the src code stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the langlistener will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
 
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
