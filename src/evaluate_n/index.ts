@@ -57,7 +57,7 @@ export default function evaluate(node: Node, scope: Scope) {
             interpreter.reusables.result = SEEN;
             
             const perExe = interpreter.reusables.shared.perExe;
-            if (perExe) perExe(result);
+            if (perExe) perExe(result);//call this before resuming the generator.
 
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
@@ -70,8 +70,9 @@ export default function evaluate(node: Node, scope: Scope) {
             }
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
-            refreshExeStack(interpreter);//call this only after the listener sees the last exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
-            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
+            const wasCleared = refreshExeStack(interpreter);//call this only after the listener sees the latest exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
+            const pushedManually = executedManually && !wasCleared
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,pushedManually});
 
             return result;
         }
@@ -87,8 +88,9 @@ export default function evaluate(node: Node, scope: Scope) {
             const perExe = interpreter.reusables.shared.perExe;
             if (perExe) perExe(result);
 
-            refreshExeStack(interpreter);
-            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
+            const wasCleared = refreshExeStack(interpreter);
+            const pushedManually = executedManually && !wasCleared
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,pushedManually});
 
             return result;
         }

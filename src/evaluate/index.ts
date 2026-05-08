@@ -95,8 +95,9 @@ export default function* evaluate(node: Node, scope: Scope) {
             }
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
-            refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
-            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
+            const wasCleared = refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
+            const pushedManually = executedManually && !wasCleared
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,pushedManually});
 
             return result;
         }
@@ -111,8 +112,9 @@ export default function* evaluate(node: Node, scope: Scope) {
             const perExe = interpreter.reusables.shared.perExe;
             if (perExe) perExe(result);
 
-            refreshExeStack(interpreter);
-            pushHandler({interpreter,result,nodeType:(node as EsNode).type,executedManually});
+            const wasCleared = refreshExeStack(interpreter);
+            const pushedManually = executedManually && !wasCleared
+            pushHandler({interpreter,result,nodeType:(node as EsNode).type,pushedManually});
 
             return result;
         }
