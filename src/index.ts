@@ -367,7 +367,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
             chalk.red.underline(`\n\nTrace`) + `\n${err}`
         )
     }
-    public getMonitoredFn = (...args:any[])=>{
+    public runMonitoredFn = (...args:any[])=>{
         this.stage = 'MONITORING';
         let result;
 
@@ -450,7 +450,7 @@ export const monitor = {
             sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
         }
         interpreter.astInUse = ast;
-        return interpreter.getMonitoredFn as MonitoredFn<T>;
+        return interpreter.runMonitoredFn as MonitoredFn<T>;
     }
 }
 
