@@ -60,10 +60,8 @@ export function refreshExeStack(interpreter:SvalPlus):boolean {
 //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
-    if (interpreter.langListener) {
-        refreshReusables(acornNode,currentScope,handler)
-        return interpreter.langListener(interpreter.visit);
-    }
+    refreshReusables(acornNode,currentScope,handler)
+    return interpreter.langListener!(interpreter.visit);
 }
 function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;

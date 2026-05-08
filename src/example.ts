@@ -1,4 +1,4 @@
-import { monitor,EsNode } from "./index.ts";
+import { monitor,EsNode, ListenerGenerator } from "./index.ts";
 import chalk from "chalk";
 
 //the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
@@ -103,15 +103,14 @@ const generatedCode = {value:''};
 
 const addPseudoClosure = monitor.fn({
     main:{
-        ref:(a: number, b: number)=>{
-            console.log('hello',Math.sqrt(4),a,b);
+        ref:async (a: number, b: number)=>{
+            log('hello',Math.sqrt(4),a,b);
             return 14
         },
-        captures:{
-            log
-        }
+        captures:{log}
     },
-    listener:function (visit) {
+    listener:function* (visit):ListenerGenerator {
+        visit.is('Any',(event)=>console.log('DEPTH',event.scope.depth))
         visit.is('CallExpression',event=>{
             const calleeIndex = visit.localExeStack().length;
             const callees = new Set()
@@ -119,16 +118,19 @@ const addPseudoClosure = monitor.fn({
             visit.perExe = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
                 const element = stack.get(-(calleeIndex + 1));
-                console.log('RESULT:',stack.get(0).evaluation);
+                // console.log('RESULT:',stack.get(0).evaluation);
                 if (!callees.has(element)) {
-                    // console.log('Callee:',element);
+                    console.log('Callee:',element);
                     callees.add(element);
                     return
                 }
             }
-            visit.execute();
+        });
+        console.log(yield visit.execute());//for async functions,we want to yield the execution to pause the listener till it fully executes.but since we cant yield in the is method,we do it outside and continue the remaining half of our logic in another is block of the same query.
+        visit.is('CallExpression',()=>{
             // console.log('\nFULL EXECUTION TRACE:',[...visit.localExeStack()]);
         })
+        
     },
     beforeEachCall:(a,b)=>{
         console.log(`Seen the numbers a:${a} and b:${b}`);
@@ -136,13 +138,15 @@ const addPseudoClosure = monitor.fn({
     sendGeneratedCodeTo:generatedCode,
 });
 
+console.log(chalk.green('\nGenerated code:'));
+console.log(generatedCode.value);
+
 const result = addPseudoClosure(4,8);
 console.log(result);
 
 const end = performance.now();
 console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
 
-console.log(chalk.green('\nGenerated code:'));
-console.log(generatedCode.value);
+
 
 
