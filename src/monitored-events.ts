@@ -2,7 +2,7 @@
 //because of the demand and supply architecture,the script-monitor runs as close to the speed of sval as possible.so the overhead is the interpretation step not necessarily the monitor or sval
 
 import Scope from "./scope/index.ts";
-import { Node as EsNode} from "estree";
+import { Node as EsTreeNode} from "estree";
 import { 
     Literal,VariableDeclaration, FunctionDeclaration,
 
@@ -24,6 +24,8 @@ import { Var } from "./scope/variable.ts";
 import { QList,ReadonlyQList } from "./q-list.ts";
 
 export type Fn = (...args:any[])=>any;
+
+export type EsNode = EsTreeNode;//i couldnt directly export it from the module because its only a types file
 
 export type Query = 
     | Literal['type']
@@ -112,14 +114,14 @@ export type PerExe = ()=>void;
 
 export interface Visit {//its composed of methods so that it always uses the latest values from the reusables even if a ref may be stable
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
-    perExe:(perExe:PerExe)=>void,
+    set perExe(perExe:PerExe),
     execute:<T extends any=any>()=>T,
     localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the listener was called
 }
 export type LangListener = (visit:Visit)=> void | ListenerGenerator
 
 export interface ExeResult {
-    value:unknown,
+    evaluation:unknown,
     type:EsNode['type'],
     node:EsNode,//this will always be available as the nodes are always created before the evaluator is called
     scope:ScopeForEvent | typeof NOT_ALLOCATED;//this is the scope specifically created for each event object.since the event object may not be alloacted,this object too may not also be allocated

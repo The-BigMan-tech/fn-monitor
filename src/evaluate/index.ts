@@ -10,7 +10,6 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import {Node as EsNode} from "estree";
 import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { 
     callMonitor, 

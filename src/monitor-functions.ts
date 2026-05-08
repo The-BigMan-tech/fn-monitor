@@ -39,7 +39,7 @@ export function pushResult(interpreter:SvalPlus,result:any) {
     const node = interpreter.reusables.node!;
 
     interpreter.reusables.shared.exeStack.unshift({
-        value:result,
+        evaluation:result,
         type:node.type,
         node,
         scope:(currentEvent === NOT_ALLOCATED)

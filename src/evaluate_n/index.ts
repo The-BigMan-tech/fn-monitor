@@ -10,7 +10,6 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import {Node as EsNode} from "estree";
 import { SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
 import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe } from '../monitor-functions.ts'
 import chalk from 'chalk'

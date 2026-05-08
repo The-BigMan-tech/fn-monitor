@@ -145,34 +145,87 @@ class Sval {
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
-import { LangListener,Reusables, ScopeForEvent,VariableForEvent,Fn, createEvent, SvalPlus as SvalPlusContract, UNASSIGNED, LAZY_NODE, Visit, EventMap, NOT_ALLOCATED,PerExe } from './monitored-events.ts'
+import { 
+    LangListener,
+    Reusables, 
+    ScopeForEvent,
+    VariableForEvent,
+    Fn, 
+    createEvent, 
+    SvalPlus as SvalPlusContract, 
+    UNASSIGNED, 
+    LAZY_NODE, 
+    Visit as VisitContract, 
+    EventMap, 
+    NOT_ALLOCATED,
+    PerExe
+} from './monitored-events.ts'
 import { isGenerator, pushResult } from './monitor-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 import jsBeatutify from "js-beautify";
 
 
 class EventScope implements ScopeForEvent {
-    private scope:Scope
+    #scope:Scope
     public parent:Scope | null;
     public depth:number;
     public variables:ScopeForEvent['variables'];
 
     constructor(interpreter:SvalPlus) {
-        this.scope = interpreter.reusables.currentScope!;
-        this.parent = this.scope.scopeParent;
-        this.depth = this.scope.scopeDepth;
+        this.#scope = interpreter.reusables.currentScope!;
+        this.parent = this.#scope.scopeParent;
+        this.depth = this.#scope.scopeDepth;
         this.variables = {
             search:(name:string):VariableForEvent | null =>{
-                const variable = this.scope.find(name);
+                const variable = this.#scope.find(name);
                 if (variable === null) return null;
 
                 const variableForEvent = { value:()=>variable.get() }
                 return variableForEvent
             },
-            local:this.scope.scopeContext
+            local:this.#scope.scopeContext
         }
     }
 }
+class Visit implements VisitContract {
+    #interpreter:SvalPlus
+
+    constructor(interpreter:SvalPlus) {
+        this.#interpreter = interpreter;
+    }
+    public localExeStack = ()=>{
+        return this.#interpreter.reusables.shared.readonlyExeStack;
+    }
+    public is:VisitContract['is'] = (query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.
+        const node = this.#interpreter.reusables.node!;
+        if ((query === "Any") || (node.type === query)) {
+            const event:EventMap[typeof query] = createEvent(query,this.#interpreter)
+            cb(event);
+            this.#interpreter.reusables.currentEvent = event;
+        }
+    };
+    public execute = ()=>{
+        const handler = this.#interpreter.reusables.handler;
+        if (handler !== null) {
+            if (this.#interpreter.reusables.result !== UNASSIGNED) {
+                throw new Error(chalk.red(`A node can only be executed once`))
+            }
+            this.#interpreter.reusables.result = handler(this.#interpreter.reusables.node!,this.#interpreter.reusables.currentScope!);
+            if (isGenerator(this.#interpreter.reusables.result)) {
+                return LAZY_NODE;
+            }else {
+                pushResult(this.#interpreter,this.#interpreter.reusables.result);
+                return this.#interpreter.reusables.result;
+            }
+        }
+    };
+    set perExe(perExe:PerExe) {
+        this.#interpreter.reusables.shared.perExe = {
+            fn:perExe,
+            owner:this.#interpreter.reusables.node!
+        }
+    }
+} 
 class SvalPlus extends Sval implements SvalPlusContract {
     public langListener:LangListener | null = null;
     public fnBeforeEachCall:Fn | undefined = undefined;
@@ -184,6 +237,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
     public reusables:Reusables;
+    public visit:Visit = new Visit(this);//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
 
     constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
@@ -206,41 +260,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public createEventScope = ()=>{
         return new EventScope(this);
-    }
-
-    public visit:Visit = {//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-        localExeStack:()=>{
-            return this.reusables.shared.readonlyExeStack;
-        },
-        is:(query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.
-            const node = this.reusables.node!;
-            if ((query === "Any") || (node.type === query)) {
-                const event:EventMap[typeof query] = createEvent(query,this)
-                cb(event);
-                this.reusables.currentEvent = event;
-            }
-        },
-        execute:()=>{
-            const handler = this.reusables.handler;
-            if (handler !== null) {
-                if (this.reusables.result !== UNASSIGNED) {
-                    throw new Error(chalk.red(`A node can only be executed once`))
-                }
-                this.reusables.result = handler(this.reusables.node!,this.reusables.currentScope!);
-                if (isGenerator(this.reusables.result)) {
-                    return LAZY_NODE;
-                }else {
-                    pushResult(this,this.reusables.result);
-                    return this.reusables.result;
-                }
-            }
-        },
-        perExe:(perExe:PerExe)=>{
-            this.reusables.shared.perExe = {
-                fn:perExe,
-                owner:this.reusables.node!
-            }
-        }
     }
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {
         const fnString = fn.toString();
@@ -376,14 +395,14 @@ interface FnAst {
 declare const __brand: unique symbol;
 
 // 2. Create a reusable Brand utility
-export type Brand<T, B> = T & { readonly [__brand]:B };
+type Brand<T, B> = T & { readonly [__brand]:B };
 export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>;
 
-interface Metadata<T extends Fn> {
+export interface Metadata<T extends Fn> {
     ref:T extends MonitoredFn<Fn> ? never : T,
     captures?:Record<string,any>
 }
-interface MonitorFnSetup<T extends Fn> {
+export interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
     listener:LangListener,
     inlineFunctions?:Record<string,Metadata<Fn>>
@@ -433,9 +452,14 @@ export {
     type Query,
     type EventMap,
     type Visit,
+    type ListenerGenerator,
+    type ExeResult,
+    type EsNode,
 
+    NOT_ALLOCATED,
+    LAZY_NODE,
 
-    //the reason why i didnt export these as just types is because of instance-of checks
+    //the reason why i didnt export these as just types is because of possible instance-of checks 
     //Default Event
     LangEvent,
 
