@@ -105,15 +105,18 @@ export const LAZY_NODE = Symbol('LAZY_NODE');
 export const UNASSIGNED = Symbol('UNASSIGNED');
 export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
-export type GenExe = Generator<typeof LAZY_NODE,undefined,any>;
+export type ListenerGenerator = Generator<typeof LAZY_NODE,undefined,any>;
+
+export type PerExe = (result:any)=>void;
 
 export interface Visit {//its composed of methods so that it always uses the latest values from the reusables even if a ref may be stable
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
-    execute:<T extends any=any>()=>T ,
-    localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the listener was called
     matched:()=>boolean,//returns true if an is check was satisfied in a listener call
+    perExe:(perExe:null | PerExe)=>void,
+    execute:<T extends any=any>()=>T,
+    localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the listener was called
 }
-export type LangListener = (visit:Visit)=>void | GenExe
+export type LangListener = (visit:Visit)=> void | ListenerGenerator
 
 export interface ExeResult {
     value:unknown,
@@ -131,6 +134,7 @@ export interface Reusables {
         exeStack:QList<ExeResult>,
         readonlyExeStack:ReadonlyQList<ExeResult>,
         evalStack:{value:number},
+        perExe:PerExe | null
     }
 }
 export interface SvalPlus {

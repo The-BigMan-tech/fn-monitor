@@ -76,7 +76,8 @@ export function captureReusables(interpreter:SvalPlus):Reusables {
         shared:{
             evalStack:interpreter.reusables.shared.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
             exeStack:interpreter.reusables.shared.exeStack,
-            readonlyExeStack:interpreter.reusables.shared.readonlyExeStack
+            readonlyExeStack:interpreter.reusables.shared.readonlyExeStack,
+            perExe:interpreter.reusables.shared.perExe
         }
     };
 }
@@ -90,4 +91,5 @@ export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reus
     interpreter.reusables.shared.evalStack = prevReusables.shared.evalStack;
     interpreter.reusables.shared.exeStack = prevReusables.shared.exeStack;
     interpreter.reusables.shared.readonlyExeStack = prevReusables.shared.readonlyExeStack;
+    interpreter.reusables.shared.perExe = prevReusables.shared.perExe
 }

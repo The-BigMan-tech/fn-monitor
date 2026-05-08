@@ -78,6 +78,9 @@ export default function* evaluate(node: Node, scope: Scope) {
                 ?yield* higherHandler(handler(node,scope),interpreter)
                 :yield* higherHandler(interpreter.reusables.result,interpreter);
 
+            const perExe = interpreter.reusables.shared.perExe;
+            if (perExe) perExe(result);//since this needs to be called with the result of each execution,we need to call it after we have the result but before the exe stack is refreshed so that the callback can query the stack and also before resuming the generator with the final result.
+            
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
                     throw new Error(chalk.red(`For lazy nodes,LangListeners that are generators can only yield that node.`))
@@ -100,7 +103,9 @@ export default function* evaluate(node: Node, scope: Scope) {
                 :yield* higherHandler(interpreter.reusables.result,interpreter);
             
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
-            
+            const perExe = interpreter.reusables.shared.perExe;
+            if (perExe) perExe(result);
+
             refreshExeStack(interpreter);
             pushHandler(interpreter,result,(node as EsNode).type);
 

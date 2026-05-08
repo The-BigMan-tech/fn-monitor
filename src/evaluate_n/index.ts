@@ -54,6 +54,9 @@ export default function evaluate(node: Node, scope: Scope) {
                 ?handler(node,scope)
                 :interpreter.reusables.result
 
+            const perExe = interpreter.reusables.shared.perExe;
+            if (perExe) perExe(result);
+
             if (!next.done) {
                 if (next.value !== interpreter.reusables.result) {
                     throw new Error(chalk.red(`For an eager node,LangListeners that are generators can only yield the result of that node to be consistent.`))
@@ -76,6 +79,8 @@ export default function evaluate(node: Node, scope: Scope) {
                 :interpreter.reusables.result
 
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
+            const perExe = interpreter.reusables.shared.perExe;
+            if (perExe) perExe(result);
 
             refreshExeStack(interpreter);
             pushHandler(interpreter,result,(node as EsNode).type);
