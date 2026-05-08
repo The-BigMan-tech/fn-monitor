@@ -101,16 +101,23 @@ const log = (...args:any[])=> {
 const start = performance.now();
 const generatedCode = {value:''};
 
+
 const addPseudoClosure = monitor.fn({
     main:{
         ref:async (a: number, b: number)=>{
             log('hello',Math.sqrt(4),a,b);
             return 14
         },
-        captures:{log}
+        // captures:{
+        //     log
+        // }
+    },
+    inlineFunctions:{
+        log:{
+            ref:log
+        }
     },
     listener:function* (visit):ListenerGenerator {
-        visit.is('Any',(event)=>console.log('DEPTH',event.scope.depth))
         visit.is('CallExpression',event=>{
             const calleeIndex = visit.localExeStack().length;
             const callees = new Set()
@@ -126,7 +133,7 @@ const addPseudoClosure = monitor.fn({
                 }
             }
         });
-        console.log(yield visit.execute());//for async functions,we want to yield the execution to pause the listener till it fully executes.but since we cant yield in the is method,we do it outside and continue the remaining half of our logic in another is block of the same query.
+        yield visit.execute();//for async functions,we want to yield the execution to pause the listener till it fully executes.but since we cant yield in the is method,we do it outside and continue the remaining half of our logic in another is block of the same query.
         visit.is('CallExpression',()=>{
             // console.log('\nFULL EXECUTION TRACE:',[...visit.localExeStack()]);
         })
@@ -138,11 +145,11 @@ const addPseudoClosure = monitor.fn({
     sendGeneratedCodeTo:generatedCode,
 });
 
-console.log(chalk.green('\nGenerated code:'));
-console.log(generatedCode.value);
+// console.log(chalk.green('\nGenerated code:'));
+// console.log(generatedCode.value);
 
-const result = addPseudoClosure(4,8);
-console.log(result);
+const result = await addPseudoClosure(4,8);
+console.log('RESULT FROM FN',result);
 
 const end = performance.now();
 console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
