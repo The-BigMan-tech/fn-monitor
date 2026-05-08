@@ -11,7 +11,7 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import { SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
-import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe } from '../monitor-functions.ts'
+import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../monitor-functions.ts'
 import chalk from 'chalk'
 
 let evaluateOps: any
@@ -33,14 +33,13 @@ export default function evaluate(node: Node, scope: Scope) {
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
-    const interpreter:SvalPlus = scope.interpreter;
-    const depth = scope.scopeDepth;
-    
-    if ((depth < 2) || (typeof interpreter.langListener !== "function")) {//if we are in the generated code wrappers,just skip the extra evaluator logic entirely and send the result.The second condition is a guard
+    if (!useModifiedEvaluator(scope)) {
         return handler(node,scope);
     }
     
-    const parentReusables = captureReusables(interpreter)
+    const interpreter:SvalPlus = scope.interpreter;
+    const parentReusables = captureReusables(interpreter);
+
     try {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));

@@ -238,6 +238,20 @@ class SvalPlus extends Sval implements SvalPlusContract {
 
     public reusables:Reusables;
     public visit:Visit = new Visit(this);//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
+    public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
+
+    public static meriyahParseOptions:MeriyahOptions = {
+        module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
+        next: true,      // Modern ES support
+        loc: true,       // Essential for your shop.demand tracking
+        ranges: true,    // Good for error reporting
+        lexical: true    // Helps Sval understand 'let/const' vs 'var'
+    }
+    public static defaultOptions:SvalOptions = {
+        sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont work with the modules option
+        ecmaVer:2024, 
+        sandBox: true, // Standard for eDSLs/Sandboxes,
+    };
 
     constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
@@ -322,32 +336,6 @@ class SvalPlus extends Sval implements SvalPlusContract {
         }
         return fnCode;
     }
-    public getMonitoredFn = (...args:any[])=>{
-        if (this.fnBeforeEachCall !== undefined) {
-            this.fnBeforeEachCall(...args);
-        }
-        try {
-            this.import({ [SvalPlus.argsVar]:args });
-            this.run(this.astInUse!.fnCall);
-            return this.exports[SvalPlus.resultExport];
-        }catch(err) {
-            if (err instanceof ReferenceError) {
-                throw new Error(SvalPlus.refErrMsg(err))
-            }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
-        };
-    }
-    public static meriyahParseOptions:MeriyahOptions = {
-        module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
-        next: true,      // Modern ES support
-        loc: true,       // Essential for your shop.demand tracking
-        ranges: true,    // Good for error reporting
-        lexical: true    // Helps Sval understand 'let/const' vs 'var'
-    }
-    public static defaultOptions:SvalOptions = {
-        sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont work with the modules option
-        ecmaVer:2024, 
-        sandBox: true, // Standard for eDSLs/Sandboxes,
-    };
     public static sha256Key(str:string):string {
         return 'generated_' + sha256.create().update(str).hex();
     }
@@ -378,6 +366,32 @@ class SvalPlus extends Sval implements SvalPlusContract {
             Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
             chalk.red.underline(`\n\nTrace`) + `\n${err}`
         )
+    }
+    public getMonitoredFn = (...args:any[])=>{
+        this.stage = 'MONITORING';
+        let result;
+
+        if (this.fnBeforeEachCall !== undefined) {
+            this.fnBeforeEachCall(...args);
+        }
+        try {
+            this.import({ [SvalPlus.argsVar]:args });
+            this.run(this.astInUse!.fnCall);
+            result = this.exports[SvalPlus.resultExport];
+            return result;
+        }
+        catch(err) {
+            if (err instanceof ReferenceError) {
+                throw new Error(SvalPlus.refErrMsg(err))
+            }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
+        }
+        finally {
+            if (result instanceof Promise) {
+                result.finally(()=>{this.stage = "IDLE"});
+            }else {
+                this.stage = "IDLE";
+            }
+        }
     }
 }
 const Colors = {
@@ -423,6 +437,7 @@ export const monitor = {
             fnBeforeEachCall:beforeEachCall,
             options:SvalPlus.defaultOptions
         });
+        interpreter.stage = "PRE-PROCESSING";
         interpreter.exports[SvalPlus.capturesVar] = captures || Object.create(null);
 
         const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);

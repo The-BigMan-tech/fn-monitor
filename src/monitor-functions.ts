@@ -7,6 +7,13 @@ import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./monitored-events
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
+export function useModifiedEvaluator(scope:Scope):boolean {
+    const interpreter:SvalPlus = scope.interpreter;
+    const inUserCode = scope.scopeDepth >= 2;//its only the generated code thats at depth 1 and 0.
+    const availableListener = (typeof interpreter.langListener === "function");
+    
+    return ((interpreter.stage === 'MONITORING') && inUserCode && availableListener)
+}
 export function callPerExe(interpreter:SvalPlus) {
     const perExe = interpreter.reusables.shared.perExe;
     const node = interpreter.reusables.node!;

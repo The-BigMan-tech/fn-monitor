@@ -146,6 +146,7 @@ export interface SvalPlus {
     langListener:LangListener | null,
     reusables:Reusables,
     visit:Visit,
+    stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
     createEventScope:()=>ScopeForEvent,
 }
 export interface VariableForEvent {

@@ -16,7 +16,8 @@ import {
     callPerExe, 
     captureReusables, 
     cleanStack, 
-    isGenerator, pushHandler, pushResult, refreshExeStack, // Use the Generator version
+    isGenerator, pushHandler, pushResult, refreshExeStack,
+    useModifiedEvaluator, // Use the Generator version
 } from '../monitor-functions.ts'
 
 import chalk from 'chalk'
@@ -59,14 +60,13 @@ export default function* evaluate(node: Node, scope: Scope) {
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
-    const interpreter: SvalPlus = scope.interpreter;
-    const depth = scope.scopeDepth;
-
-    if ((depth < 2) || (typeof interpreter.langListener !== "function")) {//if we are in the generated code wrappers,just skip the extra evaluator logic entirely and send the result.The second condition is a guard
+    if (!useModifiedEvaluator(scope)) {
         return yield* handler(node,scope);
     }
 
+    const interpreter: SvalPlus = scope.interpreter;
     const parentReusables = captureReusables(interpreter);
+
     try {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
