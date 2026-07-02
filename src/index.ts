@@ -220,7 +220,7 @@ class Visit implements VisitContract {
             }
         }
     };
-    set perExe(perExe:PerExe) {
+    set perExecution(perExe:PerExe) {
         this.#interpreter.reusables.shared.perExe = {
             fn:perExe,
             owner:this.#interpreter.reusables.node!
