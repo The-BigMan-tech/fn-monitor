@@ -68,7 +68,7 @@ export function refreshExeStack(interpreter:SvalPlus):boolean {
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
     refreshReusables(acornNode,currentScope,handler)
-    return interpreter.langListener!(interpreter.visit);
+    return interpreter.langListener!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
 }
 function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
