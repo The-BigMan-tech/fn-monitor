@@ -57,7 +57,7 @@ const monitoredFractalTest = monitor.fn({
         timeoutTracker.stepCounter++;
         
         // Binary bitmask check: Only execute the inner code once every 1024 steps
-        if ((timeoutTracker.stepCounter & 1024) === 0) {
+        if ((timeoutTracker.stepCounter & 1023) === 0) {
             const totalTime = performance.now() - timeoutTracker.startTime;
             if (totalTime > timeoutTracker.limitMs) {
                 throw new Error(`Max execution time exceeded.Used ${totalTime.toFixed(3)}ms when only given ${timeoutTracker.limitMs.toFixed(3)}ms`);
