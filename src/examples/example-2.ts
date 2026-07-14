@@ -18,12 +18,41 @@ function calculateAverage(numbers: number[]): number {
     for (let i = 0; i < numbers.length; i++) {
         sum += numbers[i];
     }
-    return sum / numbers.length;
+    return Number((sum / numbers.length).toFixed(3));
+}
+function heavySortTest(count: number): any[] {
+    // Generate a pseudo-random list of player objects
+    const list: any[] = [];
+    for (let i = 0; i < count; i++) {
+        list.push({
+            id: i,
+            score: (i * 33 + 7) % 100 // Creates a deterministic jumbled list of scores
+        });
+    }
+
+    // Heavy Nested Bubble Sort Loop - Triggers massive AST mutations and steps
+    const len = list.length;
+    for (let i = 0; i < len; i++) {
+        for (let j = 0; j < len - 1 - i; j++) {
+            if (list[j].score > list[j + 1].score) {
+                // Swap structural object elements
+                const temp = list[j];
+                list[j] = list[j + 1];
+                list[j + 1] = temp;
+            }
+        }
+    }
+    return list;
 }
 
+
 perf(()=>{
-    calculateAverage([20,30,70,88,91,72])
+    const result = calculateAverage([20,30,70,88,91,72]);
+    console.log('\nThe average is: ',result);
 });
+// perf(()=>{
+//     heavySortTest(100)
+// });
 
 
 const timeoutTracker = {
@@ -57,5 +86,6 @@ const monitoredFnTest = monitor.fn({
 
 console.log(chalk.green(`Finished building the fn in ${(performance.now()-fnBuilsStart).toFixed(3)}ms`));
 perf(()=>{
-    monitoredFnTest([20,30,70,88,91,72])
+    const result = monitoredFnTest([20,30,70,88,91,72]);
+    console.log('\nThe average is: ',result);
 });
