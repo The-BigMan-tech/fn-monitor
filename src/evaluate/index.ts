@@ -10,7 +10,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
 import { 
     callMonitor, 
     callPerExe, 

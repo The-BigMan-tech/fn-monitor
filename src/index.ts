@@ -160,7 +160,7 @@ import {
     EventMap, 
     NOT_ALLOCATED,
     PerExe
-} from './monitored-events.ts'
+} from './custom-types.ts'
 import { isGenerator, pushResult } from './helper-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 import jsBeatutify from "js-beautify";
@@ -426,7 +426,6 @@ export interface MonitorFnSetup<T extends Fn> {
 }
 
 //the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
-//The monitor uses an ast walker interpreter to execute the code cuz a bytecode version will make it impossible to setup step by step monitoring
 
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
@@ -524,4 +523,4 @@ export {
 
     // Data
     LiteralEvent
-} from "./monitored-events.ts"
+} from "./custom-types.ts"

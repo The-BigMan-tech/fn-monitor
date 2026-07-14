@@ -10,7 +10,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { SEEN, SvalPlus, UNASSIGNED } from '../monitored-events.ts'
+import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
 import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../helper-functions.ts'
 import chalk from 'chalk'
 

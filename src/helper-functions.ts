@@ -1,7 +1,7 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import {Node as EsNode} from "estree";
-import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./monitored-events.ts";
+import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./custom-types.ts";
 
 
 export function isGenerator(obj:unknown):obj is Generator {
