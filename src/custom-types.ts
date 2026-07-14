@@ -118,7 +118,6 @@ export interface Visit {//its composed of methods so that it always uses the lat
     execute:<T extends any=any>()=>T,
     localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the inspector was called
 }
-export type Inspector = (visit:Visit)=> void | InspectorGenerator
 
 export interface ExeResult {
     evaluation:unknown,
@@ -142,8 +141,13 @@ export interface Reusables {
         }
     }
 }
+
+export type Inspector = (visit:Visit)=> void | InspectorGenerator;
+export type OnStep = ()=>void;//Unlike the inspector,this fn is called on every step without any information from whats happening during the interpretation.Using this alone over the inspector will make the interpreter much faster because it doesnt allocate extra intermediate objects for context.It is useful for setting timers on the interpreted code.
+
 export interface SvalPlus {
     inspector:Inspector | null,
+    onStep:OnStep | null,
     reusables:Reusables,
     visit:Visit,
     stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';

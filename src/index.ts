@@ -158,7 +158,8 @@ import {
     Visit as VisitContract, 
     EventMap, 
     NOT_ALLOCATED,
-    PerExe
+    PerExe,
+    OnStep
 } from './custom-types.ts'
 import { isGenerator, pushResult } from './helper-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
@@ -228,6 +229,7 @@ class Visit implements VisitContract {
 } 
 class SvalPlus extends Sval implements SvalPlusContract {
     public inspector:Inspector | null = null;
+    public onStep:OnStep | null = null;
 
     public fnBeforeEachCall:Fn | undefined = undefined;
     public astInUse:FnAst | null = null;
@@ -251,17 +253,21 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public static defaultOptions:SvalOptions = {
         sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont work with the modules option
         ecmaVer:2024, 
-        sandBox: true, // Standard for eDSLs/Sandboxes,
+        sandBox:true, 
     };
 
     constructor(args:{
         inspector:Inspector | undefined,
+        onStep:OnStep | undefined,
         options:SvalOptions,
         fnBeforeEachCall:Fn | undefined
     }) {
         super(args.options);
         this.fnBeforeEachCall = args.fnBeforeEachCall;
+
         this.inspector = args.inspector || null;
+        this.onStep = args.onStep || null;
+
         this.reusables = {
             currentEvent:NOT_ALLOCATED,
             currentScope:null,
@@ -368,7 +374,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public static refErrMsg(err:ReferenceError) {
         return (
             chalk.red.underline(`\nReference Error`) +
-            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn on creation or have its source inlined if its a function.\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
+            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call, or through the configuration,it must be either captured into the monitored fn upon creation or inlined(inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
             chalk.red.underline(`\n\nTrace`) + `\n${err}`
         )
     }
@@ -423,7 +429,8 @@ export interface Metadata<T extends Fn> {
 }
 export interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
-    inspector?:Inspector
+    inspector?:Inspector,
+    onStep?:OnStep,
     inlineFunctions?:Record<string,Metadata<Fn>>
     beforeEachCall?:(...args:Parameters<T>)=>void,
     sendGeneratedCodeTo?:{value:string}
@@ -434,10 +441,17 @@ export interface MonitorFnSetup<T extends Fn> {
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
         const {ref:fn,captures} = setup.main;
-        const {inspector,beforeEachCall,inlineFunctions,sendGeneratedCodeTo} = setup;
+        const {
+            inspector,
+            onStep,
+            beforeEachCall,
+            inlineFunctions,
+            sendGeneratedCodeTo
+        } = setup;
 
         const interpreter = new SvalPlus({
             inspector,
+            onStep,
             fnBeforeEachCall:beforeEachCall,
             options:SvalPlus.defaultOptions
         });
@@ -466,6 +480,7 @@ export {
 
 export {
     type Inspector,
+    type OnStep,
     type VariableForEvent,
     type ScopeForEvent,
     type Query,

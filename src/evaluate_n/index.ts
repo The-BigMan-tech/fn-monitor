@@ -33,13 +33,18 @@ export default function evaluate(node: Node, scope: Scope) {
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
+    const interpreter:SvalPlus = scope.interpreter;
+    if (interpreter.onStep) {
+        interpreter.onStep();
+    }
+
     if (!useModifiedEvaluator(scope)) {
         return handler(node,scope);
-    }
-    
-    const interpreter:SvalPlus = scope.interpreter;
-    const parentReusables = captureReusables(interpreter);
+    };
 
+    //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
+    const parentReusables = captureReusables(interpreter);
+    
     try {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
