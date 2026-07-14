@@ -1,4 +1,4 @@
-import { monitor,EsNode, ListenerGenerator } from "../index.ts";
+import { monitor,EsNode,InspectorGenerator } from "../index.ts";
 import chalk from "chalk";
 
 //the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
@@ -40,7 +40,7 @@ perf(() => {
         main:{
             ref:internalAdd, 
         },
-        listener:(visit) => {
+        inspector:(visit) => {
             let matched = false;
 
             visit.is('AssignmentExpression',event => {
@@ -86,7 +86,6 @@ perf(() => {
             ref:internalAdd2,
             captures:{ hello2 },
         },
-        listener:()=>undefined,
     });
     const result = addClosure(1,3)
     console.log(result);
@@ -117,7 +116,7 @@ const addPseudoClosure = monitor.fn({
             ref:log
         }
     },
-    listener:function* (visit):ListenerGenerator {
+    inspector:function* (visit):InspectorGenerator {
         visit.is('CallExpression',event=>{
             const calleeIndex = visit.localExeStack().length;
             const callees = new Set()
@@ -133,7 +132,7 @@ const addPseudoClosure = monitor.fn({
                 }
             }
         });
-        yield visit.execute();//for async functions,we want to yield the execution to pause the listener till it fully executes.but since we cant yield in the is method,we do it outside and continue the remaining half of our logic in another is block of the same query.
+        yield visit.execute();//for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the is method,we do it outside and continue the remaining half of our logic in another is block of the same query.
         visit.is('CallExpression',()=>{
             // console.log('\nFULL EXECUTION TRACE:',[...visit.localExeStack()]);
         })

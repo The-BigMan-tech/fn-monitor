@@ -140,13 +140,13 @@ class Sval {
 //!!Many of the design decisions were intentional.So make sure that you carefully verify what you are doing before changing how the modified interpreter works or manages objects
 //!!The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon.Im trading raw performance for architectural simplicity
 
-//because the src code stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the langlistener will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
+//because the src code stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the inspector will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
 
 import chalk from "chalk";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
 import { 
-    LangListener,
+    Inspector,
     Reusables, 
     ScopeForEvent,
     VariableForEvent,
@@ -227,7 +227,8 @@ class Visit implements VisitContract {
     }
 } 
 class SvalPlus extends Sval implements SvalPlusContract {
-    public langListener:LangListener | null = null;
+    public inspector:Inspector | null = null;
+
     public fnBeforeEachCall:Fn | undefined = undefined;
     public astInUse:FnAst | null = null;
 
@@ -237,7 +238,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
     public reusables:Reusables;
-    public visit:Visit = new Visit(this);//Even if each listener gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
+    public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
     public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
 
     public static meriyahParseOptions:MeriyahOptions = {
@@ -253,10 +254,14 @@ class SvalPlus extends Sval implements SvalPlusContract {
         sandBox: true, // Standard for eDSLs/Sandboxes,
     };
 
-    constructor(args:{listener:LangListener | undefined,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
+    constructor(args:{
+        inspector:Inspector | undefined,
+        options:SvalOptions,
+        fnBeforeEachCall:Fn | undefined
+    }) {
         super(args.options);
         this.fnBeforeEachCall = args.fnBeforeEachCall;
-        this.langListener = args.listener || null;
+        this.inspector = args.inspector || null;
         this.reusables = {
             currentEvent:NOT_ALLOCATED,
             currentScope:null,
@@ -418,7 +423,7 @@ export interface Metadata<T extends Fn> {
 }
 export interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
-    listener?:LangListener,
+    inspector?:Inspector
     inlineFunctions?:Record<string,Metadata<Fn>>
     beforeEachCall?:(...args:Parameters<T>)=>void,
     sendGeneratedCodeTo?:{value:string}
@@ -429,10 +434,10 @@ export interface MonitorFnSetup<T extends Fn> {
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
         const {ref:fn,captures} = setup.main;
-        const {listener,beforeEachCall,inlineFunctions,sendGeneratedCodeTo} = setup;
+        const {inspector,beforeEachCall,inlineFunctions,sendGeneratedCodeTo} = setup;
 
         const interpreter = new SvalPlus({
-            listener,
+            inspector,
             fnBeforeEachCall:beforeEachCall,
             options:SvalPlus.defaultOptions
         });
@@ -460,13 +465,13 @@ export {
 } from './q-list.ts';
 
 export {
-    type LangListener,
+    type Inspector,
     type VariableForEvent,
     type ScopeForEvent,
     type Query,
     type EventMap,
     type Visit,
-    type ListenerGenerator,
+    type InspectorGenerator,
     type ExeResult,
     type EsNode,
 

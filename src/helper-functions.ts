@@ -10,8 +10,8 @@ export function isGenerator(obj:unknown):obj is Generator {
 export function useModifiedEvaluator(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
     const inUserCode = scope.scopeDepth >= 2;//its only the generated code thats at depth 1 and 0.
-    const availableListener = (typeof interpreter.langListener === "function");
-    const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableListener);
+    const availableInspector = (typeof interpreter.inspector === "function");
+    const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableInspector);
     return use;
 }
 export function callPerExe(interpreter:SvalPlus) {
@@ -59,7 +59,7 @@ export function refreshExeStack(interpreter:SvalPlus):boolean {
     const OneNodeLeft = interpreter.reusables.shared.evalStack.value <= 1
     if (OneNodeLeft) {
         // console.log('\nCLEARED EXE STACK');
-        interpreter.reusables.shared.exeStack.clear();//since the listener can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
+        interpreter.reusables.shared.exeStack.clear();//since the inspector can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
         return true;
     }
     return false;
@@ -68,7 +68,7 @@ export function refreshExeStack(interpreter:SvalPlus):boolean {
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
     refreshReusables(acornNode,currentScope,handler)
-    return interpreter.langListener!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
+    return interpreter.inspector!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
 }
 function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;

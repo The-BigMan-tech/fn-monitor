@@ -76,7 +76,7 @@ export default function* evaluate(node: Node, scope: Scope) {
             const next = feedback.next();
             const executedManually = (interpreter.reusables.result !== UNASSIGNED);
 
-            const result = executedManually//this result variable must be called strictly after resuming the generator if the listener is a generator
+            const result = executedManually//this result variable must be called strictly after resuming the generator if the inspector is a generator
                 ?yield* higherHandler(interpreter.reusables.result,interpreter)
                 :yield* higherHandler(handler(node,scope),interpreter);
 
@@ -84,16 +84,16 @@ export default function* evaluate(node: Node, scope: Scope) {
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
-                    throw new Error(chalk.red(`For a lazy node,LangListeners that are generators can only yield that lazy node but saw ${String((next as IteratorResult<any>).value)}.`))
+                    throw new Error(chalk.red(`For a lazy node,inspectors that are generators can only yield that lazy node but saw ${String((next as IteratorResult<any>).value)}.`))
                 }
                 const next2 = feedback.next(result);
                 if (!next2.done) {
-                    throw new Error(chalk.red(`In Lazy Node:LangListeners that are generators can only yield once.`))
+                    throw new Error(chalk.red(`In Lazy Node:inspectors that are generators can only yield once.`))
                 }
             }
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
-            const wasCleared = refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the listener.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
+            const wasCleared = refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the inspector.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
             const pushedManually = executedManually && !wasCleared
             
             pushHandler(interpreter,result,pushedManually);

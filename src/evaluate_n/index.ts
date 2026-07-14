@@ -58,16 +58,16 @@ export default function evaluate(node: Node, scope: Scope) {
             
             if (!next.done) {
                 if (next.value !== manuallyExecutedResult) {
-                    throw new Error(chalk.red(`For an eager node,LangListeners that are generators can only yield the result of that node to be consistent but saw: ${String(next.value)} instead of: ${String(manuallyExecutedResult)}.`))
+                    throw new Error(chalk.red(`For an eager node,inspectors that are generators can only yield the result of that node to be consistent but saw: ${String(next.value)} instead of: ${String(manuallyExecutedResult)}.`))
                 }
                 const next2 = feedback.next(result);
                 if (!next2.done) {
-                    throw new Error(chalk.red(`In Eager Node:LangListeners that are generators can only yield once.`))
+                    throw new Error(chalk.red(`In Eager Node:inspectors that are generators can only yield once.`))
                 }
             }
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
-            const wasCleared = refreshExeStack(interpreter);//call this only after the listener sees the latest exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
+            const wasCleared = refreshExeStack(interpreter);//call this only after the inspector sees the latest exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
             const pushedManually = executedManually && !wasCleared
             
             pushHandler(interpreter,result,pushedManually);

@@ -108,7 +108,7 @@ export const UNASSIGNED = Symbol('UNASSIGNED');
 export const SEEN = Symbol('SEEN');
 export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
-export type ListenerGenerator = Generator<typeof LAZY_NODE,undefined,any>;
+export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,any>;
 
 export type PerExe = ()=>void;
 
@@ -116,9 +116,9 @@ export interface Visit {//its composed of methods so that it always uses the lat
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
     set perExecution(perExe:PerExe),
     execute:<T extends any=any>()=>T,
-    localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the listener was called
+    localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the inspector was called
 }
-export type LangListener = (visit:Visit)=> void | ListenerGenerator
+export type Inspector = (visit:Visit)=> void | InspectorGenerator
 
 export interface ExeResult {
     evaluation:unknown,
@@ -131,7 +131,7 @@ export interface Reusables {
     currentScope:Scope | null,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     result:any | typeof UNASSIGNED | typeof SEEN,
-    currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the listener didnt explicitly visit a node type to trigger an event allocation
+    currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the inspector didnt explicitly visit a node type to trigger an event allocation
     shared:{
         exeStack:QList<ExeResult>,
         readonlyExeStack:ReadonlyQList<ExeResult>,
@@ -143,7 +143,7 @@ export interface Reusables {
     }
 }
 export interface SvalPlus {
-    langListener:LangListener | null,
+    inspector:Inspector | null,
     reusables:Reusables,
     visit:Visit,
     stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
@@ -160,7 +160,7 @@ export interface ScopeForEvent {
     parent:Scope | null;
     depth:number
 }
-export class LangEvent<NodeType extends EsNode = EsNode> {
+export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event
     public node:NodeType;
     public scope:ScopeForEvent;
 
