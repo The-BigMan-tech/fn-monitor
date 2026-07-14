@@ -161,7 +161,7 @@ import {
     NOT_ALLOCATED,
     PerExe
 } from './monitored-events.ts'
-import { isGenerator, pushResult } from './monitor-functions.ts';
+import { isGenerator, pushResult } from './helper-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 import jsBeatutify from "js-beautify";
 
@@ -254,10 +254,10 @@ class SvalPlus extends Sval implements SvalPlusContract {
         sandBox: true, // Standard for eDSLs/Sandboxes,
     };
 
-    constructor(args:{listener:LangListener,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
+    constructor(args:{listener:LangListener | undefined,options:SvalOptions,fnBeforeEachCall:Fn | undefined}) {
         super(args.options);
         this.fnBeforeEachCall = args.fnBeforeEachCall;
-        this.langListener = args.listener;
+        this.langListener = args.listener || null;
         this.reusables = {
             currentEvent:NOT_ALLOCATED,
             currentScope:null,
@@ -419,7 +419,7 @@ export interface Metadata<T extends Fn> {
 }
 export interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
-    listener:LangListener,
+    listener?:LangListener,
     inlineFunctions?:Record<string,Metadata<Fn>>
     beforeEachCall?:(...args:Parameters<T>)=>void,
     sendGeneratedCodeTo?:{value:string}

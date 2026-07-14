@@ -18,7 +18,7 @@ import {
     cleanStack, 
     isGenerator, pushHandler, pushResult, refreshExeStack,
     useModifiedEvaluator, // Use the Generator version
-} from '../monitor-functions.ts'
+} from '../helper-functions.ts'
 
 import chalk from 'chalk'
 
