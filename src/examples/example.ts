@@ -1,4 +1,4 @@
-import { monitor,EsNode, ListenerGenerator } from "./index.ts";
+import { monitor,EsNode, ListenerGenerator } from "../index.ts";
 import chalk from "chalk";
 
 //the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
@@ -153,7 +153,5 @@ console.log('RESULT FROM FN',result);
 
 const end = performance.now();
 console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
-
-
 
 
