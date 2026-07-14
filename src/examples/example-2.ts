@@ -9,37 +9,20 @@ function perf(fn:(...args:any[])=>void) {
     console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
 };
 
-function fractalTest(size:number)  {
-    let checkSum = 0;
-    const maxIterations = 300;
-    
-    for (let y = 0; y < size; y++) {
-        const c_im = -1.2 + (y * 2.4) / size;
-        
-        for (let x = 0; x < size; x++) {
-            const c_re = -2.0 + (x * 2.5) / size;
-            let z_re = 0.0;
-            let z_im = 0.0;
-            let isMandelbrot = true;
-            
-            for (let i = 0; i < maxIterations; i++) {
-                const z_re_new = z_re * z_re - z_im * z_im + c_re;
-                z_im = 2.0 * z_re * z_im + c_im;
-                z_re = z_re_new;
-                
-                if (z_re * z_re + z_im * z_im > 4.0) {
-                    checkSum += i;
-                    isMandelbrot = false;
-                    break;
-                }
-            }
-            if (isMandelbrot) checkSum += maxIterations;
-        }
+function calculateAverage(numbers: number[]): number {
+    if (!numbers || numbers.length === 0) {
+        return 0;
     }
-    return checkSum;
-};
+    
+    let sum = 0;
+    for (let i = 0; i < numbers.length; i++) {
+        sum += numbers[i];
+    }
+    return sum / numbers.length;
+}
+
 perf(()=>{
-    fractalTest(60)
+    calculateAverage([20,30,70,88,91,72])
 });
 
 
@@ -49,9 +32,11 @@ const timeoutTracker = {
     stepCounter: 0
 };
 
-const monitoredFractalTest = monitor.fn({
+const fnBuilsStart = performance.now();
+
+const monitoredFnTest = monitor.fn({
     main: {
-        ref: fractalTest,
+        ref:calculateAverage,
     },
     onStep: () => {
         timeoutTracker.stepCounter++;
@@ -70,6 +55,7 @@ const monitoredFractalTest = monitor.fn({
     }
 });
 
+console.log(chalk.green(`Finished building the fn in ${(performance.now()-fnBuilsStart).toFixed(3)}ms`));
 perf(()=>{
-    monitoredFractalTest(60)
+    monitoredFnTest([20,30,70,88,91,72])
 });
