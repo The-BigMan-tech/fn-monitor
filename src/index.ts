@@ -235,7 +235,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public astInUse:FnAst | null = null;
 
     public static readonly resultExport:string = SvalPlus.sha256Key('result');
-    public static readonly argsVar = SvalPlus.sha256Key('args');
+    public static readonly argsVar = SvalPlus.sha256Key('args');//this can safely be static because its just used as a common name for the passed arguments.Its used in a per-instance object to ensure isolation
     public static readonly capturesVar = SvalPlus.sha256Key('captures');
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
@@ -378,6 +378,10 @@ class SvalPlus extends Sval implements SvalPlusContract {
             ansis.red.underline(`\n\nTrace`) + `\n${err}`
         )
     }
+    private argImports:{ [SvalPlus.argsVar]:any[] } = { 
+        [SvalPlus.argsVar]:null as any //we firstly set it to null to prevent creating a wasted empty object
+    }
+
     public runMonitoredFn = (...args:any[])=>{
         this.stage = 'MONITORING';
         let result;
@@ -386,8 +390,10 @@ class SvalPlus extends Sval implements SvalPlusContract {
             this.fnBeforeEachCall(...args);
         }
         try {
-            this.import({ [SvalPlus.argsVar]:args });
+            this.argImports[SvalPlus.argsVar] = args;
+            this.import(this.argImports);
             this.run(this.astInUse!.fnCall);
+
             result = this.exports[SvalPlus.resultExport];
             return result;
         }
