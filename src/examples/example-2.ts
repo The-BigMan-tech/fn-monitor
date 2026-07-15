@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import ansis from "ansis";
 import { monitor } from "../index.ts";
 
 
@@ -6,10 +6,13 @@ function perf(fn:(...args:any[])=>void) {
     const start = performance.now();
     fn();
     const end = performance.now();
-    console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
+    console.log(ansis.green(`\nFinished in ${end-start} milliseconds\n`));
 };
 
-function calculateAverage(numbers: number[]): number {
+function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
+    if (caller === "monitor") {
+        while (true) {}//simulate an infinite loop
+    }
     if (!numbers || numbers.length === 0) {
         return 0;
     }
@@ -47,45 +50,56 @@ function heavySortTest(count: number): any[] {
 
 
 perf(()=>{
-    const result = calculateAverage([20,30,70,88,91,72]);
+    const result = calculateAverage([20,30,70,88,91,72],'js');
     console.log('\nThe average is: ',result);
 });
-// perf(()=>{
-//     heavySortTest(100)
-// });
+perf(()=>{
+    heavySortTest(100)
+});
 
+type milliseconds = number;
 
-const timeoutTracker = {
-    limitMs: 50,       // 50ms absolute execution limit
-    startTime: 0,
-    stepCounter: 0
-};
+function timeFn<T extends (...args:any[])=>void>(fn:T,time:milliseconds):T {
+    const timeoutTracker = {
+        limitMs:time,       // 50ms absolute execution limit
+        startTime: 0,
+        stepCounter: 0
+    };
 
-const fnBuilsStart = performance.now();
+    const fnBuilsStart = performance.now();
 
-const monitoredFnTest = monitor.fn({
-    main: {
-        ref:calculateAverage,
-    },
-    onStep: () => {
-        timeoutTracker.stepCounter++;
-        
-        // Binary bitmask check: Only execute the inner code once every 1024 steps
-        if ((timeoutTracker.stepCounter & 1023) === 0) {
-            const totalTime = performance.now() - timeoutTracker.startTime;
-            if (totalTime > timeoutTracker.limitMs) {
-                throw new Error(`Max execution time exceeded.Used ${totalTime.toFixed(3)}ms when only given ${timeoutTracker.limitMs.toFixed(3)}ms`);
+    const monitoredFn = monitor.fn({
+        main: {
+            ref:fn
+        },
+        beforeEachCall: () => {
+            timeoutTracker.stepCounter = 0;
+            timeoutTracker.startTime = performance.now();
+        },
+        onStep: () => {
+            timeoutTracker.stepCounter++;
+
+            if ((timeoutTracker.stepCounter & 1023) === 0) {// Binary bitmask check: Only execute the inner code once every 1024 steps
+                const totalTime = performance.now() - timeoutTracker.startTime;
+                if (totalTime > timeoutTracker.limitMs) {
+                    throw new Error(`Max execution time exceeded.Used ${totalTime.toFixed(3)}ms when only given ${timeoutTracker.limitMs.toFixed(3)}ms`);
+                }
             }
         }
-    },
-    beforeEachCall: () => {
-        timeoutTracker.stepCounter = 0;
-        timeoutTracker.startTime = performance.now();
-    }
+    });
+
+    console.log(ansis.cyan(`Finished building the fn in ${(performance.now()-fnBuilsStart).toFixed(3)}ms`));
+    return monitoredFn
+}
+
+const avg = timeFn(calculateAverage,50);
+const heavySort = timeFn(heavySortTest,250);
+
+perf(()=>{
+    const result = avg([20,30,70,88,91,72],'js');//you can call and use this just like a regular function
+    console.log('\nThe average from the timed fn is: ',result);
 });
 
-console.log(chalk.green(`Finished building the fn in ${(performance.now()-fnBuilsStart).toFixed(3)}ms`));
 perf(()=>{
-    const result = monitoredFnTest([20,30,70,88,91,72]);
-    console.log('\nThe average is: ',result);
+    heavySort(120);
 });
