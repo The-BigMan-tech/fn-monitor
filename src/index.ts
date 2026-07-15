@@ -138,7 +138,7 @@ class Sval {
 }
 //*-----------------THE MONITOR-------------------------------------------------------------------------
 //!!Many of the design decisions were intentional.So make sure that you carefully verify what you are doing before changing how the modified interpreter works or manages objects
-//!!The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon.Im trading raw performance for architectural simplicity
+//!!The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon for very practical reasons.
 //!!The parts of the project that are pure sval code and not my custom modifications have type complaints.Since these are outside my modifications and they still work,I left them alone.
 
 //because the src code stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the inspector will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
