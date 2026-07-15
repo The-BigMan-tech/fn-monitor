@@ -1,5 +1,5 @@
 import { monitor,EsNode,InspectorGenerator } from "../index.ts";
-import chalk from "chalk";
+import ansis from "ansis";
 
 //the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
 
@@ -7,7 +7,7 @@ function perf(fn:(...args:any[])=>void) {
     const start = performance.now();
     fn();
     const end = performance.now();
-    console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
+    console.log(ansis.green('\nFinished in ',end-start,' milliseconds\n'));
 }
 function hello() {
     console.log('Hello function');
@@ -144,13 +144,13 @@ const addPseudoClosure = monitor.fn({
     sendGeneratedCodeTo:generatedCode,
 });
 
-// console.log(chalk.green('\nGenerated code:'));
+// console.log(ansis.green('\nGenerated code:'));
 // console.log(generatedCode.value);
 
 const result = await addPseudoClosure(4,8);
 console.log('RESULT FROM FN',result);
 
 const end = performance.now();
-console.log(chalk.green('\nFinished in ',end-start,' milliseconds\n'));
+console.log(ansis.green('\nFinished in ',end-start,' milliseconds\n'));
 
 

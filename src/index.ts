@@ -142,7 +142,7 @@ class Sval {
 
 //because the src code stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the inspector will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
 
-import chalk from "chalk";
+import ansis from "ansis";
 import { LRUCache } from 'lru-cache'
 import {sha256} from "js-sha256"
 import { 
@@ -209,7 +209,7 @@ class Visit implements VisitContract {
         const handler = this.#interpreter.reusables.handler;
         if (handler !== null) {
             if (this.#interpreter.reusables.result !== UNASSIGNED) {
-                throw new Error(chalk.red(`A node can only be executed once`))
+                throw new Error(ansis.red(`A node can only be executed once`))
             }
             this.#interpreter.reusables.result = handler(this.#interpreter.reusables.node!,this.#interpreter.reusables.currentScope!);
             if (isGenerator(this.#interpreter.reusables.result)) {
@@ -373,9 +373,9 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public static refErrMsg(err:ReferenceError) {
         return (
-            chalk.red.underline(`\nReference Error`) +
+            ansis.red.underline(`\nReference Error`) +
             Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call, or through the configuration,it must be either captured into the monitored fn upon creation or inlined(inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
-            chalk.red.underline(`\n\nTrace`) + `\n${err}`
+            ansis.red.underline(`\n\nTrace`) + `\n${err}`
         )
     }
     public runMonitoredFn = (...args:any[])=>{
@@ -394,7 +394,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         catch(err) {
             if (err instanceof ReferenceError) {
                 throw new Error(SvalPlus.refErrMsg(err))
-            }else throw new Error(chalk.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
+            }else throw new Error(ansis.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
         }
         finally {
             if (result instanceof Promise) {
@@ -406,7 +406,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
 }
 const Colors = {
-    orange:chalk.hex('#f6c098')
+    orange:ansis.hex('#f6c098')
 };
 interface FnSrc {
     fnCode:string,
@@ -417,14 +417,9 @@ interface FnAst {
     fnCall:Node,
     fnCallString:string
 }
-declare const __brand: unique symbol;
-
-// 2. Create a reusable Brand utility
-type Brand<T, B> = T & { readonly [__brand]:B };
-export type MonitoredFn<T extends Fn> = Brand<T,'MonitoredFn'>;
 
 export interface Metadata<T extends Fn> {
-    ref:T extends MonitoredFn<Fn> ? never : T,
+    ref:T,
     captures?:Record<string,any>
 }
 export interface MonitorFnSetup<T extends Fn> {
@@ -439,7 +434,7 @@ export interface MonitorFnSetup<T extends Fn> {
 //the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
 
 export const monitor = {
-    fn<T extends Fn>(setup:MonitorFnSetup<T>):MonitoredFn<T> {
+    fn<T extends Fn>(setup:MonitorFnSetup<T>):T {
         const {ref:fn,captures} = setup.main;
         const {
             inspector,
@@ -468,7 +463,7 @@ export const monitor = {
             sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
         }
         interpreter.astInUse = ast;
-        return interpreter.runMonitoredFn as MonitoredFn<T>;
+        return interpreter.runMonitoredFn as T;
     }
 }
 
@@ -478,6 +473,7 @@ export {
     ReadonlyQList
 } from './q-list.ts';
 
+//!!The estree types pkg is intentionally made as a dependency and not a dev dep because the project is directly exporting one of its types for intellisense
 export {
     type Inspector,
     type OnStep,

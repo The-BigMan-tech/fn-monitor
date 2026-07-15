@@ -16,7 +16,7 @@ export default defineConfig({
         },
         rollupOptions: {
             external: [
-                'chalk',
+                'ansis',
                 ...builtinModules, 
                 ...builtinModules.map(m => `node:${m}`),
                 ...Object.keys(pkg.dependencies || {}),

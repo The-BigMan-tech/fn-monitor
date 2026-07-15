@@ -12,7 +12,7 @@ import * as program from './program.ts'
 
 import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
 import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../helper-functions.ts'
-import chalk from 'chalk'
+import ansis from 'ansis'
 
 let evaluateOps: any
 
@@ -47,7 +47,7 @@ export default function evaluate(node: Node, scope: Scope) {
     
     try {
         interpreter.reusables.shared.evalStack.value += 1;
-        // console.log(chalk.yellow.underline('\n\nCALLED MONITOR'));
+        // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);
 
         if (isGenerator(feedback)) {
@@ -63,11 +63,11 @@ export default function evaluate(node: Node, scope: Scope) {
             
             if (!next.done) {
                 if (next.value !== manuallyExecutedResult) {
-                    throw new Error(chalk.red(`For an eager node,inspectors that are generators can only yield the result of that node to be consistent but saw: ${String(next.value)} instead of: ${String(manuallyExecutedResult)}.`))
+                    throw new Error(ansis.red(`For an eager node,inspectors that are generators can only yield the result of that node to be consistent but saw: ${String(next.value)} instead of: ${String(manuallyExecutedResult)}.`))
                 }
                 const next2 = feedback.next(result);
                 if (!next2.done) {
-                    throw new Error(chalk.red(`In Eager Node:inspectors that are generators can only yield once.`))
+                    throw new Error(ansis.red(`In Eager Node:inspectors that are generators can only yield once.`))
                 }
             }
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);

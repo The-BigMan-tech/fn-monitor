@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import ansis from "ansis";
 
 /**A custom optimized dequeue with the random access of an array in one data structure */
 export class QList<T> {
@@ -89,7 +89,7 @@ export class QList<T> {
     private validateIndex(i: number): void {
         const TAIL_SIZE = this.tailSize();
         if (i < 0 || i >= TAIL_SIZE || TAIL_SIZE === 0) {
-            throw new Error(chalk.red(`\nInvalid random access in QList. Index ${i} not available (length: ${this.tailSize()})`));
+            throw new Error(ansis.red(`\nInvalid random access in QList. Index ${i} not available (length: ${this.tailSize()})`));
         }
     }
     /**Get the element at the specified index.It can accept negative indices like the at method of an array */
@@ -132,7 +132,7 @@ export class ReadonlyQList<T> {
     }
     private getQList() {
         if (this.qList === undefined) {
-            throw new Error(chalk.red(`ReadonlyQList Error:Cannot use this method because the object was not given a src qList.`))
+            throw new Error(ansis.red(`ReadonlyQList Error:Cannot use this method because the object was not given a src qList.`))
         }
         return this.qList;
     }
