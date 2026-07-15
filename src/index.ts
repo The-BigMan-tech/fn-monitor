@@ -434,8 +434,12 @@ export interface MonitorFnSetup<T extends Fn> {
 //the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
 
 export const monitor = {
-    fn<T extends Fn>(setup:MonitorFnSetup<T>):T {
+    fn<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
         const {ref:fn,captures} = setup.main;
+
+        if ('alreadyMonitored' in fn) {
+            throw new Error(ansis.red(`\nA monitored function cannot be monitored.`))
+        }
         const {
             inspector,
             onStep,
@@ -463,7 +467,10 @@ export const monitor = {
             sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
         }
         interpreter.astInUse = ast;
-        return interpreter.runMonitoredFn as T;
+        
+        const newFn = interpreter.runMonitoredFn as any
+        newFn['alreadyMonitored'] = true;
+        return newFn;
     }
 }
 
