@@ -233,12 +233,14 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public onStep:OnStep | null = null;
 
     public fnBeforeEachCall:Fn | undefined = undefined;
-    public astInUse:FnAst | null = null;
-
+    public fnAfterEachCall:Fn | undefined = undefined;
+    
     public static readonly resultExport:string = SvalPlus.sha256Key('result');
     public static readonly argsVar = SvalPlus.sha256Key('args');//this can safely be static because its just used as a common name for the passed arguments.Its used in a per-instance object to ensure isolation
     public static readonly capturesVar = SvalPlus.sha256Key('captures');
+    
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
+    public astInUse:FnAst | null = null;
 
     public reusables:Reusables;
     public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
@@ -261,10 +263,13 @@ class SvalPlus extends Sval implements SvalPlusContract {
         inspector:Inspector | undefined,
         onStep:OnStep | undefined,
         options:SvalOptions,
-        fnBeforeEachCall:Fn | undefined
+        fnBeforeEachCall:Fn | undefined,
+        fnAfterEachCall:Fn | undefined
     }) {
         super(args.options);
+
         this.fnBeforeEachCall = args.fnBeforeEachCall;
+        this.fnAfterEachCall = args.fnAfterEachCall;
 
         this.inspector = args.inspector || null;
         this.onStep = args.onStep || null;
@@ -383,6 +388,13 @@ class SvalPlus extends Sval implements SvalPlusContract {
         [SvalPlus.argsVar]:null as any //we firstly set it to null to prevent creating a wasted empty object
     }
 
+    private normalizeErr(err:unknown):Error {
+        if (err instanceof ReferenceError) {
+            return new Error(SvalPlus.refErrMsg(err))
+        }else {
+            return new Error(ansis.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
+        }
+    }
     public runMonitoredFn = (...args:any[])=>{
         this.stage = 'MONITORING';
         let result;
@@ -390,26 +402,39 @@ class SvalPlus extends Sval implements SvalPlusContract {
         if (this.fnBeforeEachCall !== undefined) {
             this.fnBeforeEachCall(...args);
         }
-        try {
-            this.argImports[SvalPlus.argsVar] = args;
-            this.import(this.argImports);
-            this.run(this.astInUse!.fnCall);
+        this.argImports[SvalPlus.argsVar] = args;
+        this.import(this.argImports);
 
+        try {
+            this.run(this.astInUse!.fnCall);
             result = this.exports[SvalPlus.resultExport];
-            return result;
-        }
-        catch(err) {
-            if (err instanceof ReferenceError) {
-                throw new Error(SvalPlus.refErrMsg(err))
-            }else throw new Error(ansis.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
-        }
-        finally {
-            if (result instanceof Promise) {
-                result.finally(()=>{this.stage = "IDLE"});
-            }else {
-                this.stage = "IDLE";
+        }catch(err) {
+            result = this.normalizeErr(err);
+        };
+
+        if (result instanceof Promise) {
+            return result
+                .then(res => {
+                    if (this.fnAfterEachCall) this.fnAfterEachCall(res);
+                    return res; // Pass the successful result down the chain
+                })
+                .catch(err => {
+                    const error = this.normalizeErr(err)
+                    if (this.fnAfterEachCall) this.fnAfterEachCall(error);
+                    throw error; // Re-throw so the caller still sees the error
+                })
+                .finally(()=>{
+                    this.stage = "IDLE";
+                })
+        }else {
+            try {
+                if (this.fnAfterEachCall !== undefined) this.fnAfterEachCall(result);
+                if (result instanceof Error) throw result;
+                return result;
+            }finally {
+                this.stage = "IDLE";//this runs regardless of whether the hook throws an error or not
             }
-        }
+        };
     }
 }
 const Colors = {
@@ -433,9 +458,10 @@ export interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
     inspector?:Inspector,
     onStep?:OnStep,
-    inlineFunctions?:Record<string,Metadata<Fn>>
-    beforeEachCall?:(...args:Parameters<T>)=>void,
+    inlineFunctions?:Record<string,Metadata<Fn>>,
     sendGeneratedCodeTo?:{value:string}
+    beforeEachCall?:(...args:Parameters<T>)=>void,//having the arguments here is useful for logging or blocking the fn if the args are malicious
+    afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
 
 //the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
@@ -451,6 +477,7 @@ export const monitor = {
             inspector,
             onStep,
             beforeEachCall,
+            afterEachCall,
             inlineFunctions,
             sendGeneratedCodeTo
         } = setup;
@@ -459,6 +486,7 @@ export const monitor = {
             inspector,
             onStep,
             fnBeforeEachCall:beforeEachCall,
+            fnAfterEachCall:afterEachCall,
             options:SvalPlus.defaultOptions
         });
         interpreter.stage = "PRE-PROCESSING";
