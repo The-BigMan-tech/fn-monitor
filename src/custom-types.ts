@@ -154,7 +154,7 @@ export interface SvalPlus {
     onStep:OnStep | null,
     reusables:Reusables,
     visit:Visit,
-    stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
+    stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';//the purpose of this is to prevent the interpreter from hitting the inspector during the parsing stage and also when its not explicitly running the monitored function
     createEventScope:()=>ScopeForEvent,
 }
 export interface VariableForEvent {

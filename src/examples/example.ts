@@ -7,7 +7,7 @@ function perf(fn:(...args:any[])=>void) {
     const start = performance.now();
     fn();
     const end = performance.now();
-    console.log(ansis.green('\nFinished in ',end-start,' milliseconds\n'));
+    console.log(ansis.green(`\nFinished in ${end-start} milliseconds\n`));
 }
 function hello() {
     console.log('Hello function');
@@ -147,10 +147,11 @@ const addPseudoClosure = monitor.fn({
 // console.log(ansis.green('\nGenerated code:'));
 // console.log(generatedCode.value);
 
-const result = await addPseudoClosure(4,8);
+const result = addPseudoClosure(4,8);
+const result2 = await addPseudoClosure(5,6);
 console.log('RESULT FROM FN',result);
 
 const end = performance.now();
-console.log(ansis.green('\nFinished in ',end-start,' milliseconds\n'));
+console.log(ansis.green(`\nFinished in ${end-start} milliseconds\n`));
 
 
