@@ -77,6 +77,7 @@ function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handl
     interpreter.reusables.handler = handler;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
+    //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation
 }
 export function clearEvalStack(interpreter:SvalPlus) {
     // console.log('CLEARED EVAL');

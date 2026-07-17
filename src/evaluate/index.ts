@@ -25,12 +25,13 @@ import ansis from 'ansis'
 
 let evaluateOps: any
 
-function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
+function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:Reusables):Generator {
     let result = iterator.next();
     while (!result.done) {
         let input;
         try {
             input = yield result.value;// The error from .throw() enters here
+            restoreCapturedReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
         }catch (e) {
             result = iterator.throw(e);
             continue;
@@ -85,12 +86,18 @@ export default function* evaluate(node: Node, scope: Scope) {
             const executedManually = (interpreter.reusables.result !== UNASSIGNED);
 
             const result = executedManually//this result variable must be called strictly after resuming the generator if the inspector is a generator
-                ?yield* higherHandler(interpreter.reusables.result,interpreter)
-                :yield* higherHandler(handler(node,scope),interpreter);
+                ?yield* higherHandler(
+                    interpreter.reusables.result,
+                    interpreter,
+                    localReusables
+                )
+                :yield* higherHandler(
+                    handler(node,scope),
+                    interpreter,
+                    localReusables
+                );
 
             interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash
-
-            restoreCapturedReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded through the handler and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
@@ -114,8 +121,16 @@ export default function* evaluate(node: Node, scope: Scope) {
         else {
             const executedManually = (interpreter.reusables.result !== UNASSIGNED);
             const result = executedManually
-                ?yield* higherHandler(interpreter.reusables.result,interpreter)
-                :yield* higherHandler(handler(node,scope),interpreter);
+                ?yield* higherHandler(
+                    interpreter.reusables.result,
+                    interpreter,
+                    localReusables
+                )
+                :yield* higherHandler(
+                    handler(node,scope),
+                    interpreter,
+                    localReusables
+                );
             interpreter.reusables.result = SEEN
             
             restoreCapturedReusables(interpreter,localReusables)
