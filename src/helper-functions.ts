@@ -1,6 +1,6 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
-import {Node as EsNode} from "estree";
+import type {Node as EsNode} from "estree";
 import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./custom-types.ts";
 
 

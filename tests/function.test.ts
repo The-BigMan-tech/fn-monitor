@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { parse } from 'acorn'
-import Sval from '../src'
+import Sval from '../src/sval.ts'
 
 describe('testing function', () => {
   it('should excute function normally', () => {

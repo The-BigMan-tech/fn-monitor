@@ -7,7 +7,7 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "start": "vite",
-        "test": "node scripts && vitest run --coverage",
+        "test": "vitest run --coverage",
         "build": "vite build"
     },
     "keywords": [],
@@ -25,11 +25,12 @@
         "meriyah": "^7.1.0"
     },
     "devDependencies": {
-        "@types/js-beautify": "^1.14.3",
         "@swc/core": "^1.11.24",
+        "@types/js-beautify": "^1.14.3",
         "@types/node": "^22.15.3",
         "@vitest/coverage-v8": "^3.1.2",
         "happy-dom": "^20.0.11",
+        "tsx": "^4.23.1",
         "vite": "^6.3.4",
         "vite-plugin-dts": "^4.5.3",
         "vitest": "^3.1.2"

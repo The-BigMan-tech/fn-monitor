@@ -2,8 +2,8 @@
 //because of the demand and supply architecture,the script-monitor runs as close to the speed of sval as possible.so the overhead is the interpretation step not necessarily the monitor or sval
 
 import Scope from "./scope/index.ts";
-import { Node as EsTreeNode} from "estree";
-import { 
+import type { Node as EsTreeNode} from "estree";
+import type { 
     Literal,VariableDeclaration, FunctionDeclaration,
 
     IfStatement,SwitchStatement,TryStatement,CatchClause,
