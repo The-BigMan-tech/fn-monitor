@@ -1,8 +1,18 @@
-//!!Many of the design decisions were intentional.So make sure that you carefully verify what you are doing before changing how the modified interpreter works or manages objects
-//!!The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon for very practical reasons.
-//!!The parts of the project that are pure sval code and not my custom modifications have type complaints.Since these are outside my modifications and they still work,I left them alone.
-
-//because the src code stack trace in the monitor isnt the same as the one it will be in a native environment,the stacktrace of the monitored function wont be helpful.It means that the unmonitored function must be used independently for debugging.But the inspector will show a proper stack trace if it throws an error because its runs directly in the runtime,not the interpreter.
+//!!Note:
+/** 
+ * Many of the design decisions were intentional.
+ *  
+ * To share interpretation context and control with the inspector hook performantly,I used a reusables object architecture to prevent creating intermediate objects mid evaluation.but to prevent several state bugs when it comes to sharing state like this across independent evaluations,I had to extend the architecture to favor copy over overwriting at certain points.
+ * So its an overwrite,save progress by copying,then overwriting kind of a thing.I didnt expect the state transitions to be this complex.
+ * The code works and its not inherently bad but the evaluator may have been cleaner and with less edge cases if I didnt use interpreter-wide reusables from the start.But there is some good to it.I dont know how well it saves memory,but it also allows the extended interpreter and other related objects to be decoupled from any specific local evaluation
+ * This model only concerns the modified evaluator thats only used when the inspector hook is passed to the interpreter.The model will likely remain unchanged.
+ * 
+ * The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon for very practical reasons.
+ * The parts of the project that are pure sval code and not my custom modifications have type complaints.Since these are outside my modifications and they still work,I left them alone.
+ * 
+ * because monitored fns run in an isolated context,any errors thrown in them will not map directly to where it was written in the editor.The functions must be debugged in their unmonitored state until a native mapping solution exists.
+ * But the inspector will show a proper stack trace if it throws an error because its runs directly in the js runtime,not the interpreter.
+*/
 
 import Sval, { SvalOptions } from "./sval.ts"
 import { Node } from 'acorn'
@@ -69,6 +79,7 @@ class Visit implements VisitContract {
     }
     public is:VisitContract['is'] = (query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.
         const node = this.#interpreter.reusables.node!;
+
         if ((query === "Any") || (node.type === query)) {
             const event:EventMap[typeof query] = createEvent(query,this.#interpreter)
             cb(event);
@@ -259,9 +270,14 @@ class SvalPlus extends Sval implements SvalPlusContract {
 
     private normalizeErr(err:unknown):Error {
         if (err instanceof ReferenceError) {
-            return new Error(SvalPlus.refErrMsg(err))
+            err.message = SvalPlus.refErrMsg(err);
+            return err;
         }else {
-            return new Error(ansis.red.underline(`\nError in Monitored Function:`) + `\n${err}`);
+            const error = err instanceof Error 
+                ? err 
+                : new Error(String(err));
+            error.message = ansis.red.underline(`\nError in Monitored Function:`) + `\n${error.message}`
+            return error
         }
     }
     public runMonitoredFn = (...args:any[])=>{

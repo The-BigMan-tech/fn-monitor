@@ -61,6 +61,8 @@ export default function evaluate(node: Node, scope: Scope) {
             const manuallyExecutedResult = interpreter.reusables.result;//save it before marking it as seen.this extra line is special just to the generator part under the regular evaluator cuz its not needed in other branches as a medium for safety check
             interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash
             
+            //If you noticed,I didnt capture nor restore the reusables local to this evaluation because it runs to completion and the reusables wont be overwritten by another evaluation
+
             if (!next.done) {
                 if (next.value !== manuallyExecutedResult) {
                     throw new Error(ansis.red(`For an eager node,inspectors that are generators can only yield the result of that node to be consistent but saw: ${String(next.value)} instead of: ${String(manuallyExecutedResult)}.`))

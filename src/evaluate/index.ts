@@ -77,6 +77,7 @@ export default function* evaluate(node: Node, scope: Scope) {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
         const feedback = callMonitor(node, scope, handler);
+        const localReusables = captureReusables(interpreter);//capture the reusbales after the callMonitor method has updated it to the local node and scope
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
@@ -87,6 +88,8 @@ export default function* evaluate(node: Node, scope: Scope) {
                 :yield* higherHandler(handler(node,scope),interpreter);
 
             interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash
+
+            restoreCapturedReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded through the handler and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
