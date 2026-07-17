@@ -35,3 +35,4 @@ so the interpreter prioritizes control but also stability when giving that contr
 *SRC CODE VS LOGS for understanding code
 *Simulation vs Pattern recognition
 
+the monitor cant support dynamic imports in monitored fns.it treats functions as scripts and not modules.so it sees import as a ref error and if you try to capture the import fn,it will even fail to parse.
