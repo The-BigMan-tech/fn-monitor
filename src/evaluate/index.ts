@@ -17,6 +17,7 @@ import {
     captureReusables, 
     cleanStack, 
     isGenerator, pushHandler, pushResult, refreshExeStack,
+    restoreCapturedReusables,
     useModifiedEvaluator, // Use the Generator version
 } from '../helper-functions.ts'
 
@@ -117,6 +118,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                 :yield* higherHandler(handler(node,scope),interpreter);
             interpreter.reusables.result = SEEN
             
+            restoreCapturedReusables(interpreter,localReusables)
             // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
             const wasCleared = refreshExeStack(interpreter);

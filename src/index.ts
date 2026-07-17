@@ -3,7 +3,8 @@
  * Many of the design decisions were intentional.
  *  
  * To share interpretation context and control with the inspector hook performantly,I used a reusables object architecture to prevent creating intermediate objects mid evaluation.but to prevent several state bugs when it comes to sharing state like this across independent evaluations,I had to extend the architecture to favor copy over overwriting at certain points.
- * So its an overwrite,save progress by copying,then overwriting kind of a thing.I didnt expect the state transitions to be this complex.
+ * So its an overwrite,save progress by copying,then overwriting kind of a thing.I didnt expect the state transitions to be this complex.One of those complexities is where an async function is ran but not awaited followed by an await for another async function
+ * 
  * The code works and its not inherently bad but the evaluator may have been cleaner and with less edge cases if I didnt use interpreter-wide reusables from the start.But there is some good to it.I dont know how well it saves memory,but it also allows the extended interpreter and other related objects to be decoupled from any specific local evaluation
  * This model only concerns the modified evaluator thats only used when the inspector hook is passed to the interpreter.The model will likely remain unchanged.
  * 
