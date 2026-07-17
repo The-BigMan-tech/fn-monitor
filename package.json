@@ -7,8 +7,8 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "start": "vite",
-        "test": "vitest run --coverage",
-        "build": "vite build"
+        "build": "vite build",
+        "sval:test": "vitest run --coverage"
     },
     "keywords": [],
     "files": [
