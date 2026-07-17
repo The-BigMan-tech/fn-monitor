@@ -35,7 +35,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
     const interpreter:SvalPlus = scope.interpreter;
     if (interpreter.onStep) {
-        interpreter.onStep();
+        interpreter.onStep();//this is intentionally called before each step and not after,because the inspector could arbitrary execute a node anytime which will make where the hook will run unpredictable and with more edge cases to watch out for
     }
 
     if (!useModifiedEvaluator(scope)) {
