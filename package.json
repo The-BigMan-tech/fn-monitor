@@ -1,5 +1,5 @@
 {
-    "name": "js-function-monitor",
+    "name": "fn-monitor",
     "version": "3.11.3",
     "description": "A augmentation of the sval js-in-js interpreter to monitor functions as they execute",
     "type": "module",
