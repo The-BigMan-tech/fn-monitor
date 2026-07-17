@@ -249,7 +249,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public static refErrMsg(err:ReferenceError) {
         return (
             ansis.red.underline(`\nReference Error`) +
-            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call, or through the configuration,it must be either captured into the monitored fn upon creation or inlined(inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
+            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn upon creation or inlined through the inlineFunctions property when calling monitor.fn(). (inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
             ansis.red.underline(`\n\nTrace`) + `\n${err}`
         )
     }

@@ -36,3 +36,5 @@ so the interpreter prioritizes control but also stability when giving that contr
 *Simulation vs Pattern recognition
 
 the monitor cant support dynamic imports in monitored fns.it treats functions as scripts and not modules.so it sees import as a ref error and if you try to capture the import fn,it will even fail to parse.
+
+trying to fork or modify this repo to make it work for modules to be a module monitor will cause severe technical debt because the additional layers were built with hidden assumption that they are working in a fn context
