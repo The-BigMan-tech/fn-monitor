@@ -1,21 +1,60 @@
-//!!Note:
-/** 
- * Many of the design decisions were intentional.
- *  
- * Do not to expand this into a script-level or module-level monitor because it would break the hidden function-context assumptions used throughout the codebase.
+/**
+ * ARCHITECTURAL NOTES & DESIGN DECISIONS
  * 
- * To share interpretation context and control with the inspector hook performantly,I used a reusables object architecture to prevent creating intermediate objects mid evaluation.but to prevent several state bugs,I had to extend the architecture to favor copy over overwriting at certain points.
- * So its an overwrite,save progress by copying,then overwriting kind of a thing.I didnt expect the state transitions to be this complex.One of those complexities is where an async function is ran but not awaited followed by an await for another async function
+ * Please read before making significant modifications to the evaluators.
  * 
- * The code works and its not inherently bad but the evaluator may have been cleaner and with less edge cases if I didnt use interpreter-wide reusables from the start.But there is some good to it.I dont know how well it saves memory,but it also allows the extended interpreter and other related objects to be decoupled from any specific local evaluation
- * This model only concerns the modified evaluator thats only used when the inspector hook is passed to the interpreter.The model will likely remain unchanged.
+ * 1. SCOPE LIMITATIONS:
+ *    Do not expand this into a script-level or module-level monitor. Doing so will 
+ *    break the hidden function-context assumptions used throughout this codebase.
  * 
- * The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon for very practical reasons.
- * The parts of the project that are pure sval code and are not influenced my custom modifications have type complaints.Since they still work,I left them alone.
+ * 2. STATE MANAGEMENT (Reusables Architecture):
+ *    To share interpretation context and control with the inspector hook performantly,
+ *    this implementation leverages reusable objects from the extended interpreter to prevent 
+ *    creating intermediate objects mid-evaluation. 
  * 
- * because monitored fns run in an isolated context,any errors thrown in them will not map directly to where it was written in the editor.The functions must be debugged in their unmonitored state until a native mapping solution exists.
- * But the inspector will show a proper stack trace if it throws an error because its runs directly in the js runtime,not the interpreter.
-*/
+ *    - To prevent state bugs in this architecture (especially during complex async/await 
+ *      transitions), the implementation favors a "copy, then overwrite" pattern at specific 
+ *      points rather than always choosing to overwrite the reusables.
+ * 
+ *    - While the evaluator could theoretically be cleaner without interpreter-wide 
+ *      reusables, this approach successfully decouples the extended interpreter from 
+ *      specific local evaluations. This model is stable and will likely remain unchanged.
+ * 
+ * 3. CORE IMPLEMENTATION:
+ *    This project uses an AST-walker interpreter underneath and will continue to do so.
+ *    There are no plans to rewrite this to a bytecode implementation for practical reasons.
+ * 
+ * 4. TYPESCRIPT & UNMODIFIED CODE:
+ *    Parts of the codebase that consist of pure, unmodified `sval` code may have 
+ *    TypeScript complaints. Since they function correctly, they have been left as-is 
+ *    to preserve the original behavior.
+ * 
+ * 5. DEBUGGING LIMITATIONS:
+ *    Because monitored functions run in an isolated context, errors thrown within them 
+ *    will not map directly to their original source location in the editor. 
+ *    - Functions should be debugged in their unmonitored state until a native source 
+ *      mapping solution is implemented.
+ *    - However, the inspector will still display a proper stack trace if an error is 
+ *      thrown, as it executes directly in the JS runtime, not the interpreter.
+ * 
+ * 6. INTERPRETER ISOLATION:
+ *    Each monitored function must be assigned its own interpreter instance. While this 
+ *    may appear to be a memory overhead, it is strictly required to prevent state 
+ *    collision between executions. Sharing a single interpreter across multiple monitored 
+ *    functions would introduce severe and unpredictable edge cases.
+ * 
+ * 7. AST NODE MUTATION & PERFORMANCE:
+ *    A monitored function is parsed only once, meaning its AST node and scope objects 
+ *    are created just once and reused. 
+ *    - WARNING: Any mutations made to this node within the inspector during a function 
+ *      call will persist and reflect in all subsequent calls. 
+ *    - Reparsing the code on every call was intentionally avoided to maintain execution speed.
+ * 
+ * 8. SANDBOXING CONTEXT:
+ *    This monitor is not designed to act as a secure sandbox on its own. However, you 
+ *    can use the inspector hook to simulate a sandboxed environment by actively monitoring 
+ *    and intercepting nodes as the interpreter executes the function.
+ */
 
 import Sval, { SvalOptions } from "./sval.ts"
 import { Node } from 'acorn'
@@ -356,8 +395,6 @@ export interface MonitorFnSetup<T extends Fn> {
     beforeEachCall?:(...args:Parameters<T>)=>void,//having the arguments here is useful for logging or blocking the fn if the args are malicious
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
-
-//Each monitored function must have their own interpreter.It might sound like a waste of memory but its required to ensure that they does not step on each other's toes.There will be a whole lot more edge cases if they all shared the same interpreter
 
 export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
     const {ref:mainFn,captures} = setup.main;
