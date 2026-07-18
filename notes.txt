@@ -1,3 +1,6 @@
+//!!Some of the notes here may be stale.so they may not hold up to the current behaviour
+
+
 Unlike static analysis,u cant dig into a node to get the child scope nor execute it.the interpreter has to execute each node and discover each scope as they come to keep the program stable as it is also running it simultaneously.so u can only dig into the node to get info about its children as a pure data structure.but u can climb up to get the scope of the parent since that one has been discovered first.and with the parent scope and the name of the node if it exists,u can retrieve any object made in the past
 
 This means that each node,scope and execute method passed to a inspector will always belong to the current visited node and not that from a local traversal.this prevents undefined behaviour .
@@ -38,3 +41,5 @@ so the interpreter prioritizes control but also stability when giving that contr
 the monitor cant support dynamic imports in monitored fns.it treats functions as scripts and not modules.so it sees import as a ref error and if you try to capture the import fn,it will even fail to parse.
 
 trying to fork or modify this repo to make it work for modules to be a module monitor will cause severe technical debt because the additional layers were built with hidden assumption that they are working in a fn context
+
+because a monitored fn is only parsed once,the node and scope object are also created just once.any mutations you do that node in an inspector during a call will reflect in other calls.If the monitor were to parse the code on each call,it will be very slow
