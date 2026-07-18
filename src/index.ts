@@ -357,7 +357,7 @@ export interface MonitorFnSetup<T extends Fn> {
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
 
-//the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
+//Each monitored function must have their own interpreter.It might sound like a waste of memory but its required to ensure that they does not step on each other's toes.There will be a whole lot more edge cases if they all shared the same interpreter
 
 export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
     const {ref:mainFn,captures} = setup.main;
