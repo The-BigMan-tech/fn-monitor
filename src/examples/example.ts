@@ -93,6 +93,7 @@ perf(() => {
 
 //INLINING
 const WasCalled = 'Was Called';
+const HelloStr = "hello";
 
 const log = async (...args:any[])=> {
     console.log(...args);
@@ -106,12 +107,12 @@ const generatedCode = {value:''};
 const addPseudoClosure = monitor.fn({
     main:{
         ref:async (a: number, b: number)=>{
-            await log('hello',Math.sqrt(4),a,b);
+            await log(HelloStr,Math.sqrt(4),a,b);
             return a + b
         },
-        // captures:{
-        //     log
-        // }
+        captures:{
+            HelloStr
+        }
     },
     inlineFunctions:{
         log:{
