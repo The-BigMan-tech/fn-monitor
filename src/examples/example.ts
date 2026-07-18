@@ -92,9 +92,11 @@ perf(() => {
 });
 
 //INLINING
-const log = (...args:any[])=> {
+const WasCalled = 'Was Called';
+
+const log = async (...args:any[])=> {
     console.log(...args);
-    return 'Was Called'
+    return WasCalled
 }
 
 const start = performance.now();
@@ -104,8 +106,8 @@ const generatedCode = {value:''};
 const addPseudoClosure = monitor.fn({
     main:{
         ref:async (a: number, b: number)=>{
-            log('hello',Math.sqrt(4),a,b);
-            return 14
+            await log('hello',Math.sqrt(4),a,b);
+            return a + b
         },
         // captures:{
         //     log
@@ -113,7 +115,10 @@ const addPseudoClosure = monitor.fn({
     },
     inlineFunctions:{
         log:{
-            ref:log
+            ref:log,
+            captures:{
+                WasCalled
+            }
         }
     },
     inspector:function* (visit):InspectorGenerator {
@@ -136,7 +141,6 @@ const addPseudoClosure = monitor.fn({
         visit.is('CallExpression',()=>{
             // console.log('\nFULL EXECUTION TRACE:',[...visit.localExeStack()]);
         })
-        
     },
     beforeEachCall:(a,b)=>{
         console.log(`Seen the numbers a:${a} and b:${b}`);
@@ -144,12 +148,14 @@ const addPseudoClosure = monitor.fn({
     sendGeneratedCodeTo:generatedCode,
 });
 
-// console.log(ansis.green('\nGenerated code:'));
-// console.log(generatedCode.value);
+console.log(ansis.green('\nGenerated code:'));
+console.log(generatedCode.value);
 
 const result = addPseudoClosure(4,8);
 const result2 = await addPseudoClosure(5,6);
-console.log('RESULT FROM FN',result);
+
+console.log('RESULT 1 FROM FN',result);
+console.log('RESULT 2 FROM FN',result2);
 
 const end = performance.now();
 console.log(ansis.green(`\nFinished in ${end-start} milliseconds\n`));
