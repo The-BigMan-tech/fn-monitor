@@ -155,7 +155,7 @@ console.log(generatedCode.value);
 const result = addPseudoClosure(4,8);
 const result2 = await addPseudoClosure(5,6);
 
-console.log('RESULT 1 FROM FN',result);
+console.log('RESULT 1 FROM FN',await result);
 console.log('RESULT 2 FROM FN',result2);
 
 const end = performance.now();
