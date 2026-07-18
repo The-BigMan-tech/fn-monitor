@@ -36,7 +36,7 @@ let otherNodes = 0;
 
 
 perf(() => {
-    const add = monitor.fn({//monitored fns return functions that can be used seamlessly like their unmonitored counterparts
+    const add = monitor({//monitored fns return functions that can be used seamlessly like their unmonitored counterparts
         main:{
             ref:internalAdd, 
         },
@@ -81,7 +81,7 @@ const internalAdd2 = (a:number,b:number):number =>{
 
 
 perf(() => {
-    const addClosure = monitor.fn({
+    const addClosure = monitor({
         main:{
             ref:internalAdd2,
             captures:{ hello2 },
@@ -104,7 +104,7 @@ const start = performance.now();
 const generatedCode = {value:''};
 
 
-const addPseudoClosure = monitor.fn({
+const addPseudoClosure = monitor({
     main:{
         ref:async (a: number, b: number)=>{
             await log(HelloStr,Math.sqrt(4),a,b);

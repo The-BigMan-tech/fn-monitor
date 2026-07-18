@@ -287,7 +287,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         }
     }
 
-    
+
     public runMonitoredFn = (...args:any[])=>{
         this.stage = 'MONITORING';
         let result;
@@ -359,48 +359,48 @@ export interface MonitorFnSetup<T extends Fn> {
 
 //the paradigm for monitored functions is one interpreter per function to ensure complete isolation,predictability and zero side effects across different functions
 
-export const monitor = {
-    fn<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
-        const {ref:mainFn,captures} = setup.main;
+export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
+    const {ref:mainFn,captures} = setup.main;
+    
+    if ('alreadyMonitored' in mainFn) {
+        throw new Error(ansis.red(`\nA monitored function cannot be monitored.`))
+    };
 
-        if ('alreadyMonitored' in mainFn) {
-            throw new Error(ansis.red(`\nA monitored function cannot be monitored.`))
-        }
-        const {
-            embed:functionsToEmbed,
-            inspector,
-            onStep,
-            beforeEachCall,
-            afterEachCall,
-            sendGeneratedCodeTo
-        } = setup;
+    const {
+        embed:functionsToEmbed,
+        inspector,
+        onStep,
+        beforeEachCall,
+        afterEachCall,
+        sendGeneratedCodeTo
+    } = setup;
 
-        const interpreter = new SvalPlus({
-            inspector,
-            onStep,
-            fnBeforeEachCall:beforeEachCall,
-            fnAfterEachCall:afterEachCall,
-            options:SvalPlus.defaultOptions
-        });
-        interpreter.stage = "PRE-PROCESSING";
-        interpreter.exports[SvalPlus.capturesVar] = captures || Object.create(null);
+    const interpreter = new SvalPlus({
+        inspector,
+        onStep,
+        fnBeforeEachCall:beforeEachCall,
+        fnAfterEachCall:afterEachCall,
+        options:SvalPlus.defaultOptions
+    });
 
-        const fnSrc = interpreter.getFnSrc(mainFn,SvalPlus.capturesVar);
-        fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
+    interpreter.stage = "PRE-PROCESSING";
+    interpreter.exports[SvalPlus.capturesVar] = captures || Object.create(null);
+    
+    const fnSrc = interpreter.getFnSrc(mainFn,SvalPlus.capturesVar);
+    fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
+    
+    const ast = SvalPlus.getFnAst(fnSrc);
+    interpreter.run(ast.fnCode);
 
-        const ast = SvalPlus.getFnAst(fnSrc);
-        interpreter.run(ast.fnCode);
+    if (sendGeneratedCodeTo) {
+        sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
+    };
 
-        if (sendGeneratedCodeTo) {
-            sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
-        };
+    interpreter.astInUse = ast;
+    const newFn = interpreter.runMonitoredFn as any;
 
-        interpreter.astInUse = ast;
-        const newFn = interpreter.runMonitoredFn as any;
-
-        newFn['alreadyMonitored'] = true;
-        return newFn;
-    }
+    newFn['alreadyMonitored'] = true;
+    return newFn;
 }
 
 export { Var } from './scope/variable.ts'
