@@ -114,7 +114,7 @@ const addPseudoClosure = monitor.fn({
             HelloStr
         }
     },
-    inlineFunctions:{
+    embed:{
         log:{
             ref:log,
             captures:{

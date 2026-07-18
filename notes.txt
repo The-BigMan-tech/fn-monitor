@@ -10,7 +10,7 @@ During code execution,the nodes are always fresh even for the same code to ensur
 
 Also notice that i called the object passed to the inspector visit and not visitor.
 
-so the flow of the icm is to preprocess ur code with generated data based on ur capture and inline dependencies,parse ur code,cache the ast then on each run---it runs a small cached ast to call the fn,encounters a node,calls ur inspector with the node,scope and execute fn,then implicitly executes the same mutable node if u already havent
+so the flow of the icm is to preprocess ur code with generated data based on ur capture and embed dependencies,parse ur code,cache the ast then on each run---it runs a small cached ast to call the fn,encounters a node,calls ur inspector with the node,scope and execute fn,then implicitly executes the same mutable node if u already havent
 
 since each scope and node sval creates is a fresh new object even for the same ast when revisited,doing this means that each event object is isolated cuz they keep they dont keep a live ref to the current node and scope but only the ref at the time it was made.this means that the current node and scope can safely be reassigned without affecting them.but for visit,i still make the visist reflect the current data by only creating one visit instance per interpreter and making it use lazy properties.
 

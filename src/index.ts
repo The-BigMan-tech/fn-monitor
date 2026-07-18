@@ -2,14 +2,16 @@
 /** 
  * Many of the design decisions were intentional.
  *  
- * To share interpretation context and control with the inspector hook performantly,I used a reusables object architecture to prevent creating intermediate objects mid evaluation.but to prevent several state bugs when it comes to sharing state like this across independent evaluations,I had to extend the architecture to favor copy over overwriting at certain points.
+ * Do not to expand this into a script-level or module-level monitor because it would break the hidden function-context assumptions used throughout the codebase.
+ * 
+ * To share interpretation context and control with the inspector hook performantly,I used a reusables object architecture to prevent creating intermediate objects mid evaluation.but to prevent several state bugs,I had to extend the architecture to favor copy over overwriting at certain points.
  * So its an overwrite,save progress by copying,then overwriting kind of a thing.I didnt expect the state transitions to be this complex.One of those complexities is where an async function is ran but not awaited followed by an await for another async function
  * 
  * The code works and its not inherently bad but the evaluator may have been cleaner and with less edge cases if I didnt use interpreter-wide reusables from the start.But there is some good to it.I dont know how well it saves memory,but it also allows the extended interpreter and other related objects to be decoupled from any specific local evaluation
  * This model only concerns the modified evaluator thats only used when the inspector hook is passed to the interpreter.The model will likely remain unchanged.
  * 
  * The project uses an ast-walker interpreter underneath and will continue this way.I dont plan to rewrite this to a bytecode implementation anytime soon for very practical reasons.
- * The parts of the project that are pure sval code and not my custom modifications have type complaints.Since these are outside my modifications and they still work,I left them alone.
+ * The parts of the project that are pure sval code and are not influenced my custom modifications have type complaints.Since they still work,I left them alone.
  * 
  * because monitored fns run in an isolated context,any errors thrown in them will not map directly to where it was written in the editor.The functions must be debugged in their unmonitored state until a native mapping solution exists.
  * But the inspector will show a proper stack trace if it throws an error because its runs directly in the js runtime,not the interpreter.
@@ -172,7 +174,9 @@ class SvalPlus extends Sval implements SvalPlusContract {
     }
     public createEventScope = ()=>{
         return new EventScope(this);
-    }
+    };
+
+
     public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {
         const fnString = fn.toString();
         const hash = SvalPlus.sha256Key(fnString);
@@ -206,34 +210,35 @@ class SvalPlus extends Sval implements SvalPlusContract {
             fnName:finalFnName 
         };
     }
-    public getInlinedFunctions(inlineFns:Record<string,Metadata<Fn>> | undefined):string {
+    public getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
         let fnCode:string = '';
 
-        if (inlineFns !== undefined) {
+        if (functions !== undefined) {
             let declarations = '';
             let assignments = '';
 
-            for (const [index,name] of Object.keys(inlineFns).sort().entries()) {//used sort here to increase the cache hit rate
-                const inlineFn = inlineFns[name];
-
-                const inlineCapturesVar = SvalPlus.sha256Key(`inlineCaptures_${index}`)
-                this.exports[inlineCapturesVar] = inlineFn.captures || Object.create(null);
-
-                const inlineFnSrc = this.getFnSrc(inlineFn.ref,inlineCapturesVar);//passing undefined here prevents infinite recursion
+            for (const [index,name] of Object.keys(functions).sort().entries()) {//used sort here to increase the cache hit rate
+                const fn = functions[name];
+                const capturesVar = SvalPlus.sha256Key(`embeddedCaptures_${index}`)
+                
+                this.exports[capturesVar] = fn.captures || Object.create(null);
+                const fnSrc = this.getFnSrc(fn.ref,capturesVar);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
-                    ${inlineFnSrc.fnCode}
-                    return ${inlineFnSrc.fnName};
+                    ${fnSrc.fnCode}
+                    return ${fnSrc.fnName};
                 })();`
                 declarations += `\nvar ${name};`;
                 assignments += `\n${name} = ${scopedFn};`;
             }
-            // Prepend inlined logic so it's available to the main function
+            // Prepend embedded logic so it's available to the main function
             fnCode = declarations + assignments;
         }
         return fnCode;
-    }
+    };
+
+
     public static sha256Key(str:string):string {
         return 'generated_' + sha256.create().update(str).hex();
     }
@@ -261,7 +266,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
     public static refErrMsg(err:ReferenceError) {
         return (
             ansis.red.underline(`\nReference Error`) +
-            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn upon creation or inlined through the inlineFunctions property when calling monitor.fn(). (inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but inlined functions can be monitored.`) +
+            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn upon creation or embedded through the embed property when calling monitor.fn(). (inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but embedded functions can be monitored.`) +
             ansis.red.underline(`\n\nTrace`) + `\n${err}`
         )
     }
@@ -281,6 +286,8 @@ class SvalPlus extends Sval implements SvalPlusContract {
             return error
         }
     }
+
+    
     public runMonitoredFn = (...args:any[])=>{
         this.stage = 'MONITORING';
         let result;
@@ -342,9 +349,9 @@ export interface Metadata<T extends Fn> {
 }
 export interface MonitorFnSetup<T extends Fn> {
     main:Metadata<T>,
+    embed?:Record<string,Metadata<Fn>>,//directly include a function's src in the same interpreter context as the main function being monitored
     inspector?:Inspector,
     onStep?:OnStep,
-    inlineFunctions?:Record<string,Metadata<Fn>>,
     sendGeneratedCodeTo?:{value:string}
     beforeEachCall?:(...args:Parameters<T>)=>void,//having the arguments here is useful for logging or blocking the fn if the args are malicious
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
@@ -354,17 +361,17 @@ export interface MonitorFnSetup<T extends Fn> {
 
 export const monitor = {
     fn<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
-        const {ref:fn,captures} = setup.main;
+        const {ref:mainFn,captures} = setup.main;
 
-        if ('alreadyMonitored' in fn) {
+        if ('alreadyMonitored' in mainFn) {
             throw new Error(ansis.red(`\nA monitored function cannot be monitored.`))
         }
         const {
+            embed:functionsToEmbed,
             inspector,
             onStep,
             beforeEachCall,
             afterEachCall,
-            inlineFunctions,
             sendGeneratedCodeTo
         } = setup;
 
@@ -378,18 +385,19 @@ export const monitor = {
         interpreter.stage = "PRE-PROCESSING";
         interpreter.exports[SvalPlus.capturesVar] = captures || Object.create(null);
 
-        const fnSrc = interpreter.getFnSrc(fn,SvalPlus.capturesVar);
-        fnSrc.fnCode += interpreter.getInlinedFunctions(inlineFunctions);
+        const fnSrc = interpreter.getFnSrc(mainFn,SvalPlus.capturesVar);
+        fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
 
         const ast = SvalPlus.getFnAst(fnSrc);
         interpreter.run(ast.fnCode);
 
         if (sendGeneratedCodeTo) {
             sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
-        }
+        };
+
         interpreter.astInUse = ast;
-        
-        const newFn = interpreter.runMonitoredFn as any
+        const newFn = interpreter.runMonitoredFn as any;
+
         newFn['alreadyMonitored'] = true;
         return newFn;
     }
