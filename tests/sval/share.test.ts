@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { _assign } from '../src/share/util'
+import { _assign } from '../../src/share/util'
 
 describe('testing src/share/util.ts', () => {
   it('_assign should behavior correctly', () => {

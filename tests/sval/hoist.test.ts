@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import Sval from '../src/sval.ts'
+import Sval from '../../src/sval.ts'
 
 describe('testing hoist', () => {
   it('should hoist function normally', () => {
