@@ -3,5 +3,6 @@ build/
 coverage/
 .vscode/
 node_modules/
+notes/
 .env
 
