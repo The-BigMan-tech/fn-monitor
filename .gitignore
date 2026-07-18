@@ -5,4 +5,7 @@ notes/
 coverage/
 .vscode/
 .env
-guide-for-readme.md
+
+#These are just to help make the readme file.
+guide-for-readme/
+rollup.config.ts
