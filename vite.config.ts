@@ -16,7 +16,6 @@ export default defineConfig({
         },
         rollupOptions: {
             external: [
-                'ansis',
                 ...builtinModules, 
                 ...builtinModules.map(m => `node:${m}`),
                 ...Object.keys(pkg.dependencies || {}),

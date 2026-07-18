@@ -1,20 +1,38 @@
 {
-    "name": "fn-monitor",
+    "name": "@typescript-guy/fn-monitor",
     "version": "3.12.0",
     "description": "A augmentation of the sval js-in-js interpreter to monitor functions as they execute",
+    
     "type": "module",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    
+    "files": [
+        "dist/**/*.js",
+        "dist/**/*.d.ts",
+        "ACKNOWLEDGEMENTS.md"
+    ],
+
+    "author":"typescript-guy",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/The-BigMan-tech/fn-monitor.git"
+    },
+
+    "keywords": [
+        "javascript",
+        "typescript",
+        "function",
+        "monitor",
+        "interpreter"
+    ],
+
     "scripts": {
         "start": "vite",
         "build": "vite build",
         "sval:test": "vitest run --coverage"
     },
-    "keywords": [],
-    "files": [
-        "dist"
-    ],
-    "author": "",
     "dependencies": {
         "@types/estree": "^1.0.8",
         "acorn": "^8.14.0",
