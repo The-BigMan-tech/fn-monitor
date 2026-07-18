@@ -352,7 +352,7 @@ export interface MonitorFnSetup<T extends Fn> {
     embed?:Record<string,Metadata<Fn>>,//directly include a function's src in the same interpreter context as the main function being monitored
     inspector?:Inspector,
     onStep?:OnStep,
-    sendGeneratedCodeTo?:{value:string}
+    sourceOut?:{value:string}//the object to write the generated code used in the interpreter.It is useful for debugging purposes
     beforeEachCall?:(...args:Parameters<T>)=>void,//having the arguments here is useful for logging or blocking the fn if the args are malicious
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
@@ -361,7 +361,7 @@ export interface MonitorFnSetup<T extends Fn> {
 
 export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
     const {ref:mainFn,captures} = setup.main;
-    
+
     if ('alreadyMonitored' in mainFn) {
         throw new Error(ansis.red(`\nA monitored function cannot be monitored.`))
     };
@@ -372,7 +372,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
         onStep,
         beforeEachCall,
         afterEachCall,
-        sendGeneratedCodeTo
+        sourceOut
     } = setup;
 
     const interpreter = new SvalPlus({
@@ -392,8 +392,12 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     const ast = SvalPlus.getFnAst(fnSrc);
     interpreter.run(ast.fnCode);
 
-    if (sendGeneratedCodeTo) {
-        sendGeneratedCodeTo.value = jsBeatutify(fnSrc.fnCode + ast.fnCallString,{indent_size:4}); //for debubgging the generated code
+    if (sourceOut) {
+        sourceOut.value = jsBeatutify(
+            fnSrc.fnCode + 
+            ast.fnCallString,
+            {indent_size:4}
+        );
     };
 
     interpreter.astInUse = ast;

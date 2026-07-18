@@ -146,7 +146,7 @@ const addPseudoClosure = monitor({
     beforeEachCall:(a,b)=>{
         console.log(`Seen the numbers a:${a} and b:${b}`);
     },
-    sendGeneratedCodeTo:generatedCode,
+    sourceOut:generatedCode,
 });
 
 console.log(ansis.green('\nGenerated code:'));

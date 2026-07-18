@@ -68,7 +68,7 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,time:milliseconds):T {
 
     const fnBuilsStart = performance.now();
 
-    const monitoredFn = monitor.fn({
+    const monitoredFn = monitor({
         main: {
             ref:fn
         },
