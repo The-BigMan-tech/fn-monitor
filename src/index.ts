@@ -407,25 +407,29 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     return newFn;
 }
 
-export { Var } from './scope/variable.ts'
+export { Var } from './scope/variable.ts';
+
 export {
     QList,
     ReadonlyQList
 } from './q-list.ts';
 
 //!!The estree types pkg is intentionally made as a dependency and not a dev dep because the project is directly exporting one of its types for intellisense
-export {
-    type Inspector,
-    type OnStep,
-    type VariableForEvent,
-    type ScopeForEvent,
-    type Query,
-    type EventMap,
-    type Visit,
-    type InspectorGenerator,
-    type ExeResult,
-    type EsNode,
 
+export type {
+    Inspector,
+    OnStep,
+    VariableForEvent,
+    ScopeForEvent,
+    Query,
+    EventMap,
+    Visit,
+    InspectorGenerator,
+    ExeResult,
+    EsNode,
+} from "./custom-types.ts"
+
+export {
     NOT_ALLOCATED,
     LAZY_NODE,
 
