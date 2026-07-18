@@ -31,7 +31,8 @@
     "scripts": {
         "start": "vite",
         "build": "vite build",
-        "sval:test": "vitest run --coverage"
+        "test": "vitest run --coverage",
+        "publish:public":"npm publish --registry=https://registry.npmjs.org/ --access public"
     },
     "dependencies": {
         "@types/estree": "^1.0.8",
