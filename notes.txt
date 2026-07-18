@@ -43,3 +43,5 @@ the monitor cant support dynamic imports in monitored fns.it treats functions as
 trying to fork or modify this repo to make it work for modules to be a module monitor will cause severe technical debt because the additional layers were built with hidden assumption that they are working in a fn context
 
 because a monitored fn is only parsed once,the node and scope object are also created just once.any mutations you do that node in an inspector during a call will reflect in other calls.If the monitor were to parse the code on each call,it will be very slow
+
+the monitor is not meant to be treated as a sandbox but you can use the inspector hook to simulate a sandbox by monitoring the nodes as the interpreter executes the function
