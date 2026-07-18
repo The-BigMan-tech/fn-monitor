@@ -1,8 +1,8 @@
+node_modules/
 dist/
 build/
+notes/
 coverage/
 .vscode/
-node_modules/
-notes/
 .env
 
