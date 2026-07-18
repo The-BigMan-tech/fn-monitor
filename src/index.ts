@@ -249,7 +249,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
             return cached;
         }
         const fnCallString = 
-            `\n\n//This is the entry code that is ran each time the monitored function is called and the result is streamed through the exports variable.` +
+            `\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
             `\n\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`;
 
         const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
