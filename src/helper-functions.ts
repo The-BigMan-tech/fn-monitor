@@ -20,8 +20,8 @@ export function callPerExe(interpreter:SvalPlus) {
 
     if (perExe) {
         perExe.fn();//call this after the executed result has been pushed
-        if (perExe.owner === node) {
-            interpreter.reusables.shared.perExe = null;//automatically nullify the perExe hook if it reached node that existed at the time it was set.Ive forgotten why I added this but it has to do with something with not calling it twice for the same node
+        if (perExe.owner === node) {//consume the hook after it fires for its owner node
+            interpreter.reusables.shared.perExe = null;
         }
     }
 }
