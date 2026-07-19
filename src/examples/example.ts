@@ -1,24 +1,22 @@
 import { monitor,EsNode,InspectorGenerator } from "../index.ts";
 import ansis from "ansis";
 
-//the perf profiles include the parsing and preprocessing step the monitor uses to build the code before it even executes it.Thanks to its caching,this only happens once and every call to that function takes significantly less time cuz it skips that step.
-
 function perf(fn:(...args:any[])=>void) {
     const start = performance.now();
     fn();
     const end = performance.now();
     console.log(ansis.green(`\nFinished in ${end-start} milliseconds\n`));
 }
-function hello() {
+function sayHello() {
     console.log('Hello function');
 }
 
 
 //NATIVE FUNCTION
-const arrToAdd = [1,2,3,4,5,6,7,8,9,10];
+const arrToSum = [1,2,3,4,5,6,7,8,9,10];
 
-const internalAdd = (nums:number[],hello:()=>void)=> {
-    hello();
+const sumUp = (nums:number[],sayHello:()=>void)=> {
+    sayHello();
     let sum:number = 0;
     for (const num of nums) {
         sum += num
@@ -26,7 +24,7 @@ const internalAdd = (nums:number[],hello:()=>void)=> {
     return {sum:sum};
 }
 perf(()=>{
-    const result = internalAdd(arrToAdd,hello);
+    const result = sumUp(arrToSum,sayHello);
     console.log(result);
 })
 
@@ -36,9 +34,12 @@ let otherNodes = 0;
 
 
 perf(() => {
-    const add = monitor({
+    const monitoredSumUp = monitor({
         main:{
-            ref:internalAdd, 
+            ref:sumUp, 
+        },
+        beforeEachCall:()=>{
+            console.log('Entered the monitored sum up function');
         },
         inspector:(visit) => {
             let matched = false;
@@ -60,38 +61,37 @@ perf(() => {
                 })
             }
         },
-        beforeEachCall:()=>{
-            console.log('Entered the monitored add function');
-        }
     });
-    const result = add(arrToAdd, hello);//passing an external dependency through its arguments
+    const result = monitoredSumUp(arrToSum,sayHello);//because monitored fns are isolated,we can pass outside data as arguments
     console.log('Final Result:', result, 'Interceptions:', count,'Other nodes',otherNodes);
 });
 
 const random = Math.round(Math.random() * 100);
-function hello2() {
+function sayHelloRandom() {
     console.log('Hello random number: ',random);
 }
 
 //CAPTURING
-const internalAdd2 = (a:number,b:number):number =>{
-    hello2();
+const addNums = (a:number,b:number):number =>{
+    sayHelloRandom();
     return a + b;
 }
 
 
 perf(() => {
-    const addClosure = monitor({
+    const monitoredAddNums = monitor({
         main:{
-            ref:internalAdd2,
-            captures:{ hello2 },
+            ref:addNums,//the fn we want to monitor
+            captures:{ 
+                sayHelloRandom//instead of passing this as an arg on each call,we can capture the ref from the outside.But it will run oustdie of the interpreter and cant be monitored
+            },
         },
     });
-    const result = addClosure(1,3)
+    const result = monitoredAddNums(1,3)
     console.log(result);
 });
 
-//INLINING
+//Embedding external functions directly in the interpreter's context
 const WasCalled = 'Was Called';
 const HelloStr = "hello";
 
@@ -104,7 +104,7 @@ const start = performance.now();
 const generatedCode = {value:''};
 
 
-const addPseudoClosure = monitor({
+const monitoredAsyncAdd = monitor({
     main:{
         ref:async (a: number, b: number)=>{
             await log(HelloStr,Math.sqrt(4),a,b);
@@ -115,10 +115,10 @@ const addPseudoClosure = monitor({
         }
     },
     embed:{
-        log:{
-            ref:log,
+        log:{//create a function in the interpreter's context called log.
+            ref:log,//pass in the ref to use to get the src code for the embedded function
             captures:{
-                WasCalled
+                WasCalled//optionally include anything it should capture since it is also isolated
             }
         }
     },
@@ -152,8 +152,8 @@ const addPseudoClosure = monitor({
 console.log(ansis.green('\nGenerated code:'));
 console.log(generatedCode.value);
 
-const result = addPseudoClosure(4,8);
-const result2 = await addPseudoClosure(5,6);
+const result = monitoredAsyncAdd(4,8);
+const result2 = await monitoredAsyncAdd(5,6);
 
 console.log('RESULT 1 FROM FN',await result);
 console.log('RESULT 2 FROM FN',result2);
