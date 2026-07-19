@@ -144,9 +144,6 @@ export interface Reusables {
 
 export type Inspector = (visit:Visit)=> void | InspectorGenerator;
 
-//Unlike the inspector,this fn is called on every step without any information from whats happening during the interpretation.
-//Using this fn on its own over the inspector will make the interpreter much faster because it doesnt allocate extra intermediate objects for context.
-// It is useful for setting timers on the interpreted code.Make sure to use this if you know that your inspector doesnt use any interpreter info.Else,including it,even an empty one,will cause several unnecessary allocations
 export type OnStep = ()=>void;
 
 export interface SvalPlus {

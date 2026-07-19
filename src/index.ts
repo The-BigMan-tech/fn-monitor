@@ -383,19 +383,60 @@ interface FnAst {
 }
 
 export interface Metadata<T extends Fn> {
+    /**the reference to the function to be included in the interpreter context**/
     ref:T,
+
+    /** 
+     *Because the function runs in an isolated interpreter context,any data that it uses from the outside scope has to captured by mapping the variable names to their variables and passing the object here.
+     *It is important to keep in mind that the captures object itself follows the semantic of copy primitives by value and copy obects by reference.
+    */
     captures?:Record<string,any>
 }
 export interface MonitorFnSetup<T extends Fn> {
+    /**The configuration for the main function to monitor */
     main:Metadata<T>,
-    embed?:Record<string,Metadata<Fn>>,//directly include a function's src in the same interpreter context as the main function being monitored
+    
+    /**
+     * If the main function calls another function outside of its scope,this is an alternative to capturing it by reference.
+     * Unlike reference capturing,this directly include a function's source code in the same interpreter context as the main function being monitored.It can also state its own captures as well or use other embedded functions.
+    */
+    embed?:Record<string,Metadata<Fn>>,
+    
+    /**
+     * The main hook that gets fed the interpreter's context as the function executes.The visit object is rich enough to inspect nodes and their scope,modify them before execution and execute nodes manually to see and change their results.
+     * But it cannot directly stop the interpreter from executing a node itself.This is to prevent a half broken state.If required,it must throw an error.
+    */
     inspector?:Inspector,
+
+    /**
+     *Like the inspector hook,this is called before each interpreted step.but it does not get the rich visit object to inspect or modify nodes
+     *Using this hook alone without the inspector will make the interpreter significantly faster because it removes all the allocations it will need to create the tools for the visit object
+     *Even without node information,it is useful for setting timers on the interpreted code by checking against a time after a number of steps.
+     *If the use case above is enough,use this hook and leave the inspector as undefined.Else,including the inspector,even as a no-op function,will cause several unnecessary allocations
+    */
     onStep?:OnStep,
-    sourceOut?:{value:string}//the object to write the generated code used in the interpreter.It is useful for debugging purposes
-    beforeEachCall?:(...args:Parameters<T>)=>void,//having the arguments here is useful for logging or blocking the fn if the args are malicious
+
+    /**It takes an object with a value property and overwrites it with the generated code used in the interpreter for a specific monitored function.It includes the code for all embedded functions as well */
+    sourceOut?:{value:string}
+
+    /**
+     * The hook that is called before each call to the monitored function
+     * It gets the arguments passed to the function from the caller.It is useful for logging or inspecting the args before execution
+    */
+    beforeEachCall?:(...args:Parameters<T>)=>void,
+
+
+    /**
+     *The hook that is called after each call to the monitored function
+     *It gets the result returned from the function or an error if an error was thrown in the function.
+     */
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
 
+/**
+ * This function is the only export you need to get started.It accepts a brief config that includes a function and returns a new function that can be called exactly as the original.But it is executed by a custom interpreter rather than your js engine directly.
+ * The major advantage you get is that you can inject hooks at any part of the function's lifecyle and they are treated as first class citizens by the interpreter.Essentially making it a white-box.
+*/
 export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
     const {ref:mainFn,captures} = setup.main;
 

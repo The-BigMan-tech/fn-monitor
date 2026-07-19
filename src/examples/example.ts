@@ -36,7 +36,7 @@ let otherNodes = 0;
 
 
 perf(() => {
-    const add = monitor({//monitored fns return functions that can be used seamlessly like their unmonitored counterparts
+    const add = monitor({
         main:{
             ref:internalAdd, 
         },
