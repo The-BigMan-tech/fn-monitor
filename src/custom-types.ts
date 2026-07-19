@@ -195,7 +195,7 @@ export interface Reusables {
     currentScope:Scope | null,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
     result:any | typeof UNASSIGNED | typeof SEEN,
-    currentEvent:LangEvent | typeof NOT_ALLOCATED,//the current event will be a symbol if the inspector didnt explicitly visit a node type to trigger an event allocation
+    currentEvent:LangEvent | typeof NOT_ALLOCATED,
     shared:{
         exeStack:QList<ExeResult>,
         readonlyExeStack:ReadonlyQList<ExeResult>,
