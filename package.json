@@ -1,6 +1,6 @@
 {
     "name": "@typescript-guy/fn-monitor",
-    "version": "3.12.0",
+    "version": "1.0.0",
     "description": "An augmentation of the sval JS-in-JS interpreter to monitor functions as they execute.",
     "type": "module",
     "main": "dist/index.js",
