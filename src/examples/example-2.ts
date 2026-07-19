@@ -92,14 +92,15 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,time:milliseconds):T {
     return monitoredFn
 }
 
-const avg = timeFn(calculateAverage,50);
 const heavySort = timeFn(heavySortTest,250);
 
 perf(()=>{
-    const result = avg([20,30,70,88,91,72],'js');//you can call and use this just like a regular function
-    console.log('\nThe average from the timed fn is: ',result);
+    heavySort(100);
 });
 
+
+const avg = timeFn(calculateAverage,50);
 perf(()=>{
-    heavySort(120);
+    const result = avg([20,30,70,88,91,72],'monitor');//you can call and use this just like a regular function
+    console.log('\nThe average from the timed fn is: ',result);
 });
