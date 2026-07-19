@@ -193,3 +193,11 @@ The core execution engine of this project is a modified and extended version of 
 *Please note: This project is an independent extension and is not affiliated with, endorsed by, or sponsored by the original `sval` project or its authors.*
 
 `sval` is licensed under the MIT License.
+
+## Questions & Support
+
+If you have questions about how to use `@typescript-guy/fn-monitor`, need help with a specific implementation, or want to discuss architecture:
+* **Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions)**: This is the best place for Q&A and community help.
+* **Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues)**: If you've found a bug or want to request a new feature.
+
+*Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues to see if your question has already been answered!*
