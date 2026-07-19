@@ -1,7 +1,7 @@
 # @typescript-guy/fn-monitor
 
-![npm](https://img.shields.io/npm/v/@typescript-guy/fn-monitor)
-![license](https://img.shields.io/npm/l/@typescript-guy/fn-monitor)
+![npm](https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor)
+![license](https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor)
 
 An augmentation of the [`sval`](https://github.com/Siubaak/sval) JS-in-JS interpreter designed to monitor functions as they execute. 
 
