@@ -27,6 +27,12 @@ export type Fn = (...args:any[])=>any;
 
 export type EsNode = EsTreeNode;//i couldnt directly export it from the module because its only a types file
 
+
+/**
+ * This is a string union of all the possible nodes the caller can query in the visit.is callback.
+ * They are all estree node types.You will see type definitions shortening this to EsNode.
+ * There are over 30 types of nodes that you can query and if any of the nodes dont match your needs,you can always use the 'Any' query which matches for every node.You can then use the estree node type to cast it to specific types
+ */
 export type Query = 
     | Literal['type']
     | BinaryExpression['type']
@@ -65,6 +71,10 @@ export type Query =
     | UnaryExpression['type']
     | 'Any'; // The fallback / default
 
+/**
+ * The type definiton that maps each node query to the event object you will get from that query
+ * Each type has its own dedicated Event class which helps to tailor intellisense
+ */
 export type EventMap = (
     Record<Literal['type'], LiteralEvent> &
     Record<BinaryExpression['type'], BinaryExprEvent> &
@@ -104,27 +114,82 @@ export type EventMap = (
     Record<'Any', LangEvent>
 );
 export const LAZY_NODE = Symbol('LAZY_NODE');
+export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
+
+//These two symbols are internal and wont be encountered by the caller/library user
 export const UNASSIGNED = Symbol('UNASSIGNED');
 export const SEEN = Symbol('SEEN');
-export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
+
 
 export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,any>;
 
 export type PerExe = ()=>void;
 
-export interface Visit {//its composed of methods so that it always uses the latest values from the reusables even if a ref may be stable
+/**
+ * The rich object that gives inspectors their ability to participate in the interpretation of the function
+ * Every monitored function has exactly one interpreter and also,exactly one visit object to themselves
+ * This means that the visit object is only alloacted once per monitored function and not per call to save memory
+ * You will shoot yourself in the foot if you attempt to take the visit object oustide of the inspector hook to use elsewhere.It can cause unexpected side effects.It is to be used strictly within that hook
+ * 
+ * Because there is only one unique visit object,it uses live references to the current interpreter's state.This means that:
+ *  -The local exe stack is volatile.
+ *  -The 'is' method does not register your callback as a hook.Although that is what it will look like on the outside,its actually eagerly evaluating your callback the moment you call it and check your query against the current node.It will then discard your callback right after.
+ *  -The perExecution method does not register your callback as a hook.You use it like a setter and its short lived.It only exists for the current node and all its children
+ *  -The execute method must strictly be called within the lifetime of the inspector hook if you ever wish to call it.
+ * 
+ * You dont have to worry too much about all of this if you use the visit object in the inspector hook where you know using it is safe.
+ */
+export interface Visit {
+    /**
+     * You pass in which node you are interested in as the first argument and you pass in your callback as the second.
+     * For each node that matches your query,it will fire your callback and allocate a scope object to wrap together with the node under a single event object
+     * You can mutate the node or query the scope.
+     * 
+     * If you dont set a query for a particular node,the interpreter will not allocate a scope nor an event object.This is to save memory.
+     * So in the exe result,you will see a symbol called NOT_ALLOCATED.but you can use visit.is('Any',...) to force the interpreter to allocate a scope and event object for every node it visits
+     */
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
+
+    /**
+     * This is fired on each executed node.The hook itself does not get passed anything.It is actually a good place to check the local exe stack.By querying for the last element,you get to see the exe result in real time which includes the nodes,the results and each scope
+     */
     set perExecution(perExe:PerExe),
+
+    /**
+     * The function that tells the interpreter to execute the current node and return the result.
+     * If its an async node like an await call,you get LAZY_NODE instead of the awaited result.You must explicitly type yield visit.execute() to get it.but it requires the inspector to be a generator instead of a regular function
+     * Once you get the result,you can read it or even modify it before it is returned to the caller
+     * The interpreter will execute the node manually if you never call this.
+     * There is no way to directly stop the interpreter from executing a node.This is to prevent a half broken state.If required,the inspector hook must throw an error
+     */
     execute:<T extends any=any>()=>T,
-    localExeStack:()=>ReadonlyQList<ExeResult>,//isn't a global history of an entire function; it's the local history of the current evaluation for the specific node at the time the inspector was called
+
+    /**
+     * This is a stack data structure that contains the results of each evaluated child node for a given node.
+     * The latest results stay at the top and the oldest remain at the bottom.
+     * It is not the full execution history of the entire function. 
+     */
+    localExeStack:()=>Omit<ReadonlyQList<ExeResult>,'swapSrc'>,
 }
 
 export interface ExeResult {
+    /**The result of the node's evaluation */
     evaluation:unknown,
+    /**The type of the node*/
     type:EsNode['type'],
-    node:EsNode,//this will always be available as the nodes are always created before the evaluator is called
-    scope:ScopeForEvent | typeof NOT_ALLOCATED;//this is the scope specifically created for each event object.since the event object may not be alloacted,this object too may not also be allocated
+    /**
+     * The node itself.Unlike the scope object,the nodes are always allocated.
+     * The reality is that the interpreter always allocates a node and a scope object to process each step.
+     * But it doesnt openly pass the original scope object because mutating the scope directly isnt as safe as a specific node
+     * So it only directly passes the internal node object and allocates a safe scope object that cant be used to mutate the original scope in any way.But it is only selectively allocated
+    */
+    node:EsNode,
+    /**
+     *the safe scope created for the caller
+     */
+    scope:ScopeForEvent | typeof NOT_ALLOCATED;
 }
+/**This type describes an internal object */
 export interface Reusables {
     node:EsNode | null,
     currentScope:Scope | null,
@@ -155,14 +220,20 @@ export interface SvalPlus {
     createEventScope:()=>ScopeForEvent,
 }
 export interface VariableForEvent {
+    /**The value of the variable */
     value:()=>any
 }
 export interface ScopeForEvent {
+    /**The variables in the scope.You can check for all the local variables or use the search method to get a variable from its identifier.*/
     variables:{
+        /**If a variable cannot be identified from the given name,you get null instead of the object */
         search:(name: string)=> VariableForEvent | null,
         local:Record<string,Var>
     },
+    /**The parent scope */
     parent:Scope | null;
+
+    /**The depth of the scope of the current node*/
     depth:number
 }
 export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event

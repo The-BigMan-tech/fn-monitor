@@ -404,7 +404,6 @@ export interface MonitorFnSetup<T extends Fn> {
     
     /**
      * The main hook that gets fed the interpreter's context as the function executes.The visit object is rich enough to inspect nodes and their scope,modify them before execution and execute nodes manually to see and change their results.
-     * But it cannot directly stop the interpreter from executing a node itself.This is to prevent a half broken state.If required,it must throw an error.
     */
     inspector?:Inspector,
 

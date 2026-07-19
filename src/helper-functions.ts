@@ -19,8 +19,8 @@ export function callPerExe(interpreter:SvalPlus) {
     const node = interpreter.reusables.node!;
 
     if (perExe) {
-        perExe.fn();//call this after the executed result has been pushed
-        if (perExe.owner === node) {//consume the hook after it fires for its owner node
+        perExe.fn();//call this after the executed result has been pushed.We dont nullify it immediately or lock it to execute strictly for the owner node,because the evaluator can pause a node to evaluate all its other children.Not clearing it immediately allows the perExe hook to fire for all the child nodes of the current node.
+        if (perExe.owner === node) {//consume the hook if we are currently at the owner node.This wont always be true on the first try because the owner node can be paused to evaluate its children.
             interpreter.reusables.shared.perExe = null;
         }
     }
