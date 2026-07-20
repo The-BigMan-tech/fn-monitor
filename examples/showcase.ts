@@ -3,6 +3,8 @@ import { InspectorGenerator, monitor } from "../src/index.ts";
 
 //SHOWCASE 1
 //This shows how to get started and a general use case
+console.log('\n\nSHOWCASE 1');
+
 const zero = 0;
 
 const sumUp = (nums:number[])=> {
@@ -47,7 +49,10 @@ console.log('Result 2',result2);
 
 
 //SHOWCASE 2
-//This example will focus on embedding and not integrating the inspector hook
+//This example will focus on embedding external functions used in the monitored function.This example will not integrate the inspector hook to keep it simple
+
+console.log('\n\nSHOWCASE 2');
+
 const Printed = 'Printed: ';
 
 function print(str:string) {
@@ -78,7 +83,12 @@ const monitoredSayHello = monitor({
 monitoredSayHello();
 console.log('Generated code: \n',generatedCode.value);
 
-//Testing async and using the exe stack to get all the called functions during the function execution
+
+//SHOWCASE 3
+//Testing the exe stack and the execute method to get all the called functions during the function execution.We are testing this on async code to see the full capability
+
+console.log('\n\nSHOWCASE 3');
+
 const monitoredAsyncSqrt = monitor({
     main:{
         ref:async (a: number)=>{
@@ -116,7 +126,11 @@ const monitoredAsyncSqrt = monitor({
 console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2)); 
 
 
-//Using the on step hook
+//SHOWCASE 4
+//Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
+
+console.log('\n\nSHOWCASE 4');
+
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
         while (true) {}//simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
