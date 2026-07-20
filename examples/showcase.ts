@@ -1,4 +1,4 @@
-import { InspectorGenerator, monitor } from "../src/index.ts";
+import { type InspectorGenerator, monitor } from "../src/index.ts";
 
 
 //SHOWCASE 1
