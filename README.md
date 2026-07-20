@@ -93,6 +93,8 @@ Result 2 I CHANGED THE VALUE
 This example focuses on embedding external functions used in the monitored function. It also demonstrates how to extract the generated code using `sourceOut`.
 
 ```typescript
+import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
+
 //This example will focus on embedding external functions used in the monitored function.This example will not integrate the inspector hook to keep it simple
 console.log('\n\nSHOWCASE 2');
 
@@ -164,6 +166,8 @@ exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a
 This example tests the execution stack (`localExeStack`) and the `execute` method to track all called functions during execution, specifically testing on async code to see its full capability.
 
 ```typescript
+import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
+
 //Testing the exe stack and the execute method to get all the called functions during the function execution.We are testing this on async code to see the full capability
 console.log('\n\nSHOWCASE 3');
 
@@ -265,6 +269,8 @@ Monitored async sqrt:  1.414
 This example uses the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.
 
 ```typescript
+import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
+
 //Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
 console.log('\n\nSHOWCASE 4');
 
