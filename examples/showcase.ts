@@ -1,4 +1,4 @@
-import { InspectorGenerator, monitor } from "../index.ts";
+import { InspectorGenerator, monitor } from "../src/index.ts";
 
 
 //SHOWCASE 1
@@ -117,17 +117,9 @@ console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2));
 
 
 //Using the on step hook
-
-function perf(fn:(...args:any[])=>void) {
-    const start = performance.now();
-    fn();
-    const end = performance.now();
-    console.log(`\nFinished in ${end-start} milliseconds\n`);
-};
-
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
-        while (true) {}//simulate an infinite loop
+        while (true) {}//simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
     }
     if (!numbers || numbers.length === 0) {
         return 0;
@@ -139,10 +131,11 @@ function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     }
     return Number((sum / numbers.length).toFixed(3));
 }
-perf(()=>{
-    const result = calculateAverage([20,30,70,88,91,72],'js');
-    console.log('\nThe average is: ',result);
-});
+
+const listForAvg = [20,30,70,88,91,72]
+
+const avg = calculateAverage(listForAvg,'js');
+console.log('\nThe average is: ',avg);
 
 
 type milliseconds = number;
@@ -158,7 +151,7 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
     const checkBudget = ()=>{
         usedTime = (performance.now() - startTime);
         if (usedTime > (budget + graceTime)) {
-            throw new Error(`A work function used ${usedTime.toFixed(3)}ms when only given a budget of ${budget.toFixed(3)}ms.`);
+            throw new Error(`The monitored function used ${usedTime.toFixed(3)}ms when only given a budget of ${budget.toFixed(3)}ms.`);
         };
     };
     const monitoredFn = monitor({
@@ -182,14 +175,10 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
         }
     });
 
-    console.log(`Finished building the fn in ${(performance.now()-fnBuilsStart).toFixed(3)}ms`);
+    console.log(`Finished building the fn in ${(performance.now()-fnBuildStart).toFixed(3)}ms`);
     return monitoredFn
 }
 
-
-const avg = timeFn(calculateAverage,50);
-
-perf(()=>{
-    const result = avg([20,30,70,88,91,72],'monitor');
-    console.log('\nThe average from the timed fn is: ',result);
-});
+const timedAvg = timeFn(calculateAverage,50);
+const avg2 = timedAvg(listForAvg,'monitor');
+console.log('\nThe average from the timed fn is: ',avg2);
