@@ -124,12 +124,12 @@ const monitoredAsyncAdd = monitor({
     },
     inspector:function* (visit):InspectorGenerator {
         visit.is('CallExpression',event=>{
-            const calleeIndex = visit.localExeStack().length;
+            const stackLenAtCallee = visit.localExeStack().length;
             const callees = new Set()
 
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
-                const element = stack.get(-(calleeIndex + 1));
+                const element = stack.get(-(stackLenAtCallee + 1));
                 // console.log('RESULT:',stack.get(0).evaluation);
                 if (!callees.has(element)) {
                     console.log('Callee:',element);
