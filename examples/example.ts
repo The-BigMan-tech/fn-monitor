@@ -1,4 +1,4 @@
-import { monitor,EsNode,InspectorGenerator } from "../index.ts";
+import { monitor,EsNode,InspectorGenerator } from "../src/index.ts";
 import ansis from "ansis";
 
 function perf(fn:(...args:any[])=>void) {
