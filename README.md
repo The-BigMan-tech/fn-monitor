@@ -486,6 +486,8 @@ Please keep the following architectural constraints in mind when using this pack
 
 - **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
+- **Runtime-Agnostic Architecture:** The interpreter is built on a pure JavaScript AST-walking engine and was not designed to rely on any environment-specific APIs, binaries, or global objects (such as Node's `vm`/`fs` or the browser's `window`/`document`).
+
 - **Debugging & Stack Traces:** Because monitored functions execute within an isolated interpreter context, errors thrown inside them will not map directly to their original source locations in your editor. It is highly recommended to debug functions in their unmonitored state first. *(Note: The inspector hook itself runs in the native JS runtime, so it will still display a standard stack trace if the inspector throws an error.)*
 
 - **AST Mutation Persistence:** To maximize performance, the monitored function's code is parsed into an AST only once. Consequently, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
