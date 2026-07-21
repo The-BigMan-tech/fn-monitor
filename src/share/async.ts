@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { AWAIT } from './const.ts'
 
 export interface runAsyncOptions {

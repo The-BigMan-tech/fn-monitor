@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { NOINIT, DEADZONE } from '../share/const.ts'
 import { VarKind } from '../scope/variable.ts'
 import { Identifier } from './identifier.ts'

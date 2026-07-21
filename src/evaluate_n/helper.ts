@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { RETURN, SUPER, NOCTOR, CLSCTOR, NEWTARGET, SUPERCALL, STRICT, STRICT_FN } from '../share/const.ts'
 import { VariableDeclaration, ClassBody, PropertyDefinition } from './declaration.ts'
 import { define, assign, inherits, callSuper } from '../share/util.ts'

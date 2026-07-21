@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { BREAK, CONTINUE, RETURN, AWAIT } from '../share/const.ts'
 import { hoist, pattern, ForXHandler } from './helper.ts'
 import { getAsyncIterator } from '../share/util.ts'

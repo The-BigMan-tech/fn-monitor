@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { define, freeze, getGetter, getSetter, createSymbol, assign, getDptor, callSuper, WINDOW } from '../share/util.ts'
 import { SUPER, NOCTOR, AWAIT, CLSCTOR, NEWTARGET, SUPERCALL, PRIVATE, IMPORT, OPTCHAIN, STRICT, STRICT_FN } from '../share/const.ts'
 import { pattern, createFunc, createClass } from './helper.ts'

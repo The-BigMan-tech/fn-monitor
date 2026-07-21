@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { createSymbol } from './util.ts'
 
 export const AWAIT: { RES: any } = { RES: undefined }

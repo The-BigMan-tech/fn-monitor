@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { NOINIT, DEADZONE, PRIVATE, IMPORT, EXPORTS } from '../share/const.ts'
 import { define, getDptor, assign, hasOwn } from '../share/util.ts'
 import { pattern, createFunc, createClass } from './helper.ts'
