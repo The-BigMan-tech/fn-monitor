@@ -151,7 +151,7 @@ class SvalPlus extends Sval implements SvalPlusContract {
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
     public static defaultOptions:SvalOptions = {
-        sourceType:"script",//use the normalized and faster evaluator at the cost of not using esm import syntax which i dont even need anyway in a function.And some of the monitor's generated code wont even work with the modules option.This also means that the interpreter cant utilize top level await to handle async functions.It has to be done carefully in the evaluator
+        sourceType:"script",//This will prevent dynamic imports and top level await.Check README
         ecmaVer:2024, 
         sandBox:true, 
     };
