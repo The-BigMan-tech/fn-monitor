@@ -459,7 +459,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     return newFn;
 }
 
-export { Var } from './scope/variable.ts';
+export type { Var } from './scope/variable.ts';
 
 export type {
     QList,
