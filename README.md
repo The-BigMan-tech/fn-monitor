@@ -465,16 +465,18 @@ All events extend the base `LangEvent` class, which provides the `node` and `sco
 
 ## How it Works
 
-Under the hood,this package utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
+Under the hood, this package utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
 
 - **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
 - **Reusables Architecture:** 
     - To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents the allocation of intermediate objects mid-evaluation.
     
-    - To ensure that it handles complex async/await state transitions safely,even when sharing  objects, it copies them at certain points to make snapshots before restoring them back after its done working with the overwritten values.
+    - To safely handle complex async/await state transitions while sharing objects, the interpreter creates snapshots by copying them at certain points, and restores the original values once it finishes working with the overwritten state.
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
+
+- **Scope Allocation & Safety:** While the interpreter heavily relies on reusable objects to maximize performance, the `scope` object provided to the inspector is a deliberate exception. Unlike AST nodes (which are parsed once and reused), the scope object is always freshly allocated for each event and exposed strictly with read-only methods. This design choice guarantees predictability and prevents accidental mutations of the interpreter's internal state.
 
 ---
 
@@ -482,18 +484,18 @@ Under the hood,this package utilizes an **AST-walker interpreter** (rather than 
 
 Please keep the following architectural constraints in mind when using this package:
 
-**ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+- **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
-**Debugging & Stack Traces:** Because monitored functions execute within an isolated interpreter context, errors thrown inside them will not map directly to their original source locations in your editor. It is highly recommended to debug functions in their unmonitored state first. (Note: The inspector hook itself runs in the native JS runtime, so it will still display a standard stack trace if the inspector throws an error.)
+- **Debugging & Stack Traces:** Because monitored functions execute within an isolated interpreter context, errors thrown inside them will not map directly to their original source locations in your editor. It is highly recommended to debug functions in their unmonitored state first. *(Note: The inspector hook itself runs in the native JS runtime, so it will still display a standard stack trace if the inspector throws an error.)*
 
-**AST Mutation Persistence:** To maximize performance, the monitored function's code is parsed into an AST only once. Consequently, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
+- **AST Mutation Persistence:** To maximize performance, the monitored function's code is parsed into an AST only once. Consequently, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-**Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the inspector and onStep hooks.
+- **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
 
-**Wrapper constraints:** The monitor function can accept any standard JavaScript function, but it cannot accept a function that has already been wrapped by monitor.
+- **Wrapper Constraints:** The `monitor` function accepts any standard JavaScript function, but it **cannot** accept a function that has already been wrapped by `monitor` (i.e., you cannot double-wrap a function via the `ref` property). However, you **can** include an already-monitored function within the `captures` object. This is fully supported because captured functions execute in the native JavaScript runtime, completely outside the AST interpreter's context.
 
-**Dynamic Imports:** The interpreter intentionally blocks dynamic import() calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the captures or embed properties. This design decision ensures that module resolution remains handled by your native JS engine, preserving the interpreter's isolation and preventing unexpected network or filesystem side-effects during execution.
-
+- **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property. This design decision ensures that module resolution remains handled by your native JS engine, preserving the interpreter's isolation and preventing unexpected network or filesystem side-effects during execution.
+  
 ---
 
 ## Questions & Support
