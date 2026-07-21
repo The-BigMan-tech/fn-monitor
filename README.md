@@ -42,7 +42,7 @@ const monitoredSumUp = monitor({
     main:{
         ref:sumUp,
         captures:{
-            //since 'zero' is used by sumUp and is outside its scope,we capture it into the interpreter's context
+             //since 'zero' is used by sumUp and is outside its scope,we capture it into the interpreter's context
             zero
         } 
     },
@@ -56,6 +56,11 @@ const monitoredSumUp = monitor({
         })
         visit.is('ReturnStatement',event=>{
             const result = visit.execute();
+
+            const sumVar = event.scope.variables.search('sum');
+            const finalSum = sumVar?.value();//query the scope for a specific variable
+
+            console.log('final sum: ',finalSum,'Is result:',finalSum===result.RES);
             result.RES = 'I CHANGED THE VALUE';
         })
     },
@@ -63,6 +68,7 @@ const monitoredSumUp = monitor({
         console.log('result of the monitored function: ',result);
     }
 });
+
 const arrToSum = [1,2,3,4,5,6,7,8,9,10];
 
 const result1 = sumUp(arrToSum)
@@ -90,6 +96,7 @@ assignment result -28
 assignment result -36
 assignment result -45
 assignment result -55
+final sum:  -55 Is result: true
 result of the monitored function:  I CHANGED THE VALUE
 Result 2 I CHANGED THE VALUE
 ```
