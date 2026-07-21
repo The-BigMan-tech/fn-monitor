@@ -3,54 +3,29 @@
  * 
  * Please read before making significant modifications to the evaluators.
  * 
- * 1. SCOPE LIMITATIONS:
+ * 1. PURPOSE LIMITATIONS:
  *    Do not expand this into a script-level or module-level monitor. Doing so will 
  *    break the hidden function-context assumptions used throughout this codebase.
  * 
- * 2. STATE MANAGEMENT (Reusables Architecture):
- *    To share interpretation context and control with the inspector hook performantly,
- *    this implementation leverages reusable objects from the extended interpreter to prevent 
- *    creating intermediate objects mid-evaluation. 
- * 
- *    - To prevent state bugs in this architecture (especially during complex async/await 
- *      transitions), the implementation favors a "copy, then overwrite" pattern at specific 
- *      points rather than always choosing to overwrite the reusables.
- * 
- *    - While the evaluator could theoretically be cleaner without interpreter-wide 
- *      reusables, this approach successfully decouples the extended interpreter from 
- *      specific local evaluations. This model is stable and will likely remain unchanged.
- * 
- * 3. CORE IMPLEMENTATION:
- *    This project uses an AST-walker interpreter underneath and will continue to do so.
- *    There are no plans to rewrite this to a bytecode implementation for practical reasons.
- * 
- * 4. TYPESCRIPT & UNMODIFIED CODE:
+ * 2. TYPESCRIPT & UNMODIFIED CODE:
  *    Parts of the codebase that consist of pure, unmodified `sval` code may have 
  *    TypeScript complaints. Since they function correctly, they have been left as-is 
  *    to preserve the original behavior.
  * 
- * 5. DEBUGGING LIMITATIONS:
- *    Because monitored functions run in an isolated context, errors thrown within them 
- *    will not map directly to their original source location in the editor. 
- *    - Functions should be debugged in their unmonitored state until a native source 
- *      mapping solution is implemented.
- *    - However, the inspector will still display a proper stack trace if an error is 
- *      thrown, as it executes directly in the JS runtime, not the interpreter.
- * 
- * 6. INTERPRETER ISOLATION:
+ * 3. INTERPRETER ISOLATION:
  *    Each monitored function must be assigned its own interpreter instance. While this 
  *    may appear to be a memory overhead, it is strictly required to prevent state 
  *    collision between executions. Sharing a single interpreter across multiple monitored 
  *    functions would introduce severe and unpredictable edge cases.
  * 
- * 7. AST NODE MUTATION & PERFORMANCE:
+ * 4. AST NODE MUTATION & PERFORMANCE:
  *    A monitored function is parsed only once, meaning its AST node and scope objects 
  *    are created just once and reused. 
  *    - WARNING: Any mutations made to this node within the inspector during a function 
  *      call will persist and reflect in all subsequent calls. 
  *    - Reparsing the code on every call was intentionally avoided to maintain execution speed.
  * 
- * 8. SANDBOXING CONTEXT:
+ * 5. ISOLATION CONTEXT:
  *    This monitor is not designed to act as a secure sandbox on its own. However, you 
  *    can use the inspector hook to simulate a sandboxed environment by actively monitoring 
  *    and intercepting nodes as the interpreter executes the function.
