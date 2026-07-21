@@ -102,7 +102,6 @@ The example also demonstrates how to extract the generated code using `sourceOut
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-
 console.log('\n\nSHOWCASE 2');
 
 const Printed = 'Printed: ';
@@ -110,15 +109,23 @@ const Printed = 'Printed: ';
 function print(str:string) {
     console.log(Printed,str);
 }
-function sayHello() {
-    print('Hello world')
-};
+function printName(name:string) {
+    console.log('Hello ',name);
+}
 
-const generatedCode = {value:''};
+function sayHello(name:string) {
+    print('Hello world')
+    printName(name)
+}
+
+const generatedCode = {value:''}
 
 const monitoredSayHello = monitor({
     main:{
-        ref:sayHello
+        ref:sayHello,
+        captures:{
+            printName//this function will run directly in your js engine when called.
+        }
     },
     embed:{
         print:{//the object that maps the function name to the reference
@@ -129,32 +136,44 @@ const monitoredSayHello = monitor({
         }
     },
     sourceOut:generatedCode
-});
+})
 
-monitoredSayHello();
-console.log('Generated code: \n',generatedCode.value);
+monitoredSayHello('person');
+console.log('\nGenerated code: \n',generatedCode.value);
+
 ```
 
 **Output:**
 ```text
 SHOWCASE 2
 Printed:  Hello world
+Hello  person
+
 Generated code: 
  const sayHello = (() => {
-    const intermediateFn_generated_e5cfb848025ac6e4e2479f115f4e10c3d31fe67ef652c478bd92b7d844c05601 = (() => {
-        function sayHello() {
+
+    const {
+        printName
+    } = exports.generated_2d9457560f1192de6a8da998971a4cfc3c773887307d984c32cb5701ca397688;
+
+    const intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d = (() => {
+        function sayHello(name) {
             print('Hello world');
+            printName(name);
         };
         return sayHello
     })();
-    return intermediateFn_generated_e5cfb848025ac6e4e2479f115f4e10c3d31fe67ef652c478bd92b7d844c05601;
+    return intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d;
 })();
 var print;
 print = (() => {
+
     const print = (() => {
+
         const {
             Printed
         } = exports.generated_fb3b5ed8b028f3b1a1075a448cde71ecb3b8e731a2493d3f9880e5d6c4b4ee20;
+
         const intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee = (() => {
             function print(str) {
                 console.log(Printed, str);
@@ -163,10 +182,13 @@ print = (() => {
         })();
         return intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee;
     })();
-    return print
+    return print;
 })();;
+
 //This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
+
 exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68 = sayHello(...generated_090772cf4068973daad3f715eb788d39fe2c02be42efd86de81f0e59198d6237);
+
 ```
 
 ### Showcase 3: Async Execution & The Execution Stack
