@@ -26,7 +26,7 @@ This example demonstrates how to get started, capture external variables, and us
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-//This shows how to get started and a general use case
+
 console.log('\n\nSHOWCASE 1');
 
 const zero = 0;
@@ -94,12 +94,15 @@ Result 2 I CHANGED THE VALUE
 ```
 
 ### Showcase 2: Embedding External Functions
-This example focuses on embedding external functions used in the monitored function. It also demonstrates how to extract the generated code using `sourceOut`.
+This example focuses on embedding external functions used in the monitored function.It tells the interpreter to directly include its source code in the same context which allows us to monitor it when called
+
+The example also demonstrates how to extract the generated code using `sourceOut`. But it will not use the inspector hook to keep it simple
+
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-//This example will focus on embedding external functions used in the monitored function.This example will not integrate the inspector hook to keep it simple
+
 console.log('\n\nSHOWCASE 2');
 
 const Printed = 'Printed: ';
@@ -172,7 +175,7 @@ This example tests the execution stack (`localExeStack`) and the `execute` metho
 ```typescript
 import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
 
-//Testing the exe stack and the execute method to get all the called functions during the function execution.We are testing this on async code to see the full capability
+
 console.log('\n\nSHOWCASE 3');
 
 const monitoredAsyncSqrt = monitor({
@@ -275,7 +278,7 @@ This example uses the `onStep` hook to implement a live timeout on a function, h
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-//Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
+
 console.log('\n\nSHOWCASE 4');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
@@ -423,7 +426,9 @@ All events extend the base `LangEvent` class, which provides the `node` and `sco
 Under the hood, `@typescript-guy/fn-monitor` utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
 
 * **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
+  
 * **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal "reusable" objects. This prevents the allocation of intermediate objects mid-evaluation. To handle complex async/await state transitions safely, it uses a "copy, then overwrite" pattern.
+  
 * **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
 
 ---
@@ -433,8 +438,11 @@ Under the hood, `@typescript-guy/fn-monitor` utilizes an **AST-walker interprete
 Please keep the following architectural constraints in mind when using this package:
 
 1. **Debugging & Stack Traces:** Because monitored functions run in an isolated context, errors thrown within them will not map directly to their original source location in your editor. You should debug functions in their unmonitored state first. *(Note: The inspector hook itself runs in the native JS runtime, so it will still display a proper stack trace if the inspector throws an error).*
+   
 2. **AST Mutation Persistence:** Because the AST is parsed only once, **any mutations made to a node within the inspector will persist and reflect in all subsequent calls** to that function. 
+   
 3. **Sandboxing Context:** This monitor is not designed to act as a secure, impenetrable sandbox out-of-the-box. However, you can simulate a sandboxed environment by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
+   
 4. **Scope Limitations:** The monitor can accept any function except for another already monitored function.
 
 ---
