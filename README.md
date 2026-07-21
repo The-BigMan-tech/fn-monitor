@@ -56,9 +56,7 @@ const monitoredSumUp = monitor({
         })
         visit.is('ReturnStatement',event=>{
             const result = visit.execute();
-
-            const sumVar = event.scope.variables.search('sum');
-            const finalSum = sumVar?.value();//query the scope for a specific variable
+            const finalSum = event.scope.variables.search('sum');
 
             console.log('final sum: ',finalSum,'Is result:',finalSum===result.RES);
             result.RES = 'I CHANGED THE VALUE';
