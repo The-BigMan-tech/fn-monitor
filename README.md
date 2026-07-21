@@ -26,7 +26,6 @@ This example demonstrates how to get started, capture external variables, and us
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-
 console.log('\n\nSHOWCASE 1');
 
 const zero = 0;
@@ -197,13 +196,13 @@ This example tests the execution stack (`localExeStack`) and the `execute` metho
 ```typescript
 import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
 
-
 console.log('\n\nSHOWCASE 3');
 
 const monitoredAsyncSqrt = monitor({
     main:{
         ref:async (a: number)=>{
-            const sqrt = Math.sqrt(a);
+            const sqrtFn = Math.sqrt;
+            const sqrt = sqrtFn(a);
             const rounded = Number(sqrt.toFixed(3))
             return await Promise.resolve(rounded);
         }
@@ -212,10 +211,13 @@ const monitoredAsyncSqrt = monitor({
         visit.is('CallExpression',()=>{
             const stackLenAtCallee = visit.localExeStack().length;
             const callees = new Set()
+
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
                 const element = stack.get(-(stackLenAtCallee + 1));//in the stack,the latest values stay at the front and the oldest stay at the back.The callee node will stay at the back as each execution inserts a new result to the stack
-                if (!callees.has(element)) {
+                const isFunction = typeof element.evaluation === 'function';
+
+                if (isFunction && !callees.has(element)) {
                     console.log('Callee:',element);
                     callees.add(element);
                     return
@@ -231,21 +233,23 @@ const monitoredAsyncSqrt = monitor({
         yield visit.execute();//for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the 'is' method,we do it outside.We must set our perExe hook before calling visit.execute for the hook to fire.which is why this is at the bottom
     },
 });
+
 console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2)); 
 ```
 
 **Output:**
 ```text
 SHOWCASE 3
+
 Callee: {
-  evaluation: Object [Math] {},
+  evaluation: [Function: sqrt],
   type: 'Identifier',
   node: {
     type: 'Identifier',
-    name: 'Math',
-    start: 178,
-    end: 182,
-    range: [ 178, 182 ],
+    name: 'sqrtFn',
+    start: 210,
+    end: 216,
+    range: [ 210, 216 ],
     loc: { start: [Object], end: [Object] }
   },
   scope: Symbol(NOT_ALLOCATED)
@@ -256,22 +260,9 @@ Callee: {
   node: {
     type: 'Identifier',
     name: 'Number',
-    start: 214,
-    end: 220,
-    range: [ 214, 220 ],
-    loc: { start: [Object], end: [Object] }
-  },
-  scope: Symbol(NOT_ALLOCATED)
-}
-Callee: {
-  evaluation: 1.4142135623730951,
-  type: 'Identifier',
-  node: {
-    type: 'Identifier',
-    name: 'sqrt',
-    start: 221,
-    end: 225,
-    range: [ 221, 225 ],
+    start: 243,
+    end: 249,
+    range: [ 243, 249 ],
     loc: { start: [Object], end: [Object] }
   },
   scope: Symbol(NOT_ALLOCATED)
@@ -282,9 +273,9 @@ Callee: {
   node: {
     type: 'Identifier',
     name: 'Promise',
-    start: 258,
-    end: 265,
-    range: [ 258, 265 ],
+    start: 287,
+    end: 294,
+    range: [ 287, 294 ],
     loc: { start: [Object], end: [Object] }
   },
   scope: Symbol(NOT_ALLOCATED)
@@ -299,7 +290,6 @@ This example uses the `onStep` hook to implement a live timeout on a function, h
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
-
 
 console.log('\n\nSHOWCASE 4');
 
