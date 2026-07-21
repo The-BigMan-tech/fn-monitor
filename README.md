@@ -40,7 +40,8 @@ const monitoredSumUp = monitor({
     main:{
         ref:sumUp,
         captures:{
-            zero//since zero is used by sumUp and is outside its scope,we capture it into the interpreter's context
+            //since 'zero' is used by sumUp and is outside its scope,we capture it into the interpreter's context
+            zero
         } 
     },
     beforeEachCall:(nums)=>{
@@ -92,9 +93,9 @@ Result 2 I CHANGED THE VALUE
 ```
 
 ### Showcase 2: Embedding External Functions
-This example focuses on embedding external functions used in the monitored function.It tells the interpreter to directly include its source code in the same context which allows us to monitor it when called
+This example focuses on embedding external functions that are called in the monitored function and how they are different from captured ones.
 
-The example also demonstrates how to extract the generated code using `sourceOut`. But it will not use the inspector hook to keep it simple
+It also demonstrates how to extract the generated code used in the interpreter using `sourceOut`. 
 
 
 ```typescript
@@ -122,13 +123,21 @@ const monitoredSayHello = monitor({
     main:{
         ref:sayHello,
         captures:{
-            printName//this function will run directly in your js engine when called.
+            //since this function is captured directly,it will run in your js engine when called.
+            printName
         }
     },
+
+    //'embed' is an object that maps a name to a function's reference and captured variables.
+
+    // It tells the interpreter to directly include each of their source code in the same context which allows us to also monitor it when it is called by our main function.But we will not use the inspector hook here to keep it simple.
+
     embed:{
-        print:{//the object that maps the function name to the reference
+        print:{
             ref:print,
-            captures:{//it can also state its own captures.and if we want,we could embed more functions and have the embedded print function call that.But lets keep things simple
+            //It can also state its own captures.
+            //If we want,we could embed more functions and have the embedded print function call that.But lets keep things simple.
+            captures:{
                 Printed
             }
         }
@@ -294,7 +303,8 @@ console.log('\n\nSHOWCASE 4');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
-        while (true) {}//simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
+        //simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
+        while (true) {}
     }
     if (!numbers || numbers.length === 0) {
         return 0;
@@ -339,12 +349,15 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
         },
         onStep:() => {
             step += 1;
-            const shouldCheckBudget = (step & 1023) === 0;// Binary bitmask check: Only execute the inner code once every 1024 steps since perf.now is heavy
+            // Binary bitmask check: Only execute the inner code once every 1024 steps since perf.now is heavy
+            const shouldCheckBudget = (step & 1023) === 0;
             if (shouldCheckBudget) checkBudget();
         },
         afterEachCall:(result)=>{
-            if (!(result instanceof Error)) {//if the result is an error,we let the interpreter bubble it up
-                checkBudget();//in case the function doesnt use up to the number of steps required to recheck the budget,we check the budget here to be accurate and safe
+            //if the result is an error,we let the interpreter bubble it up
+            if (!(result instanceof Error)) {
+                //in case the function doesn't use up to the number of steps required to recheck the budget,we check the budget here to be accurate and safe
+                checkBudget();
             }
         }
     });
@@ -377,7 +390,7 @@ The monitored function used 50.580ms when only given a budget of 50.000ms.
 ### Core Functions & Interfaces
 
 #### `monitor<T>(setup: MonitorFnSetup<T>)`
-The main export. Accepts a configuration object and returns a new function that can be called exactly as the original, but is executed by the custom interpreter. The returned function is augmented with an `alreadyMonitored: true` property.
+The main export. Accepts a configuration object and returns a new function that can be called exactly as the original, but it is executed by the custom interpreter. The returned function is augmented with an `alreadyMonitored: true` property.
 
 #### `MonitorFnSetup<T>`
 | Property | Type | Description |
@@ -403,7 +416,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | :--- | :--- |
-| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope and event object. |
+| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope,an event object,and fires the callback. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed node. Short-lived; exists only for the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. For async nodes, returns `LAZY_NODE` (requires `yield`). |
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
@@ -418,28 +431,36 @@ The rich object that gives inspectors their ability to participate in the interp
 
 #### `ScopeForEvent` & `VariableForEvent`
 * **`ScopeForEvent`**: Contains `variables` (with a `search(name)` method and `local` record), `parent` scope, and `depth`.
-* **`VariableForEvent`**: Contains a `value()` method to retrieve the variable's value.
+  
+* **`VariableForEvent`**: Returned from the `variables.search` method and contains a `value()` method to retrieve the variable's value.
 
 ### Utility Types & Classes
 
-* **`QList<T>` / `ReadonlyQList<T>`**: Custom optimized dequeue with random array access. Used internally for the execution stack, but exposed for advanced type inference.
-* **`Query`**: A string union of all possible ESTree node types you can query in `visit.is`, plus `'Any'`.
+* **`QList<T>` / `ReadonlyQList<T>`**: Custom optimized dequeue with random array access. Used internally for the execution stack, but the types are exposed for advanced type inference.
+  
+* **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query.It also includes `'Any'` which matches for all nodes.
+  
 * **`EventMap`**: Maps each node query to its dedicated Event class for tailored intellisense.
-* **Symbols**: `LAZY_NODE`, `NOT_ALLOCATED`, `UNASSIGNED`, `SEEN`.
+  
+* **Symbols**: 
+    - `LAZY_NODE` is returned when you call visit.execute on an async node like an await call.
+  
+    - `NOT_ALLOCATED` is used to mark scopes that were not allocated when their respective nodes were visited.The interpreter only allocates scopes that matches a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
 
 ### Event Classes
 All events extend the base `LangEvent` class, which provides the `node` and `scope` properties. There are over 30 specific event classes, including:
+
 `BinaryExprEvent`, `CallExprEvent`, `AssignmentExprEvent`, `UpdateExprEvent`, `LogicalExprEvent`, `MemberExprEvent`, `AwaitExprEvent`, `FuncExprEvent`, `ArrowFnExprEvent`, `TernaryExprEvent`, `NewExprEvent`, `YieldExprEvent`, `ReturnStmtEvent`, `IfStmtEvent`, `SwitchStmtEvent`, `ThrowStmtEvent`, `TryStmtEvent`, `CatchClauseEvent`, `VarDeclEvent`, `FuncDeclEvent`, `ForStmtEvent`, `WhileStmtEvent`, `DoWhileStmtEvent`, `ForOfStmtEvent`, `ForInStmtEvent`, `LabeledStmtEvent`, `BreakStmtEvent`, `ContinueStmtEvent`, `LiteralEvent`, `ExpressionStmtEvent`, `ArrayExprEvent`, `ObjectExprEvent`, `TemplateLiteralEvent`, `SequenceExprEvent`, `UnaryExprEvent`.
 
 ---
 
 ## How it Works
 
-Under the hood, `@typescript-guy/fn-monitor` utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
+Under the hood,this package utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
 
 * **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
-* **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal "reusable" objects. This prevents the allocation of intermediate objects mid-evaluation. To handle complex async/await state transitions safely, it uses a "copy, then overwrite" pattern.
+* **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents the allocation of intermediate objects mid-evaluation.And to ensure that it handles complex async/await state transitions safely,even when sharing objects, it utilizes a "copy,use and overwrite" pattern.
   
 * **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
 
@@ -461,11 +482,13 @@ Please keep the following architectural constraints in mind when using this pack
 
 ## Questions & Support
 
-If you want to play around with the package, there is an `examples` folder in the repository. *(Note: If you copy the examples, you will need to change the import from `'../index.ts'` to `'@typescript-guy/fn-monitor'`)*. 
+If you want to play around with the package, there is an `examples` folder in the repository. *(Note: If you copy the examples, you will need to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*. 
+
 🔗 **[View Examples](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples)**
 
-If you have questions about how to use `@typescript-guy/fn-monitor`, need help with a specific implementation, or want to discuss architecture:
+If you have questions about how to use this package, need help with a specific implementation, or want to discuss architecture:
 * **Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions)**: This is the best place for Q&A and community help.
+  
 * **Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues)**: If you've found a bug or want to request a new feature.
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues to see if your question has already been answered!*
