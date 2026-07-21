@@ -410,7 +410,7 @@ export interface MonitorFnSetup<T extends Fn> {
 
 function assertRefIsNotMonitored(metadata:Metadata<Fn>) {
     const {ref} = metadata;
-    if ('alreadyMonitored' in ref) {//we only assert this for the refs because they are directly included in the interpreter's context.whereas,captured fns are ran by the js engine and thus,it will work without issues.
+    if ('alreadyMonitored' in ref) {//we only assert this for the refs because they are directly included in the interpreter's context. Whereas captured fns are ran by the js engine and thus,it will work without issues.
         throw new Error(ansis.red(`\nA monitored function cannot be directly included in the interpreter's context.Try to capture it instead.`))
     };
 }
@@ -464,7 +464,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     };
 
     interpreter.astInUse = ast;
-    const newFn = interpreter.runMonitoredFn as any;
+    const newFn = interpreter.runMonitoredFn as T & { alreadyMonitored: true };
 
     newFn['alreadyMonitored'] = true;
     return newFn;
