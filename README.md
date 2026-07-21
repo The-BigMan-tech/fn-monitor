@@ -3,7 +3,7 @@
 ![npm](https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor)
 ![license](https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor)
 
-`@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, or control JavaScript functions at runtime by injecting hooks at any part of a function's lifecycle, effectively turning your functions into white-boxes.
+`@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
 
 ## Installation
@@ -14,7 +14,7 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction
 
-The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature as the original, but is executed by a custom interpreter rather than your JS engine directly. 
+The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
 
 ## Quick Examples
