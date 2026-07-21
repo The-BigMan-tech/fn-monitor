@@ -31,6 +31,11 @@ const monitoredSumUp = monitor({
         })
         visit.is('ReturnStatement',event=>{
             const result = visit.execute();
+
+            const sumVar = event.scope.variables.search('sum');
+            const finalSum = sumVar?.value();//query the scope for a specific variable
+
+            console.log('final sum: ',finalSum,'Is result:',finalSum===result.RES);
             result.RES = 'I CHANGED THE VALUE';
         })
     },
@@ -74,6 +79,7 @@ const monitoredSayHello = monitor({
         ref:sayHello,
         captures:{
             printName//this function will run directly in your js engine when called.
+
         }
     },
     embed:{
