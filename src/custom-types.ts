@@ -1,5 +1,4 @@
 //My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough to narrow down the nodes with just instanceof checks 
-//because of the demand and supply architecture,the script-monitor runs as close to the speed of sval as possible.so the overhead is the interpretation step not necessarily the monitor or sval
 
 import Scope from "./scope/index.ts";
 import type { Node as EsTreeNode} from "estree";
