@@ -7,7 +7,7 @@
     "removeComments":false,
     "resolveJsonModule": true,
     "downlevelIteration": true,
-    "rootDir": "./",
+    "rootDir":"./src",
     "declarationDir": "./types",
     "moduleResolution": "nodenext",
     "module": "nodenext",
@@ -18,7 +18,6 @@
   },
   "include": [
     "src/**/*",
-    "examples/**/*"  
   ],
   "exclude": [
     "node_modules",
