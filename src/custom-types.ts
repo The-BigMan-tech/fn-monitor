@@ -218,16 +218,12 @@ export interface SvalPlus {
     stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';//the purpose of this is to prevent the interpreter from hitting the inspector during the parsing stage and also when its not explicitly running the monitored function
     createEventScope:()=>ScopeForEvent,
 }
-export interface VariableForEvent {
-    /**The value of the variable */
-    value:()=>any
-}
 export interface ScopeForEvent {
     /**The variables in the scope.You can check for all the local variables or use the search method to get a variable from its identifier.*/
     variables:{
-        /**If a variable cannot be identified from the given name,you get null instead of the object */
-        search:(name: string)=> VariableForEvent | null,
-        local:Record<string,Var>
+        /**If a variable cannot be identified from the given name,it returns undefined. */
+        search:(name: string)=>unknown | undefined,
+        local:Record<string,unknown>
     },
     /**The depth of the scope of the current node*/
     depth:number

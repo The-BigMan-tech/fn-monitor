@@ -45,7 +45,6 @@ import {
     Inspector,
     Reusables, 
     ScopeForEvent,
-    VariableForEvent,
     Fn, 
     createEvent, 
     SvalPlus as SvalPlusContract, 
@@ -64,7 +63,8 @@ import jsBeatutify from "js-beautify";
 
 
 class EventScope implements ScopeForEvent {
-    #scope:Scope
+    #scope:Scope;
+
     public depth:number;
     public variables:ScopeForEvent['variables'];
 
@@ -72,15 +72,17 @@ class EventScope implements ScopeForEvent {
         this.#scope = interpreter.reusables.currentScope!;
         this.depth = this.#scope.scopeDepth - 2;//We subtract 2 to make it 0-indexed.check the comment next to the variable, 'inUserScope' in one of the files
         
-        this.variables = {
-            search:(name:string):VariableForEvent | null =>{
-                const variable = this.#scope.find(name);
-                if (variable === null) return null;
+        const local:ScopeForEvent['variables']['local'] = {};
+        Object.entries(this.#scope.scopeContext).forEach(([k,v])=>{
+            local[k] = v.get()
+        });
 
-                const variableForEvent = { value:()=>variable.get() }
-                return variableForEvent
+        this.variables = {
+            search:(name:string):unknown | undefined =>{
+                const variable = this.#scope.find(name);
+                return (variable === null)?undefined:variable.get();
             },
-            local:this.#scope.scopeContext
+            local
         }
     }
 } 
@@ -481,7 +483,6 @@ export type {
 export type {
     Inspector,
     OnStep,
-    VariableForEvent,
     ScopeForEvent,
     Query,
     EventMap,

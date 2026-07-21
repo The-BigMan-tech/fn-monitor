@@ -438,10 +438,9 @@ The rich object that gives inspectors their ability to participate in the interp
 | `node` | `EsNode` | The AST node itself. |
 | `scope` | `ScopeForEvent \| typeof NOT_ALLOCATED` | The safe scope created for the caller. |
 
-#### `ScopeForEvent` & `VariableForEvent`
+#### `ScopeForEvent`
 * **`ScopeForEvent`**: Contains `variables` (with a `search(name)` method and `local` record), and `depth`.
-  
-* **`VariableForEvent`**: Returned from the `variables.search` method and contains a `value()` method to retrieve the variable's value.
+
 
 ### Utility Types & Classes
 
