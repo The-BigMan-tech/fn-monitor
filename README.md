@@ -24,11 +24,13 @@ Because your hooks are treated as first-class citizens by the interpreter, you c
 This example demonstrates how to get started, capture external variables, and use the `inspector` hook to intercept and modify AST nodes during execution.
 
 ```typescript
-import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
+import { monitor } from "@typescript-guy/fn-monitor";
 
 //This shows how to get started and a general use case
 console.log('\n\nSHOWCASE 1');
+
 const zero = 0;
+
 const sumUp = (nums:number[])=> {
     let sum:number = zero;
     for (const num of nums) {
@@ -61,8 +63,10 @@ const monitoredSumUp = monitor({
     }
 });
 const arrToSum = [1,2,3,4,5,6,7,8,9,10];
+
 const result1 = sumUp(arrToSum)
 console.log('Result 1',result1);
+
 const result2 = monitoredSumUp(arrToSum)//the exact same call signature
 console.log('Result 2',result2);
 ```
@@ -93,7 +97,7 @@ Result 2 I CHANGED THE VALUE
 This example focuses on embedding external functions used in the monitored function. It also demonstrates how to extract the generated code using `sourceOut`.
 
 ```typescript
-import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
+import { monitor } from "@typescript-guy/fn-monitor";
 
 //This example will focus on embedding external functions used in the monitored function.This example will not integrate the inspector hook to keep it simple
 console.log('\n\nSHOWCASE 2');
@@ -269,7 +273,7 @@ Monitored async sqrt:  1.414
 This example uses the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.
 
 ```typescript
-import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
+import { monitor } from "@typescript-guy/fn-monitor";
 
 //Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
 console.log('\n\nSHOWCASE 4');
