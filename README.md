@@ -372,11 +372,12 @@ console.log('\nThe average from the timed fn is: ',avg2);
 **Output:**
 ```text
 SHOWCASE 4
+
 The average is:  61.833
 Finished building the fn in 3.393ms
 Error: 
 Error in Monitored Function:
-The monitored function used 61.844ms when only given a budget of 50.000ms.
+The monitored function used 50.580ms when only given a budget of 50.000ms.
 ....
 ```
 
