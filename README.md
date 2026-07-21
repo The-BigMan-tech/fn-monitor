@@ -16,6 +16,8 @@ npm install @typescript-guy/fn-monitor
 
 The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
+> 📌 Before integrating this package, please review the [Important Notes & Limitations](#important-notes--limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports
+
 
 ## Quick Examples
 
@@ -416,7 +418,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | :--- | :--- |
-| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope,an event object,and fires the callback. |
+| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope, and wraps it together with the respective node in an event object, and fires the callback with it. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed node. Short-lived; exists only for the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. For async nodes, returns `LAZY_NODE` (requires `yield`). |
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
@@ -458,28 +460,32 @@ All events extend the base `LangEvent` class, which provides the `node` and `sco
 
 Under the hood,this package utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
 
-* **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
+- **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
-* **Reusables Architecture:** 
+- **Reusables Architecture:** 
     - To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents the allocation of intermediate objects mid-evaluation.
-  
+    
     - To ensure that it handles complex async/await state transitions safely,even when sharing  objects, it copies them at certain points to make snapshots before restoring them back after its done working with the overwritten values.
   
-* **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
+- **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
 
 ---
 
-## Limitations & Important Notes
+## Important Notes & Limitations
 
 Please keep the following architectural constraints in mind when using this package:
 
-1. **Debugging & Stack Traces:** Because monitored functions run in an isolated context, errors thrown within them will not map directly to their original source location in your editor. You should debug functions in their unmonitored state first. *(Note: The inspector hook itself runs in the native JS runtime, so it will still display a proper stack trace if the inspector throws an error).*
-   
-2. **AST Mutation Persistence:** Because the AST is parsed only once, **any mutations made to a node within the inspector will persist and reflect in all subsequent calls** to that function. 
-   
-3. **Execution Control & Isolation:** This monitor is not designed to act as a strict, secure execution environment out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the inspector and onStep hooks.
-   
-4. **Scope Limitations:** The monitor can accept any function except for another already monitored function.
+**ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+
+**Debugging & Stack Traces:** Because monitored functions execute within an isolated interpreter context, errors thrown inside them will not map directly to their original source locations in your editor. It is highly recommended to debug functions in their unmonitored state first. (Note: The inspector hook itself runs in the native JS runtime, so it will still display a standard stack trace if the inspector throws an error.)
+
+**AST Mutation Persistence:** To maximize performance, the monitored function's code is parsed into an AST only once. Consequently, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
+
+**Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the inspector and onStep hooks.
+
+**Monitoring Limitations:** The monitor function can accept any standard JavaScript function, but it cannot accept a function that has already been wrapped by monitor.
+
+**Dynamic Imports:** The interpreter intentionally blocks dynamic import() calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the captures or embed properties. This design decision ensures that module resolution remains handled by your native JS engine, preserving the interpreter's isolation and preventing unexpected network or filesystem side-effects during execution.
 
 ---
 
