@@ -483,7 +483,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the inspector and onStep hooks.
 
-**Monitoring Limitations:** The monitor function can accept any standard JavaScript function, but it cannot accept a function that has already been wrapped by monitor.
+**Wrapper constraints:** The monitor function can accept any standard JavaScript function, but it cannot accept a function that has already been wrapped by monitor.
 
 **Dynamic Imports:** The interpreter intentionally blocks dynamic import() calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the captures or embed properties. This design decision ensures that module resolution remains handled by your native JS engine, preserving the interpreter's isolation and preventing unexpected network or filesystem side-effects during execution.
 
