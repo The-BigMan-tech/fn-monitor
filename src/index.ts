@@ -65,14 +65,13 @@ import jsBeatutify from "js-beautify";
 
 class EventScope implements ScopeForEvent {
     #scope:Scope
-    public parent:Scope | null;
     public depth:number;
     public variables:ScopeForEvent['variables'];
 
     constructor(interpreter:SvalPlus) {
         this.#scope = interpreter.reusables.currentScope!;
-        this.parent = this.#scope.scopeParent;
-        this.depth = this.#scope.scopeDepth;
+        this.depth = this.#scope.scopeDepth - 2;//We subtract 2 to make it 0-indexed.check the comment next to the variable, 'inUserScope' in one of the files
+        
         this.variables = {
             search:(name:string):VariableForEvent | null =>{
                 const variable = this.#scope.find(name);
@@ -84,7 +83,7 @@ class EventScope implements ScopeForEvent {
             local:this.#scope.scopeContext
         }
     }
-}
+} 
 class Visit implements VisitContract {
     #interpreter:SvalPlus
 

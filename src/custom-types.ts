@@ -229,9 +229,6 @@ export interface ScopeForEvent {
         search:(name: string)=> VariableForEvent | null,
         local:Record<string,Var>
     },
-    /**The parent scope */
-    parent:Scope | null;
-
     /**The depth of the scope of the current node*/
     depth:number
 }
