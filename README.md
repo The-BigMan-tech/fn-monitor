@@ -3,7 +3,7 @@
 ![npm](https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor)
 ![license](https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor)
 
-`@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to inspect, debug, or sandbox JavaScript functions at runtime by injecting hooks at any part of a function's lifecycle, effectively turning your functions into white-boxes.
+`@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, or control JavaScript functions at runtime by injecting hooks at any part of a function's lifecycle, effectively turning your functions into white-boxes.
 
 
 ## Installation
@@ -454,7 +454,7 @@ Please keep the following architectural constraints in mind when using this pack
    
 2. **AST Mutation Persistence:** Because the AST is parsed only once, **any mutations made to a node within the inspector will persist and reflect in all subsequent calls** to that function. 
    
-3. **Sandboxing Context:** This monitor is not designed to act as a secure, impenetrable sandbox out-of-the-box. However, you can simulate a sandboxed environment by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
+3. **Execution Control & Isolation:** This monitor is not designed to act as a strict, secure execution environment out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the inspector and onStep hooks.
    
 4. **Scope Limitations:** The monitor can accept any function except for another already monitored function.
 
