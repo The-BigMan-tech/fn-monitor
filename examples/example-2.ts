@@ -1,5 +1,5 @@
 import ansis from "ansis";
-import { monitor } from "../index.ts";
+import { monitor } from "../src/index.ts";
 
 
 function perf(fn:(...args:any[])=>void) {

@@ -486,7 +486,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
 
 export { Var } from './scope/variable.ts';
 
-export {
+export type {
     QList,
     ReadonlyQList
 } from './q-list.ts';
