@@ -460,7 +460,10 @@ Under the hood,this package utilizes an **AST-walker interpreter** (rather than 
 
 * **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
-* **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents the allocation of intermediate objects mid-evaluation.And to ensure that it handles complex async/await state transitions safely,even when sharing objects, it utilizes a "copy,use and overwrite" pattern.
+* **Reusables Architecture:** 
+    - To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents the allocation of intermediate objects mid-evaluation.
+  
+    - To ensure that it handles complex async/await state transitions safely,even when sharing  objects, it copies them at certain points to make snapshots before restoring them back after its done working with the overwritten values.
   
 * **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
 
