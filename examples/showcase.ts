@@ -58,16 +58,23 @@ const Printed = 'Printed: ';
 function print(str:string) {
     console.log(Printed,str);
 }
+function printName(name:string) {
+    console.log('Hello ',name);
+}
 
-function sayHello() {
+function sayHello(name:string) {
     print('Hello world')
+    printName(name)
 }
 
 const generatedCode = {value:''}
 
 const monitoredSayHello = monitor({
     main:{
-        ref:sayHello
+        ref:sayHello,
+        captures:{
+            printName//this function will run directly in your js engine when called.
+        }
     },
     embed:{
         print:{//the object that maps the function name to the reference
@@ -80,19 +87,21 @@ const monitoredSayHello = monitor({
     sourceOut:generatedCode
 })
 
-monitoredSayHello();
-console.log('Generated code: \n',generatedCode.value);
+monitoredSayHello('person');
+console.log('\nGenerated code: \n',generatedCode.value);
 
 
 //SHOWCASE 3
-//Testing the exe stack and the execute method to get all the called functions during the function execution.We are testing this on async code to see the full capability
+//Testing the exe stack and the execute method to get all the callees during the function execution.
+//We are testing this on async code to see the full capability
 
 console.log('\n\nSHOWCASE 3');
 
 const monitoredAsyncSqrt = monitor({
     main:{
         ref:async (a: number)=>{
-            const sqrt = Math.sqrt(a);
+            const sqrtFn = Math.sqrt;
+            const sqrt = sqrtFn(a);
             const rounded = Number(sqrt.toFixed(3))
             return await Promise.resolve(rounded);
         }
@@ -105,8 +114,9 @@ const monitoredAsyncSqrt = monitor({
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
                 const element = stack.get(-(stackLenAtCallee + 1));//in the stack,the latest values stay at the front and the oldest stay at the back.The callee node will stay at the back as each execution inserts a new result to the stack
+                const isFunction = typeof element.evaluation === 'function';
 
-                if (!callees.has(element)) {
+                if (isFunction && !callees.has(element)) {
                     console.log('Callee:',element);
                     callees.add(element);
                     return
