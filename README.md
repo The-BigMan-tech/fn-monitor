@@ -222,7 +222,7 @@ const monitoredAsyncSqrt = monitor({
 
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
-                const element = stack.get(-(stackLenAtCallee + 1));//in the stack,the latest values stay at the front and the oldest stay at the back.The callee node will stay at the back as each execution inserts a new result to the stack
+                const element = stack.get(-(stackLenAtCallee + 1));//in the stack,the latest values stay at the front/left end and the oldest stay at the back/right end.The callee node will stay at the back as each execution inserts a new result to the stack
                 const isFunction = typeof element.evaluation === 'function';
 
                 if (isFunction && !callees.has(element)) {
@@ -390,7 +390,7 @@ The monitored function used 50.580ms when only given a budget of 50.000ms.
 ### Core Functions & Interfaces
 
 #### `monitor<T>(setup: MonitorFnSetup<T>)`
-The main export. Accepts a configuration object and returns a new function that can be called exactly as the original, but it is executed by the custom interpreter. The returned function is augmented with an `alreadyMonitored: true` property.
+The main export. Accepts a configuration object and returns a new function that can be called exactly as the original, but is executed by the custom interpreter. The returned function is augmented with an `alreadyMonitored: true` property.
 
 #### `MonitorFnSetup<T>`
 | Property | Type | Description |
