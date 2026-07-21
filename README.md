@@ -14,7 +14,7 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction
 
-The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function that behaves exactly like the original, but is executed by a custom interpreter rather than your JS engine directly. 
+The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature as the original, but is executed by a custom interpreter rather than your JS engine directly. 
 
 Because your hooks are treated as first-class citizens by the interpreter, you can inject lifecycle hooks (`beforeEachCall`, `afterEachCall`), a lightweight step hook (`onStep`), or a deep AST inspector (`inspector`) to observe, modify, and manually execute nodes in real-time.
 
