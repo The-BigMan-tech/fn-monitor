@@ -10,7 +10,10 @@
         "dist/**/*.d.ts",
         "ACKNOWLEDGEMENTS.md"
     ],
-    "author": "typescript-guy",
+    "author":{
+        "name":"typescript-guy",
+        "url": "https://github.com/The-BigMan-tech"
+    },
     "license": "MIT",
     "repository": {
         "type": "git",
