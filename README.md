@@ -236,7 +236,7 @@ const monitoredAsyncSqrt = monitor({
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
 
-                //in the stack,the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
+                //in the stack, the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
                 const element = stack.get(-(stackLenAtCallee + 1));
                 const isFunction = typeof element.evaluation === 'function';
 
