@@ -122,6 +122,7 @@ const monitoredAsyncSqrt = monitor({
             const callees = new Set()
 
             //by setting perExecution here,we guarantee that the hook will only fire from this particular CallExpr node going forward.
+            
             //After the interpreter has branched to other nodes while evaluating this one,it will terminate the hook once it has arrived back to this specific CallExpr node.This makes the hook short-lived and focused
             
             visit.perExecution = ()=>{
