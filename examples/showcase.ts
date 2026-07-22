@@ -130,7 +130,7 @@ const monitoredAsyncSqrt = monitor({
         visit.is('ReturnStatement',()=>{
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack()
-                console.log('seen awaited result: ',stack.get(0).evaluation);
+                console.log('nodes evaluated during return: ',stack.get(0).evaluation);
             }
         })
         yield visit.execute();//for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the 'is' method,we do it outside.We must set our perExe hook before calling visit.execute for the hook to fire.which is why this is at the bottom
