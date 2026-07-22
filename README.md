@@ -12,11 +12,13 @@
 npm install @typescript-guy/fn-monitor
 ```
 
+
 ## API Introduction
 
 The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
 > 📌 Before integrating this package, please review the [Important Notes & Limitations](#important-notes--limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports
+
 
 
 ## Quick Examples
@@ -399,6 +401,7 @@ The monitored function used 50.580ms when only given a budget of 50.000ms.
 
 ---
 
+
 ## Full API Reference
 
 ### Core Functions & Interfaces
@@ -422,6 +425,7 @@ The main export. Accepts a configuration object and returns a new function that 
 | :--- | :--- | :--- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
 | `captures` | `Record<string, any>` | Maps variable names to their outside-scope values. Follows copy-by-value (primitives) and copy-by-reference (objects) semantics. |
+
 
 ### The Inspector Context
 
@@ -447,6 +451,7 @@ The rich object that gives inspectors their ability to participate in the interp
 * **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. `variables.local` and `variables.search(name)` return the raw values directly (no wrappers), and `depth` is strictly 0-indexed. It starts from the wrapped function's root.
 
 
+
 ### Utility Types & Classes
 
 * **`QList<T>` / `ReadonlyQList<T>`**: Custom optimized dequeue with random array access. Used internally for the execution stack, but the types are exposed for advanced type inference.
@@ -460,12 +465,14 @@ The rich object that gives inspectors their ability to participate in the interp
   
     - `NOT_ALLOCATED` is used to mark scopes that were not allocated when their respective nodes were visited. The interpreter only allocates scopes that match a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
 
+
 ### Event Classes
 All events extend the base `LangEvent` class, which provides the `node` and `scope` properties. There are over 30 specific event classes, including:
 
 `BinaryExprEvent`, `CallExprEvent`, `AssignmentExprEvent`, `UpdateExprEvent`, `LogicalExprEvent`, `MemberExprEvent`, `AwaitExprEvent`, `FuncExprEvent`, `ArrowFnExprEvent`, `TernaryExprEvent`, `NewExprEvent`, `YieldExprEvent`, `ReturnStmtEvent`, `IfStmtEvent`, `SwitchStmtEvent`, `ThrowStmtEvent`, `TryStmtEvent`, `CatchClauseEvent`, `VarDeclEvent`, `FuncDeclEvent`, `ForStmtEvent`, `WhileStmtEvent`, `DoWhileStmtEvent`, `ForOfStmtEvent`, `ForInStmtEvent`, `LabeledStmtEvent`, `BreakStmtEvent`, `ContinueStmtEvent`, `LiteralEvent`, `ExpressionStmtEvent`, `ArrayExprEvent`, `ObjectExprEvent`, `TemplateLiteralEvent`, `SequenceExprEvent`, `UnaryExprEvent`.
 
 ---
+
 
 ## How it Works
 
@@ -483,6 +490,7 @@ Under the hood, this package utilizes an **AST-walker interpreter** (rather than
 - **Scope Allocation & Safety:** While the interpreter heavily relies on reusable objects to maximize performance, the `scope` object provided to the inspector is a deliberate exception. Unlike AST nodes (which are parsed once and reused), the scope object is always freshly allocated for each event. This design choice guarantees predictability and prevents accidental mutations of the interpreter's internal state.
 
 ---
+
 
 ## Important Notes & Limitations
 
@@ -504,6 +512,7 @@ Please keep the following architectural constraints in mind when using this pack
   
 ---
 
+
 ## Questions & Support
 
 If you want to play around with the package, there is an `examples` folder in the repository. *(Note: If you copy the examples, you will need to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*. 
@@ -518,6 +527,7 @@ If you have questions about how to use this package, need help with a specific i
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues to see if your question has already been answered!*
 
 ---
+
 
 ## Acknowledgements
 
