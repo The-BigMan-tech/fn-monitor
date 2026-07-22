@@ -430,7 +430,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | :--- | :--- |
-| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope, and wraps it together with the respective node in an event object, and fires the callback with it. |
+| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope, wraps it together with the respective node in an event object, and fires the callback with it. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed node. Short-lived; exists only for the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. For async nodes, returns `LAZY_NODE` (requires `yield`). |
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
@@ -444,21 +444,21 @@ The rich object that gives inspectors their ability to participate in the interp
 | `scope` | `ScopeForEvent \| typeof NOT_ALLOCATED` | The safe scope created for the caller. |
 
 #### `ScopeForEvent`
-* **`ScopeForEvent`**: Contains `variables` (with a `search(name)` method and `local` record), and `depth`.
+* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. `variables.local` and `variables.search(name)` return the raw values directly (no wrappers), and `depth` is strictly 0-indexed. It starts from the wrapped function's root.
 
 
 ### Utility Types & Classes
 
 * **`QList<T>` / `ReadonlyQList<T>`**: Custom optimized dequeue with random array access. Used internally for the execution stack, but the types are exposed for advanced type inference.
   
-* **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query.It also includes `'Any'` which matches for all nodes.
+* **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query. It also includes `'Any'` , which matches all nodes.
   
 * **`EventMap`**: Maps each node query to its dedicated Event class for tailored intellisense.
   
 * **Symbols**: 
     - `LAZY_NODE` is returned when you call visit.execute on an async node like an await call.
   
-    - `NOT_ALLOCATED` is used to mark scopes that were not allocated when their respective nodes were visited.The interpreter only allocates scopes that matches a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
+    - `NOT_ALLOCATED` is used to mark scopes that were not allocated when their respective nodes were visited. The interpreter only allocates scopes that match a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
 
 ### Event Classes
 All events extend the base `LangEvent` class, which provides the `node` and `scope` properties. There are over 30 specific event classes, including:
@@ -480,7 +480,7 @@ Under the hood, this package utilizes an **AST-walker interpreter** (rather than
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
 
-- **Scope Allocation & Safety:** While the interpreter heavily relies on reusable objects to maximize performance, the `scope` object provided to the inspector is a deliberate exception. Unlike AST nodes (which are parsed once and reused), the scope object is always freshly allocated for each event and exposed strictly with read-only methods. This design choice guarantees predictability and prevents accidental mutations of the interpreter's internal state.
+- **Scope Allocation & Safety:** While the interpreter heavily relies on reusable objects to maximize performance, the `scope` object provided to the inspector is a deliberate exception. Unlike AST nodes (which are parsed once and reused), the scope object is always freshly allocated for each event. This design choice guarantees predictability and prevents accidental mutations of the interpreter's internal state.
 
 ---
 
