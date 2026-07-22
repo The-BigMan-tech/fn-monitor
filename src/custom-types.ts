@@ -150,7 +150,11 @@ export interface Visit {
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
 
     /**
-     * This is fired on each executed node.The hook itself does not get passed anything.It is actually a good place to check the local exe stack.By querying for the last element,you get to see the exe result in real time which includes the nodes,the results and each scope
+     * This is fired for each executed node starting from the current node.The current node at the time when it was set becomes its owner.
+     * After firing for all other related nodes,it will terminate when the interpreter reaches back to the owner. 
+     *
+     * The hook itself does not get passed anything.But it is a good place to check the local exe stack.
+     * By querying for the head element,you get to see the exe result in real time which includes the nodes,the evaluated result and each scope
      */
     set perExecution(perExe:PerExe),
 
@@ -165,7 +169,7 @@ export interface Visit {
 
     /**
      * This is a stack data structure that contains the results of each evaluated child node for a given node.
-     * The latest results stay at the top and the oldest remain at the bottom.
+     * The latest results stay at the head and the oldest remain at the tail.
      * It is not the full execution history of the entire function. 
      */
     localExeStack:()=>Omit<ReadonlyQList<ExeResult>,'swapSrc'>,
