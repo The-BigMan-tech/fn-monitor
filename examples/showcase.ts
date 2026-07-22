@@ -18,7 +18,8 @@ const monitoredSumUp = monitor({
     main:{
         ref:sumUp,
         captures:{
-            zero//since zero is used by sumUp and is outside its scope,we capture it into the interpreter's context
+             //since 'zero' is used by sumUp and is outside its scope,we capture it into the interpreter's context
+            zero
         } 
     },
     beforeEachCall:(nums)=>{
@@ -50,7 +51,6 @@ console.log('Result 1',result1);
 const result2 = monitoredSumUp(arrToSum)//the exact same call signature
 console.log('Result 2',result2);
 
-
 //SHOWCASE 2
 //This example will focus on embedding external functions used in the monitored function.This example will not integrate the inspector hook to keep it simple
 
@@ -76,14 +76,21 @@ const monitoredSayHello = monitor({
     main:{
         ref:sayHello,
         captures:{
-            printName//this function will run directly in your js engine when called.
-
+            //since this function is captured directly,it will run in your js engine when called.
+            printName
         }
     },
+
+    //'embed' is an object that maps a name to a function's reference and captured variables.
+
+    // It tells the interpreter to directly include each of their source code in the same context which allows us to also monitor it when it is called by our main function.But we will not use the inspector hook here to keep it simple.
+
     embed:{
-        print:{//the object that maps the function name to the reference
+        print:{
             ref:print,
-            captures:{//it can also state its own captures.and if we want,we could embed more functions and have the embedded print function call that.But lets keep things simple
+            //It can also state its own captures.
+            //If we want,we could embed more functions and have the embedded print function call that.But lets keep things simple.
+            captures:{
                 Printed
             }
         }
@@ -93,7 +100,6 @@ const monitoredSayHello = monitor({
 
 monitoredSayHello('person');
 console.log('\nGenerated code: \n',generatedCode.value);
-
 
 //SHOWCASE 3
 //Testing the exe stack and the execute method to get all the callees during the function execution.
@@ -120,7 +126,9 @@ const monitoredAsyncSqrt = monitor({
             
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
-                const element = stack.get(-(stackLenAtCallee + 1));//in the stack,the latest values stay at the front and the oldest stay at the back.The callee node will stay at the back as each execution inserts a new result to the stack
+
+                //in the stack,the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
+                const element = stack.get(-(stackLenAtCallee + 1));
                 const isFunction = typeof element.evaluation === 'function';
 
                 if (isFunction && !callees.has(element)) {
@@ -133,15 +141,15 @@ const monitoredAsyncSqrt = monitor({
         visit.is('ReturnStatement',()=>{
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack()
-                console.log('nodes evaluated during return: ',stack.get(0).evaluation);
+                console.log('node evaluated during return: ',stack.get(0).evaluation);
             }
         })
-        yield visit.execute();//for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the 'is' method,we do it outside.We must set our perExe hook before calling visit.execute for the hook to fire.which is why this is at the bottom
+        //for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the 'is' method,we do it outside.We must set our perExe hook before calling visit.execute for the hook to fire.which is why this is at the bottom
+        yield visit.execute();
     },
 });
 
 console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2)); 
-
 
 //SHOWCASE 4
 //Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
