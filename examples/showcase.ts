@@ -115,6 +115,9 @@ const monitoredAsyncSqrt = monitor({
             const stackLenAtCallee = visit.localExeStack().length;
             const callees = new Set()
 
+            //by setting perExecution here,we guarantee that the hook will only fire from this particular CallExpr node going forward.
+            //After the interpreter has branched to other nodes while evaluating this one,it will terminate the hook once it has arrived back to this specific CallExpr node.This makes the hook short-lived and focused
+            
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
                 const element = stack.get(-(stackLenAtCallee + 1));//in the stack,the latest values stay at the front and the oldest stay at the back.The callee node will stay at the back as each execution inserts a new result to the stack
