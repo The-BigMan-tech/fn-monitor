@@ -38,4 +38,72 @@ describe('Scope object tests', () => {
         expect(hitVarDeclNode).toBe(true);
         expect(hitAssignmentExprNode).toBe(true);
     });
+
+    it ('should ensure that it allocates a fresh scope object for each query',()=>{
+
+    })
+
+    it('should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{
+        let hitReturnNode = false;
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    const name = "person";
+                    const age = 20;
+                    return;
+                }
+            },
+            inspector:(visit)=>{
+                visit.is('ReturnStatement',event=>{
+                    const vars = event.scope.variables;
+
+                    expect(vars.search('name')).toBe('person');
+                    expect(vars.search('age')).toBe(20);
+
+                    expect(vars.local).toMatchObject({
+                        name:'person',
+                        age:20
+                    })
+                    hitReturnNode = true;
+                })
+            }
+        })
+                    
+        fn();
+        expect(hitReturnNode).toBe(true)
+    })
+
+    it('should verify that local strictly has local variables while the search method can fetch captured variables outside the local scope',()=>{
+        let hitReturnNode = false;
+
+        const age = 20;
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    const name = "person";
+                    return;
+                },
+                captures:{
+                    age
+                }
+            },
+            inspector:(visit)=>{
+                visit.is('ReturnStatement',event=>{
+                    const vars = event.scope.variables;
+
+                    expect(vars.search('name')).toBe('person');
+                    expect(vars.search('age')).toBe(20);
+
+                    expect(vars.local).toMatchObject({
+                        name:'person',
+                    })
+                    hitReturnNode = true;
+                })
+            }
+        })          
+        fn();
+        expect(hitReturnNode).toBe(true)
+    })
 });
