@@ -504,6 +504,8 @@ Please keep the following architectural constraints in mind when using this pack
 
 - **AST Mutation Persistence:** To maximize performance, the monitored function's code is parsed into an AST only once. Consequently, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
+- **Performance Critical:** The monitor() function performs heavy AST parsing and interpreter instantiation. Calling it inside a loop, request handler, or component render cycle will cause performance bottlenecks. **Always call `monitor()` outside of hot loops**, and execute the *returned* function in your loops or handlers.
+
 - **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
 
 - **Wrapper Constraints:** The `monitor` function accepts any standard JavaScript function, but it **cannot** accept a function that has already been wrapped by `monitor` (i.e., you cannot double-wrap a function via the `ref` property). However, you **can** include an already-monitored function within the `captures` object. This is fully supported because captured functions execute in the native JavaScript runtime, completely outside the AST interpreter's context.
