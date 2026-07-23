@@ -29,7 +29,7 @@
     "scripts": {
         "start": "vite",
         "build": "vite build",
-        "test": "vitest run --coverage",
+        "test": "vitest run",
         "publish:public": "npm publish --registry=https://registry.npmjs.org/ --access public"
     },
     "dependencies": {
