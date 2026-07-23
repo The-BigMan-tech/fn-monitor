@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { monitor } from '../../src/index'; // Adjust path to your entry point
+import { monitor } from '../../src/index'; 
 import { WrapperError } from '../../src/custom-types';
 
 describe('Wrapper Constraints', () => {
