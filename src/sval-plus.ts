@@ -169,12 +169,15 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         },
     };
 
-    // Accepting either SvalOptions or SvalPlusArgs allows this class to be instantiated 
-    // exactly like the parent class. This backward-compatible behavior is utilized in the core tests.
+    // Accepting either SvalOptions,SvalPlusArgs or nothing allows this class to be instantiated exactly like the parent class. 
+    // This backward-compatible behavior is utilized in the core tests.
     // Any code utilizing the SvalPlus extensions is required to always pass true to 'useExtensions'
 
-    constructor(args:SvalPlusArgs | SvalOptions) {
-        const useExtensions:boolean | undefined = (args as SvalPlusArgs).useExtensions;
+    constructor(args?:SvalPlusArgs | SvalOptions) {
+        const useExtensions:boolean = 
+            (args !== undefined) && (args as SvalPlusArgs).useExtensions
+            ?true
+            :false
 
         if (!useExtensions) {
             super(args as SvalOptions);
