@@ -28,6 +28,36 @@ import { isGenerator, pushResult } from './helper-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
+const Colors = {
+    orange:ansis.hex('#f6c098')
+};
+export interface FnSrc {
+    fnCode:string,
+    fnName:string 
+}
+export interface FnAst {
+    fnCode:Node,
+    fnCall:Node,
+    fnCallString:string
+}
+export interface Metadata<T extends Fn> {
+    /**the reference to the function to be included in the interpreter context**/
+    ref:T,
+
+    /** 
+     *Because the function runs in an isolated interpreter context,any data that it uses from the outside scope has to captured by mapping the variable names to their variables and passing the object here.
+     *It is important to keep in mind that the captures object itself follows the semantic of copy primitives by value and copy obects by reference.
+    */
+    captures?:Record<string,any>
+}
+interface SvalPlusArgs {
+    inspector?:Inspector,
+    onStep?:OnStep,
+    fnBeforeEachCall?:Fn,
+    fnAfterEachCall?:Fn,
+    options?:SvalOptions,
+}
+
 class EventScope implements ScopeForEvent {
     #scope:Scope;
 
@@ -123,13 +153,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         sandBox:true, 
     };
 
-    constructor(args:{
-        inspector?:Inspector,
-        onStep?:OnStep,
-        fnBeforeEachCall?:Fn,
-        fnAfterEachCall?:Fn,
-        options?:SvalOptions,
-    }) {
+    constructor(args:SvalPlusArgs) {
         super(args.options);
 
         this.fnBeforeEachCall = args.fnBeforeEachCall;
