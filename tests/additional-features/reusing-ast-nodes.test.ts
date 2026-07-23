@@ -28,23 +28,21 @@ describe('AST Mutation Persistence', () => {
         expect(modifiedOp).toBe(false);
 
         // First call: The inspector mutates the AST. 
-        // The function executes as `5 - 1`, resulting in 4.
-        const result1 = monitoredFn(5, 1);
-        expect(result1).toBe(4);
-        expect(modifiedOp).toBe(true);
+        
+        expect(monitoredFn(5, 1)).toBe(4);
+        expect(modifiedOp).toBe(true);// The function executes as `5 - 1`, resulting in 4.
 
         // Second call: The inspector skips mutation, BUT the AST is already changed.
-        // The function executes as `4 - 3`, resulting in 1 (proving persistence).
-        expect(modifiedOp).toBe(true);
-        const result2 = monitoredFn(4, 3);
-        expect(result2).toBe(1);
+
+        expect(modifiedOp).toBe(true);//verify that the operator is modified first.
+        expect(monitoredFn(4, 3)).toBe(1);//The function executes as `4 - 3`, resulting in 1 (proving persistence).
     });
 
     it('should reuse ast nodes if the internal generated code from calling monitor hits the cache.',()=>{
         function sub(a: number, b: number) {
             return a - b;
         }
-        const monitoredSub = monitor({//this is intentionally not lifted to the top because its doing a stateful operation and it should not affect other tests
+        const monitoredFn1 = monitor({//this is intentionally not lifted to the top because its doing a stateful operation and it should not affect other tests
             main: { 
                 ref:sub 
             },
@@ -57,12 +55,12 @@ describe('AST Mutation Persistence', () => {
                 });
             }
         });
-        const monitoredSub2 = monitor({
+        const monitoredFn2 = monitor({
             main:{
                 ref:sub
             }
         });
-        expect(monitoredSub(4,2)).toBe(6);
-        expect(monitoredSub2(5,2)).toBe(7);//the mutated operator persists to this call
+        expect(monitoredFn1(4,2)).toBe(6);
+        expect(monitoredFn2(5,2)).toBe(7);//the mutated operator persists to this call
     })
 });
