@@ -124,11 +124,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     };
 
     constructor(args:{
-        inspector:Inspector | undefined,
-        onStep:OnStep | undefined,
-        options:SvalOptions,
-        fnBeforeEachCall:Fn | undefined,
-        fnAfterEachCall:Fn | undefined
+        inspector?:Inspector,
+        onStep?:OnStep,
+        fnBeforeEachCall?:Fn,
+        fnAfterEachCall?:Fn,
+        options?:SvalOptions,
     }) {
         super(args.options);
 
