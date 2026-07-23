@@ -39,10 +39,6 @@ describe('Scope object tests', () => {
         expect(hitAssignmentExprNode).toBe(true);
     });
 
-    it ('should ensure that it allocates a fresh scope object for each query',()=>{
-
-    })
-
     it('should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{
         let hitReturnNode = false;
 
@@ -103,6 +99,43 @@ describe('Scope object tests', () => {
                 })
             }
         })          
+        fn();
+        expect(hitReturnNode).toBe(true)
+    })
+
+    it ('should ensure that the scope object is a read-only view',()=>{
+        let hitReturnNode = false;
+        let modifiedLocal = false;
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    const name = "person";
+                    return name;
+                }
+            },
+            beforeEachCall:()=>{
+                hitReturnNode = false;
+            },
+            inspector:(visit)=>{
+                visit.is('ReturnStatement',event=>{
+                    const vars = event.scope.variables;
+
+                    if (!modifiedLocal) {
+                        vars.local['name'] = "john";
+                        modifiedLocal = true;
+                    }else{
+                        expect(vars.local['name']).toBe('person')
+                    };
+                    hitReturnNode = true;
+                })
+            }
+        })
+                    
+        fn();
+        expect(hitReturnNode).toBe(true);
+        expect(modifiedLocal).toBe(true);
+
         fn();
         expect(hitReturnNode).toBe(true)
     })
