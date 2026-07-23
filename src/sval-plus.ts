@@ -126,8 +126,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public inspector:Inspector | null = null;
     public onStep:OnStep | null = null;
 
-    public fnBeforeEachCall:Fn | undefined = undefined;
-    public fnAfterEachCall:Fn | undefined = undefined;
+    public fnBeforeEachCall:Fn | null = null;
+    public fnAfterEachCall:Fn | null = null;
     
     public static readonly resultExport:string = SvalPlus.sha256Key('result');
     public static readonly argsVar = SvalPlus.sha256Key('args');//this can safely be static because its just used as a common name for the passed arguments.Its used in a per-instance object to ensure isolation
@@ -156,8 +156,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     constructor(args:SvalPlusArgs) {
         super(args.options);
 
-        this.fnBeforeEachCall = args.fnBeforeEachCall;
-        this.fnAfterEachCall = args.fnAfterEachCall;
+        this.fnBeforeEachCall = args.fnBeforeEachCall || null;
+        this.fnAfterEachCall = args.fnAfterEachCall || null;
 
         this.inspector = args.inspector || null;
         this.onStep = args.onStep || null;
@@ -297,7 +297,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.stage = 'MONITORING';
         let result;
 
-        if (this.fnBeforeEachCall !== undefined) {
+        if (this.fnBeforeEachCall) {
             this.fnBeforeEachCall(...args);
         }
         this.argImports[SvalPlus.argsVar] = args;
@@ -326,7 +326,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 })
         }else {
             try {
-                if (this.fnAfterEachCall !== undefined) this.fnAfterEachCall(result);
+                if (this.fnAfterEachCall) this.fnAfterEachCall(result);
                 if (result instanceof Error) throw result;
                 return result;
             }finally {
