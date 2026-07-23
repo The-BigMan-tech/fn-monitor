@@ -3,15 +3,14 @@ import { monitor } from '../../src/index';
 import { WrapperError } from '../../src/custom-types';
 
 describe('Wrapper Constraints', () => {
-    const monitoredFn = monitor({
-        main: { 
-            ref:() => undefined
-        } 
-    });
-
     // TEST 1: Verify the `alreadyMonitored` flag exists
 
     it('should augment the returned function with the alreadyMonitored flag', () => {
+        const monitoredFn = monitor({
+            main: { 
+                ref:() => undefined
+            } 
+        });
         expect(monitoredFn.alreadyMonitored).toBe(true);
     });
 
@@ -19,6 +18,11 @@ describe('Wrapper Constraints', () => {
     // TEST 2: The Guardrail (Double-wrapping via main.ref)
 
     it('should throw an error if an already monitored function is passed to main.ref', () => {
+        const monitoredFn = monitor({
+            main: { 
+                ref:() => undefined
+            } 
+        });
         expect(() => {
             monitor({ 
                 main: { 
@@ -32,6 +36,11 @@ describe('Wrapper Constraints', () => {
     // TEST 3: The Guardrail (Double-wrapping via embed)
 
     it('should throw an error if an already monitored function is passed to embed through a ref property', () => {
+        const monitoredFn = monitor({
+            main: { 
+                ref:() => undefined
+            } 
+        });
         expect(() => {
             monitor({ 
                 main: { 
