@@ -29,8 +29,8 @@
     "scripts": {
         "build": "vite build",
         "test": "vitest run",
-        "test:interpreter":"vitest ./tests/interpreter",
-        "test:features":"vitest ./tests/additional-features",
+        "test:interpreter":"vitest run ./tests/interpreter",
+        "test:features":"vitest run ./tests/additional-features",
         "publish:public": "npm publish --registry=https://registry.npmjs.org/ --access public"
     },
     "dependencies": {
