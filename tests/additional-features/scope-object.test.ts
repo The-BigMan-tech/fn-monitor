@@ -132,11 +132,13 @@ describe('Scope object tests', () => {
             }
         })
                     
+        // First call: Triggers the mutation attempt
         fn();
         expect(hitReturnNode).toBe(true);
         expect(modifiedLocal).toBe(true);
 
+        // Second call: Proves the mutation did not persist or affect internal state
         fn();
-        expect(hitReturnNode).toBe(true)
+        expect(hitReturnNode).toBe(true);
     })
 });
