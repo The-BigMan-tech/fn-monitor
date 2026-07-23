@@ -109,6 +109,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     };
 
     const interpreter = new SvalPlus({
+        useExtensions:true,
         inspector,
         onStep,
         fnBeforeEachCall:beforeEachCall,

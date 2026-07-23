@@ -51,6 +51,7 @@ export interface Metadata<T extends Fn> {
     captures?:Record<string,any>
 }
 interface SvalPlusArgs {
+    useExtensions:boolean,
     inspector?:Inspector,
     onStep?:OnStep,
     fnBeforeEachCall?:Fn,
@@ -123,22 +124,11 @@ class Visit implements VisitContract {
     }
 } 
 export class SvalPlus extends Sval implements SvalPlusContract {
-    public inspector:Inspector | null = null;
-    public onStep:OnStep | null = null;
-
-    public fnBeforeEachCall:Fn | null = null;
-    public fnAfterEachCall:Fn | null = null;
-    
     public static readonly resultExport:string = SvalPlus.sha256Key('result');
     public static readonly argsVar = SvalPlus.sha256Key('args');//this can safely be static because its just used as a common name for the passed arguments.Its used in a per-instance object to ensure isolation
     public static readonly capturesVar = SvalPlus.sha256Key('captures');
     
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
-    public astInUse:FnAst | null = null;
-
-    public reusables:Reusables;
-    public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-    public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
 
     public static meriyahParseOptions:MeriyahOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
@@ -152,8 +142,46 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         ecmaVer:2024, 
         sandBox:true, 
     };
+    
 
-    constructor(args:SvalPlusArgs) {
+    public inspector:Inspector | null = null;
+    public onStep:OnStep | null = null;
+
+    public fnBeforeEachCall:Fn | null = null;
+    public fnAfterEachCall:Fn | null = null;
+    
+    public astInUse:FnAst | null = null;
+
+    public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
+    public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
+
+    public reusables:Reusables = {
+        currentEvent:NOT_ALLOCATED,
+        currentScope:null,
+        node:null,
+        result:UNASSIGNED,
+        handler:null,
+        shared:{
+            evalStack:{value:0},
+            exeStack:new QList(),
+            readonlyExeStack:new ReadonlyQList(),
+            perExe:null
+        },
+    };
+
+    // Accepting either SvalOptions or SvalPlusArgs allows this class to be instantiated 
+    // exactly like the parent class. This backward-compatible behavior is utilized in the core tests.
+    //any code utilizing the SvalPlus extensions is required to always pass true to 'useExtensions'
+
+    constructor(args:SvalPlusArgs | SvalOptions) {
+        const useExtensions:boolean | undefined = (args as SvalPlusArgs).useExtensions;
+
+        if (!useExtensions) {
+            super(args as SvalOptions);
+            return;
+        };
+
+        args = args as SvalPlusArgs;
         super(args.options);
 
         this.fnBeforeEachCall = args.fnBeforeEachCall || null;
@@ -162,19 +190,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.inspector = args.inspector || null;
         this.onStep = args.onStep || null;
 
-        this.reusables = {
-            currentEvent:NOT_ALLOCATED,
-            currentScope:null,
-            node:null,
-            result:UNASSIGNED,
-            handler:null,
-            shared:{
-                evalStack:{value:0},
-                exeStack:new QList(),
-                readonlyExeStack:new ReadonlyQList(),
-                perExe:null
-            },
-        };
         this.reusables.shared.readonlyExeStack.swapSrc(this.reusables.shared.exeStack);
     }
     public createEventScope = ()=>{
