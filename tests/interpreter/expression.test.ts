@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing src/expression.ts', () => {
   it('should call expression run normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     class A {
       a = 1
@@ -19,7 +19,7 @@ describe('testing src/expression.ts', () => {
     expect(interpreter.exports.inst.a).toBe(2)
   })
   it('should unary expression run normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     const code = `
       exports.a = !(~(+(-1)))
@@ -40,7 +40,7 @@ describe('testing src/expression.ts', () => {
     expect(interpreter.exports.f).toBe('boolean')
   })
   it('should binary expression run normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     const code = `
       // comparison
@@ -103,7 +103,7 @@ describe('testing src/expression.ts', () => {
     expect(interpreter.exports.v).toBeTruthy()
   })
   it('should assignment expression run normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     const code = `
       exports.a = 2
       expect(exports.a).toBe(2)
@@ -147,7 +147,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should throw TypeError when assigning to constant', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     let error = null
     try {
       interpreter.run(`
@@ -162,7 +162,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should parse spread element normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     interpreter.run(`
       const arr = [1, 2]
@@ -192,7 +192,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should parse sparse array literals normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     interpreter.run(`
       exports.a = [, 1]
@@ -211,7 +211,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should parse regular expression normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       const re = /\\/\\*<([^>]+?)>\\*\\/([\\s\\S]*?)\\/\\*<\\/([^>]+?)>\\*\\//g
@@ -229,7 +229,7 @@ describe('testing src/expression.ts', () => {
     // Test for issue #118: regex literals should not be cached in closures
     // When a regex has the global flag, reusing the same RegExp object causes
     // lastIndex to persist between calls, leading to incorrect results
-    const interpreter = new Sval({ sourceType: 'module' })
+    const interpreter = new SvalPlus({ sourceType: 'module' })
     interpreter.run(`
       export default () => {
         return (str) => {
@@ -245,7 +245,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should handle regex literals with flags correctly', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const re1 = /abc/gi
       const re2 = /abc/gi
@@ -261,7 +261,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support object expression', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       const name = 'y'
@@ -311,7 +311,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support object expression with correct property descriptor', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const a = {
         x: 5,
@@ -348,7 +348,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support logic expression', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       const x = 0
@@ -362,7 +362,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support method call with super + getter', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class X {
         get say() {
@@ -383,7 +383,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support method call with computed name', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       var x = {
         say() {
@@ -398,7 +398,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support method call with computed name', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       exports.result = 1+!!2
     `)
@@ -407,7 +407,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should support all kinds of delete actions', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       var x = {}
 
@@ -446,7 +446,7 @@ describe('testing src/expression.ts', () => {
 
   // https://github.com/Siubaak/sval/issues/83
   it('should support optional chaining', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       var x = { a: { b: 1 }, c: null, e: () => 2 }
 
@@ -466,7 +466,7 @@ describe('testing src/expression.ts', () => {
 
   // https://github.com/Siubaak/sval/issues/130
   it('should propagate optional chain short-circuit through subsequent member access', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       var user = undefined
       var config = null
@@ -486,7 +486,7 @@ describe('testing src/expression.ts', () => {
 
   it('should support dynamic import', () => {
     return new Promise((done) => {
-      const interpreter = new Sval({ sourceType: 'module' })
+      const interpreter = new SvalPlus({ sourceType: 'module' })
       interpreter.import('done', { default: done })
       interpreter.import('expect', { default: expect })
       interpreter.import('module', () => ({ default: 1 }))
@@ -503,7 +503,7 @@ describe('testing src/expression.ts', () => {
 
   it('should support top-level await', () => {
     return new Promise((done) => {
-      const interpreter = new Sval({ sourceType: 'module' })
+      const interpreter = new SvalPlus({ sourceType: 'module' })
       interpreter.import('done', { default: done })
       interpreter.import('expect', { default: expect })
       interpreter.import('module', () => ({ default: 1 }))
@@ -518,7 +518,7 @@ describe('testing src/expression.ts', () => {
   })
 
   it('should throw ReferenceError when assigning to undeclared variable in module mode', () => {
-    const interpreter = new Sval({ ecmaVer: 11, sandBox: true, sourceType: 'module' })
+    const interpreter = new SvalPlus({ ecmaVer: 11, sandBox: true, sourceType: 'module' })
     interpreter.run(`
       let sawAssignmentError = false;
       try {
@@ -533,7 +533,7 @@ describe('testing src/expression.ts', () => {
 
   it('should include full property path in TypeError for non-function member calls (issue #143)', () => {
     // simple member expression: foo.bar is not a function
-    const interp1 = new Sval()
+    const interp1 = new SvalPlus()
     interp1.run(`
       const foo = { bar: 42 }
       try {
@@ -546,7 +546,7 @@ describe('testing src/expression.ts', () => {
     expect(interp1.exports.err.message).toBe('foo.bar is not a function')
 
     // nested member expression: foo.bar.baz is not a function
-    const interp2 = new Sval()
+    const interp2 = new SvalPlus()
     interp2.run(`
       const foo = { bar: { baz: 42 } }
       try {
@@ -559,7 +559,7 @@ describe('testing src/expression.ts', () => {
     expect(interp2.exports.err.message).toBe('foo.bar.baz is not a function')
 
     // computed member expression: foo[0] is not a function
-    const interp3 = new Sval()
+    const interp3 = new SvalPlus()
     interp3.run(`
       const foo = [42]
       try {
@@ -574,7 +574,7 @@ describe('testing src/expression.ts', () => {
 
   it('should include identifier name in SyntaxError for invalid async usage (issue #143)', () => {
     // async followed by identifier that is not a valid async arrow → Unexpected identifier 'name'
-    const sval1 = new Sval()
+    const sval1 = new SvalPlus()
     let err1: any
     try {
       sval1.run("async fetch('/url')")
@@ -585,7 +585,7 @@ describe('testing src/expression.ts', () => {
     expect(err1.message).toBe("Unexpected identifier 'fetch'")
 
     // async followed by bare identifier (no call, just end of input)
-    const sval2 = new Sval()
+    const sval2 = new SvalPlus()
     let err2: any
     try {
       sval2.run('async foo')
@@ -596,7 +596,7 @@ describe('testing src/expression.ts', () => {
     expect(err2.message).toBe("Unexpected identifier 'foo'")
 
     // two identifiers in a row (not async-specific)
-    const sval3 = new Sval()
+    const sval3 = new SvalPlus()
     let err3: any
     try {
       sval3.run('foo bar')

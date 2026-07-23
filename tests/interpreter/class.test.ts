@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import Sval from "../../src/sval.ts"
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing class', () => {
   it('should create es5 class normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       function Point(x, y) {
         this.x = x
@@ -25,7 +25,7 @@ describe('testing class', () => {
   })
 
   it('should create es6 class normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Point {
         constructor(x, y) {
@@ -53,7 +53,7 @@ describe('testing class', () => {
   })
 
   it('should create class with getter/setter normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class A {
         constructor() {
@@ -78,7 +78,7 @@ describe('testing class', () => {
   })
 
   it('should extend class normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class A {
         get g() {
@@ -112,7 +112,7 @@ describe('testing class', () => {
   })
 
   it('should get base class normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class A {
         set g(val) {
@@ -133,7 +133,7 @@ describe('testing class', () => {
   })
 
   it('should call base class method normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class A {
         assign() {
@@ -154,7 +154,7 @@ describe('testing class', () => {
   })
 
   it('should support property expression', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const methodName = 'say'
       class Foo {
@@ -171,7 +171,7 @@ describe('testing class', () => {
   })
 
   it('should support returns object for constructor', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Foo {
         constructor() {
@@ -188,7 +188,7 @@ describe('testing class', () => {
   })
 
   it('should throw TypeError when calling es6 class as function', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     let error = null
     try {
       interpreter.run(`
@@ -225,7 +225,7 @@ describe('testing class', () => {
   })
   
   it('should call super normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class X {
         constructor(x) {
@@ -245,7 +245,7 @@ describe('testing class', () => {
   })
 
   it('should call super automatically', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class X {
         constructor() {
@@ -261,7 +261,7 @@ describe('testing class', () => {
   })
 
   it('should call super class static methods normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class X {
         static set() {
@@ -277,7 +277,7 @@ describe('testing class', () => {
   })
 
   it('should throw ReferenceError when super() is not called before acessing this', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         class X {
@@ -301,7 +301,7 @@ describe('testing class', () => {
   })
 
   it('should throw ReferenceError when super() is not called in constructor for derived class', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         class X {
@@ -324,7 +324,7 @@ describe('testing class', () => {
   })
 
   it('should throw ReferenceError when super constructor is called multiple times', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         class X {
@@ -348,7 +348,7 @@ describe('testing class', () => {
   })
 
   it('should support class expression', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const MyClass = class Me {
         getClassName() {
@@ -363,7 +363,7 @@ describe('testing class', () => {
   })
 
   it('should hide class name from outer with class expression', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         const MyClass = class Me {
@@ -380,7 +380,7 @@ describe('testing class', () => {
   })
 
   it('should support omitting class name for class expression', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const MyClass = class {
         say() {
@@ -395,7 +395,7 @@ describe('testing class', () => {
   })
 
   it('should not support hoisting for es6 class', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         new Foo()
@@ -409,7 +409,7 @@ describe('testing class', () => {
   })
 
   it('should not support hoisting for es6 class 2', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       {
         let Foo = class {}
@@ -420,7 +420,7 @@ describe('testing class', () => {
   })
 
   it('should have correct name for class', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Point {}
       exports.result = Point.name === 'Point'
@@ -430,7 +430,7 @@ describe('testing class', () => {
   })
 
   it('should support static method for class', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Point {
         static create() {
@@ -445,7 +445,7 @@ describe('testing class', () => {
   })
 
   it('should set correct new.target when creating instance', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Point {
         constructor() {
@@ -462,7 +462,7 @@ describe('testing class', () => {
   })
 
   it('should support generator method', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Foo {
         constructor(...args) {
@@ -489,7 +489,7 @@ describe('testing class', () => {
   })
 
   it('should support async method', async () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class Foo {
         constructor() {
@@ -507,7 +507,7 @@ describe('testing class', () => {
   })
 
   it('should support property accessing between parent and child class', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       class X {
         constructor() {
@@ -546,7 +546,7 @@ describe('testing class', () => {
   })
 
   it('should create class with field normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import('expect', expect)
     interpreter.run(`
       class A {
@@ -575,7 +575,7 @@ describe('testing class', () => {
   })
 
   it('should support class static block', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import('expect', expect)
     interpreter.run(`
       class A {

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing string', () => {
   it('should support unicode string', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       const a = "\u0061"
@@ -24,13 +24,13 @@ describe('testing string', () => {
   })
 
   it('should parse template element normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run('const a = 1; exports.str = `a: ${a}`')
     expect(interpreter.exports.str).toBe('a: 1')
   })
 
   it('should support tagged template string', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       function tag(stringArr, value1, value2){
@@ -47,7 +47,7 @@ describe('testing string', () => {
   })
 
   it('should convert string to char array', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       const word = 'word'

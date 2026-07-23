@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing hoist', () => {
   it('should hoist function normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       function a() {}
     `)
   })
   it('should hoist function normally in block', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       {
         a
@@ -40,7 +40,7 @@ describe('testing hoist', () => {
     }
   })
   it('should hoist function normally in function', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       {
         a()
@@ -52,14 +52,14 @@ describe('testing hoist', () => {
     `)
   })
   it('should hoist var normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       var a = 1
     `)
   })
   it('should hoist var normally in block', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       {
@@ -68,7 +68,7 @@ describe('testing hoist', () => {
     `)
   })
   it('should hoist var normally in while', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       var i = 1
@@ -78,7 +78,7 @@ describe('testing hoist', () => {
     `)
   })
   it('should hoist var normally in do-while', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       var i = 1
@@ -88,7 +88,7 @@ describe('testing hoist', () => {
     `)
   })
   it('should hoist var normally in for', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       for (var i = 0; i < 1; i++) {
@@ -97,7 +97,7 @@ describe('testing hoist', () => {
     `)
   })
   it('should hoist var normally in for-in', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a
       for (var i in [0]) {
@@ -106,7 +106,7 @@ describe('testing hoist', () => {
     `)
   })
   it('should hoist var normally in switch', () => {
-    const interpreter = new Sval({ sandBox: false })
+    const interpreter = new SvalPlus({ sandBox: false })
     interpreter.run(`
       a
       b
@@ -133,7 +133,7 @@ describe('testing hoist', () => {
     // Reflect.deleteProperty(window, 'c')
   })
   it('should hoist var normally in try-catch', () => {
-    const interpreter = new Sval({ sandBox: false })
+    const interpreter = new SvalPlus({ sandBox: false })
     interpreter.run(`
       a
       b
@@ -154,7 +154,7 @@ describe('testing hoist', () => {
     Reflect.deleteProperty(window, 'c')
   })
   it('should hoist var normally in patterns', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     const code = `
       a
       b
@@ -176,7 +176,7 @@ describe('testing hoist', () => {
     interpreter.run(code)
   })
   it('should hoist const and let and simulate temporal dead zone', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         const a = 1

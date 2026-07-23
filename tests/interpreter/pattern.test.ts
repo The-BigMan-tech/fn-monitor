@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing pattern', () => {
   it('should parse object pattern normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const tmp = 'd'
       const { a, b, c = 3, [tmp]: d, e = 2 } = { a: 1, b: 2, d: 4, e: 3 }
@@ -20,7 +20,7 @@ describe('testing pattern', () => {
     expect(interpreter.exports.e).toBe(3)
   })
   it('should parse assign pattern normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const [a, b] = [1, 2]
       exports.a = a
@@ -30,7 +30,7 @@ describe('testing pattern', () => {
     expect(interpreter.exports.b).toBe(2)
   })
   it('should parse array pattern normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       let a = 1, b = 2; // ';' should be kept
       [a, b] = [b, a]
@@ -41,7 +41,7 @@ describe('testing pattern', () => {
     expect(interpreter.exports.b).toBe(1)
   })
   it('should parse rest element normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       let a; // ';' should be kept
       [...a] = [1, 2]
@@ -84,7 +84,7 @@ describe('testing pattern', () => {
     expect(interpreter.exports.z).toEqual(8)
   })
   it('should parse rest element of function params normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a(1, 2)
       c(1, 2, 3)

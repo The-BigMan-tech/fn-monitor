@@ -1,15 +1,17 @@
+//@ts-nocheck
+
 import { describe, it, expect } from 'vitest'
 import { parse } from 'acorn'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing function', () => {
   it('should excute function normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run('!function(){exports.a=1}()')
     expect(interpreter.exports.a).toBe(1)
   })
   it('should get function inside by its name', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const a = function b() { exports.x = a === b }
       a()
@@ -18,7 +20,7 @@ describe('testing function', () => {
     expect(interpreter.exports.x).toBeTruthy()
   })
   it('should redeclare param inside function by var', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       a(1)
       function a(b) {
@@ -31,7 +33,7 @@ describe('testing function', () => {
   })
 
   it('should yield generator normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       function* a() {
         for (const i of [1, 2, 3]) {
@@ -49,7 +51,7 @@ describe('testing function', () => {
     expect(interpreter.exports.res).toEqual([1, 2, 3])
   })
   it('should proxy generator normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       function* a() {
         yield* [1, 2, 3]
@@ -67,7 +69,7 @@ describe('testing function', () => {
 
   it('should excute async function normally', () => {
     return new Promise((done) => {
-      const interpreter = new Sval()
+      const interpreter = new SvalPlus()
       interpreter.import({ expect, done })
       interpreter.run(`
         a()
@@ -84,7 +86,7 @@ describe('testing function', () => {
   })
   it('should excute async function normally 2', () => {
     return new Promise((done) => {
-      const interpreter = new Sval()
+      const interpreter = new SvalPlus()
       interpreter.import({ getItem, expect, done })
       interpreter.run(`
         a()
@@ -105,7 +107,7 @@ describe('testing function', () => {
 
   it('should excute async function with params', () => {
     return new Promise((done) => {
-      const interpreter = new Sval()
+      const interpreter = new SvalPlus()
       interpreter.import({ getItem, expect, done })
       interpreter.run(`
         a([1, 2, 3], [1, 2, 3])
@@ -126,7 +128,7 @@ describe('testing function', () => {
 
   it('should excute async generator normally', () => {
     return new Promise((done) => {
-      const interpreter = new Sval()
+      const interpreter = new SvalPlus()
       interpreter.import({ getItem, expect, done })
       interpreter.run(`
         const res = []
@@ -152,7 +154,7 @@ describe('testing function', () => {
 
   it('should support async generator with throwing error', () => {
     return new Promise((done) => {
-      const interpreter = new Sval()
+      const interpreter = new SvalPlus()
       interpreter.import({ getItem, expect, done })
       interpreter.run(`
         const res = []
@@ -180,7 +182,7 @@ describe('testing function', () => {
 
   it('should support async generator with throwing error in generator', () => {
     return new Promise((done) => {
-      const interpreter = new Sval()
+      const interpreter = new SvalPlus()
       interpreter.import({ getItem, expect, done })
       interpreter.run(`
         const res = []
@@ -219,7 +221,7 @@ describe('testing function', () => {
   })
 
   it('should throw Error when using arrow function as constructor', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     try {
       interpreter.run(`
         const ArrowFunc = () => {}
@@ -232,7 +234,7 @@ describe('testing function', () => {
   })
 
   it('should throw TypeError when using arrow function as constructor', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     let error = null
     try {
       interpreter.run(`
@@ -248,7 +250,7 @@ describe('testing function', () => {
   })
 
   it('should throw TypeError when using non-function as constructor', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     let error = null
     try {
       interpreter.run(`
@@ -278,7 +280,7 @@ describe('testing function', () => {
   })
 
   it('should throw TypeError when calling non-function', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     let error = null
     try {
       interpreter.run(`
@@ -323,7 +325,7 @@ describe('testing function', () => {
 
   // https://github.com/Siubaak/sval/issues/94
   it('should accept function destructured parameters', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       expect((([a, b, c]) => a + b + c)([1, 2, 3])).toEqual(6)
@@ -333,7 +335,7 @@ describe('testing function', () => {
   })
 
   it('should treat function this as undefined in module sourceType (strict mode)', () => {
-    const interpreter = new Sval({ ecmaVer: 11, sandBox: true, sourceType: 'module' })
+    const interpreter = new SvalPlus({ ecmaVer: 11, sandBox: true, sourceType: 'module' })
     interpreter.run(`
       var isStrict = (function () { return !this; })();
       export { isStrict };
@@ -342,7 +344,7 @@ describe('testing function', () => {
   })
 
   it('should treat function this as undefined when use strict directive at script level', () => {
-    const interpreter = new Sval({ ecmaVer: 11, sandBox: true, sourceType: 'script' })
+    const interpreter = new SvalPlus({ ecmaVer: 11, sandBox: true, sourceType: 'script' })
     interpreter.run(`
       'use strict';
       exports.isStrict = (function () { return !this; })();
@@ -351,7 +353,7 @@ describe('testing function', () => {
   })
 
   it('should treat function this as undefined when use strict directive in function body', () => {
-    const interpreter = new Sval({ ecmaVer: 11, sandBox: true, sourceType: 'script' })
+    const interpreter = new SvalPlus({ ecmaVer: 11, sandBox: true, sourceType: 'script' })
     interpreter.run(`
       exports.isStrict = (function () { 'use strict'; return !this; })();
     `)
@@ -359,7 +361,7 @@ describe('testing function', () => {
   })
 
   it('should serialize functions with toString', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     const parsedCode = interpreter.parse(`
       expect((function x(a, b) { return a + b }).toString()).toEqual('function x(a, b) { return a + b }')

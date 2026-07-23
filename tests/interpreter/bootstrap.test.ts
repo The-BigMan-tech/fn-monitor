@@ -1,9 +1,11 @@
+//@ts-nocheck
+
 import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { ecmaVersion } from 'acorn'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 let code: string
 
@@ -18,18 +20,18 @@ if (existsSync(codePath)) {
 
 describe('testing bootstrap', () => {
   it('should compile normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`!async function(){${code}}()`) // also test for generator env
     interpreter.run(code)
   })
 
   it('should compile normally in generator env', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`!async function(){${code}}()`)
   })
 
   it('should support global mode', () => {
-    const interpreter = new Sval({
+    const interpreter = new SvalPlus({
       sandBox: false
     })
 
@@ -46,7 +48,7 @@ describe('testing bootstrap', () => {
   })
 
   it('should support sandbox mode', () => {
-    const interpreter = new Sval({
+    const interpreter = new SvalPlus({
       sandBox: true
     })
 
@@ -65,10 +67,10 @@ describe('testing bootstrap', () => {
       2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
       'latest'
     ]
-    versions.forEach((v) => new Sval({ ecmaVer: v }))
+    versions.forEach((v) => new SvalPlus({ ecmaVer: v }))
 
     try {
-      new Sval({ ecmaVer: 4 as any })
+      new SvalPlus({ ecmaVer: 4 as any })
     } catch(ex) {
       expect(ex.message).toBe('unsupported ecmaVer')
     }
@@ -81,7 +83,7 @@ describe('testing bootstrap', () => {
       bar: function() { return bar } 
     }
 
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import(modules)
 
     interpreter.run(`

@@ -1,9 +1,11 @@
+//@ts-nocheck
+
 import { describe, it, expect } from 'vitest'
-import Sval from '../../src/sval.ts'
+import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing declaration', () => {
   it('should declare var normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     const code = `
       var a
       var a = 1
@@ -69,7 +71,7 @@ describe('testing declaration', () => {
   })
 
   it('should declare let normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     const code = `
       let a = 1
       let b
@@ -93,7 +95,7 @@ describe('testing declaration', () => {
   })
 
   it('should declare const normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.run(`
       const a = 1
       exports.a = a
@@ -102,7 +104,7 @@ describe('testing declaration', () => {
   })
 
   it('should declare var in global env normally', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
     interpreter.import({ expect })
     interpreter.run(`
       var a = 1
@@ -140,7 +142,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when declaring multiple times with `let`', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     try {
       interpreter.run(`
@@ -153,7 +155,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when declaring multiple times with `const`', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     let err
     try {
@@ -169,7 +171,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when declaring `const` without initializer', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     let err
     try {
@@ -184,7 +186,7 @@ describe('testing declaration', () => {
   })
 
   it('should support declare variable with sequence', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     const code = `
       var a = 1, b, c = function() { return 3 }
@@ -216,7 +218,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when const does not have initializer in sequence', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     try {
       interpreter.run(`
@@ -232,7 +234,7 @@ describe('testing declaration', () => {
   })
 
   it('should support nested variable definition within global + block', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     const code = `
       let a = 5
@@ -263,7 +265,7 @@ describe('testing declaration', () => {
   })
 
   it('should support nested variable definition within global + function', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     interpreter.run(`
       let a = 5
@@ -293,7 +295,7 @@ describe('testing declaration', () => {
   })
 
   it('should support self executing function', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     interpreter.run(`
       (function x() {
@@ -311,7 +313,7 @@ describe('testing declaration', () => {
   })
 
   it('should support module import and export', () => {
-    const interpreter = new Sval({ sourceType: 'module' })
+    const interpreter = new SvalPlus({ sourceType: 'module' })
 
     interpreter.import('expect', { default: expect })
     interpreter.import('module', () => ({ default: 1, x: 2 }))
@@ -340,7 +342,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when declaring function after const', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     let err
     try {
@@ -357,7 +359,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when declaring function after let', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     let err
     try {
@@ -374,7 +376,7 @@ describe('testing declaration', () => {
   })
 
   it('should throw SyntaxError when redeclaring const in same scope', () => {
-    const interpreter = new Sval()
+    const interpreter = new SvalPlus()
 
     let err
     try {
