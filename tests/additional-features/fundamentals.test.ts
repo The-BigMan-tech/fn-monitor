@@ -127,4 +127,64 @@ describe('Basic behaviours',()=>{
         const expectedResult = weirdFormula(a,b,c);
         expect(monitoredFn(a,b,c)).toBe(expectedResult)
     })
+
+    it('should correctly route and fire visit.is callbacks for multiple distinct AST node types, including async nodes', async () => {
+        const hitCounts = {
+            VariableDeclaration: 0,
+            IfStatement: 0,
+            BinaryExpression: 0,
+            AssignmentExpression: 0,
+            UpdateExpression: 0,
+            ArrowFunctionExpression: 0,
+            CallExpression: 0,
+            AwaitExpression: 0,
+            ReturnStatement: 0,
+        };
+
+        const testFn = async (a: number) => {
+            let x = a;                              // 1. VariableDeclaration
+            if (x > 0) {                            // 2. IfStatement, 3. BinaryExpression (x > 0)
+                x = x + 1;                          // 4. AssignmentExpression, 5. BinaryExpression (x + 1)
+                x++;                                // 6. UpdateExpression
+            }
+
+            // 7. VariableDeclaration, 8. ArrowFunctionExpression, 9. BinaryExpression (y * 2)
+            const double = (y: number) => y * 2;
+            
+            // 10. VariableDeclaration, 11. CallExpression (double), 12. CallExpression (Promise.resolve), 13. AwaitExpression
+            const res = await Promise.resolve(double(x)); 
+            return res;                             // 14. ReturnStatement
+        };
+
+        const monitoredFn = monitor({
+            main: { ref: testFn },
+            inspector: (visit) => {
+                // Register hooks for all 9 distinct node types
+                visit.is('VariableDeclaration', () => { hitCounts.VariableDeclaration++; });
+                visit.is('IfStatement', () => { hitCounts.IfStatement++; });
+                visit.is('BinaryExpression', () => { hitCounts.BinaryExpression++; });
+                visit.is('AssignmentExpression', () => { hitCounts.AssignmentExpression++; });
+                visit.is('UpdateExpression', () => { hitCounts.UpdateExpression++; });
+                visit.is('ArrowFunctionExpression', () => { hitCounts.ArrowFunctionExpression++; });
+                visit.is('CallExpression', () => { hitCounts.CallExpression++; });
+                visit.is('AwaitExpression', () => { hitCounts.AwaitExpression++; });
+                visit.is('ReturnStatement', () => { hitCounts.ReturnStatement++; });
+            }
+        });
+
+        // Execute the async function to trigger the generator-based AST walk
+        const result = await monitoredFn(5);
+        expect(result).toBe(14);
+
+        // Assert the exact hit counts based on the AST structure of testFn
+        expect(hitCounts.VariableDeclaration).toBe(3);   // let x, const double, const res
+        expect(hitCounts.IfStatement).toBe(1);           // if (x > 0)
+        expect(hitCounts.BinaryExpression).toBe(3);      // (x > 0), (x + 1), (y * 2)
+        expect(hitCounts.AssignmentExpression).toBe(1);  // x = ...
+        expect(hitCounts.UpdateExpression).toBe(1);      // x++
+        expect(hitCounts.ArrowFunctionExpression).toBe(1);// (y) => ...
+        expect(hitCounts.CallExpression).toBe(2);        // double(x) AND Promise.resolve(...)
+        expect(hitCounts.AwaitExpression).toBe(1);       // await ...
+        expect(hitCounts.ReturnStatement).toBe(1);       // return res
+    });
 })
