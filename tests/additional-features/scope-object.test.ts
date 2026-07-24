@@ -132,12 +132,15 @@ describe('Scope object tests', () => {
             },
             beforeEachCall:()=>{
                 hitSumUpdate = false;
+                scopes.clear()
             },
             inspector: (visit) => {
                 visit.is('AssignmentExpression', (event) => {
-                    if (event.scope.depth === 1){// Intercept the 'sum += i' node, which is visited 3 times in the loop
-                        expect(scopes.has(event.scope)).toBe(false)
-                        scopes.add(event.scope);
+                    const scope = event.scope;
+
+                    if (scope.depth === 2){// Intercept the 'sum += i' node, which is visited 3 times in the loop
+                        expect(scopes.has(scope)).toBe(false)
+                        scopes.add(scope);
                         hitSumUpdate = true;
                     }
                 });
