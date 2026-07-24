@@ -116,8 +116,8 @@ describe('Scope object tests', () => {
     })
 
     it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.This is to prevent unexpected behaviour', () => {
-        let hitAssignmentNode = false;
-        const capturedScopes = new Set()
+        let hitSumUpdate = false;
+        const scopes = new Set()
 
         const fn = monitor({
             main: {
@@ -131,21 +131,22 @@ describe('Scope object tests', () => {
                 }
             },
             beforeEachCall:()=>{
-                hitAssignmentNode = false;
+                hitSumUpdate = false;
             },
             inspector: (visit) => {
-                // Intercept the 'sum += i' node, which is visited 3 times in the loop
                 visit.is('AssignmentExpression', (event) => {
-                    expect(capturedScopes.has(event.scope)).toBe(false)
-                    capturedScopes.add(event.scope);
-                    hitAssignmentNode = true;
+                    if (event.scope.depth === 1){// Intercept the 'sum += i' node, which is visited 3 times in the loop
+                        expect(scopes.has(event.scope)).toBe(false)
+                        scopes.add(event.scope);
+                        hitSumUpdate = true;
+                    }
                 });
             }
         });
 
         fn();
-        expect(hitAssignmentNode).toBe(true);
-        expect(capturedScopes.size).toBe(3);// The loop runs 3 times, so we should have captured 3 scope objects
+        expect(hitSumUpdate).toBe(true);
+        expect(scopes.size).toBe(3);// The loop runs 3 times, so we should have captured 3 scope objects
     });
 
     it ('should ensure that the scope object is a read-only view and isolated from other scopes',()=>{
