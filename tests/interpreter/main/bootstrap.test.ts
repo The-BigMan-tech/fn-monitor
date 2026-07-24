@@ -5,7 +5,7 @@ import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { ecmaVersion } from 'acorn'
-import { SvalPlus } from '../../src/sval-plus'
+import { SvalPlus } from '../../../src/sval-plus'
 
 let code: string
 

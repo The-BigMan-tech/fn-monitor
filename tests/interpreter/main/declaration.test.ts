@@ -1,7 +1,7 @@
 //@ts-nocheck
 
 import { describe, it, expect } from 'vitest'
-import { SvalPlus } from '../../src/sval-plus'
+import { SvalPlus } from '../../../src/sval-plus'
 
 describe('testing declaration', () => {
   it('should declare var normally', () => {

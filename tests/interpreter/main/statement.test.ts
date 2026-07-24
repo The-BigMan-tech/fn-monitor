@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SvalPlus } from '../../src/sval-plus'
+import { SvalPlus } from '../../../src/sval-plus'
 
 describe('testing statement', () => {
   it('should for statement run normally', () => {
