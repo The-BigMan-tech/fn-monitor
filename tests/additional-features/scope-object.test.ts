@@ -142,7 +142,7 @@ describe('Scope object tests', () => {
         expect(hitReturnNode).toBe(true);
     })
 
-    it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node to prevent unexepected behaviour', () => {
+    it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.This is to prevent unexpected behaviour', () => {
         let hitAssignmentNode = false;
         const capturedScopes: any[] = [];
 
@@ -158,7 +158,7 @@ describe('Scope object tests', () => {
                 }
             },
             inspector: (visit) => {
-                // Intercept the 'i++' node, which is visited 3 times in the loop
+                // Intercept the 'sum += i' node, which is visited 3 times in the loop
                 visit.is('AssignmentExpression', (event) => {
                     capturedScopes.push(event.scope);
                     hitAssignmentNode = true;
@@ -172,12 +172,15 @@ describe('Scope object tests', () => {
         // The loop runs 3 times, so we should have captured 3 scope objects
         expect(capturedScopes.length).toBe(3);
 
-        // PROOF 1: They are distinct object references (freshly allocated)
+        // PROOF 1: The scope objects themselves are distinct references (freshly allocated)
         expect(capturedScopes[0]).not.toBe(capturedScopes[1]);
         expect(capturedScopes[1]).not.toBe(capturedScopes[2]);
 
-        // PROOF 2: Mutating the scope on iteration 1 does not affect iteration 2
-        capturedScopes[0].variables.local['sum'] = 'MUTATED';
-        expect(capturedScopes[1].variables.local['sum']).not.toBe('MUTATED');
+        // PROOF 2: The `variables.local` objects are also distinct references
+        expect(capturedScopes[0].variables.local).not.toBe(capturedScopes[1].variables.local);
+
+        // PROOF 3: Mutating the local object on iteration 1 does not bleed into iteration 2
+        capturedScopes[0].variables.local['__test_mutation__'] = true;
+        expect(capturedScopes[1].variables.local['__test_mutation__']).toBeUndefined();
     });
 });
