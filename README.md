@@ -456,7 +456,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 * **`QList<T>` / `ReadonlyQList<T>`**: Custom optimized dequeue with random array access. Used internally for the execution stack, but the types are exposed for advanced type inference.
   
-* **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query. It also includes `'Any'` , which matches all nodes.
+* **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query. It also includes `'Any'` , which matches all nodes and node types that did not get their own explicit classes.
   
 * **`EventMap`**: Maps each node query to its dedicated Event class for tailored intellisense.
   
