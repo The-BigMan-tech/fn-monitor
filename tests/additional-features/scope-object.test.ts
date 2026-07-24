@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { monitor } from '../../src/index'; 
+import { monitor, ScopeForEvent } from '../../src/index'; 
 
 describe('Scope object tests', () => {
     it('should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
@@ -117,7 +117,7 @@ describe('Scope object tests', () => {
 
     it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.This is to prevent unexpected behaviour', () => {
         let hitSumUpdate = false;
-        const scopes = new Set()
+        const scopes = new Set<ScopeForEvent>()
 
         const fn = monitor({
             main: {
