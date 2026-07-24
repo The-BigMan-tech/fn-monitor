@@ -20,11 +20,22 @@
         "url": "git+https://github.com/The-BigMan-tech/fn-monitor.git"
     },
     "keywords": [
-        "javascript",
-        "typescript",
-        "function",
-        "monitor",
-        "interpreter"
+        "javascript", 
+        "typescript", 
+        "sval", 
+        "ast",
+        "ast-walker", 
+        "interpreter", 
+        "monitor", 
+        "monitoring-tool", 
+        "debugging", 
+        "debugging-tool", 
+        "metaprogramming", 
+        "execution-control", 
+        "runtime", 
+        "sandbox", 
+        "hooks",
+        "function-inspection"
     ],
     "scripts": {
         "build": "vite build",
