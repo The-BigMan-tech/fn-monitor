@@ -44,7 +44,7 @@ describe('Basic behaviours',()=>{
 
     it('should ensure that embedded functions can be inspected',()=>{
         let outsideFn:(...args:any[])=>any | undefined;
-        let hitDeclNode = false;
+        let hitReturnNode = false;
 
         const fn = monitor({
             main:{
@@ -59,21 +59,22 @@ describe('Basic behaviours',()=>{
                 }
             },
             beforeEachCall:()=>{
-                hitDeclNode = false
+                hitReturnNode = false
             },
             inspector:(visit)=>{
                 visit.is('ReturnStatement',event=>{
                     const vars = event.scope.variables;
                     expect(vars.search('x')).toBe('hello world');
                     expect(vars.local).toHaveProperty('x', 'hello world');
-                    hitDeclNode = true;
+
+                    hitReturnNode = true;
                 })
             }
         });
 
         //Ensure that the embedded functions works as expected
         expect(fn()).toBe('hello world')
-        expect(hitDeclNode).toBe(true)
+        expect(hitReturnNode).toBe(true)
     })
 
     it('should ensure that the event object is always freshly allocated per visit',()=>{
