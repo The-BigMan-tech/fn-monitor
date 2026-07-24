@@ -289,8 +289,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public static refErrMsg(err:ReferenceError) {
         return (
             ansis.red.underline(`\nReference Error`) +
-            Colors.orange(`\n-Monitored functions cannot access data outside the isolated interpreter.\n\n-The data must be either be passed as an argument on each call,captured into the monitored fn upon creation or embedded through the embed property when calling monitor.fn(). (inlining only works for functions).\n\n-Captured variables are handled outside the interpreter and thus,outside the monitor's tracking system but embedded functions can be monitored.`) +
-            ansis.red.underline(`\n\nTrace`) + `\n${err}`
+            ansis.white(
+                `\n${err.message}\n` +
+                `\n-Monitored functions cannot access variables from the outside.` + 
+                `\n-They must be either be passed as an argument on each call or captured/embedded into the monitored fn upon creation.\n`
+            )
         )
     }
     private argImports:{ [SvalPlus.argsVar]:any[] } = { 
@@ -305,7 +308,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             const error = err instanceof Error 
                 ? err 
                 : new Error(String(err));
-            error.message = ansis.red.underline(`\nError in Monitored Function:`) + `\n${error.message}`
             return error
         }
     }
