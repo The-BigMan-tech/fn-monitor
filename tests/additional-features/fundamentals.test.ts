@@ -110,4 +110,21 @@ describe('Basic behaviours',()=>{
         expect(hitSumUpdate).toBe(true);
         expect(events.size).toBe(3)
     })
+
+    it('should ensure that monitored functions preserve the call signature of their unmonitored counterpart',()=>{
+        const weirdFormula = (a:number,b:number,c:number) => {
+            return a + (b/(c - a));
+        }
+        const monitoredFn = monitor({
+            main:{
+                ref:weirdFormula
+            }
+        })
+        const a = 1;
+        const b = 2;
+        const c = 3;
+
+        const expectedResult = weirdFormula(a,b,c);
+        expect(monitoredFn(a,b,c)).toBe(expectedResult)
+    })
 })
