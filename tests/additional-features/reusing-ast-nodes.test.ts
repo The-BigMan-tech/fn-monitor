@@ -28,12 +28,10 @@ describe('AST Mutation Persistence', () => {
         expect(modifiedOp).toBe(false);
 
         // First call: The inspector mutates the AST. 
-        
-        expect(monitoredFn(5, 1)).toBe(4);
-        expect(modifiedOp).toBe(true);// The function executes as `5 - 1`, resulting in 4.
+        expect(monitoredFn(5, 1)).toBe(4);// The function executes as `5 - 1`, resulting in 4.
+
 
         // Second call: The inspector skips mutation, BUT the AST is already changed.
-
         expect(modifiedOp).toBe(true);//verify that the operator is modified first.
         expect(monitoredFn(4, 3)).toBe(1);//The function executes as `4 - 3`, resulting in 1 (proving persistence).
     });

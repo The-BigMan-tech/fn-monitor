@@ -115,6 +115,39 @@ describe('Scope object tests', () => {
         expect(hitReturnNode).toBe(true)
     })
 
+    it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.This is to prevent unexpected behaviour', () => {
+        let hitAssignmentNode = false;
+        const capturedScopes = new Set()
+
+        const fn = monitor({
+            main: {
+                ref: () => {
+                    let sum = 0;
+                    // A loop ensures the exact same AST nodes are visited multiple times
+                    for (let i = 0; i < 3; i++) {
+                        sum += i;
+                    }
+                    return sum;
+                }
+            },
+            beforeEachCall:()=>{
+                hitAssignmentNode = false;
+            },
+            inspector: (visit) => {
+                // Intercept the 'sum += i' node, which is visited 3 times in the loop
+                visit.is('AssignmentExpression', (event) => {
+                    expect(capturedScopes.has(event.scope)).toBe(false)
+                    capturedScopes.add(event.scope);
+                    hitAssignmentNode = true;
+                });
+            }
+        });
+
+        fn();
+        expect(hitAssignmentNode).toBe(true);
+        expect(capturedScopes.size).toBe(3);// The loop runs 3 times, so we should have captured 3 scope objects
+    });
+
     it ('should ensure that the scope object is a read-only view and isolated from other scopes',()=>{
         let hitReturnNode = false;
         let modifiedLocal = false;
@@ -153,42 +186,4 @@ describe('Scope object tests', () => {
         fn();
         expect(hitReturnNode).toBe(true);
     })
-
-    it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.This is to prevent unexpected behaviour', () => {
-        let hitAssignmentNode = false;
-        const capturedScopes: any[] = [];
-
-        const fn = monitor({
-            main: {
-                ref: () => {
-                    let sum = 0;
-                    // A loop ensures the exact same AST nodes are visited multiple times
-                    for (let i = 0; i < 3; i++) {
-                        sum += i;
-                    }
-                    return sum;
-                }
-            },
-            beforeEachCall:()=>{
-                hitAssignmentNode = false;
-            },
-            inspector: (visit) => {
-                // Intercept the 'sum += i' node, which is visited 3 times in the loop
-                visit.is('AssignmentExpression', (event) => {
-                    capturedScopes.push(event.scope);
-                    hitAssignmentNode = true;
-                });
-            }
-        });
-
-        fn();
-        expect(hitAssignmentNode).toBe(true);
-
-        // The loop runs 3 times, so we should have captured 3 scope objects
-        expect(capturedScopes.length).toBe(3);
-
-        // PROOF: The scope objects themselves are distinct references (freshly allocated)
-        expect(capturedScopes[0]).not.toBe(capturedScopes[1]);
-        expect(capturedScopes[1]).not.toBe(capturedScopes[2]);
-    });
 });
