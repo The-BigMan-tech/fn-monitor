@@ -469,7 +469,29 @@ The rich object that gives inspectors their ability to participate in the interp
 ### Event Classes
 All events extend the base `LangEvent` class, which provides the `node` and `scope` properties. There are over 30 specific event classes, including:
 
-`BinaryExprEvent`, `CallExprEvent`, `AssignmentExprEvent`, `UpdateExprEvent`, `LogicalExprEvent`, `MemberExprEvent`, `AwaitExprEvent`, `FuncExprEvent`, `ArrowFnExprEvent`, `TernaryExprEvent`, `NewExprEvent`, `YieldExprEvent`, `ReturnStmtEvent`, `IfStmtEvent`, `SwitchStmtEvent`, `ThrowStmtEvent`, `TryStmtEvent`, `CatchClauseEvent`, `VarDeclEvent`, `FuncDeclEvent`, `ForStmtEvent`, `WhileStmtEvent`, `DoWhileStmtEvent`, `ForOfStmtEvent`, `ForInStmtEvent`, `LabeledStmtEvent`, `BreakStmtEvent`, `ContinueStmtEvent`, `LiteralEvent`, `ExpressionStmtEvent`, `ArrayExprEvent`, `ObjectExprEvent`, `TemplateLiteralEvent`, `SequenceExprEvent`, `UnaryExprEvent`.
+`BinaryExprEvent`, `CallExprEvent`, `AssignmentExprEvent`, 
+
+`UpdateExprEvent`, `LogicalExprEvent`, `MemberExprEvent`, 
+
+`AwaitExprEvent`, `FuncExprEvent`, `ArrowFnExprEvent`, 
+
+`TernaryExprEvent`, `NewExprEvent`, `YieldExprEvent`, 
+
+`ReturnStmtEvent`, `IfStmtEvent`, `SwitchStmtEvent`, 
+
+`ThrowStmtEvent`, `TryStmtEvent`, `CatchClauseEvent`, 
+
+`VarDeclEvent`, `FuncDeclEvent`, `ForStmtEvent`, 
+
+`WhileStmtEvent`, `DoWhileStmtEvent`, `ForOfStmtEvent`,
+
+`ForInStmtEvent`, `LabeledStmtEvent`, `BreakStmtEvent`, 
+
+`ContinueStmtEvent`, `LiteralEvent`, `ExpressionStmtEvent`, 
+
+`ArrayExprEvent`, `ObjectExprEvent`, `TemplateLiteralEvent`, 
+
+`SequenceExprEvent`, `UnaryExprEvent`.
 
 ---
 
