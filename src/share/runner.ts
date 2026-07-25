@@ -12,12 +12,7 @@ export function runAsync(
     options: runOptions = {}
 ): Promise<any> 
 {
-    const { 
-        res, 
-        err, 
-        ret, 
-        fullRet 
-    } = options
+    const { res, err, ret, fullRet } = options
     
     return new Promise((resolve, reject) => {
         if ('ret' in options) {
