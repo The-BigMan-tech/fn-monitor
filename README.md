@@ -454,7 +454,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ### Utility Types & Classes
 
-* **`QList<T>` / `ReadonlyQList<T>`**: Custom optimized dequeue with random array access. Used internally for the execution stack, but the types are exposed for advanced type inference.
+* **`LocalExeStack`**: A custom, optimized deque (double-ended queue) with random array access, used internally to manage the execution stack. It is exposed to the user as a read-only view to prevent state corruption.
   
 * **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query. It also includes `'Any'` , which matches all nodes and node types that did not get their own explicit classes.
   
