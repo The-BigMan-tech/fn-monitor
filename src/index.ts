@@ -21,15 +21,25 @@
  * 4. AST NODE MUTATION & PERFORMANCE:
  *    A monitored function is parsed only once, meaning its AST node and scope objects 
  *    are created just once and reused. 
- *    - WARNING: Any mutations made to this node within the inspector during a function 
+ *    - WARNING: Any mutations made to a node within the inspector during a function 
  *      call will persist and reflect in all subsequent calls. 
  *    - Reparsing the code on every call was intentionally avoided to maintain execution speed.
  * 
- * 5. ISOLATION CONTEXT:
+ * 5. SCOPE ALLOCATION:
+ *    Unlike ast nodes,the user-facing scope objects are always freshly allocated on every visit to 
+ *    ensure safety while the interpreter reuses the internal scope
+ * 
+ * 6. ISOLATION CONTEXT:
  *    This monitor is not designed to act as a secure sandbox on its own. However, you 
  *    can use the inspector hook to simulate a sandboxed environment by actively monitoring 
  *    and intercepting nodes as the interpreter executes the function.
- */
+ * 
+ * 7. SVAL COMPATIBILITY:
+ *    `SvalPlus` must remain a strict drop-in replacement for `Sval`. Its constructor and 
+ *    public API must be strictly identical or additive to ensure upstream `sval` test suites 
+ *    run seamlessly. Avoid breaking changes to core internals unless rigorously tested to 
+ *    preserve compatibility (e.g., the generator evaluator refactor).
+*/
 
 
 import jsBeatutify from "js-beautify";
