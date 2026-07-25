@@ -131,7 +131,7 @@ export default class Sval {
         hoist(ast, scope)
         evaluate(ast, scope)
     }
-    
+
     public run(code: string | Node):void {
         const ast = typeof code === 'string' ? this.parse(code) : code
         const scope = this.scope
