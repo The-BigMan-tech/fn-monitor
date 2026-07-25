@@ -315,10 +315,21 @@ describe('Basic behaviours',()=>{
     })
 
     it('should ensure that the local exe stack is cleared after evaluating the function',()=>{
-
+        let stack:LocalExeStack | undefined;
+        const fn = monitor({
+            main:{
+                ref:(x:number)=>x + 5
+            },
+            inspector:(visit)=>{
+                stack = visit.localExeStack()//dont do this pattern in actual use cases
+            }
+        })
+        fn(10);
+        expect(stack).toBeDefined();
+        expect(stack!.length).toBe(0)
     })
 
-    it('should ensure that visit.execute returns LAZY_NODE for async or generator nodes',()=>{
+    it('should ensure that visit.execute returns LAZY_NODE for async or genera.tor nodes',()=>{
 
     })
 
