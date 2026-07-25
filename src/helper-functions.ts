@@ -37,9 +37,10 @@ export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,han
 
 export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
     interpreter.reusables.shared.evalStack.value -= 1;
-    // console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
-
     const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
+    
+    // console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
+    
     if (zeroNodesLeft) {
         clearEvalStack(interpreter);
     } else {
@@ -95,6 +96,7 @@ function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
     interpreter.reusables.shared.evalStack.value = 0;
+    interpreter.reusables.shared.exeStack.clear();
 }
 
 
