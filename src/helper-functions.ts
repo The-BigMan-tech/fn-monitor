@@ -25,6 +25,8 @@ export function callPerExe(interpreter:SvalPlus) {
         }
     }
 }
+
+
 export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
     interpreter.reusables.shared.evalStack.value -= 1;
     // console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
@@ -58,12 +60,13 @@ export function pushResult(interpreter:SvalPlus,result:any) {
 export function refreshExeStack(interpreter:SvalPlus):boolean {
     const OneNodeLeft = interpreter.reusables.shared.evalStack.value <= 1
     if (OneNodeLeft) {
-        // console.log('\nCLEARED EXE STACK');
         interpreter.reusables.shared.exeStack.clear();//since the inspector can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
         return true;
     }
     return false;
 }
+
+
 //we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
 export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;

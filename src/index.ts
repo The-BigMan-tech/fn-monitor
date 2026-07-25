@@ -151,6 +151,7 @@ export type {
 
 export type {
     Inspector,
+    LocalExeStack,
     OnStep,
     ScopeForEvent,
     Query,

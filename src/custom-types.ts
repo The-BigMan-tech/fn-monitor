@@ -125,6 +125,8 @@ export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,any>;
 
 export type PerExe = ()=>void;
 
+export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
+
 /**
  * The rich object that gives inspectors their ability to participate in the interpretation of the function
  * Every monitored function has exactly one interpreter and also,exactly one visit object to themselves
@@ -173,7 +175,7 @@ export interface Visit {
      * The latest results stay at the head and the oldest remain at the tail.
      * It is not the full execution history of the entire function. 
      */
-    localExeStack:()=>Omit<ReadonlyQList<ExeResult>,'swapSrc'>,
+    localExeStack:()=>LocalExeStack,
 }
 
 export interface ExeResult {
