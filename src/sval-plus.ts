@@ -84,7 +84,7 @@ class EventScope implements ScopeForEvent {
         }
     }
 } 
-class Visit implements VisitContract {
+export class Visit implements VisitContract {
     #interpreter:SvalPlus
 
     constructor(interpreter:SvalPlus) {

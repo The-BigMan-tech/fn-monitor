@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { LangEvent, monitor } from '../../src/index'; 
 import { VisitExecutionError } from '../../src/custom-types';
+import { Visit } from '../../src/sval-plus';
 
 describe('Basic behaviours',()=>{
     it('should isolate monitored functions from the outside scope',()=>{
@@ -244,13 +245,73 @@ describe('Basic behaviours',()=>{
             }
         })
         fn();
+        expect(hitAssignNode).toBe(true)
+
         //If the node was executed twice,this will catch the extra increment
         expect(outsideVar.value).toBe(10);
-        expect(hitAssignNode).toBe(true)
     })
 
     it('should execute the node automatically if visit.execute was not called',()=>{
+        const outsideVar = {value:0};
+        let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
 
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    const x = 10;
+                    outsideVar.value = x;
+                },
+                captures:{
+                    outsideVar
+                }
+            },
+            beforeEachCall:()=>{
+                hitAssignNode = false
+            },
+            inspector:(visit)=>{
+                visit.is('AssignmentExpression',()=>{
+                    //we do nothing
+                    hitAssignNode = true;
+                })
+            }
+        })
+        fn();
+        expect(hitAssignNode).toBe(true);
+        expect(outsideVar.value).toBe(10);
+    })
+
+    it('should ensure that all the hooks are fired when set and together with their proper arguments',()=>{
+        let calledBeforeCallHook = false;
+        let calledAfterCallHook = false;
+        let calledInspectorHook = false;
+        let calledOnStepHook = false;
+
+        const fn = monitor({
+            main:{
+                ref:(x:number)=>x
+            },
+            beforeEachCall:(x)=>{
+                calledBeforeCallHook = true;
+                expect(x).toBe(10)
+            },
+            afterEachCall:(result)=>{
+                calledAfterCallHook = true;
+                expect(result).toBe(10)
+            },
+            inspector:(visit)=>{
+                calledInspectorHook = true;
+                expect(visit instanceof Visit).toBe(true)
+            },
+            onStep:((args:any)=>{
+                calledOnStepHook = true;
+                expect(args).toBe(undefined)
+            }) as any
+        })
+        fn(10);
+        expect(calledBeforeCallHook).toBe(true);
+        expect(calledAfterCallHook).toBe(true);
+        expect(calledInspectorHook).toBe(true);
+        expect(calledOnStepHook).toBe(true)
     })
 
     it('should ensure that the local exe stack is cleared after evaluating the function',()=>{
@@ -262,10 +323,6 @@ describe('Basic behaviours',()=>{
     })
 
     it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',()=>{
-
-    })
-
-    it('should ensure that all the hooks are fired when set',()=>{
 
     })
 
