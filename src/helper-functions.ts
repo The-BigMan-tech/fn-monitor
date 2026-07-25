@@ -14,6 +14,8 @@ export function useModifiedEvaluator(scope:Scope):boolean {
     const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableInspector);
     return use;
 }
+
+
 export function callPerExe(interpreter:SvalPlus) {
     const perExe = interpreter.reusables.shared.perExe;
     const node = interpreter.reusables.node!;
@@ -24,6 +26,12 @@ export function callPerExe(interpreter:SvalPlus) {
             interpreter.reusables.shared.perExe = null;
         }
     }
+}
+//we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
+export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+    const interpreter = currentScope.interpreter!;
+    refreshReusables(acornNode,currentScope,handler)
+    return interpreter.inspector!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
 }
 
 
@@ -38,6 +46,17 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
         restoreCapturedReusables(interpreter, parentReusables);
     }
 }
+/**It returns true if it was refreshed and false if it wasnt */
+export function refreshExeStack(interpreter:SvalPlus):boolean {
+    const OneNodeLeft = interpreter.reusables.shared.evalStack.value <= 1
+    if (OneNodeLeft) {
+        interpreter.reusables.shared.exeStack.clear();//since the inspector can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
+        return true;
+    }
+    return false;
+}
+
+
 export function pushHandler(interpreter:SvalPlus,result:any,pushedManually:boolean) {
     if (!pushedManually) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
         pushResult(interpreter,result);
@@ -56,23 +75,9 @@ export function pushResult(interpreter:SvalPlus,result:any) {
             currentEvent.scope
     });
 }
-/**It returns true if it was refreshed and false if it wasnt */
-export function refreshExeStack(interpreter:SvalPlus):boolean {
-    const OneNodeLeft = interpreter.reusables.shared.evalStack.value <= 1
-    if (OneNodeLeft) {
-        interpreter.reusables.shared.exeStack.clear();//since the inspector can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
-        return true;
-    }
-    return false;
-}
 
 
-//we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
-export function callMonitor(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = currentScope.interpreter!;
-    refreshReusables(acornNode,currentScope,handler)
-    return interpreter.inspector!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
-}
+
 function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
     interpreter.reusables.node = acornNode as EsNode;
@@ -82,7 +87,7 @@ function refreshReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handl
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
     //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation
 }
-export function clearEvalStack(interpreter:SvalPlus) {
+function clearEvalStack(interpreter:SvalPlus) {
     // console.log('CLEARED EVAL');
     interpreter.reusables.node = null;
     interpreter.reusables.currentScope = null;
@@ -91,6 +96,8 @@ export function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
     interpreter.reusables.shared.evalStack.value = 0;
 }
+
+
 export function captureReusables(interpreter:SvalPlus):Reusables {
     return {
         node: interpreter.reusables.node,
