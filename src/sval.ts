@@ -118,19 +118,20 @@ export default class Sval {
         }
         try {
             return parse(code, this.options)
-        } catch (err) {
+        }catch (err) {
             throw improveSyntaxError(err as SyntaxError & { pos?: number }, code)
         }
     }
 
-    private* useAsync(ast:Program,scope:Scope) {
+    private* useGenEvaluator(ast:Program,scope:Scope) {
         yield* hoistAsync(ast, scope)
         yield* evaluateAsync(ast, scope)
     }
-    private useSync(ast:Program,scope:Scope) {
+    private useSyncEvaluator(ast:Program,scope:Scope) {
         hoist(ast, scope)
         evaluate(ast, scope)
     }
+    
     public run(code: string | Node):void {
         const ast = typeof code === 'string' ? this.parse(code) : code
         const scope = this.scope
@@ -143,10 +144,10 @@ export default class Sval {
 
         if (useAsyncForTopLevel){
             runAsync(//fire and forget the promise
-                this.useAsync(ast as Program,scope)
+                this.useGenEvaluator(ast as Program,scope)
             )
         }else {
-            this.useSync(ast as Program,scope)
+            this.useSyncEvaluator(ast as Program,scope)
         }
     }
 }
