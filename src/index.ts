@@ -21,8 +21,8 @@
  * 
  * 4. GENERATOR EVALUATOR TEST COVERAGE:
  *    Unlike the normalized evaluator, which is rigorously validated by the 250+ regression 
- *    tests inherited from `sval`, the generator-based evaluator currently lacks comprehensive 
- *    automated test coverage.
+ *    tests inherited from `sval` and the additional extension tests, the generator-based evaluator 
+ *    currently lacks comprehensive automated test coverage.
  *    
  *    DIRECTIVE: Any modifications to the generator evaluator MUST be thoroughly verified 
  *    via manual testing (e.g., running the showcase examples).
