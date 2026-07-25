@@ -133,7 +133,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public static meriyahParseOptions:MeriyahOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
         next: true,      // Modern ES support
-        loc: true,       // Essential for your shop.demand tracking
+        loc: true,    
         ranges: true,    // Good for error reporting
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
