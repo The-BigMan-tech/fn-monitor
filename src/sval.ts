@@ -3,7 +3,7 @@ import { parse, Options, Node, Program } from 'acorn'
 import { EXPORTS, IMPORT, STRICT } from './share/const.ts'
 import Scope from './scope/index.ts'
 
-import { runAsync } from './share/async.ts'
+import { runAsync } from './share/runners.ts'
 import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'

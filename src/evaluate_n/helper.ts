@@ -3,7 +3,7 @@
 import { RETURN, SUPER, NOCTOR, CLSCTOR, NEWTARGET, SUPERCALL, STRICT, STRICT_FN } from '../share/const.ts'
 import { VariableDeclaration, ClassBody, PropertyDefinition } from './declaration.ts'
 import { define, assign, inherits, callSuper } from '../share/util.ts'
-import { runAsync, runAsyncOptions } from '../share/async.ts'
+import { runAsync, runOptions } from '../share/runners.ts'
 import { Identifier } from '../evaluate_n/identifier.ts'
 import { BlockStatement } from './statement.ts'
 import Scope from '../scope/index.ts'
