@@ -50,7 +50,7 @@ export default class Sval {
     private options: Options = { ecmaVersion: 'latest' }
     private scope = new Scope(null, true,this)
 
-    exports: Record<string, any> = {}
+    public exports: Record<string, any> = {}
 
     constructor(options: SvalOptions = {}) {
         let { ecmaVer = 'latest', sandBox = true, sourceType = 'script' } = options
