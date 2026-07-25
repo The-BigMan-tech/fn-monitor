@@ -1,5 +1,4 @@
 //@ts-nocheck
-
 import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
