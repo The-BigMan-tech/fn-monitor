@@ -145,11 +145,6 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
 export type {Metadata} from "./sval-plus.ts";
 
 export type {
-    QList,
-    ReadonlyQList
-} from './q-list.ts';
-
-export type {
     Inspector,
     LocalExeStack,
     OnStep,
