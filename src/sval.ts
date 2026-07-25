@@ -117,25 +117,30 @@ export default class Sval {
         }
     }
 
-    public run(code: string | Node) {
+    private* useAsync(ast:Program,scope:Scope) {
+        yield* hoistAsync(ast, scope)
+        yield* evaluateAsync(ast, scope)
+    }
+    private useSync(ast:Program,scope:Scope) {
+        hoist(ast, scope)
+        evaluate(ast, scope)
+    }
+    public run(code: string | Node):void {
         const ast = typeof code === 'string' ? this.parse(code) : code
         const scope = this.scope
+
         // check if top-level await supports
-        if (
+        const useAsyncForTopLevel = (
             (this.options.sourceType === 'module') && 
-            (
-                this.options.ecmaVersion === 'latest'|| 
-                this.options.ecmaVersion >= 13
+            (this.options.ecmaVersion === 'latest'|| this.options.ecmaVersion >= 13)
+        );
+
+        if (useAsyncForTopLevel){
+            runAsync(//fire and forget the promise
+                this.useAsync(ast as Program,scope)
             )
-        ){
-            runAsync((function* () {
-                yield* hoistAsync(ast as Program, scope)
-                yield* evaluateAsync(ast, scope)
-            })())
-        } 
-        else {
-            hoist(ast as Program, scope)
-            evaluate(ast, scope)
+        }else {
+            this.useSync(ast as Program,scope)
         }
     }
 }
