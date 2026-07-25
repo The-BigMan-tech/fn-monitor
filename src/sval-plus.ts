@@ -22,6 +22,7 @@ import {
     NOT_ALLOCATED,
     PerExe,
     OnStep,
+    VisitExecutionError,
 } from './custom-types.ts'
 
 import { isGenerator, pushResult } from './helper-functions.ts';
@@ -105,7 +106,7 @@ class Visit implements VisitContract {
         const handler = this.#interpreter.reusables.handler;
         if (handler !== null) {
             if (this.#interpreter.reusables.result !== UNASSIGNED) {
-                throw new Error(ansis.red(`A node can only be executed once`))
+                throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
             }
             this.#interpreter.reusables.result = handler(this.#interpreter.reusables.node!,this.#interpreter.reusables.currentScope!);
             if (isGenerator(this.#interpreter.reusables.result)) {

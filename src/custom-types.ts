@@ -26,6 +26,7 @@ export type Fn = (...args:any[])=>any;
 export type EsNode = EsTreeNode;//i couldnt directly export it from the module because its only a types file
 
 export class WrapperError extends Error {};
+export class VisitExecutionError extends Error {};
 
 /**
  * This is a string union of all the possible nodes the caller can query in the visit.is callback.
