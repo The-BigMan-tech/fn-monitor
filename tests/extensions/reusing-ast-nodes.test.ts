@@ -36,7 +36,7 @@ describe('AST Mutation Persistence', () => {
         expect(monitoredFn(4, 3)).toBe(1);//The function executes as `4 - 3`, resulting in 1 (proving persistence).
     });
 
-    it('should reuse ast nodes if the internal generated code from calling monitor hits the cache.',()=>{
+    it('should reuse ast nodes if the internal generated code from the monitor function hits the cache.',()=>{
         function sub(a: number, b: number) {
             return a - b;
         }
