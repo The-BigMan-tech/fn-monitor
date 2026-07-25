@@ -1,7 +1,8 @@
 /**
- * ARCHITECTURAL NOTES & DESIGN DECISIONS
+ * ARCHITECTURAL NOTES FOR MAINTAINERS & CONTRIBUTORS
  * 
- * Please read before making significant modifications to the evaluators.
+ * Please thoroughly review the "Important Notes" section in the README and 
+ * understand the following before making significant modifications to the codebase.
  * 
  * 1. PURPOSE LIMITATIONS:
  *    Do not expand this into a script-level or module-level monitor. Doing so will 
@@ -10,36 +11,25 @@
  * 2. TYPESCRIPT & UNMODIFIED CODE:
  *    Parts of the codebase that consist of pure, unmodified `sval` code may have 
  *    TypeScript complaints. Since they function correctly, they have been left as-is 
- *    to preserve the original behavior.
+ *    to preserve the original behavior, marked with `@ts-nocheck`.
  * 
- * 3. INTERPRETER ISOLATION:
- *    Each monitored function must be assigned its own interpreter instance. While this 
- *    may appear to be a memory overhead, it is strictly required to prevent state 
- *    collision between executions. Sharing a single interpreter across multiple monitored 
- *    functions would introduce severe and unpredictable edge cases.
- * 
- * 4. AST NODE MUTATION & PERFORMANCE:
- *    A monitored function is parsed only once, meaning its AST node and scope objects 
- *    are created just once and reused. 
- *    - WARNING: Any mutations made to a node within the inspector during a function 
- *      call will persist and reflect in all subsequent calls. 
- *    - Reparsing the code on every call was intentionally avoided to maintain execution speed.
- * 
- * 5. SCOPE ALLOCATION:
- *    Unlike ast nodes,the user-facing scope objects are always freshly allocated on every visit to 
- *    ensure safety while the interpreter reuses the internal scope
- * 
- * 6. ISOLATION CONTEXT:
- *    This monitor is not designed to act as a secure sandbox on its own. However, you 
- *    can use the inspector hook to simulate a sandboxed environment by actively monitoring 
- *    and intercepting nodes as the interpreter executes the function.
- * 
- * 7. SVAL COMPATIBILITY:
+ * 3. SVAL COMPATIBILITY:
  *    `SvalPlus` must remain a strict drop-in replacement for `Sval`. Its constructor and 
  *    public API must be strictly identical or additive to ensure upstream `sval` test suites 
  *    run seamlessly. Avoid breaking changes to core internals unless rigorously tested to 
- *    preserve compatibility (e.g., the generator evaluator refactor).
-*/
+ *    preserve compatibility (e.g., the evaluator refactor).
+ * 
+ * 4. GENERATOR EVALUATOR TEST COVERAGE:
+ *    Unlike the normalized evaluator, which is rigorously validated by the 250+ regression 
+ *    tests inherited from `sval`, the generator-based evaluator currently lacks comprehensive 
+ *    automated test coverage.
+ *    
+ *    DIRECTIVE: Any modifications to the generator evaluator MUST be thoroughly verified 
+ *    via manual testing (e.g., running the showcase examples).
+ *    
+ *    NOTE: This manual testing requirement will be retired once comprehensive automated 
+ *    tests are added for the generator evaluator.
+ */
 
 
 import jsBeatutify from "js-beautify";
