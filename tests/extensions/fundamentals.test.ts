@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LangEvent, monitor } from '../../src/index'; 
+import { VisitExecutionError } from '../../src/custom-types';
 
 describe('Basic behaviours',()=>{
     it('should isolate monitored functions from the outside scope',()=>{
@@ -187,4 +188,92 @@ describe('Basic behaviours',()=>{
         expect(hitCounts.AwaitExpression).toBe(1);       // await ...
         expect(hitCounts.ReturnStatement).toBe(1);       // return res
     });
+
+    it('should ensure that visit.execute manually executes a node and it is not allowed to be called twice',()=>{
+        const outsideVar = {value:0};
+        let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    const x = 10;
+                    outsideVar.value = x;
+                },
+                captures:{
+                    outsideVar
+                }
+            },
+            beforeEachCall:()=>{
+                hitAssignNode = false
+            },
+            inspector:(visit)=>{
+                visit.is('AssignmentExpression',()=>{
+                    visit.execute()
+                    expect(outsideVar.value).toBe(10);
+                    expect(()=>visit.execute()).toThrow(VisitExecutionError);
+                    hitAssignNode = true;
+                })
+            }
+        })
+        fn();
+        expect(hitAssignNode).toBe(true)
+    });
+
+    it('should not execute the node automatically if visit.execute was called',()=>{
+        const outsideVar = {value:0};
+        let hitAssignNode = false;
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    const x = 10;
+                    outsideVar.value += x;//notice that this particular test increments the value rather than overwriting it.
+                },
+                captures:{
+                    outsideVar
+                }
+            },
+            beforeEachCall:()=>{
+                hitAssignNode = false;
+            },
+            inspector:(visit)=>{
+                visit.is('AssignmentExpression',()=>{
+                    visit.execute();
+                    hitAssignNode = true;
+                })
+            }
+        })
+        fn();
+        //If the node was executed twice,this will catch the extra increment
+        expect(outsideVar.value).toBe(10);
+        expect(hitAssignNode).toBe(true)
+    })
+
+    it('should execute the node automatically if visit.execute was not called',()=>{
+
+    })
+
+    it('should ensure that the local exe stack is cleared after evaluating the function',()=>{
+
+    })
+
+    it('should ensure that visit.execute returns LAZY_NODE for async or generator nodes',()=>{
+
+    })
+
+    it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',()=>{
+
+    })
+
+    it('should ensure that all the hooks are fired when set',()=>{
+
+    })
+
+    it('should ensure that the perExecution hook is fired for every node starting from the current node and terminating at the node where it started firing from',()=>{
+
+    })
+
+    it('should ensure that the local exe stack is synchronized with the executed nodes',()=>{
+
+    })
 })
