@@ -329,8 +329,27 @@ describe('Basic behaviours',()=>{
         expect(stack!.length).toBe(0)
     })
 
-    it('should ensure that visit.execute returns LAZY_NODE for async or genera.tor nodes',()=>{
+    it('should ensure that visit.execute returns LAZY_NODE for async or generator nodes',()=>{
+        let hitAwaitNode = false;
 
+        const fn = monitor({
+            main:{
+                ref:async (x: number)=>{
+                    return await Promise.resolve(x);
+                }
+            },
+            beforeEachCall:()=>{
+                hitAwaitNode = false;
+            },
+            inspector:(visit)=>{
+                visit.is('AwaitExpression',()=>{
+                    expect(visit.execute()).toBe(LAZY_NODE)
+                    hitAwaitNode = true;
+                })
+            }
+        })
+        fn(10);
+        expect(hitAwaitNode).toBe(true)
     })
 
     it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',()=>{
