@@ -59,7 +59,12 @@ export default class Sval {
           ecmaVer -= ecmaVer < 2015 ? 0 : 2009 // format ecma edition
         }
 
-        if (ecmaVer !== 'latest' && ecmaVer !== 3 && (ecmaVer < 5 || ecmaVer > latestVer)) {
+        const versionIsUnsupported =(
+            (ecmaVer !== 'latest') && 
+            (ecmaVer !== 3) && 
+            ((ecmaVer < 5) || (ecmaVer > latestVer))
+        )
+        if (versionIsUnsupported) {
             throw new Error(`unsupported ecmaVer`)
         }
 
@@ -77,13 +82,14 @@ export default class Sval {
             this.scope.let('self', win)
             // ES modules have undefined as the top-level this (strict mode)
             this.scope.let('this', sourceType === 'module' ? undefined : win)
-        } else {
+        }else {
             this.scope.let('globalThis', globalObj)
             this.scope.let('window', globalObj)
             this.scope.let('self', globalObj)
             // ES modules have undefined as the top-level this (strict mode)
             this.scope.let('this', sourceType === 'module' ? undefined : globalObj)
         }
+
         this.scope.const(sourceType === 'module' ? EXPORTS : 'exports', this.exports = {})
         if (sourceType === 'module') {
             this.scope.const(STRICT, true)
