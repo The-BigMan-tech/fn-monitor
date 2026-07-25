@@ -41,7 +41,7 @@
         "build": "vite build",
         "test": "vitest run",
         "test:interpreter":"vitest run ./tests/interpreter",
-        "test:features":"vitest run ./tests/additional-features",
+        "test:extensions":"vitest run ./tests/extensions",
         "publish:public": "npm publish --registry=https://registry.npmjs.org/ --access public"
     },
     "dependencies": {
