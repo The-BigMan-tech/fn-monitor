@@ -137,6 +137,9 @@ export class ReadonlyQList<T> {
         return this.qList;
     }
     public swapSrc(newQList:QList<T>) {
+        if (!(newQList instanceof QList)) {
+            throw new Error(ansis.red(`ReadonlyQList Error:the src reference must be a Qlist`))
+        }
         this.qList = newQList;
     }
     public get(i:number):T {//O1
