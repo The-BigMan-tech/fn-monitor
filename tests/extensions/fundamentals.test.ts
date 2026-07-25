@@ -288,7 +288,7 @@ describe('Basic behaviours',()=>{
 
         const fn = monitor({
             main:{
-                ref:(x:number)=>x
+                ref:(x:number)=>x**2
             },
             beforeEachCall:(x)=>{
                 calledBeforeCallHook = true;
@@ -296,7 +296,7 @@ describe('Basic behaviours',()=>{
             },
             afterEachCall:(result)=>{
                 calledAfterCallHook = true;
-                expect(result).toBe(10)
+                expect(result).toBe(100)
             },
             inspector:(visit)=>{
                 calledInspectorHook = true;
