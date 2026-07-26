@@ -490,4 +490,29 @@ describe('Basic behaviours',()=>{
         fn(10);
         expect(perExeCalls).toBe(executedNodes)
     })
+
+    it('should ensure that the local exe stack always has the latest executed node at its head',()=>{
+        const fn = monitor({
+            main:{
+                ref:(x: number)=>{
+                    const y = 10 + x
+                    return y;
+                }
+            },
+            inspector:function* (visit):InspectorGenerator { 
+                let currentNode: EsNode | undefined;
+
+                visit.is('Any', (event) => {
+                    currentNode = event.node;
+                });
+
+                visit.execute();
+
+                const stack = visit.localExeStack();
+                const head = stack.get(0);
+                expect(head.node).toBe(currentNode);
+            }
+        })
+        fn(10);
+    })
 })
