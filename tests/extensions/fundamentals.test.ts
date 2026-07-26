@@ -329,7 +329,7 @@ describe('Basic behaviours',()=>{
         expect(stack!.length).toBe(0)
     })
 
-    it('should ensure that visit.execute returns LAZY_NODE for async or generator nodes',()=>{
+    it('should ensure that visit.execute returns LAZY_NODE for async or generator nodes',async ()=>{
         let hitAwaitNode = false;
 
         const fn = monitor({
@@ -348,7 +348,7 @@ describe('Basic behaviours',()=>{
                 })
             }
         })
-        fn(10);
+        await fn(10);
         expect(hitAwaitNode).toBe(true)
     })
 
