@@ -470,7 +470,7 @@ describe('Basic behaviours',()=>{
         await fn2(10);
     })
 
-    it('should ensure that the perExecution hook is fired for every executed node',async ()=>{
+    it('should ensure that the perExecution hook is fired for every executed node',()=>{
         let executedNodes = 0;
         let perExeCalls = 0;
 
@@ -480,14 +480,14 @@ describe('Basic behaviours',()=>{
                     return 10 + x
                 }
             },
-            inspector:function* (visit):InspectorGenerator {  
+            inspector:(visit)=> {  
                 executedNodes += 1;  
                 visit.perExecution = ()=>{
                     perExeCalls += 1;
                 }
             }
         })
-        await fn(10);
+        fn(10);
         expect(perExeCalls).toBe(executedNodes)
     })
 })
