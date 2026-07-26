@@ -337,7 +337,7 @@ describe('Basic behaviours',()=>{
         expect(beforeHookCount).toBe(1);
         expect(afterHookCount).toBe(1)
 
-        //We test the afterEachCall hook again for the async version because the interpreter handles the hook for async functions differently
+        //We test the afterEachCall hook again for the async version because the interpreter handles this particular hook for async functions differently
         let afterHookCountForAsync = 0;
 
         const fn2 = monitor({
