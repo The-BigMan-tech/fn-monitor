@@ -470,6 +470,24 @@ describe('Basic behaviours',()=>{
         await fn2(10);
     })
 
+    it('should ensure that the inspector is fired for every node',async ()=>{
+        let inspectorCalls = 0;
+
+        const fn = monitor({
+            main:{
+                ref:async (x: number)=>{
+                    const y = ((10 + x) - (x + 9))**2;
+                    return await Promise.resolve(y);
+                }
+            },
+            inspector:() => {  
+                inspectorCalls += 1; 
+            }
+        })
+        await fn(10);
+        expect(inspectorCalls).toBe(15);
+    })
+
     it('should ensure that the perExecution hook is fired for every executed node',async ()=>{
         let executedNodes = 0;
         let perExeCalls = 0;

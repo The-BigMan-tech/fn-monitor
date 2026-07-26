@@ -48,7 +48,7 @@ export default function evaluate(node: Node, scope: Scope) {
     try {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
-        const feedback = callInspector(node, scope, handler);
+        const feedback = callInspector(node, scope, handler);//call this before the node is executed
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
