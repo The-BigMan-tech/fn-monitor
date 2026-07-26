@@ -144,18 +144,22 @@ describe('Basic behaviours',()=>{
         };
 
         const testFn = async (a: number) => {
-            let x = a;                              // 1. VariableDeclaration
-            if (x > 0) {                            // 2. IfStatement, 3. BinaryExpression (x > 0)
-                x = x + 1;                          // 4. AssignmentExpression, 5. BinaryExpression (x + 1)
-                x++;                                // 6. UpdateExpression
+            let x = a;      // 1. VariableDeclaration
+            if (x > 0) {    // 2. IfStatement, 3. BinaryExpression (x > 0)
+                x = x + 1;  // 4. AssignmentExpression, 5. BinaryExpression (x + 1)
+                x++;        // 6. UpdateExpression
             }
-
-            // 7. VariableDeclaration, 8. ArrowFunctionExpression, 9. BinaryExpression (y * 2)
+            // 7. VariableDeclaration, 
+            // 8. ArrowFunctionExpression, 
+            // 9. BinaryExpression (y * 2)
             const double = (y: number) => y * 2;
             
-            // 10. VariableDeclaration, 11. CallExpression (double), 12. CallExpression (Promise.resolve), 13. AwaitExpression
+            // 10. VariableDeclaration, 
+            // 11. CallExpression (double), 
+            // 12. CallExpression (Promise.resolve), 
+            // 13. AwaitExpression
             const res = await Promise.resolve(double(x)); 
-            return res;                             // 14. ReturnStatement
+            return res;// 14. ReturnStatement
         };
 
         const monitoredFn = monitor({
