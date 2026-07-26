@@ -476,9 +476,8 @@ describe('Basic behaviours',()=>{
 
         const fn = monitor({
             main:{
-                ref:async (x: number)=>{
-                    const y = 10 + x;
-                    return await Promise.resolve(y);
+                ref:(x: number)=>{
+                    return 10 + x
                 }
             },
             inspector:function* (visit):InspectorGenerator {  
