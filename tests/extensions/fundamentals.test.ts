@@ -470,15 +470,25 @@ describe('Basic behaviours',()=>{
         await fn2(10);
     })
 
-    it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',()=>{
+    it('should ensure that the perExecution hook is fired for every executed node',async ()=>{
+        let executedNodes = 0;
+        let perExeCalls = 0;
 
-    })
-
-    it('should ensure that the perExecution hook is fired for every node starting from the current node and terminating at the node where it started firing from',()=>{
-
-    })
-
-    it('should ensure that the local exe stack is synchronized with the executed nodes',()=>{
-
+        const fn = monitor({
+            main:{
+                ref:async (x: number)=>{
+                    const y = 10 + x;
+                    return await Promise.resolve(y);
+                }
+            },
+            inspector:function* (visit):InspectorGenerator {  
+                executedNodes += 1;  
+                visit.perExecution = ()=>{
+                    perExeCalls += 1;
+                }
+            }
+        })
+        await fn(10);
+        expect(perExeCalls).toBe(executedNodes)
     })
 })
