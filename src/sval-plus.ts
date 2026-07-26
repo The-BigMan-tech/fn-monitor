@@ -25,7 +25,7 @@ import {
     VisitExecutionError,
 } from './custom-types.ts'
 
-import { isGenerator, pushResult } from './helper-functions.ts';
+import { isGenerator, pushResult } from './lifecycle-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 

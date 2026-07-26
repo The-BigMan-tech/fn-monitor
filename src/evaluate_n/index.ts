@@ -11,7 +11,7 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
-import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../helper-functions.ts'
+import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../lifecycle-functions.ts'
 import ansis from 'ansis'
 
 let evaluateOps: any

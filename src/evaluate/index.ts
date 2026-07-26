@@ -19,7 +19,7 @@ import {
     isGenerator, pushHandler, pushResult, refreshExeStack,
     restoreCapturedReusables,
     useModifiedEvaluator, // Use the Generator version
-} from '../helper-functions.ts'
+} from '../lifecycle-functions.ts'
 
 import ansis from 'ansis'
 
