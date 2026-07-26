@@ -352,6 +352,34 @@ describe('Basic behaviours',()=>{
         expect(hitAwaitNode).toBe(true)
     })
 
+    it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',async ()=>{
+        let hitAwaitNode = false;
+
+        const fn = monitor({
+            main:{
+                ref:async (x: number)=>{
+                    return await Promise.resolve(x);
+                }
+            },
+            beforeEachCall:()=>{
+                hitAwaitNode = false
+            },
+            inspector:function* (visit):InspectorGenerator {
+                const result = visit.execute();
+
+                if (result === LAZY_NODE) {
+                    const resolvedValue = yield result;
+                    visit.is('AwaitExpression',()=>{//we only want to test the executed result of the await node
+                        expect(resolvedValue).toBe(10);
+                        hitAwaitNode = true;
+                    })
+                }
+            }
+        })
+        await fn(10);
+        expect(hitAwaitNode).toBe(true);
+    })
+
     it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',()=>{
 
     })
