@@ -16,7 +16,7 @@ import {
     callPerExe, 
     captureReusables, 
     cleanStack, 
-    isGenerator, pushHandler, pushResult, refreshExeStack,
+    isGenerator, pushHandler, pushResult,
     restoreCapturedReusables,
     useModifiedEvaluator, // Use the Generator version
 } from '../lifecycle-functions.ts'
@@ -38,10 +38,12 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:R
         }
         result = iterator.next(input);
     }
+    
     const final = result.value;
     if (interpreter.reusables.result !== UNASSIGNED) {//this is true if visit.execute was called
         pushResult(interpreter,final)//the node cant be null during an evaluator call
     }
+    // console.log('STACK: ',[...interpreter.reusables.shared.readonlyExeStack].map(x=>x.type));
     return final; 
 }
 
@@ -77,7 +79,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     
     try {
         interpreter.reusables.shared.evalStack.value += 1;
-        // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
+
         const feedback = callInspector(node, scope, handler);
         const localReusables = captureReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
 
@@ -97,7 +99,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                     localReusables
                 );
 
-            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash
+            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.
 
             if (!next.done) {
                 if (next.value !== LAZY_NODE) {
@@ -108,10 +110,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                     throw new Error(ansis.red(`In Lazy Node:inspectors that are generators can only yield once.`))
                 }
             }
-            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
-
-            const wasCleared = refreshExeStack(interpreter);//the order here is important.refresh it after the whole generator finishes so that it doesnt clear mid-execution of the inspector.But it must be done before pushing the new result so that it doesnt become part of the old values in the stack.
-            const pushedManually = executedManually && !wasCleared
+            const pushedManually = executedManually;
             
             pushHandler(interpreter,result,pushedManually);
             callPerExe(interpreter);
@@ -134,10 +133,8 @@ export default function* evaluate(node: Node, scope: Scope) {
             interpreter.reusables.result = SEEN
             
             restoreCapturedReusables(interpreter,localReusables)
-            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
-            const wasCleared = refreshExeStack(interpreter);
-            const pushedManually = executedManually && !wasCleared
+            const pushedManually = executedManually
             
             pushHandler(interpreter,result,pushedManually);
             callPerExe(interpreter);
@@ -146,7 +143,6 @@ export default function* evaluate(node: Node, scope: Scope) {
         }
     } 
     finally {
-        // console.log('called finally');
         cleanStack(interpreter,parentReusables)
     }
 }

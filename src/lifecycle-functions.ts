@@ -47,15 +47,6 @@ export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
         restoreCapturedReusables(interpreter, parentReusables);
     }
 }
-/**It returns true if it was refreshed and false if it wasnt */
-export function refreshExeStack(interpreter:SvalPlus):boolean {
-    const OneNodeLeft = interpreter.reusables.shared.evalStack.value <= 1
-    if (OneNodeLeft) {
-        interpreter.reusables.shared.exeStack.clear();//since the inspector can only ever see the last exe stack,we only clear it after theyve seen it and not immediately after its filled with values
-        return true;
-    }
-    return false;
-}
 
 
 export function pushHandler(interpreter:SvalPlus,result:any,pushedManually:boolean) {

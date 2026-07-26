@@ -11,7 +11,7 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
-import { callInspector, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../lifecycle-functions.ts'
+import { callInspector, captureReusables, cleanStack,isGenerator, pushHandler, callPerExe, useModifiedEvaluator } from '../lifecycle-functions.ts'
 import ansis from 'ansis'
 
 let evaluateOps: any
@@ -47,7 +47,7 @@ export default function evaluate(node: Node, scope: Scope) {
     
     try {
         interpreter.reusables.shared.evalStack.value += 1;
-        // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
+
         const feedback = callInspector(node, scope, handler);//call this before the node is executed
 
         if (isGenerator(feedback)) {
@@ -72,10 +72,8 @@ export default function evaluate(node: Node, scope: Scope) {
                     throw new Error(ansis.red(`In Eager Node:inspectors that are generators can only yield once.`))
                 }
             }
-            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
 
-            const wasCleared = refreshExeStack(interpreter);//call this only after the inspector sees the latest exe stack before it gets possibly cleared but before any exe results that belong to the next stack iteration is pushed so that they dont get cleared prematurely
-            const pushedManually = executedManually && !wasCleared
+            const pushedManually = executedManually;
             
             pushHandler(interpreter,result,pushedManually);
             callPerExe(interpreter);
@@ -88,12 +86,9 @@ export default function evaluate(node: Node, scope: Scope) {
             const result = executedManually
                 ?interpreter.reusables.result
                 :handler(node,scope)//must be done after calling next
+                
             interpreter.reusables.result = SEEN;
-
-            // console.log(`\nRESULT OF "${interpreter.reusables.node!.type}" :`, result);
-
-            const wasCleared = refreshExeStack(interpreter);
-            const pushedManually = executedManually && !wasCleared
+            const pushedManually = executedManually;
             
             pushHandler(interpreter,result,pushedManually);
             callPerExe(interpreter);
