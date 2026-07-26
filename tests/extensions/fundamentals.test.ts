@@ -506,11 +506,13 @@ describe('Basic behaviours',()=>{
                     currentNode = event.node;
                 });
 
-                visit.execute();
+                const result = visit.execute();
 
                 const stack = visit.localExeStack();
                 const head = stack.get(0);
+
                 expect(head.node).toBe(currentNode);
+                expect(head.evaluation).toBe(result);
             }
         })
         fn(10);
