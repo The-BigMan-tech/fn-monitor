@@ -22,14 +22,15 @@
  * 4. GENERATOR EVALUATOR TEST COVERAGE:
  *    Unlike the normalized evaluator, which is rigorously validated by the 250+ regression 
  *    tests inherited from `sval` and the additional extension tests, the generator-based evaluator 
- *    currently lacks comprehensive automated test coverage.
+ *    currently relies on only a handful of dedicated async tests and lacks comprehensive coverage.
  *    
  *    DIRECTIVE: Any modifications to the generator evaluator MUST be thoroughly verified 
  *    via manual testing (e.g., running the showcase examples).
  *    
  *    NOTE: This manual testing requirement will be retired once comprehensive automated 
  *    tests are added for the generator evaluator.
- */
+ * 
+*/
 
 
 import jsBeatutify from "js-beautify";
