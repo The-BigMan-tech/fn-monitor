@@ -132,8 +132,6 @@ export default function* evaluate(node: Node, scope: Scope) {
                 );
             interpreter.reusables.result = SEEN
             
-            restoreCapturedReusables(interpreter,localReusables)
-
             const pushedManually = executedManually
             
             pushHandler(interpreter,result,pushedManually);
