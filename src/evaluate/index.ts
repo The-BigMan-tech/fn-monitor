@@ -12,7 +12,7 @@ import * as program from './program.ts'
 
 import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
 import { 
-    callMonitor, 
+    callInspector, 
     callPerExe, 
     captureReusables, 
     cleanStack, 
@@ -78,8 +78,8 @@ export default function* evaluate(node: Node, scope: Scope) {
     try {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
-        const feedback = callMonitor(node, scope, handler);
-        const localReusables = captureReusables(interpreter);//capture the reusbales after the callMonitor method has updated it to the local node and scope
+        const feedback = callInspector(node, scope, handler);
+        const localReusables = captureReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
 
         if (isGenerator(feedback)) {
             const next = feedback.next();

@@ -11,7 +11,7 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
-import { callMonitor, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../lifecycle-functions.ts'
+import { callInspector, captureReusables, cleanStack,isGenerator,  refreshExeStack, restoreCapturedReusables,pushHandler, callPerExe, useModifiedEvaluator } from '../lifecycle-functions.ts'
 import ansis from 'ansis'
 
 let evaluateOps: any
@@ -48,7 +48,7 @@ export default function evaluate(node: Node, scope: Scope) {
     try {
         interpreter.reusables.shared.evalStack.value += 1;
         // console.log(ansis.yellow.underline('\n\nCALLED MONITOR'));
-        const feedback = callMonitor(node, scope, handler);
+        const feedback = callInspector(node, scope, handler);
 
         if (isGenerator(feedback)) {
             const next = feedback.next();
