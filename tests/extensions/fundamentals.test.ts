@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LangEvent, monitor } from '../../src/index'; 
+import { LangEvent, monitor,LAZY_NODE,LocalExeStack,InspectorGenerator,EsNode } from '../../src/index'; 
 import { VisitExecutionError } from '../../src/custom-types';
 import { Visit } from '../../src/sval-plus';
 
@@ -312,6 +312,40 @@ describe('Basic behaviours',()=>{
         expect(calledAfterCallHook).toBe(true);
         expect(calledInspectorHook).toBe(true);
         expect(calledOnStepHook).toBe(true)
+    })
+
+    it('should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',async ()=>{
+        let beforeHookCount = 0;
+        let afterHookCount = 0;
+
+        const fn = monitor({
+            main:{
+                ref:()=>undefined
+            },
+            beforeEachCall:()=>{
+                beforeHookCount += 1;
+            },
+            afterEachCall:()=>{
+                afterHookCount += 1;
+            }
+        })
+        fn();
+        expect(beforeHookCount).toBe(1);
+        expect(afterHookCount).toBe(1)
+
+        //We test the afterEachCall hook again for the async version because the interpreter handles the hook for async functions differently
+        let afterHookCountForAsync = 0;
+
+        const fn2 = monitor({
+            main:{
+                ref:async ()=>undefined
+            },
+            afterEachCall:()=>{
+                afterHookCountForAsync += 1;
+            }
+        })
+        await fn2();
+        expect(afterHookCountForAsync).toBe(1)
     })
 
     it('should ensure that the local exe stack is cleared after evaluating the function',()=>{
