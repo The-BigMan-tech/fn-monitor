@@ -424,7 +424,7 @@ The main export. Accepts a configuration object and returns a new function that 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
-| `captures` | `Record<string, any>` | Maps variable names to their outside-scope values. Follows copy-by-value (primitives) and copy-by-reference (objects) semantics. |
+| `captures` | `Record<string, any>` | Maps variable names to their values which are stored outside the wrapped function's scope. Follows copy-by-value (primitives) and copy-by-reference (objects) semantics. |
 
 
 ### The Inspector Context
@@ -507,7 +507,7 @@ Under the hood, this package utilizes an **AST-walker interpreter** (rather than
     
     - To safely handle complex async/await state transitions while sharing objects, the interpreter creates snapshots by copying them at certain points, and restores the original values once it finishes working with the overwritten state.
   
-- **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes and scope objects are reused across all calls to maximize execution speed.
+- **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
 
 - **Scope Allocation & Safety:** While the interpreter heavily relies on reusable objects to maximize performance, the `scope` object provided to the inspector is a deliberate exception. Unlike AST nodes (which are parsed once and reused), the scope object is always freshly allocated for each event. This design choice guarantees predictability and prevents accidental mutations of the interpreter's internal state.
 
