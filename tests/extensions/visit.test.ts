@@ -265,15 +265,64 @@ describe('Visit object behaviour',()=>{
             inspector:(visit)=> {   
                 visit.is('Any',()=>undefined)//force the interpreter to alllocate all scopes
 
-                visit.is('VariableDeclaration',()=>{//this will hit y=10 + x
-                    if (!setPerExeHook) {
+                //this will hit y = 10 + x
+                visit.is('VariableDeclaration',()=>{
+                    if (!setPerExeHook) {//this locks this hook to the node,(y = 10 + x)
                         visit.perExecution = ()=>{
                             setPerExeHook = true;
+
                             const head = visit.localExeStack().get(0)
                             const nodeType = head.type;
 
                             //if the lifecycle of the perExe hook is handled properly,this particular one shouldnt live long enough to see the return statement
                             expect(nodeType).not.toBe<typeof nodeType>('ReturnStatement')
+                        }
+                    }
+                    hitDeclNode = true;
+                })
+            }
+        })
+        fn(10);
+        expect(hitDeclNode).toBe(true);
+        expect(setPerExeHook).toBe(true);
+    })
+
+    it('should ensure that the localExeStack contains the evaluation of its node and that of its children',()=>{
+        let hitDeclNode = false;
+        let setPerExeHook = false;
+
+        const fn = monitor({
+            main:{
+                ref:(x: number)=>{
+                    const y = 10 + x;
+                    return y
+                }
+            },
+            beforeEachCall:()=>{
+                hitDeclNode = false;
+                setPerExeHook = false;
+            },
+            inspector:(visit)=> {   
+                visit.is('Any',()=>undefined)//force the interpreter to alllocate all scopes
+
+                //this will hit y = 10 + x
+                visit.is('VariableDeclaration',event=>{
+                    const ownerNode = event.node;
+
+                    if (!setPerExeHook) {//this locks this hook to the node,(y = 10 + x)
+                        visit.perExecution = ()=>{
+                            setPerExeHook = true;
+
+                            const stack = visit.localExeStack()
+                            const head = stack.get(0)
+                            
+                            if (head.node === ownerNode) {
+                                expect(stack.get(0).type).toBe('VariableDeclaration');
+                                expect(stack.get(1).type).toBe('BinaryExpression');
+                                expect(stack.get(2).type).toBe('Identifier')
+                                expect(stack.get(3).type).toBe('Literal')
+                                expect(stack.length).toBe(4)
+                            }
                         }
                     }
                     hitDeclNode = true;
