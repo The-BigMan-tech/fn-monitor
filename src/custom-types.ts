@@ -175,7 +175,7 @@ export interface Visit {
      * The latest results stay at the head and the oldest remain at the tail.
      * 
      * It is a live reference to the current interpreter's state and it is cleared regularly
-     * So it should be used on demand and not stored somewhere to use for later
+     * So it should be used on demand and not stored somewhere for use later
      */
     localExeStack:()=>LocalExeStack,
 }
