@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LangEvent, monitor,LAZY_NODE,LocalExeStack,InspectorGenerator,EsNode } from '../../src/index'; 
-import { VisitExecutionError } from '../../src/custom-types';
+import { ScopeForEvent, VisitExecutionError } from '../../src/custom-types';
 import { Visit } from '../../src/sval-plus';
 
 describe('Basic behaviours',()=>{
@@ -470,7 +470,7 @@ describe('Basic behaviours',()=>{
         await fn2(10);
     })
 
-    it('should ensure that the perExecution hook is fired for every executed node',()=>{
+    it('should ensure that the perExecution hook is fired exactly for every executed node',()=>{
         let executedNodes = 0;
         let perExeCalls = 0;
 
@@ -489,6 +489,44 @@ describe('Basic behaviours',()=>{
         })
         fn(10);
         expect(perExeCalls).toBe(executedNodes)
+    })
+
+    it('should ensure that the perExecution hook only lives as long as its owner node and its children',()=>{
+        let hitDeclNode = false;
+        let setPerExeHook = false;
+
+        const fn = monitor({
+            main:{
+                ref:(x: number)=>{
+                    const y = 10 + x;
+                    return y
+                }
+            },
+            beforeEachCall:()=>{
+                hitDeclNode = false;
+                setPerExeHook = false;
+            },
+            inspector:(visit)=> {   
+                visit.is('Any',()=>undefined)//force the interpreter to alllocate all scopes
+
+                visit.is('VariableDeclaration',()=>{//this will hit y=10 + x
+                    if (!setPerExeHook) {
+                        visit.perExecution = ()=>{
+                            setPerExeHook = true;
+                            const head = visit.localExeStack().get(0)
+                            const nodeType = head.type;
+
+                            //if the lifecycle of the perExe hook is handled properly,this particular one shouldnt live long enough to see the return statement
+                            expect(nodeType).not.toBe<typeof nodeType>('ReturnStatement')
+                        }
+                    }
+                    hitDeclNode = true;
+                })
+            }
+        })
+        fn(10);
+        expect(hitDeclNode).toBe(true);
+        expect(setPerExeHook).toBe(true);
     })
 
     it('should ensure that the local exe stack always has the latest executed node at its head',async ()=>{
