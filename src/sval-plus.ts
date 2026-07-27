@@ -107,8 +107,12 @@ export class Visit implements VisitContract {
         if (handler !== null) {
             if (this.#interpreter.reusables.result !== UNASSIGNED) {
                 throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
-            }
-            this.#interpreter.reusables.result = handler(this.#interpreter.reusables.node!,this.#interpreter.reusables.currentScope!);
+            };
+
+            this.#interpreter.reusables.result = handler(
+                this.#interpreter.reusables.node!,
+                this.#interpreter.reusables.currentScope!
+            );
             if (isGenerator(this.#interpreter.reusables.result)) {
                 return LAZY_NODE;
             }else {
