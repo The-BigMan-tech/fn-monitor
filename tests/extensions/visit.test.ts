@@ -287,6 +287,31 @@ describe('Visit object behaviour',()=>{
         expect(setPerExeHook).toBe(true);
     })
 
+    it('should ensure that the localExeStack is cleared between parent nodes',()=>{
+        let hitReturnNode = false;
+
+        const fn = monitor({
+            main:{
+                ref:(x: number)=>{
+                    const y = 10 + x;
+                    return y
+                }
+            },
+            beforeEachCall:()=>{
+                hitReturnNode = false;
+            },
+            inspector:(visit)=> {   
+                visit.is('ReturnStatement',()=>{
+                    //if the stack contains the results of the variable decl node,then this will fail
+                    expect(visit.localExeStack().length).toBe(0);
+                    hitReturnNode = true;
+                })
+            }
+        })
+        fn(10);
+        expect(hitReturnNode).toBe(true);
+    })
+
     it('should ensure that the localExeStack contains the evaluation of its node and that of its children',()=>{
         let hitDeclNode = false;
         let setPerExeHook = false;
@@ -317,7 +342,8 @@ describe('Visit object behaviour',()=>{
                             const head = stack.get(0)
                             
                             if (head.node === ownerNode) {
-                                expect(stack.get(0).type).toBe('VariableDeclaration');
+                                //the variable decl node gets evaluated last and thus at the head because the interpreter has to evaluate its children first.
+                                expect(head.type).toBe('VariableDeclaration');
                                 expect(stack.get(1).type).toBe('BinaryExpression');
                                 expect(stack.get(2).type).toBe('Identifier')
                                 expect(stack.get(3).type).toBe('Literal')
