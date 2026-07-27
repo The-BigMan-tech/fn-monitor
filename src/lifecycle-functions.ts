@@ -61,6 +61,7 @@ export function pushResult(interpreter:SvalPlus,final:any) {
     const currentEvent = interpreter.reusables.currentEvent;
     const node = interpreter.reusables.node!;
 
+    //we should aways insert a new object.Trying to optimize this by reusing objects may be logically incosistent with the rest of the codebase
     interpreter.reusables.shared.exeStack.unshift({
         evaluation:final,
         type:node.type,
