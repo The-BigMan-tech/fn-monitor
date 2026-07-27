@@ -1,3 +1,5 @@
+import ansis from 'ansis';
+
 import { Node } from 'acorn'
 import { assign } from '../share/util.ts'
 import Scope from '../scope/index.ts'
@@ -10,45 +12,58 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { LAZY_NODE, Reusables, SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
+import { 
+    LAZY_NODE, 
+    Reusables, 
+    SEEN, 
+    SvalPlus 
+} from '../custom-types.ts';
+
 import { 
     callInspector, 
     callPerExe, 
     captureReusables, 
     cleanStack, 
-    isGenerator, pushHandler, pushResult,
+    executedManually, 
+    isGenerator,pushedManually,pushResult,
     restoreCapturedReusables,
     useModifiedEvaluator, // Use the Generator version
 } from '../lifecycle-functions.ts'
 
-import ansis from 'ansis'
+
+function assertIsLazy(value:any) {
+    if (value !== LAZY_NODE) {
+        throw new Error(ansis.red(`In Generator Evaluator: When the interpreter visit a LAZY_NODE,generator-based inspectors can only yield that lazy node but saw ${String(value)}.`))
+    };
+}
+function assertIsDone(done:boolean | undefined) {
+    if (!done) {
+        throw new Error(ansis.red(`In Generator Evaluator: Generator-based inspectors can only yield once.`))
+    }
+}
+function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:Reusables):Generator {
+    let iterResult = iterator.next();
+
+    while (!iterResult.done) {
+        let feedback;
+        try {
+            feedback = yield iterResult.value;
+            restoreCapturedReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
+        }catch (e) {
+            iterResult = iterator.throw(e);
+            continue;
+        }
+        iterResult = iterator.next(feedback);
+    }
+    return iterResult.value; 
+}
 
 let evaluateOps: any
 
-function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:Reusables):Generator {
-    let result = iterator.next();
-    while (!result.done) {
-        let input;
-        try {
-            input = yield result.value;// The error from .throw() enters here
-            restoreCapturedReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
-        }catch (e) {
-            result = iterator.throw(e);
-            continue;
-        }
-        result = iterator.next(input);
-    }
-    
-    const final = result.value;
-    if (interpreter.reusables.result !== UNASSIGNED) {//this is true if visit.execute was called
-        pushResult(interpreter,final)//the node cant be null during an evaluator call
-    }
-    // console.log('STACK: ',[...interpreter.reusables.shared.readonlyExeStack].map(x=>x.type));
-    return final; 
-}
-
 export default function* evaluate(node: Node, scope: Scope) {
-    if (!node) return
+    if (!node) {
+        return;
+    }
     if (!evaluateOps) {
         evaluateOps = assign(
             {},
@@ -60,7 +75,8 @@ export default function* evaluate(node: Node, scope: Scope) {
             pattern,
             program
         )
-    }
+    };
+
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
@@ -73,23 +89,22 @@ export default function* evaluate(node: Node, scope: Scope) {
         return yield* handler(node,scope);
     }
 
-
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
     const parentReusables = captureReusables(interpreter);
+    const currentReusables = interpreter.reusables;
     
     try {
-        interpreter.reusables.shared.evalStack.value += 1;
+        currentReusables.shared.evalStack.value += 1;
 
-        const feedback = callInspector(node, scope, handler);
+        const response = callInspector(node, scope, handler);
         const localReusables = captureReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
 
-        if (isGenerator(feedback)) {
-            const next = feedback.next();
-            const executedManually = (interpreter.reusables.result !== UNASSIGNED);
+        if (isGenerator(response)) {
+            const next = response.next();
 
-            const result = executedManually//this result variable must be called strictly after resuming the generator if the inspector is a generator
+            const final = executedManually(currentReusables.result)//this result variable must be called strictly after resuming the generator if the inspector is a generator
                 ?yield* higherHandler(
-                    interpreter.reusables.result,
+                    currentReusables.result,
                     interpreter,
                     localReusables
                 )
@@ -99,29 +114,21 @@ export default function* evaluate(node: Node, scope: Scope) {
                     localReusables
                 );
 
-            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.
-
-            if (!next.done) {
-                if (next.value !== LAZY_NODE) {
-                    throw new Error(ansis.red(`For a lazy node,inspectors that are generators can only yield that lazy node but saw ${String((next as IteratorResult<any>).value)}.`))
-                }
-                const next2 = feedback.next(result);
-                if (!next2.done) {
-                    throw new Error(ansis.red(`In Lazy Node:inspectors that are generators can only yield once.`))
-                }
-            }
-            const pushedManually = executedManually;
+            if (!pushedManually(currentReusables.result)) pushResult(interpreter,final);
+            currentReusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.
             
-            pushHandler(interpreter,result,pushedManually);
+            if (!next.done) {
+                assertIsLazy(next.value)
+                const next2 = response.next(final);
+                assertIsDone(next2.done)
+            };
             callPerExe(interpreter);
-
-            return result;
+            return final;
         }
         else {
-            const executedManually = (interpreter.reusables.result !== UNASSIGNED);
-            const result = executedManually
+            const final = executedManually(currentReusables.result)
                 ?yield* higherHandler(
-                    interpreter.reusables.result,
+                    currentReusables.result,
                     interpreter,
                     localReusables
                 )
@@ -130,14 +137,12 @@ export default function* evaluate(node: Node, scope: Scope) {
                     interpreter,
                     localReusables
                 );
-            interpreter.reusables.result = SEEN
-            
-            const pushedManually = executedManually
-            
-            pushHandler(interpreter,result,pushedManually);
-            callPerExe(interpreter);
 
-            return result;
+            if (!pushedManually(currentReusables.result)) pushResult(interpreter,final);
+            currentReusables.result = SEEN;
+            
+            callPerExe(interpreter);
+            return final;
         }
     } 
     finally {

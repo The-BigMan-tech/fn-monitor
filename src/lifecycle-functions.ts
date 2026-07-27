@@ -14,6 +14,16 @@ export function useModifiedEvaluator(scope:Scope):boolean {
     const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableInspector);
     return use;
 }
+export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
+    interpreter.reusables.shared.evalStack.value -= 1;
+    const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
+    
+    if (zeroNodesLeft) {
+        clearEvalStack(interpreter);
+    }else {
+        restoreCapturedReusables(interpreter, parentReusables);
+    }
+};
 
 
 export function callPerExe(interpreter:SvalPlus) {
@@ -27,7 +37,7 @@ export function callPerExe(interpreter:SvalPlus) {
         }
     }
 }
-//we want to reset the variables each time before we call the monitor so that each child evaluation dont get leaked refs or values from their parents.but we exclude eval stack and exe stack because they must be tracked throughout all evaluations
+//we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
 export function callInspector(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
     updateReusables(acornNode,currentScope,handler)
@@ -35,31 +45,18 @@ export function callInspector(acornNode:AcornNode,currentScope:Scope<SvalPlus>,h
 }
 
 
-export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
-    interpreter.reusables.shared.evalStack.value -= 1;
-    const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
-    
-    // console.log('EVAL STACK: ',interpreter.reusables.shared.evalStack.value);
-    
-    if (zeroNodesLeft) {
-        clearEvalStack(interpreter);
-    } else {
-        restoreCapturedReusables(interpreter, parentReusables);
-    }
+export function executedManually(result:any):boolean {
+    return (result !== UNASSIGNED)
 }
-
-
-export function pushHandler(interpreter:SvalPlus,result:any,pushedManually:boolean) {
-    if (!pushedManually) {//only push the result if visit.execute wasnt called which would have assigned the result and pushed it
-        pushResult(interpreter,result);
-    }
+export function pushedManually(result:any):boolean {
+    return executedManually(result) && !(isGenerator(result));//the visit.execute method doesnt and cant push the result if it is a generator
 }
-export function pushResult(interpreter:SvalPlus,result:any) {
+export function pushResult(interpreter:SvalPlus,final:any) {
     const currentEvent = interpreter.reusables.currentEvent;
     const node = interpreter.reusables.node!;
 
     interpreter.reusables.shared.exeStack.unshift({
-        evaluation:result,
+        evaluation:final,
         type:node.type,
         node,
         scope:(currentEvent === NOT_ALLOCATED)
@@ -77,10 +74,10 @@ function updateReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handle
     interpreter.reusables.handler = handler;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
-    //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation
+    //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation.Its lifecycle's end is handled in another function
+    //we dont touch the evalstack pointer here.
 }
 function clearEvalStack(interpreter:SvalPlus) {
-    // console.log('CLEARED EVAL');
     interpreter.reusables.node = null;
     interpreter.reusables.currentScope = null;
     interpreter.reusables.handler = null;
@@ -88,6 +85,8 @@ function clearEvalStack(interpreter:SvalPlus) {
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
     interpreter.reusables.shared.evalStack.value = 0;
     interpreter.reusables.shared.exeStack.clear();
+    //we dont touch perExe here because its lifecycle's end is handled in another function
+    //we dont touch the readonly exe stack because its just a live reference to the exe stack
 }
 
 
