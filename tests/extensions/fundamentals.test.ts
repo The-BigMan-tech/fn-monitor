@@ -491,7 +491,7 @@ describe('Basic behaviours',()=>{
         expect(perExeCalls).toBe(executedNodes)
     })
 
-    it('should ensure that the local exe stack always has the latest executed node at its head',()=>{
+    it('should ensure that the local exe stack always has the latest executed node at its head',async ()=>{
         const fn = monitor({
             main:{
                 ref:(x: number)=>{
@@ -499,7 +499,7 @@ describe('Basic behaviours',()=>{
                     return y;
                 }
             },
-            inspector:function* (visit):InspectorGenerator { 
+            inspector:(visit)=> { 
                 let currentNode: EsNode | undefined;
 
                 visit.is('Any', (event) => {
@@ -516,5 +516,30 @@ describe('Basic behaviours',()=>{
             }
         })
         fn(10);
+
+        //This will test the generator-based evaluator
+        const fn2 = monitor({
+            main:{
+                ref:async (x: number)=>{
+                    return await Promise.resolve(10 + x);
+                }
+            },
+            inspector:function* (visit):InspectorGenerator { 
+                let currentNode: EsNode | undefined;
+
+                visit.is('Any', (event) => {
+                    currentNode = event.node;
+                });
+
+                const result = yield visit.execute();
+
+                const stack = visit.localExeStack();
+                const head = stack.get(0);
+        
+                expect(head.node).toBe(currentNode);
+                expect(head.evaluation).toBe(result);
+            }
+        })
+        await fn2(10);
     })
 })
