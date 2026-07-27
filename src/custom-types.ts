@@ -28,6 +28,14 @@ export type EsNode = EsTreeNode;//i couldnt directly export it from the module b
 export class WrapperError extends Error {};
 export class VisitExecutionError extends Error {};
 
+export const LAZY_NODE = Symbol('LAZY_NODE');
+export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
+
+//These two symbols are internal and wont be encountered by the caller/library user
+export const UNASSIGNED = Symbol('UNASSIGNED');
+export const SEEN = Symbol('SEEN');
+
+
 /**
  * This is a string union of all the possible nodes the caller can query in the visit.is callback.
  * They are all estree node types.You will see type definitions shortening this to EsNode.
@@ -113,16 +121,11 @@ export type EventMap = (
     Record<UnaryExpression['type'],UnaryExprEvent> &
     Record<'Any', LangEvent>
 );
-export const LAZY_NODE = Symbol('LAZY_NODE');
-export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
-
-//These two symbols are internal and wont be encountered by the caller/library user
-export const UNASSIGNED = Symbol('UNASSIGNED');
-export const SEEN = Symbol('SEEN');
 
 
 export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,any>;
-
+export type Inspector = (visit:Visit)=> void | InspectorGenerator;
+export type OnStep = ()=>void;
 export type PerExe = ()=>void;
 
 export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
@@ -180,6 +183,17 @@ export interface Visit {
     localExeStack:()=>LocalExeStack,
 }
 
+
+export interface ScopeForEvent {
+    /**The variables in the scope.You can check for all the local variables or use the search method to get a variable from its identifier.*/
+    variables:{
+        /**If a variable cannot be identified from the given name,it returns undefined. */
+        search:(name: string)=>unknown | undefined,
+        local:Record<string,unknown>
+    },
+    /**The depth of the scope of the current node*/
+    depth:number
+}
 export interface ExeResult {
     /**The result of the node's evaluation */
     evaluation:unknown,
@@ -214,11 +228,6 @@ export interface Reusables {
         }
     }
 }
-
-export type Inspector = (visit:Visit)=> void | InspectorGenerator;
-
-export type OnStep = ()=>void;
-
 export interface SvalPlus {
     inspector:Inspector | null,
     onStep:OnStep | null,
@@ -227,16 +236,9 @@ export interface SvalPlus {
     stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';//the purpose of this is to prevent the interpreter from hitting the inspector during the parsing stage and also when its not explicitly running the monitored function
     createEventScope:()=>ScopeForEvent,
 }
-export interface ScopeForEvent {
-    /**The variables in the scope.You can check for all the local variables or use the search method to get a variable from its identifier.*/
-    variables:{
-        /**If a variable cannot be identified from the given name,it returns undefined. */
-        search:(name: string)=>unknown | undefined,
-        local:Record<string,unknown>
-    },
-    /**The depth of the scope of the current node*/
-    depth:number
-}
+
+
+
 export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event
     public node:NodeType;
     public scope:ScopeForEvent;
