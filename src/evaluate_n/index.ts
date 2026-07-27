@@ -12,10 +12,10 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
+import { SEEN, SvalPlus } from '../custom-types.ts'
 import { 
     callInspector, 
-    captureReusables, 
+    copyReusables, 
     stackHandler,
     isGenerator, 
     callPerExe, 
@@ -66,7 +66,7 @@ export default function evaluate(node: Node, scope: Scope) {
     };
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
-    const parentReusables = captureReusables(interpreter);
+    const parentReusables = copyReusables(interpreter);
     const currentReusables = interpreter.reusables
     
     try {

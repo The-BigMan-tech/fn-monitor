@@ -22,11 +22,11 @@ import {
 import { 
     callInspector, 
     callPerExe, 
-    captureReusables, 
+    copyReusables, 
     stackHandler, 
     executedManually, 
     isGenerator,pushedManually,pushResult,
-    restoreCapturedReusables,
+    overwriteReusables,
     useModifiedEvaluator, // Use the Generator version
 } from '../lifecycle-functions.ts'
 
@@ -48,7 +48,7 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:R
         let feedback;
         try {
             feedback = yield iterResult.value;
-            restoreCapturedReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
+            overwriteReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
         }catch (e) {
             iterResult = iterator.throw(e);
             continue;
@@ -90,14 +90,14 @@ export default function* evaluate(node: Node, scope: Scope) {
     }
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
-    const parentReusables = captureReusables(interpreter);
+    const parentReusables = copyReusables(interpreter);
     const currentReusables = interpreter.reusables;
     
     try {
         stackHandler.start(interpreter)
 
         const response = callInspector(node, scope, handler);
-        const localReusables = captureReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
+        const localReusables = copyReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
 
         if (isGenerator(response)) {
             const next = response.next();

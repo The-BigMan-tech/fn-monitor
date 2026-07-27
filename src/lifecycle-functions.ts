@@ -24,9 +24,9 @@ export const stackHandler = {
         const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
 
         if (zeroNodesLeft) {
-            clearEvalStack(interpreter);
+            clearStack(interpreter);
         }else {
-            restoreCapturedReusables(interpreter, parentReusables);
+            overwriteReusables(interpreter, parentReusables);
         }
     }
 }
@@ -83,7 +83,7 @@ function updateReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handle
     //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation.Its lifecycle's end is handled in another function
     //we dont touch the evalstack pointer here.
 }
-function clearEvalStack(interpreter:SvalPlus) {
+function clearStack(interpreter:SvalPlus) {
     interpreter.reusables.node = null;
     interpreter.reusables.currentScope = null;
     interpreter.reusables.handler = null;
@@ -96,7 +96,7 @@ function clearEvalStack(interpreter:SvalPlus) {
 }
 
 
-export function captureReusables(interpreter:SvalPlus):Reusables {
+export function copyReusables(interpreter:SvalPlus):Reusables {
     return {
         node: interpreter.reusables.node,
         currentScope:interpreter.reusables.currentScope,
@@ -111,7 +111,7 @@ export function captureReusables(interpreter:SvalPlus):Reusables {
         }
     };
 }
-export function restoreCapturedReusables(interpreter:SvalPlus,prevReusables:Reusables) {
+export function overwriteReusables(interpreter:SvalPlus,prevReusables:Reusables) {
     interpreter.reusables.node = prevReusables.node;
     interpreter.reusables.currentScope = prevReusables.currentScope;
     interpreter.reusables.handler = prevReusables.handler;
