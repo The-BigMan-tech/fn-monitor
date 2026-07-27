@@ -171,9 +171,11 @@ export interface Visit {
     execute:<T extends any=any>()=>T,
 
     /**
-     * This is a stack data structure that contains the results of each evaluated child node for a given node.
+     * This is a stack data structure that contains the results of a node and each of its evaluated child node.
      * The latest results stay at the head and the oldest remain at the tail.
-     * It is not the full execution history of the entire function. 
+     * 
+     * It is a live reference to the current interpreter's state and it is cleared regularly
+     * So it should be used on demand and not stored somewhere to use for later
      */
     localExeStack:()=>LocalExeStack,
 }
