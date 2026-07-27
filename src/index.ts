@@ -20,7 +20,7 @@
  *    preserve compatibility (e.g., the evaluator refactor).
  * 
  * 4. GENERATOR EVALUATOR TEST COVERAGE:
- *    Unlike the normalized evaluator, which is rigorously validated by the 250+ regression 
+ *    Unlike the normalized evaluator, which is rigorously validated by the 215+ regression 
  *    tests inherited from `sval` and the additional extension tests, the generator-based evaluator 
  *    currently relies on only a handful of dedicated async tests and lacks comprehensive coverage.
  *    
