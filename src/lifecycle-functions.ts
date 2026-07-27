@@ -14,16 +14,22 @@ export function useModifiedEvaluator(scope:Scope):boolean {
     const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableInspector);
     return use;
 }
-export function cleanStack(interpreter:SvalPlus,parentReusables:Reusables) {
-    interpreter.reusables.shared.evalStack.value -= 1;
-    const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
-    
-    if (zeroNodesLeft) {
-        clearEvalStack(interpreter);
-    }else {
-        restoreCapturedReusables(interpreter, parentReusables);
+
+export const stackHandler = {
+    start:(interpreter:SvalPlus)=>{
+        interpreter.reusables.shared.evalStack.value += 1;
+    },
+    finish:(interpreter:SvalPlus,parentReusables:Reusables)=> {
+        interpreter.reusables.shared.evalStack.value -= 1;
+        const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
+
+        if (zeroNodesLeft) {
+            clearEvalStack(interpreter);
+        }else {
+            restoreCapturedReusables(interpreter, parentReusables);
+        }
     }
-};
+}
 
 
 export function callPerExe(interpreter:SvalPlus) {

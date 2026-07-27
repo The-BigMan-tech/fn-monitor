@@ -16,7 +16,7 @@ import { SEEN, SvalPlus, UNASSIGNED } from '../custom-types.ts'
 import { 
     callInspector, 
     captureReusables, 
-    cleanStack,
+    stackHandler,
     isGenerator, 
     callPerExe, 
     useModifiedEvaluator, 
@@ -70,7 +70,7 @@ export default function evaluate(node: Node, scope: Scope) {
     const currentReusables = interpreter.reusables
     
     try {
-        currentReusables.shared.evalStack.value += 1;
+        stackHandler.start(interpreter)
 
         const response = callInspector(node, scope, handler);//call this before the node is executed
         //If you noticed,I didnt capture nor restore the reusables local to this evaluation because it runs to completion and the reusables wont be overwritten by another evaluation
@@ -107,6 +107,6 @@ export default function evaluate(node: Node, scope: Scope) {
             return final;
         }
     }finally {
-        cleanStack(interpreter,parentReusables)
+        stackHandler.finish(interpreter,parentReusables)
     }
 }

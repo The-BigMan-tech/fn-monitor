@@ -23,7 +23,7 @@ import {
     callInspector, 
     callPerExe, 
     captureReusables, 
-    cleanStack, 
+    stackHandler, 
     executedManually, 
     isGenerator,pushedManually,pushResult,
     restoreCapturedReusables,
@@ -94,7 +94,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     const currentReusables = interpreter.reusables;
     
     try {
-        currentReusables.shared.evalStack.value += 1;
+        stackHandler.start(interpreter)
 
         const response = callInspector(node, scope, handler);
         const localReusables = captureReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
@@ -146,6 +146,6 @@ export default function* evaluate(node: Node, scope: Scope) {
         }
     } 
     finally {
-        cleanStack(interpreter,parentReusables)
+        stackHandler.finish(interpreter,parentReusables)
     }
 }
