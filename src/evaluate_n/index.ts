@@ -67,8 +67,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
     const parentReusables = copyReusables(interpreter);
-    const currentReusables = interpreter.reusables
-    
+
     try {
         stackHandler.start(interpreter)
 
@@ -78,30 +77,35 @@ export default function evaluate(node: Node, scope: Scope) {
         if (isGenerator(response)) {
             const next = response.next();
             
-            const final = executedManually(currentReusables.result)
-                ?currentReusables.result
+            const final = executedManually(interpreter.reusables.result)
+                ?interpreter.reusables.result
                 :handler(node,scope)//must be done after calling next
 
-            if (!pushedManually(currentReusables.result)) pushResult(interpreter,final);
+            if (!pushedManually(interpreter.reusables.result)) {
+                pushResult(interpreter,final);
+            }
             
-            const manualResult = currentReusables.result//save it before marking the result as seen.this extra line is special just to the generator part under the normalized evaluator cuz its not needed in other branches as a medium for safety check.This allows this evaluator to support geerator inspectors that yield without crashing.
-            currentReusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.          
+            const manualResult = interpreter.reusables.result//save it before marking the result as seen.this extra line is special just to the generator part under the normalized evaluator cuz its not needed in other branches as a medium for safety check.This allows this evaluator to support geerator inspectors that yield without crashing.
+            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.          
 
             if (!next.done) {
                 assertIsManualResult(next.value,manualResult)
                 const next2 = response.next(final);
                 assertIsDone(next2.done);
             };
+
             callPerExe(interpreter);
             return final;
         }
         else {
-            const final = executedManually(currentReusables.result)
-                ?currentReusables.result
+            const final = executedManually(interpreter.reusables.result)
+                ?interpreter.reusables.result
                 :handler(node,scope)//must be done after calling next
 
-            if (!pushedManually(currentReusables.result)) pushResult(interpreter,final);
-            currentReusables.result = SEEN;
+            if (!pushedManually(interpreter.reusables.result)) {
+                pushResult(interpreter,final);
+            }
+            interpreter.reusables.result = SEEN;
 
             callPerExe(interpreter);
             return final;

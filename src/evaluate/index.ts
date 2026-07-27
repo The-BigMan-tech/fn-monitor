@@ -91,8 +91,7 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
     const parentReusables = copyReusables(interpreter);
-    const currentReusables = interpreter.reusables;
-    
+
     try {
         stackHandler.start(interpreter)
 
@@ -102,9 +101,9 @@ export default function* evaluate(node: Node, scope: Scope) {
         if (isGenerator(response)) {
             const next = response.next();
 
-            const final = executedManually(currentReusables.result)//this result variable must be called strictly after resuming the generator if the inspector is a generator
+            const final = executedManually(interpreter.reusables.result)//this result variable must be called strictly after resuming the generator if the inspector is a generator
                 ?yield* higherHandler(
-                    currentReusables.result,
+                    interpreter.reusables.result,
                     interpreter,
                     localReusables
                 )
@@ -114,21 +113,24 @@ export default function* evaluate(node: Node, scope: Scope) {
                     localReusables
                 );
 
-            if (!pushedManually(currentReusables.result)) pushResult(interpreter,final);
-            currentReusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.
+            if (!pushedManually(interpreter.reusables.result)){
+                pushResult(interpreter,final);
+            }
+            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.
             
             if (!next.done) {
                 assertIsLazy(next.value)
                 const next2 = response.next(final);
                 assertIsDone(next2.done)
             };
+            
             callPerExe(interpreter);
             return final;
         }
         else {
-            const final = executedManually(currentReusables.result)
+            const final = executedManually(interpreter.reusables.result)
                 ?yield* higherHandler(
-                    currentReusables.result,
+                    interpreter.reusables.result,
                     interpreter,
                     localReusables
                 )
@@ -138,8 +140,10 @@ export default function* evaluate(node: Node, scope: Scope) {
                     localReusables
                 );
 
-            if (!pushedManually(currentReusables.result)) pushResult(interpreter,final);
-            currentReusables.result = SEEN;
+            if (!pushedManually(interpreter.reusables.result)) {
+                pushResult(interpreter,final);
+            }
+            interpreter.reusables.result = SEEN;
             
             callPerExe(interpreter);
             return final;
