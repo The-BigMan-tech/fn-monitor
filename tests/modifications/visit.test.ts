@@ -145,7 +145,7 @@ describe('Visit Object Behaviour',()=>{
         const result = await monitoredFn(5);
         expect(result).toBe(14);
 
-        expect(hitCounts).toMatchObject({
+        expect(hitCounts).toEqual({
             VariableDeclaration:3,// let x, const double, const res
             IfStatement:1,// if (x > 0)
             BinaryExpression:3,// (x > 0), (x + 1), (y * 2)
@@ -158,7 +158,7 @@ describe('Visit Object Behaviour',()=>{
         } as Record<keyof typeof hitCounts,number>)
     });
 
-    it('should ensure that the perExecution hook is fired exactly for every executed node',()=>{
+    it('should ensure that the perExecution hook is fired exactly once for every executed node',()=>{
         let executedNodes = 0;
         let perExeCalls = 0;
 

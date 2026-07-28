@@ -67,7 +67,7 @@ describe('Scope Object Behaviour', () => {
                     expect(vars.search('name')).toBe('person');
                     expect(vars.search('age')).toBe(20);
 
-                    expect(vars.local).toMatchObject({
+                    expect(vars.local).toEqual({
                         name:'person',
                         age:20
                     })
@@ -105,7 +105,7 @@ describe('Scope Object Behaviour', () => {
                     expect(vars.search('name')).toBe('person');
                     expect(vars.search('age')).toBe(20);
 
-                    expect(vars.local).toMatchObject({
+                    expect(vars.local).toEqual({
                         name:'person',
                     })
                     hitReturnNode = true;
