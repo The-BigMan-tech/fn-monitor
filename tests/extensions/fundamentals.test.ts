@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { LangEvent, monitor } from '../../src/index'; 
 
-describe('Basic behaviours',()=>{
+describe('Fundamental Runtime Behaviour',()=>{
+    
     it('should isolate monitored functions from the outside scope',()=>{
         const outsideVar = "";
 

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { monitor, ScopeForEvent } from '../../src/index'; 
 
-describe('Scope object tests', () => {
+describe('Scope Object Behaviour', () => {
+    
     it('should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
         const testFn = (x: number) => {
             let y = x; // Root level of the function body

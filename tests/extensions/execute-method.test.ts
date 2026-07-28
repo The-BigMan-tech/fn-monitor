@@ -3,7 +3,8 @@ import { monitor,LAZY_NODE,InspectorGenerator,EsNode } from '../../src/index';
 import { VisitExecutionError } from '../../src/custom-types';
 
 
-describe('Visit.execute method behaviour',()=>{
+describe('Visit.execute() Method Behaviour',()=>{
+
     it('should ensure that visit.execute manually executes a node and it is not allowed to be called twice',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes

@@ -3,7 +3,8 @@ import { monitor } from '../../src/index';
 import { Visit } from '../../src/sval-plus';
 
 
-describe('Visit object behaviour',()=>{
+describe('Visit Object Behaviour',()=>{
+    
     it('should ensure that all the hooks are fired when set and together with their proper arguments',()=>{
         let calledBeforeCallHook = false;
         let calledAfterCallHook = false;

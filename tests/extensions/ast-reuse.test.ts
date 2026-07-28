@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 
 describe('AST Mutation Persistence', () => {
+    
     it('should parse the function into an AST once and reuse it, causing mutations to persist across calls', () => {
         let modifiedOp = false;
 
