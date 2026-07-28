@@ -434,7 +434,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | :--- | :--- |
-| `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope, wraps it together with the respective node in an event object, and fires the callback with it. |
+| `is(query, callback)` | Ties a callback execution to a specific AST node type. If matched, it allocates a scope, wraps it together with the respective node in an event object, and fires the callback with it.<br><br>This method does not register your callback as a hook for the future. It actually eagerly checks your query against the current node and fires the callback if it matches. It will then discard your callback right after. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed node. Short-lived; exists only for the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. <br><br>For an async node like an await statement, it defers the execution and returns the LAZY_NODE symbol. If you use a generator for the inspector, you can yield it to get the resolved value.|
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
