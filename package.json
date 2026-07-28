@@ -41,7 +41,7 @@
         "build": "vite build",
         "test": "vitest run",
         "test:interpreter": "vitest run ./tests/interpreter",
-        "test:extensions": "vitest run ./tests/extensions",
+        "test:modifications": "vitest run ./tests/modifications",
         "publish:public": "npm publish --registry=https://registry.npmjs.org/ --access public",
         "write-changelog":"tsx ./scripts/write-changelog.ts"
     },
