@@ -29,12 +29,12 @@ let evaluateOps: any
 
 function assertIsManualResult(value:any,manualResult:any) {
     if (value !== manualResult) {
-        throw new Error(ansis.red(`In Synchronous Evaluator: Generator-based inspectors can only yield the result of the current node but saw: ${String(value)} instead of: ${String(manualResult)}.`))
+        throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield the result of the current node but saw: ${String(value)} instead of: ${String(manualResult)}.`))
     }
 }
 function assertIsDone(done:boolean | undefined) {
     if (!done) {
-        throw new Error(ansis.red(`In Synchronous Evaluator: Generator-based inspectors can only yield once.`))
+        throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield once.`))
     }
 }
 export default function evaluate(node: Node, scope: Scope) {

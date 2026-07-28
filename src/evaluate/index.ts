@@ -33,12 +33,12 @@ import {
 
 function assertIsLazy(value:any) {
     if (value !== LAZY_NODE) {
-        throw new Error(ansis.red(`In Generator Evaluator: When the interpreter visit a LAZY_NODE,generator-based inspectors can only yield that lazy node but saw ${String(value)}.`))
+        throw new Error(ansis.red(`[Generator Evaluator] When the interpreter visit a LAZY_NODE,generator-based inspectors can only yield that lazy node but saw ${String(value)}.`))
     };
 }
 function assertIsDone(done:boolean | undefined) {
     if (!done) {
-        throw new Error(ansis.red(`In Generator Evaluator: Generator-based inspectors can only yield once.`))
+        throw new Error(ansis.red(`[Generator Evaluator] Generator-based inspectors can only yield once.`))
     }
 }
 function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:Reusables):Generator {
