@@ -129,10 +129,13 @@ export class Visit implements VisitContract {
     }
 } 
 export class SvalPlus extends Sval implements SvalPlusContract {
-    public static readonly resultExport:string = SvalPlus.sha256Key('result');
-    public static readonly argsVar = SvalPlus.sha256Key('args');//this can safely be static because its just used as a common name for the passed arguments.Its used in a per-instance object to ensure isolation
-    public static readonly capturesVar = SvalPlus.sha256Key('captures');
-    
+    //this can safely be static because its just used to store common names.Its used in a per-instance object to ensure isolation
+    public static commonLabels = {
+        resultExport:SvalPlus.sha256Key('result'),
+        args:SvalPlus.sha256Key('args'),
+        captures:SvalPlus.sha256Key('captures')
+    }
+
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
     public static meriyahParseOptions:MeriyahOptions = {
@@ -278,7 +281,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
         const fnCallString = 
             `\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
-            `\n\nexports.${SvalPlus.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.argsVar});`;
+            `\n\nexports.${SvalPlus.commonLabels.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.commonLabels.args});`;
 
         const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
         const fnCallAst = meriyahParse(fnCallString, SvalPlus.meriyahParseOptions);
@@ -301,8 +304,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             )
         )
     }
-    private argImports:{ [SvalPlus.argsVar]:any[] } = { 
-        [SvalPlus.argsVar]:null as any //we firstly set it to null to prevent creating a wasted empty object
+    private argImports:{ [SvalPlus.commonLabels.args]:any[] } = { 
+        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty object
     }
 
     private normalizeErr(err:unknown):Error {
@@ -325,12 +328,12 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         if (this.fnBeforeEachCall) {
             this.fnBeforeEachCall(...args);
         }
-        this.argImports[SvalPlus.argsVar] = args;
+        this.argImports[SvalPlus.commonLabels.args] = args;
         this.import(this.argImports);
 
         try {
             this.run(this.astInUse!.fnCall);
-            result = this.exports[SvalPlus.resultExport];
+            result = this.exports[SvalPlus.commonLabels.resultExport];
         }catch(err) {
             result = this.normalizeErr(err);
         };

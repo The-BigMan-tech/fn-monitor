@@ -119,9 +119,9 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     });
 
     interpreter.stage = "PRE-PROCESSING";
-    interpreter.exports[SvalPlus.capturesVar] = captures || Object.create(null);
+    interpreter.exports[SvalPlus.commonLabels.captures] = captures || Object.create(null);
     
-    const fnSrc = interpreter.getFnSrc(mainFn,SvalPlus.capturesVar);
+    const fnSrc = interpreter.getFnSrc(mainFn,SvalPlus.commonLabels.captures);
     fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
     
     const ast = SvalPlus.getFnAst(fnSrc);
