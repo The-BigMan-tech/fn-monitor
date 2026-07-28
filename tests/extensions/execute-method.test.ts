@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { monitor,LAZY_NODE,InspectorGenerator } from '../../src/index'; 
+import { monitor,LAZY_NODE,InspectorGenerator,EsNode } from '../../src/index'; 
 import { VisitExecutionError } from '../../src/custom-types';
 
 
@@ -144,4 +144,57 @@ describe('Visit.execute method behaviour',()=>{
         await fn(10);
         expect(hitAwaitNode).toBe(true);
     })
+
+    it('should restore the parent node\'s execution context after visit.execute recursively evaluates child nodes', async () => {
+        const fn = monitor({
+            main:{
+                ref:(x:number)=>{
+                    const y = (x + 1);
+                    return y
+                }
+            },
+            inspector:(visit)=>{
+                let nodeA:EsNode | undefined;
+
+                visit.is('Any',event=>{
+                    nodeA = event.node;
+                });
+
+                //calling visit.execute makes the interprter to recursively evaluate child nodes which will cause it to fire the inspector repeatedly.
+                //Comparing the node before and after, checks if the interpreter retained the context of its parent as it was executing them
+                //we cant compare the scopes because the interpreter always allocates a new scope for every event and we cant compare them by value because the value of the variables would have changed
+                
+                visit.execute();
+
+                visit.is('Any',event=>{
+                    expect(event.node === nodeA).toBe(true);
+                })
+            }
+        })
+        fn(10);
+
+        //This will test the generator-based evaluator
+        const fn2 = monitor({
+            main:{
+                ref:async (x: number)=>{
+                    return await Promise.resolve(x);
+                }
+            },
+            inspector:function* (visit):InspectorGenerator {
+                let asyncNodeA:EsNode | undefined;
+
+                visit.is('Any',event=>{
+                    asyncNodeA = event.node;
+                });
+
+                yield visit.execute();
+
+                visit.is('Any',event=>{
+                    expect(event.node === asyncNodeA).toBe(true);
+                })
+            }
+        })
+        await fn2(10);
+    })
+
 })
