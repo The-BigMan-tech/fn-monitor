@@ -406,21 +406,21 @@ The monitored function used 50.580ms when only given a budget of 50.000ms.
 
 ### Core Functions & Interfaces
 
-#### `monitor<T>(setup: MonitorFnSetup<T>)`
+#### monitor`<T>`(setup: MonitorFnSetup`<T>`)
 The main export. Accepts a configuration object and returns a new function that can be called exactly as the original, but is executed by the custom interpreter. The returned function is augmented with an `alreadyMonitored: true` property.
 
-#### `MonitorFnSetup<T>`
+#### MonitorFnSetup`<T>`
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
 | `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the same interpreter context. |
-| `inspector` | `Inspector` | The main hook fed the interpreter's context (`visit` object) to inspect, modify, and manually execute nodes. |
+| `inspector` | `Inspector` | The main hook fed the interpreter's context (`visit` object) to inspect, modify, and manually execute nodes. It can be defined as either a regular function or a generator.<br><br>💡 **Type Clarification:** You do **not** need to match the inspector's type to the monitored function's type (e.g., a regular function works fine for async code, and a generator works fine for sync code). Both will work universally, except for the specific behavioral nuance when paired with `visit.execute()`. |
 | `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not get the rich `visit` object, making it significantly faster. |
 | `sourceOut` | `{ value: string }` | Overwrites the `value` property with the generated code used in the interpreter. |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
-#### `Metadata<T>`
+#### Metadata`<T>`
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
@@ -429,17 +429,17 @@ The main export. Accepts a configuration object and returns a new function that 
 
 ### The Inspector Context
 
-#### `Visit`
+#### Visit
 The rich object that gives inspectors their ability to participate in the interpretation. Every monitored function has exactly one `visit` object allocated to save memory. **It must be used strictly within the `inspector` hook.**
 
 | Method/Property | Description |
 | :--- | :--- |
 | `is(query, callback)` | Registers a callback for specific AST node types. If matched, it allocates a scope, wraps it together with the respective node in an event object, and fires the callback with it. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed node. Short-lived; exists only for the current node and its children. |
-| `execute()` | Manually executes the current node and returns the result. For async nodes, returns `LAZY_NODE` (requires `yield`). |
+| `execute()` | Manually executes the current node and returns the result. <br><br>For an async node like an await statement, it defers the execution and returns the LAZY_NODE symbol. If you use a generator for the inspector, you can yield it to get the resolved value.|
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
 
-#### `ExeResult`
+#### ExeResult
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `evaluation` | `unknown` | The result of the node's evaluation. |
@@ -447,12 +447,10 @@ The rich object that gives inspectors their ability to participate in the interp
 | `node` | `EsNode` | The AST node itself. |
 | `scope` | `ScopeForEvent \| typeof NOT_ALLOCATED` | The safe scope created for the caller. |
 
-#### `ScopeForEvent`
-* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. `variables.local` and `variables.search(name)` return the raw values directly (no wrappers), and `depth` is strictly 0-indexed. It starts from the wrapped function's root.
-
-
 
 ### Utility Types & Classes
+
+* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` and `variables.search(name)` properties can be used to get all variable values, and `depth` is strictly 0-indexed. It starts from the wrapped function's root.
 
 * **`LocalExeStack`**: A custom, optimized deque (double-ended queue) with random array access, used internally to manage the execution stack. It is exposed to the user as a read-only view to prevent state corruption.
   
@@ -460,10 +458,7 @@ The rich object that gives inspectors their ability to participate in the interp
   
 * **`EventMap`**: Maps each node query to its dedicated Event class for tailored intellisense.
   
-* **Symbols**: 
-    - `LAZY_NODE` is returned when you call visit.execute on an async node like an await call.
-  
-    - `NOT_ALLOCATED` is used to mark scopes that were not allocated when their respective nodes were visited. The interpreter only allocates scopes that match a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
+* **`NOT_ALLOCATED`** A symbol used to mark scopes that were not allocated when their respective nodes were visited. The interpreter only allocates scopes that match a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
 
 
 ### Event Classes
