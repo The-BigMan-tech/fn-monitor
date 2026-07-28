@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 import { WrapperError } from '../../src/custom-types';
 
+//This doesnt have async tests because it's only testing pre-processing behaviour
+
 describe('Wrapper Constraints', () => {
 
-    it('should augment the returned function with the alreadyMonitored flag', () => {
+    it('should augment the returned monitored function with the alreadyMonitored flag', () => {
         const monitoredFn = monitor({
             main: { 
                 ref:() => undefined
@@ -13,7 +15,7 @@ describe('Wrapper Constraints', () => {
         expect(monitoredFn.alreadyMonitored).toBe(true);
     });
 
-    it('should throw an error if an already monitored function is passed to main.ref', () => {
+    it('should throw an error if an already monitored function is directly being wrapped to create a new monitored function', () => {
         const monitoredFn = monitor({
             main: { 
                 ref:() => undefined
@@ -28,7 +30,7 @@ describe('Wrapper Constraints', () => {
         }).toThrow(WrapperError);
     });
 
-    it('should throw an error if an already monitored function is passed to embed through a ref property', () => {
+    it('should throw an error if an already monitored function is being embedded in a new monitored function\'s context', () => {
         const monitoredFn = monitor({
             main: { 
                 ref:() => undefined
@@ -48,7 +50,7 @@ describe('Wrapper Constraints', () => {
         }).toThrow(WrapperError);
     });
 
-    it('should successfully execute an already monitored function when passed via captures', () => {
+    it('should allow an already monitored function to be captured in a new monitored function\'s context', () => {
         const monitoredInnerFn = monitor({ 
             main: { 
                 ref: (x: number) => x * 2
