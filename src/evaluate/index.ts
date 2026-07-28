@@ -99,7 +99,7 @@ export default function* evaluate(node: Node, scope: Scope) {
         const localReusables = copyReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
 
         if (isGenerator(response)) {
-            const next = response.next();
+            const next = response.next();//the generator must be advanced before evaluating the final result
 
             const final = executedManually(interpreter.reusables.result)//this result variable must be called strictly after resuming the generator if the inspector is a generator
                 ?yield* higherHandler(
