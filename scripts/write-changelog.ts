@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 
 // 1. Get tags sorted by Semantic Version (newest version first)
 const stdout = execSync('git tag --sort=-v:refname').toString().trim();
+
 if (!stdout) {
     console.error('❌ No git tags found in this repository.');
     process.exit(1);
@@ -11,22 +12,29 @@ if (!stdout) {
 const tags = stdout.split('\n').map(t => t.trim()).filter(Boolean);
 
 const latestTag = tags[0];
-const secondLatestTag = tags[1] || null;
+const previousTag = tags[1] || null;
 
 console.log(`✨ Latest Tag:        ${latestTag}`);
-console.log(`✨ Second Latest Tag: ${secondLatestTag ? secondLatestTag : 'None (First release)'}`);
+console.log(`✨ Previous Tag: ${previousTag ? previousTag : 'None (First release)'}`);
 
 // 3. Build the changelogen command dynamically
 const changelogFile = './CHANGELOG.md';
-let command = `changelogen --output=${changelogFile}`;
+let command = `changelogen --to=${latestTag} --output=${changelogFile}`;
 
 // Only add the --from flag if a second tag actually exists
-if (secondLatestTag) {
-    command = `changelogen --from=${secondLatestTag} --to=${latestTag} --output=${changelogFile}`;
+if (previousTag) {
+    command = `changelogen --from=${previousTag} --to=${latestTag} --output=${changelogFile}`;
 }
+
 console.log(`🚀 Running: ${command}`);
 
 // 4. Execute
-execSync(command, { stdio: 'inherit' }); // stdio: 'inherit' lets changelogen print its own success logs
-
-console.log('✅ Changelog generated successfully!');
+try {
+    // stdio: 'inherit' lets changelogen print its own success logs
+    execSync(command, { stdio: 'inherit' }); 
+    console.log('✅ Changelog generated successfully!');
+}catch (error) {
+    console.error('\n❌ Failed to generate changelog.');
+    console.error('Make sure `changelogen` is installed and your git history is clean.');
+    process.exit(1);
+}
