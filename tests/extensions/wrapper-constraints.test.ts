@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 import { WrapperError } from '../../src/custom-types';
 
-//This doesnt have async tests because it's only testing pre-processing behaviour
+//This doesnt have async tests because it's only testing pure pre-processing behaviour
 
 describe('Wrapper Constraints', () => {
 
