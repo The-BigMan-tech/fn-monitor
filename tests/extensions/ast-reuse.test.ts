@@ -37,7 +37,7 @@ describe('AST Mutation Persistence', () => {
         expect(monitoredFn(4, 3)).toBe(1);//The function executes as `4 - 3`, resulting in 1 (proving persistence).
     });
 
-    it('should reuse ast nodes if the internal generated code from the monitor function hits the cache.',()=>{
+    it('should reuse ast nodes across different monitored functions only if they have the exact same configuration.',()=>{
         function sub(a: number, b: number) {
             return a - b;
         }
@@ -54,12 +54,27 @@ describe('AST Mutation Persistence', () => {
                 });
             }
         });
+
         const monitoredFn2 = monitor({
             main:{
                 ref:sub
             }
         });
+
+        const monitoredFn3 = monitor({
+            main:{
+                ref:sub,
+                captures:{
+                    unusedVar:undefined
+                }
+            }
+        });
+
         expect(monitoredFn1(4,2)).toBe(6);
         expect(monitoredFn2(5,2)).toBe(7);//the mutated operator persists to this call
+        
+        //because this third function captures variables and the other two dont,
+        //the interpreter sees that their internal asts are different and will not reuse the asts.
+        expect(monitoredFn3(3,2)).toBe(1);
     })
 });
