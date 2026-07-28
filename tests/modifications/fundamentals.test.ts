@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LangEvent, monitor } from '../../src/index'; 
+import { InspectorGenerator, LangEvent, LAZY_NODE, monitor } from '../../src/index'; 
 
 describe('Fundamental Runtime Behaviour',()=>{
     
@@ -127,5 +127,34 @@ describe('Fundamental Runtime Behaviour',()=>{
 
         const expectedResult = weirdFormula(a,b,c);
         expect(monitoredFn(a,b,c)).toBe(expectedResult)
+    })
+
+    it('should ensure that the normalized evaluator can properly handle a generator function as the inspector',()=>{
+        function add(a: number, b: number) {
+            const result = a + b;
+            return result;
+        };
+
+        let sum;
+        let hitReturnNode = false;
+
+        const fn = monitor({
+            main:{
+                ref:add
+            },
+            beforeEachCall:()=>{
+                hitReturnNode = false;
+            },
+            inspector:function* (visit):InspectorGenerator {
+                const result = yield visit.execute();//since our monitored function is synchronous,it will be handled by our normalized evaluator
+                visit.is('ReturnStatement',()=>{
+                    sum = result.RES;
+                    hitReturnNode = true;
+                })
+            }
+        });
+        fn(1,3);
+        expect(hitReturnNode).toBe(true)
+        expect(sum).toBe(4);
     })
 })
