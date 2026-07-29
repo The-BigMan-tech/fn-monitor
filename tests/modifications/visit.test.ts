@@ -82,6 +82,27 @@ describe('Visit Object Behaviour',()=>{
         expect(afterHookCount).toBe(1)
     })
     
+    it('[Sync] should ensure that visit.is eagerly evaluates the query and discards the callback right after',()=>{
+        let checkedQuery = false;
+        let hits = 0;
+
+        const fn = monitor({
+            main:{
+                ref:(a:number,b:number)=>(a + b) * (a - b)
+            },
+            inspector:(visit)=>{
+                if (!checkedQuery) {
+                    visit.is('Any',()=>{
+                        hits += 1;
+                    })
+                    checkedQuery = true;
+                }
+            }
+        })
+        fn(2,3);
+        expect(hits).toBe(1);
+    })
+
     it('[Async] should correctly route and fire visit.is callbacks for multiple distinct AST node types, including async nodes', async () => {
         const hitCounts = {
             VariableDeclaration: 0,
