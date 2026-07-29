@@ -175,9 +175,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             perExe:null
         },
     };
-
-    private argImports:{ [SvalPlus.commonLabels.args]:any[] } = { 
-        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty object
+    private argImports = { 
+        [SvalPlus.commonLabels.args]:null as any as any[] //we firstly set it to null to prevent creating a wasted empty object
     }
 
 
