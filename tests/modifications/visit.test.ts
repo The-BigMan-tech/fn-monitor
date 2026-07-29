@@ -81,14 +81,14 @@ describe('Visit Object Behaviour',()=>{
         expect(beforeHookCount).toBe(1);
         expect(afterHookCount).toBe(1)
     })
-    
+
     it('[Sync] should ensure that visit.is eagerly evaluates the query and discards the callback right after',()=>{
         let checkedQuery = false;
         let hits = 0;
 
         const fn = monitor({
             main:{
-                ref:(a:number,b:number)=>(a + b) * (a - b)
+                ref:(a:number,b:number)=>(a + b) * (a - b)//complex ast with multiple nodes
             },
             inspector:(visit)=>{
                 if (!checkedQuery) {
@@ -100,6 +100,9 @@ describe('Visit Object Behaviour',()=>{
             }
         })
         fn(2,3);
+        
+        // If visit.is were a persistent listener, hits would be > 1 (firing for every node).
+        // Because it is eager and single-use, it fires exactly once for the current node and is then discarded.
         expect(hits).toBe(1);
     })
 
