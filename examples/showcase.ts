@@ -102,7 +102,7 @@ monitoredSayHello('person');
 console.log('\nGenerated code: \n',generatedCode.value);
 
 //SHOWCASE 3
-//Testing the exe stack and the execute method to get all the callees during the function execution.
+//Testing the exe stack to get all the callees during the function execution.
 //We are testing this on async code to see the full capability
 
 console.log('\n\nSHOWCASE 3');
@@ -111,8 +111,8 @@ const monitoredAsyncSqrt = monitor({
     main:{
         ref:async (a: number)=>{
             const sqrtFn = Math.sqrt;
-            const sqrt = sqrtFn(a);
-            const rounded = Number(sqrt.toFixed(3))
+            const sqrtResult = sqrtFn(a);
+            const rounded = Number(sqrtResult.toFixed(3))
             return await Promise.resolve(rounded);
         }
     },
@@ -139,14 +139,11 @@ const monitoredAsyncSqrt = monitor({
                 }
             }
         });
-        visit.is('ReturnStatement',()=>{
-            visit.perExecution = ()=>{
-                const stack = visit.localExeStack()
-                console.log('node evaluated during return: ',stack.get(0).evaluation);
-            }
+        
+        const result = yield visit.execute();//we yield outside visit.is queries
+        visit.is('AwaitExpression',()=>{
+            console.log('Awaited result: ',result);
         })
-        //for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the 'is' method,we do it outside.We must set our perExe hook before calling visit.execute for the hook to fire.which is why this is at the bottom
-        yield visit.execute();
     },
 });
 

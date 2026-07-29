@@ -208,7 +208,7 @@ exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a
 ```
 
 ### Showcase 3: Async Execution & The Execution Stack
-This example tests the execution stack (`localExeStack`) and the `execute` method to track all called functions during execution, specifically testing on async code to see its full capability.
+This example tests the execution stack (`localExeStack`) to track all called functions during execution, specifically testing on async code to see its full capability.
 
 ```typescript
 import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
@@ -219,8 +219,8 @@ const monitoredAsyncSqrt = monitor({
     main:{
         ref:async (a: number)=>{
             const sqrtFn = Math.sqrt;
-            const sqrt = sqrtFn(a);
-            const rounded = Number(sqrt.toFixed(3))
+            const sqrtResult = sqrtFn(a);
+            const rounded = Number(sqrtResult.toFixed(3))
             return await Promise.resolve(rounded);
         }
     },
@@ -236,7 +236,7 @@ const monitoredAsyncSqrt = monitor({
             visit.perExecution = ()=>{
                 const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
 
-                //in the stack, the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
+                //in the stack,the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
                 const element = stack.get(-(stackLenAtCallee + 1));
                 const isFunction = typeof element.evaluation === 'function';
 
@@ -247,14 +247,11 @@ const monitoredAsyncSqrt = monitor({
                 }
             }
         });
-        visit.is('ReturnStatement',()=>{
-            visit.perExecution = ()=>{
-                const stack = visit.localExeStack()
-                console.log('node evaluated during return: ',stack.get(0).evaluation);
-            }
+        
+        const result = yield visit.execute();//we yield outside visit.is queries
+        visit.is('AwaitExpression',()=>{
+            console.log('Awaited result: ',result);
         })
-        //for async functions,we want to yield the execution to pause the inspector till it fully executes.but since we cant yield in the 'is' method,we do it outside.We must set our perExe hook before calling visit.execute for the hook to fire.which is why this is at the bottom
-        yield visit.execute();
     },
 });
 
@@ -304,8 +301,7 @@ Callee: {
   },
   scope: Symbol(NOT_ALLOCATED)
 }
-node evaluated during return:  Promise { 1.414 }
-node evaluated during return:  { RES: 1.414 }
+Awaited result:  1.414
 Monitored async sqrt:  1.414
 ```
 
