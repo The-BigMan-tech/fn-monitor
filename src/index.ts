@@ -119,26 +119,26 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     });
 
     interpreter.stage = "PRE-PROCESSING";
-    interpreter.exports[SvalPlus.commonLabels.captures] = captures || Object.create(null);
+
+    const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
+    interpreter.exports[capturesLabel] = captures || Object.create(null);
     
-    const fnSrc = interpreter.getFnSrc(mainFn,SvalPlus.commonLabels.captures);
+    const fnSrc = interpreter.getFnSrc(mainFn,capturesLabel);
     fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
     
-    const ast = SvalPlus.getFnAst(fnSrc);
-    interpreter.run(ast.fnCode);
-
+    
     if (sourceOut) {
         sourceOut.value = jsBeatutify(
-            fnSrc.fnCode + 
-            ast.fnCallString,
+            fnSrc.fnCode + fnSrc.fnCall,
             {indent_size:4}
         );
     };
 
-    interpreter.astInUse = ast;
-    const newFn = interpreter.runMonitoredFn as T & { alreadyMonitored: true };
+    interpreter.useFn(fnSrc);
 
+    const newFn = interpreter.runFn as T & { alreadyMonitored: true };
     newFn['alreadyMonitored'] = true;
+
     return newFn;
 }
 

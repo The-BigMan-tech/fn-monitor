@@ -29,17 +29,14 @@ import { isGenerator, pushResult } from './lifecycle-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
-const Colors = {
-    orange:ansis.hex('#f6c098')
-};
 export interface FnSrc {
-    fnCode:string,
     fnName:string 
+    fnCode:string,
+    fnCall:string,
 }
 export interface FnAst {
     fnCode:Node,
     fnCall:Node,
-    fnCallString:string
 }
 export interface Metadata<T extends Fn> {
     /**the reference to the function to be included in the interpreter context**/
@@ -133,7 +130,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public static commonLabels = {
         resultExport:SvalPlus.sha256Key('result'),
         args:SvalPlus.sha256Key('args'),
-        captures:SvalPlus.sha256Key('captures')
+        captures:(fnName:string)=>{
+            return SvalPlus.sha256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
+        }
     }
 
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
@@ -158,7 +157,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public fnBeforeEachCall:Fn | null = null;
     public fnAfterEachCall:Fn | null = null;
     
-    public astInUse:FnAst | null = null;
+    public fnCallAst:Node | null = null;
 
     public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
     public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
@@ -176,6 +175,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             perExe:null
         },
     };
+
+    private argImports:{ [SvalPlus.commonLabels.args]:any[] } = { 
+        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty object
+    }
+
 
     // Accepting either SvalOptions,SvalPlusArgs or nothing allows this class to be instantiated exactly like the parent class. 
     // This backward-compatible behavior is utilized in the core tests.
@@ -202,15 +206,17 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.onStep = args.onStep || null;
 
         this.reusables.shared.readonlyExeStack.swapSrc(this.reusables.shared.exeStack);
-    }
-    public createEventScope = ()=>{
-        return new EventScope(this);
     };
 
+    private static sha256Key(str:string):string {
+        return 'generated_' + sha256.create().update(str).hex();
+    }
+    
 
-    public getFnSrc(fn:Fn,capturesVar:string):FnSrc  {
+    public getFnSrc(fn:Fn,capturesLabel:string):FnSrc  {
         const fnString = fn.toString();
         const hash = SvalPlus.sha256Key(fnString);
+
         const isDeclaration = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
 
         const intermediateFn:string = 'intermediateFn_' + hash;
@@ -221,24 +227,34 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 ${fnString};
                 return ${fn.name}
             })();`
-        }else {//handle unassigned anonymous functions
+        }
+        else {//handle unassigned anonymous functions
             intermediateFnCode = `\nconst ${intermediateFn} = ${fnString};`
         }  
-        const capturedKeys = (capturesVar !== null) ?Object.keys(this.exports[capturesVar]).sort():[];//i used sort here to increase the cache hit rate
-        const storeCaptures = (capturedKeys.length > 0) 
-            ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesVar};`
+
+        const capturedKeys = Object.keys(this.exports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
+
+        const unpackCaptures = (capturedKeys.length > 0) 
+            ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesLabel};`
             :'';
 
         const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
+
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
-            ${storeCaptures}
+            ${unpackCaptures}
             ${intermediateFnCode}
             return ${intermediateFn};
         })();`
 
+        const finalFnCall = (
+            `\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
+            `\n\nexports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});`
+        )
+
         return { 
+            fnName:finalFnName ,
             fnCode:finalFnCode,
-            fnName:finalFnName 
+            fnCall:finalFnCall
         };
     }
     public getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
@@ -248,18 +264,21 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             let declarations = '';
             let assignments = '';
 
-            for (const [index,name] of Object.keys(functions).sort().entries()) {//used sort here to increase the cache hit rate
+            const fnNames = Object.keys(functions).sort();//used sort here to increase the cache hit rate
+
+            for (const name of fnNames) {
                 const fn = functions[name];
-                const capturesVar = SvalPlus.sha256Key(`embeddedCaptures_${index}`)
-                
-                this.exports[capturesVar] = fn.captures || Object.create(null);
-                const fnSrc = this.getFnSrc(fn.ref,capturesVar);//passing undefined here prevents infinite recursion
+                const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);//prepending embeddedFn ensures that it wont conflct with existing generated commonLabels
+
+                this.exports[capturesLabel] = fn.captures || Object.create(null);
+                const fnSrc = this.getFnSrc(fn.ref,capturesLabel);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
                     ${fnSrc.fnCode}
                     return ${fnSrc.fnName};
                 })();`
+
                 declarations += `\nvar ${name};`;
                 assignments += `\n${name} = ${scopedFn};`;
             }
@@ -268,60 +287,35 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
         return fnCode;
     };
-
-
-    public static sha256Key(str:string):string {
-        return 'generated_' + sha256.create().update(str).hex();
-    }
-    public static getFnAst(fnSrc:FnSrc):FnAst {
-        const fnCodeHash = SvalPlus.sha256Key(fnSrc.fnCode);
-        const cached = SvalPlus.fnAstCache.get(fnCodeHash);
-        if (cached) {
-            return cached;
-        }
-        const fnCallString = 
-            `\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
-            `\n\nexports.${SvalPlus.commonLabels.resultExport} = ${fnSrc.fnName!}(...${SvalPlus.commonLabels.args});`;
-
-        const fnCodeAst = meriyahParse(fnSrc.fnCode, SvalPlus.meriyahParseOptions);
-        const fnCallAst = meriyahParse(fnCallString, SvalPlus.meriyahParseOptions);
-        
-        const ast = { 
-            fnCode: fnCodeAst as Node, 
-            fnCall: fnCallAst as Node ,
-            fnCallString
+    public useFn(fnSrc:FnSrc):void {
+        if (this.fnCallAst !== null) {
+            throw new Error(ansis.red(`The interpreter can only use one function`))
         };
-        SvalPlus.fnAstCache.set(fnCodeHash, ast);
-        return ast;
-    }
-    public static refErrMsg(err:ReferenceError) {
-        return (
-            ansis.red.underline(`\nReference Error`) +
-            ansis.white(
-                `\n${err.message}\n` +
-                `\n-Monitored functions cannot access variables from the outside.` + 
-                `\n-They must be either be passed as an argument on each call or captured/embedded into the monitored fn upon creation.\n`
-            )
-        )
-    }
-    private argImports:{ [SvalPlus.commonLabels.args]:any[] } = { 
-        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty object
-    }
+        let ast:FnAst;
 
-    private normalizeErr(err:unknown):Error {
-        if (err instanceof ReferenceError) {
-            err.message = SvalPlus.refErrMsg(err);
-            return err;
+        const fnCodeHash = SvalPlus.sha256Key(fnSrc.fnCode);
+        const cachedAst = SvalPlus.fnAstCache.get(fnCodeHash);
+
+        if (cachedAst) {
+            ast = cachedAst;
         }else {
-            const error = err instanceof Error 
-                ? err 
-                : new Error(String(err));
-            return error
+            const options = SvalPlus.meriyahParseOptions;
+            ast = { 
+                fnCode: meriyahParse(fnSrc.fnCode,options) as Node, 
+                fnCall: meriyahParse(fnSrc.fnCall,options) as Node ,
+            };
+            SvalPlus.fnAstCache.set(fnCodeHash, ast);
         }
+        
+        this.run(ast.fnCode);//run the generated ast instead of the string to prevent re-parsing
+        this.fnCallAst = ast.fnCall;
     }
 
 
-    public runMonitoredFn = (...args:any[])=>{
+    public createEventScope = ()=>{
+        return new EventScope(this);
+    };
+    public runFn = (...args:any[])=>{
         this.stage = 'MONITORING';
         let result;
 
@@ -332,7 +326,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.import(this.argImports);
 
         try {
-            this.run(this.astInUse!.fnCall);
+            this.run(this.fnCallAst!);
             result = this.exports[SvalPlus.commonLabels.resultExport];
         }catch(err) {
             result = this.normalizeErr(err);
@@ -361,5 +355,28 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 this.stage = "IDLE";//this runs regardless of whether the hook throws an error or not
             }
         };
+    }
+
+
+    public refErrMsg(err:ReferenceError) {
+        return (
+            ansis.red.underline(`\nReference Error`) +
+            ansis.white(
+                `\n${err.message}\n` +
+                `\n-Monitored functions cannot access variables from the outside.` + 
+                `\n-They must be either be passed as an argument on each call or captured/embedded into the monitored fn upon creation.\n`
+            )
+        )
+    };
+    private normalizeErr(err:unknown):Error {
+        if (err instanceof ReferenceError) {
+            err.message = this.refErrMsg(err);
+            return err;
+        }else {
+            const error = err instanceof Error 
+                ? err 
+                : new Error(String(err));
+            return error
+        }
     }
 };
