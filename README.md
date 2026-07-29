@@ -430,7 +430,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | :--- | :--- |
-| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it together with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This design decision keeps the interpreter simple. |
+| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it together with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This design decision keeps the interpreter simple and saves memory. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed node. It is short-lived meaning that it is discarded after evaluating the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. <br><br>For an async node like an await statement, it defers the execution and returns the LAZY_NODE symbol. If you use a generator for the inspector, you can yield it to get the resolved value.|
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
