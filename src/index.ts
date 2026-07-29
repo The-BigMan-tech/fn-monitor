@@ -1,35 +1,72 @@
 /**
- * ARCHITECTURAL NOTES FOR MAINTAINERS & CONTRIBUTORS
+ *  ARCHITECTURAL NOTES FOR MAINTAINERS & CONTRIBUTORS
+ *  
+ *  Please thoroughly review the "Important Notes" section in the README and 
+ *  understand the following before making significant modifications to the codebase.
+ *  
+ *  1. PURPOSE LIMITATIONS:
+ *     Do not expand this into a script-level or module-level monitor. Doing so will 
+ *     break the hidden function-context assumptions used throughout this codebase.
+ *  
+ *  2. TYPESCRIPT & UNMODIFIED CODE:
+ *     Parts of the codebase that consist of pure, unmodified `sval` code may have 
+ *     TypeScript complaints. Since they function correctly, they have been left as-is 
+ *     to preserve the original behavior, marked with `@ts-nocheck`.
+ *  
+ *  3. SVAL COMPATIBILITY:
+ *     The `SvalPlus` class must remain a strict drop-in replacement for `Sval`. Its constructor and 
+ *     public API must be strictly identical or additive to ensure upstream `sval` test suites 
+ *     run seamlessly. Avoid breaking changes to core internals unless rigorously tested to 
+ *     preserve compatibility (e.g., the evaluator modifications).
+ *  
+ *  4. TEST COVERAGE:
+ *      - Quick note, 
+ *          - There are two evaluator implementations--the nomalized version under the  
+ *          evaluate_n folder and the generator version which is under the evaluate folder
  * 
- * Please thoroughly review the "Important Notes" section in the README and 
- * understand the following before making significant modifications to the codebase.
+ *          - The normalized version runs synchronous code while the generator version runs async
+ *          code
+ *          
+ *          - The parts of these evaluators that have the custom modifications to enable function monitoring
+ *            are in their respective index.ts files while everything else were inherited 
+ *            from sval and left as they were.
  * 
- * 1. PURPOSE LIMITATIONS:
- *    Do not expand this into a script-level or module-level monitor. Doing so will 
- *    break the hidden function-context assumptions used throughout this codebase.
+ *      - There are two test folders,the interpreter tests and the modifications tests:
+ *          - The interpreter tests consists of the 200+ tests inherited from `sval`
+ *          - The modifications tests consist of the 30+ tests made for the custom modifications
+ *      
+ *      - These tests do not rigorously cover the generator evaluator as much as the normalized
+ *      version.   
  * 
- * 2. TYPESCRIPT & UNMODIFIED CODE:
- *    Parts of the codebase that consist of pure, unmodified `sval` code may have 
- *    TypeScript complaints. Since they function correctly, they have been left as-is 
- *    to preserve the original behavior, marked with `@ts-nocheck`.
+ *      - This means as for now, changes to the generator evaluator must be manually tested
  * 
- * 3. SVAL COMPATIBILITY:
- *    `SvalPlus` must remain a strict drop-in replacement for `Sval`. Its constructor and 
- *    public API must be strictly identical or additive to ensure upstream `sval` test suites 
- *    run seamlessly. Avoid breaking changes to core internals unless rigorously tested to 
- *    preserve compatibility (e.g., the evaluator refactor).
+ *      - This manual testing requirement will be retired once comprehensive automated tests are 
+ *       added for the generator evaluator.
  * 
- * 4. GENERATOR EVALUATOR TEST COVERAGE:
- *    Unlike the normalized evaluator, which is rigorously validated by the 215+ regression 
- *    tests inherited from `sval` and the additional extension tests, the generator-based evaluator 
- *    currently relies on only a handful of dedicated async tests and lacks comprehensive coverage.
- *    
- *    DIRECTIVE: Any modifications to the generator evaluator MUST be thoroughly verified 
- *    via manual testing (e.g., running the showcase examples).
- *    
- *    NOTE: This manual testing requirement will be retired once comprehensive automated 
- *    tests are added for the generator evaluator.
+ *      - More edge cases will still be tested even while the generator evaluator is getting 
+ *        its own coverage
  * 
+ *      - For the modification tests, each of them will be gradually marked with the following prefix;
+ *          - [Sync] to indicate that it targets the normalized evaluator.
+ *            An [Async] counterpart should be made if not available.
+ * 
+ *          - [Async] to indicate that it targets the generator evaluator.
+ *            A [Sync] counterpart should be made if not available.
+ * 
+ *          - [Sync-only] to indicate that it is only meant to target the normalized evaluator.
+ *            An [Async] counterpart should not be made
+ * 
+ *          - [Async-only] to indicate that it is only meant to test the generator evaluator. 
+ *            A [Sync] counterpart should not be made
+ *          
+ *          - [Pre] to indicate that it only tests the pre-processing step(wrapping and parsing)
+ *            and not runtime execution
+ * 
+ *      - For now, the modification tests will only contain [Pre],[Sync],[Sync-only] and [Async-only] tests.
+ *      - Later, all [Sync] tests will have [Async] counterparts to complete the coverage
+ * 
+ *      - As for the interpreter tests, plans to make a system to help it to fully cover the generator 
+ *        version is postponed till the coverage of the modification tests is complete.
 */
 
 
