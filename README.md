@@ -415,7 +415,7 @@ The main export. Accepts a configuration object and returns a new function that 
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
 | `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the same interpreter context. |
 | `inspector` | `Inspector` | The main hook fed the interpreter's context (`visit` object) to inspect, modify, and manually execute nodes. It can be defined as either a regular function or a generator.<br><br>💡 **Type Clarification:** You do **not** need to match the inspector's type to the monitored function's type (e.g., a regular function works fine for async code, and a generator works fine for sync code). Both will work universally, except for the specific behavioral nuance when paired with `visit.execute()`. |
-| `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not get the rich `visit` object, making it significantly faster. |
+| `onStep` | `OnStep` | Lightweight hook called before each interpreted step. It does not get the rich `visit` object, making it significantly faster than using the inspector. |
 | `sourceOut` | `{ value: string }` | Overwrites the `value` property with the generated code used in the interpreter. |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
@@ -434,8 +434,8 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | :--- | :--- |
-| `is(query, callback)` | Ties a callback execution to a specific AST node type. If matched, it allocates a scope, wraps it together with the respective node in an event object, and fires the callback with it.<br><br>This method does not register your callback as a hook for the future. It actually eagerly checks your query against the current node and fires the callback if it matches. It will then discard your callback right after. |
-| `set perExecution(fn)` | A setter for a callback fired on each executed node. Short-lived; exists only for the current node and its children. |
+| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it together with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. |
+| `set perExecution(fn)` | A setter for a callback fired on each executed node. It is short-lived meaning that it is discarded after evaluating the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. <br><br>For an async node like an await statement, it defers the execution and returns the LAZY_NODE symbol. If you use a generator for the inspector, you can yield it to get the resolved value.|
 | `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
 
@@ -450,7 +450,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ### Utility Types & Classes
 
-* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` and `variables.search(name)` properties can be used to get all variable values, and `depth` is strictly 0-indexed. It starts from the wrapped function's root.
+* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` and `variables.search(name)` properties can be used to get all variable values, and the `depth` property returns the depth of the scope. It is strictly 0-indexed and it starts from the wrapped function's root.
 
 * **`LocalExeStack`**: A custom, optimized deque (double-ended queue) with random array access, used internally to manage the execution stack. It is exposed to the user as a read-only view to prevent state corruption.
   
@@ -498,13 +498,13 @@ Under the hood, this package utilizes an **AST-walker interpreter** (rather than
 - **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
 - **Reusables Architecture:** 
-    - To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents the allocation of intermediate objects mid-evaluation.
+    - To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents allocation of intermediate objects mid-evaluation.
     
-    - To safely handle complex async/await state transitions while sharing objects, the interpreter creates snapshots by copying them at certain points, and restores the original values once it finishes working with the overwritten state.
+    - To safely handle complex async/await state transitions while sharing objects, the interpreter copies the reusable objects at certain points, and restores their original values once it finishes working with the overwritten values
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
 
-- **Scope Allocation & Safety:** While the interpreter heavily relies on reusable objects to maximize performance, the `scope` object provided to the inspector is a deliberate exception. Unlike AST nodes (which are parsed once and reused), the scope object is always freshly allocated for each event. This design choice guarantees predictability and prevents accidental mutations of the interpreter's internal state.
+- **Scope Allocation & Safety:** Unlike AST nodes which are parsed once and reused, the scope objects exposed to the inspector is always freshly allocated for each event. This design choice prevents accidental mutations of the interpreter's internal state.
 
 ---
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { InspectorGenerator, LangEvent, LAZY_NODE, monitor } from '../../src/index'; 
+import { InspectorGenerator, LangEvent,monitor } from '../../src/index'; 
 
 describe('Fundamental Runtime Behaviour',()=>{
     
