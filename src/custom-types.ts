@@ -139,7 +139,7 @@ export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
  * Because there is only one unique visit object,it uses live references to the current interpreter's state.This means that:
  *  -The local exe stack is volatile.
  *  -The 'is' method does not register your callback as a hook.Although that is what it will look like on the outside,its actually eagerly evaluating your callback the moment you call it and check your query against the current node.It will then discard your callback right after.
- *  -The perExecution method does not register your callback as a hook.You use it like a setter and its short lived.It only exists for the current node and all its children
+ *  -The perExecution hook is short lived.It only exists for the current node and all its children
  *  -The execute method must strictly be called within the lifetime of the inspector hook if you ever wish to call it.
  * 
  * You dont have to worry too much about all of this if you use the visit object in the inspector hook where you know using it is safe.
@@ -155,7 +155,7 @@ export interface Visit {
      */
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
 
-    /**
+    /** 
      * This is fired for each executed node starting from the current node.The current node at the time when it was set becomes its owner.
      * After firing for all other related nodes,it will terminate when the interpreter reaches back to the owner. 
      *
