@@ -217,20 +217,18 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const fnString = fn.toString();
         const hash = SvalPlus.sha256Key(fnString);
 
-        const isDeclaration = /^(async\s+)?function(\s*\*|\s+|$)/.test(fnString);
+        const namedFnPattern = /^(async\s+)?function(\s*\*)?\s+[a-zA-Z_$][a-zA-Z0-9_$]*/
+        const isNamedDefinition = namedFnPattern.test(fnString);
 
         const intermediateFn:string = 'intermediateFn_' + hash;
-        let intermediateFnCode:string = '';
-
-        if (isDeclaration) {//handle function definition
-            intermediateFnCode = `\nconst ${intermediateFn} = (()=>{
-                ${fnString};
-                return ${fn.name}
-            })();`
-        }
-        else {//handle unassigned anonymous functions
-            intermediateFnCode = `\nconst ${intermediateFn} = ${fnString};`
-        }  
+        const intermediateFnCode:string = (isNamedDefinition)
+            ?(
+                `\nconst ${intermediateFn} = (()=>{
+                    ${fnString};
+                    return ${fn.name}
+                })();`
+            )
+            :`\nconst ${intermediateFn} = ${fnString};`
 
         const capturedKeys = Object.keys(this.exports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
 
@@ -306,7 +304,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             };
             SvalPlus.fnAstCache.set(fnCodeHash, ast);
         }
-        
+
         this.run(ast.fnCode);//run the generated ast instead of the string to prevent re-parsing
         this.fnCallAst = ast.fnCall;
     }

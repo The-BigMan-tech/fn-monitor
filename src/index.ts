@@ -126,15 +126,14 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     const fnSrc = interpreter.getFnSrc(mainFn,capturesLabel);
     fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
     
-    
-    if (sourceOut) {
+    interpreter.useFn(fnSrc);
+
+    if (sourceOut) {//only write the generated code if the interpreter could parse it
         sourceOut.value = jsBeatutify(
             fnSrc.fnCode + fnSrc.fnCall,
             {indent_size:4}
         );
     };
-
-    interpreter.useFn(fnSrc);
 
     const newFn = interpreter.runFn as T & { alreadyMonitored: true };
     newFn['alreadyMonitored'] = true;
