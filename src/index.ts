@@ -46,7 +46,7 @@
  *      - More edge cases will still be tested even while the generator evaluator is getting 
  *        its own coverage
  * 
- *      - For the modification tests, each of them will be gradually marked with the following prefix;
+ *      - For the modification tests, each of them will be marked with one of the following prefixes ;
  *          - [Sync] to indicate that it targets the normalized evaluator.
  *            An [Async] counterpart should be made if not available.
  * 
@@ -62,8 +62,7 @@
  *          - [Pre] to indicate that it only tests the pre-processing step(wrapping and parsing)
  *            and not runtime execution
  * 
- *      - For now, the modification tests will only contain [Pre],[Sync],[Sync-only] and [Async-only] tests.
- *      - Later, all [Sync] tests will have [Async] counterparts to complete the coverage
+ *      - The goal is to ensure that all [Sync] tests have [Async] counterparts and vice versa to complete the coverage
  * 
  *      - As for the interpreter tests, plans to make a system to help it to fully cover the generator 
  *        version is postponed till the coverage of the modification tests is complete.
