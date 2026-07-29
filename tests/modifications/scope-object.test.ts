@@ -3,7 +3,7 @@ import { monitor, ScopeForEvent } from '../../src/index';
 
 describe('Scope Object Behaviour', () => {
     
-    it('should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
+    it('[Sync] should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
         const testFn = (x: number) => {
             let y = x; // Root level of the function body
             
@@ -46,7 +46,7 @@ describe('Scope Object Behaviour', () => {
         expect(hitAssignmentExprNode).toBe(true);
     });
 
-    it('should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{
+    it('[Sync] should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{
         let hitReturnNode = false;
 
         const fn = monitor({
@@ -80,7 +80,7 @@ describe('Scope Object Behaviour', () => {
         expect(hitReturnNode).toBe(true)
     })
 
-    it('should verify that local strictly has local variables while the search method can fetch captured variables outside the local scope',()=>{
+    it('[Sync] should verify that local strictly has local variables while the search method can fetch captured variables outside the local scope',()=>{
         let hitReturnNode = false;
 
         const age = 20;
@@ -116,7 +116,7 @@ describe('Scope Object Behaviour', () => {
         expect(hitReturnNode).toBe(true)
     })
 
-    it('should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.This is to prevent unexpected behaviour', () => {
+    it('[Sync] should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.', () => {
         let hitSumUpdate = false;
         const scopes = new Set<ScopeForEvent>()
 
@@ -153,7 +153,7 @@ describe('Scope Object Behaviour', () => {
         expect(scopes.size).toBe(3);// The loop runs 3 times, so we should have captured 3 scope objects
     });
 
-    it ('should ensure that the scope object is a read-only view and isolated from other scopes',()=>{
+    it ('[Sync] should ensure that the scope object is a read-only view and isolated from other scopes',()=>{
         let hitReturnNode = false;
         let modifiedLocal = false;
 

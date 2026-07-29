@@ -5,7 +5,7 @@ import { VisitExecutionError } from '../../src/custom-types';
 
 describe('Visit.execute() Method Behaviour',()=>{
 
-    it('should ensure that visit.execute manually executes a node and it is not allowed to be called twice',()=>{
+    it('[Sync] should ensure that visit.execute manually executes a node and it is not allowed to be called twice',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
 
@@ -35,7 +35,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(hitAssignNode).toBe(true)
     });
     
-    it('should not execute the node automatically if visit.execute was called',()=>{
+    it('[Sync] should not execute the node automatically if visit.execute was called',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;
 
@@ -66,7 +66,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(outsideVar.value).toBe(10);
     })
 
-    it('should execute the node automatically if visit.execute was not called',()=>{
+    it('[Sync] should execute the node automatically if visit.execute was not called',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
 
@@ -95,7 +95,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(outsideVar.value).toBe(10);
     })
 
-    it('should ensure that visit.execute returns LAZY_NODE for async or generator nodes',async ()=>{
+    it('[Async-only] should ensure that visit.execute returns LAZY_NODE for async nodes',async ()=>{
         let hitAwaitNode = false;
 
         const fn = monitor({
@@ -118,7 +118,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(hitAwaitNode).toBe(true)
     })
 
-    it('should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',async ()=>{
+    it('[Async-only] should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',async ()=>{
         let hitAwaitNode = false;
 
         const fn = monitor({
@@ -146,7 +146,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(hitAwaitNode).toBe(true);
     })
 
-    it('should restore the parent node\'s execution context after visit.execute recursively evaluates child nodes', async () => {
+    it('[Sync] should restore the parent node\'s execution context after visit.execute recursively evaluates child nodes',() => {
         const fn = monitor({
             main:{
                 ref:(x:number)=>{
@@ -173,9 +173,10 @@ describe('Visit.execute() Method Behaviour',()=>{
             }
         })
         fn(10);
+    })
 
-        //This will test the generator-based evaluator
-        const fn2 = monitor({
+    it('[Async] should restore the parent node\'s execution context after visit.execute recursively evaluates child nodes', async () => {
+        const fn = monitor({
             main:{
                 ref:async (x: number)=>{
                     return await Promise.resolve(x);
@@ -195,7 +196,6 @@ describe('Visit.execute() Method Behaviour',()=>{
                 })
             }
         })
-        await fn2(10);
+        await fn(10);
     })
-
 })

@@ -5,7 +5,7 @@ import { Visit } from '../../src/sval-plus';
 
 describe('Visit Object Behaviour',()=>{
     
-    it('should ensure that all the hooks are fired when set and together with their proper arguments',()=>{
+    it('[Sync] should ensure that all the hooks are fired when set and together with their proper arguments',()=>{
         let calledBeforeCallHook = false;
         let calledAfterCallHook = false;
         let calledInspectorHook = false;
@@ -39,7 +39,7 @@ describe('Visit Object Behaviour',()=>{
         expect(calledOnStepHook).toBe(true)
     })
 
-    it('should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',async ()=>{
+    it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',()=>{
         let beforeHookCount = 0;
         let afterHookCount = 0;
 
@@ -57,25 +57,32 @@ describe('Visit Object Behaviour',()=>{
         fn();
         expect(beforeHookCount).toBe(1);
         expect(afterHookCount).toBe(1)
+    })
 
+    it('[Async] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',async ()=>{ 
         //We test the afterEachCall hook again for the async version because the interpreter handles this particular hook differently for async functions 
-        let afterHookCountForAsync = 0;
+        let afterHookCount = 0;
+
+        //im only adding this count for consistency
+        let beforeHookCount = 0;
 
         const fn2 = monitor({
             main:{
                 ref:async ()=>undefined
             },
+            beforeEachCall:()=>{
+                beforeHookCount += 1;
+            },
             afterEachCall:()=>{
-                afterHookCountForAsync += 1;
+                afterHookCount += 1;
             }
         })
         await fn2();
-        expect(afterHookCountForAsync).toBe(1)
+        expect(beforeHookCount).toBe(1);
+        expect(afterHookCount).toBe(1)
     })
-
-
     
-    it('should correctly route and fire visit.is callbacks for multiple distinct AST node types, including async nodes', async () => {
+    it('[Async] should correctly route and fire visit.is callbacks for multiple distinct AST node types, including async nodes', async () => {
         const hitCounts = {
             VariableDeclaration: 0,
             IfStatement: 0,
@@ -158,7 +165,7 @@ describe('Visit Object Behaviour',()=>{
         } as Record<keyof typeof hitCounts,number>)
     });
 
-    it('should ensure that the perExecution hook is fired exactly once for every executed node',()=>{
+    it('[Sync] should ensure that the perExecution hook is fired exactly once for every executed node',()=>{
         let executedNodes = 0;
         let perExeCalls = 0;
 
@@ -179,7 +186,7 @@ describe('Visit Object Behaviour',()=>{
         expect(perExeCalls).toBe(executedNodes)
     })
 
-    it('should ensure that the perExecution hook only lives as long as its owner node and its children',()=>{
+    it('[Sync] should ensure that the perExecution hook only lives as long as its owner node and its children',()=>{
         let hitDeclNode = false;
         let setPerExeHook = false;
 

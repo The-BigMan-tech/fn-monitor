@@ -3,7 +3,7 @@ import { InspectorGenerator, LangEvent,monitor } from '../../src/index';
 
 describe('Fundamental Runtime Behaviour',()=>{
     
-    it('should isolate monitored functions from the outside scope',()=>{
+    it('[Sync] should isolate monitored functions from the outside scope',()=>{
         const outsideVar = "";
 
         const fn = monitor({
@@ -14,7 +14,7 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(()=>fn()).toThrow(ReferenceError)
     })
 
-    it('should isolate monitored functions from each other',()=>{
+    it('[Sync] should isolate monitored functions from each other',()=>{
         let outsideVar;
 
         function echo(str?:string) {
@@ -43,7 +43,7 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(fn2()).toBe('world')
     })
 
-    it('should ensure that embedded functions can be inspected',()=>{
+    it('[Sync] should ensure that embedded functions can be inspected',()=>{
         let outsideFn:(...args:any[])=>any | undefined;
         let hitReturnNode = false;
 
@@ -78,7 +78,7 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(hitReturnNode).toBe(true)
     })
 
-    it('should ensure that the event object is always freshly allocated per visit',()=>{
+    it('[Sync] should ensure that the event object is always freshly allocated per visit',()=>{
         let hitSumUpdate = false;
         const events = new Set<LangEvent>();
 
@@ -112,7 +112,7 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(events.size).toBe(3)
     })
 
-    it('should ensure that monitored functions preserve the call signature of their unmonitored counterpart',()=>{
+    it('[Sync] should ensure that monitored functions preserve the call signature of their unmonitored counterpart',()=>{
         const weirdFormula = (a:number,b:number,c:number) => {
             return a + (b/(c - a));
         }
@@ -129,7 +129,7 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(monitoredFn(a,b,c)).toBe(expectedResult)
     })
 
-    it('should ensure that the normalized evaluator can properly handle a generator function as the inspector',()=>{
+    it('[Sync-only] should ensure that the normalized evaluator can properly handle a generator function as the inspector',()=>{
         function add(a: number, b: number) {
             const result = a + b;
             return result;

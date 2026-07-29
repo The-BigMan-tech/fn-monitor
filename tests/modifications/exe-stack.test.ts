@@ -3,7 +3,7 @@ import { monitor,LocalExeStack,InspectorGenerator,EsNode } from '../../src/index
 
 describe('ExeStack Behaviour',()=>{
 
-    it('should ensure that the local exe stack is cleared after evaluating the function',()=>{
+    it('[Sync] should ensure that the local exe stack is cleared after evaluating the function',()=>{
         let stack:LocalExeStack | undefined;
         const fn = monitor({
             main:{
@@ -18,7 +18,7 @@ describe('ExeStack Behaviour',()=>{
         expect(stack!.length).toBe(0)
     })
 
-    it('should ensure that the localExeStack is cleared between parent nodes',()=>{
+    it('[Sync] should ensure that the localExeStack is cleared between parent nodes',()=>{
         let hitReturnNode = false;
 
         const fn = monitor({
@@ -43,7 +43,7 @@ describe('ExeStack Behaviour',()=>{
         expect(hitReturnNode).toBe(true);
     })
 
-    it('should ensure that the localExeStack contains the evaluation of its node and that of its children',()=>{
+    it('[Sync] should ensure that the localExeStack contains the evaluation of the current node and that of its children',()=>{
         let hitDeclNode = false;
         let setPerExeHook = false;
 
@@ -91,7 +91,7 @@ describe('ExeStack Behaviour',()=>{
         expect(setPerExeHook).toBe(true);
     })
 
-    it('should ensure that the local exe stack always has the latest executed node at its head',async ()=>{
+    it('[Sync] should ensure that the local exe stack always has the latest executed node at its head',()=>{
         const fn = monitor({
             main:{
                 ref:(x: number)=>{
@@ -116,9 +116,10 @@ describe('ExeStack Behaviour',()=>{
             }
         })
         fn(10);
+    })
 
-        //This will test the generator-based evaluator
-        const fn2 = monitor({
+    it('[Async] should ensure that the local exe stack always has the latest executed node at its head',async ()=>{
+        const fn = monitor({
             main:{
                 ref:async (x: number)=>{
                     return await Promise.resolve(10 + x);
@@ -140,6 +141,6 @@ describe('ExeStack Behaviour',()=>{
                 expect(head.evaluation).toBe(result);
             }
         })
-        await fn2(10);
+        await fn(10);
     })
 })
