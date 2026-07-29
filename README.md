@@ -521,7 +521,9 @@ Please keep the following architectural constraints in mind when using this pack
 
 - **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
 
-- **Wrapper Constraints:** The `monitor` function accepts any standard JavaScript function, but it **cannot** accept a function that has already been wrapped by `monitor` (i.e., you cannot double-wrap a function via the `ref` property). However, you **can** include an already-monitored function within the `captures` object. This is fully supported because captured functions execute in the native JavaScript runtime, completely outside the AST interpreter's context.
+- **Supported Function Types:** This package fully supports step-by-step monitoring of synchronous and async/await functions. However, native generator functions (function*) are not supported. This is because, for generators, the function body does not run during the initial call. Instead, the returned iterator object executes natively in JavaScript, entirely bypassing the interpreter.
+
+- **Wrapper Constraints:** The `monitor` function can wrap any standard JavaScript function, but it **cannot** wrap a function that has already been wrapped by `monitor` (i.e., you cannot double-wrap a function via the `ref` property). However, you **can** include an already-monitored function within the `captures` object. This is fully supported because captured functions execute in the native JavaScript runtime, completely outside the AST interpreter's context.
 
 - **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property. This design decision ensures that module resolution remains handled by your native JS engine, preserving the interpreter's isolation and preventing unexpected network or filesystem side-effects during execution.
   
