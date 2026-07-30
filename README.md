@@ -446,11 +446,13 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ### Utility Types & Classes
 
+* **`EsNode`**: The union of all ast nodes. This type is just an alias to the Node type from estree.
+  
 * **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` and `variables.search(name)` properties can be used to get all variable values, and the `depth` property returns the depth of the scope. It is strictly 0-indexed and it starts from the wrapped function's root.
 
 * **`LocalExeStack`**: A custom, optimized deque (double-ended queue) with random array access, used internally to manage the execution stack. It is exposed to the user as a read-only view to prevent state corruption.
   
-* **`Query`**: A string union of all possible EsNode types you can query in a `visit.is` query. It also includes `'Any'` , which matches all nodes and node types that did not get their own explicit classes.
+* **`Query`**: A string union of all possible EsNode types you can use in a `visit.is` query. It also includes `'Any'` , which matches all nodes and node types that did not get their own explicit classes.
   
 * **`EventMap`**: Maps each node query to its dedicated Event class for tailored intellisense.
   
