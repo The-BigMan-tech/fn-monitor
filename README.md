@@ -420,7 +420,7 @@ The main export. Accepts a configuration object and returns a new function that 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
-| `captures` | `Record<string, any>` | Maps variable names to their values which are stored outside the wrapped function's scope. Follows copy-by-value (primitives) and copy-by-reference (objects) semantics. |
+| `captures` | `Record<string, any>` | Maps variable names to their values stored outside the wrapped function's scope. The values are injected as constants into the monitored functions during parsing. Follows copy-by-value (primitives) and copy-by-reference (objects) semantics. |
 
 
 ### The Inspector Context
