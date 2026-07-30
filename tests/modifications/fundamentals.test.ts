@@ -278,22 +278,54 @@ describe('Fundamental Runtime Behaviour',()=>{
     // pre-processing phase because its relying on specific runtime hooks that are handled by the evaluators
 
     it('[Sync] should ensure that the inspector and onStep hooks are not fired during the wrapping phase',()=>{
+        const generatedCode = {value:''}
+        const Printed = 'Printed: ';
+
+        function print(str:string) {
+            console.log(Printed,str);
+        }
+        function printName(name:string) {
+            console.log('Hello ',name);
+        }
+        function sayHello(name:string) {
+            print('Hello world')
+            printName(name)
+        }
+
         let inspectorHookCalls = 0;
         let onStepHookCalls = 0;
 
         monitor({
             main:{
-                ref:(a:number,b:number)=>(a + b) * (a - b)
+                ref:sayHello,
+                captures:{
+                    printName
+                }
             },
-            onStep:()=>{
-                onStepHookCalls += 1
+            embed:{
+                print:{
+                    ref:print,
+                    ///in the generated code,the definitions for embedded functions are 1 layer deeper in the scope than the main one.
+                    //By placing a captures there, we force the interpreter to parse the captures at a depth where the user code lives i.e depth 2 and deeper
+                    //if the interpreter stage flag is ignored or not used correctly ,this test will fail
+                    captures:{
+                        Printed
+                    }
+                }
             },
             inspector:()=>{
-                inspectorHookCalls += 1
-            }
+                inspectorHookCalls += 1;
+            },
+            onStep:()=>{
+                onStepHookCalls += 1;
+            },
+            sourceOut:generatedCode
         })
+
+        expect(inspectorHookCalls).toBe(0);
         expect(onStepHookCalls).toBe(0);
-        expect(inspectorHookCalls).toBe(0)
+
+        console.log('Generated code:\n',generatedCode.value);
     })
 
     it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',()=>{
