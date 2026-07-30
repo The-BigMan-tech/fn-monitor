@@ -114,7 +114,7 @@ describe('Fundamental Runtime Behaviour',()=>{
 
     it('[Sync] should ensure that monitored functions preserve the call signature of their unmonitored counterpart',()=>{
         const weirdFormula = (a:number,b:number,c:number) => {
-            return a + (b/(c - a));
+            return a + ((c  - a)/b);
         }
         const monitoredFn = monitor({
             main:{
@@ -126,6 +126,9 @@ describe('Fundamental Runtime Behaviour',()=>{
         const c = 3;
 
         const expectedResult = weirdFormula(a,b,c);
+
+        //if the call signature was messed up,then the monitored fn will fail the test 
+        //because the correct result requires the arguments to be passed in properly.
         expect(monitoredFn(a,b,c)).toBe(expectedResult)
     })
 
