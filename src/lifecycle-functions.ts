@@ -19,7 +19,7 @@ function inUserCode(scope:Scope) {
 export function callOnStep(scope:Scope) {
     const interpreter:SvalPlus = scope.interpreter;
     if (inUserCode(scope) && (interpreter.onStep !== null)) {
-        interpreter.onStep!();
+        interpreter.onStep();
     }
 }
 export function useModifiedEvaluator(scope:Scope):boolean {
