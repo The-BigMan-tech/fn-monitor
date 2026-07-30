@@ -3,9 +3,9 @@ import Scope from "./scope/index.ts";
 import type {Node as EsNode} from "estree";
 import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./custom-types.ts";
 
-
+const generatorPrint = '[object Generator]';
 export function isGenerator(obj:unknown):obj is Generator {
-    return Object.prototype.toString.call(obj) === '[object Generator]';
+    return Object.prototype.toString.call(obj) === generatorPrint
 }
 
 
