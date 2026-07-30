@@ -75,7 +75,7 @@ export default function evaluate(node: Node, scope: Scope) {
         //If you noticed,I didnt capture nor restore the reusables local to this evaluation because it runs to completion and the reusables wont be overwritten by another evaluation
 
         if (isGenerator(response)) {
-            const next = response.next();//the generator must be advanced before generating the final result
+            const next = response.next();//the generator must be advanced before evaluating the final result
             
             const final = executedManually(interpreter.reusables.result)
                 ?interpreter.reusables.result

@@ -255,6 +255,25 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(calledOnStepHook).toBe(true)
     })
 
+    it('[Sync] should ensure that when both the inspector and the onStep hooks are defined, each one is called the exact number of times as the other',()=>{
+        let inspectorHookCalls = 0;
+        let onStepHookCalls = 0;
+
+        const fn = monitor({
+            main:{
+                ref:(a:number,b:number)=>(a + b) * (a - b)
+            },
+            onStep:()=>{
+                onStepHookCalls += 1
+            },
+            inspector:()=>{
+                inspectorHookCalls += 1
+            }
+        })
+        fn(2,2);
+        expect(onStepHookCalls).toBe(inspectorHookCalls)
+    })
+
     it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',()=>{
         let beforeHookCount = 0;
         let afterHookCount = 0;
