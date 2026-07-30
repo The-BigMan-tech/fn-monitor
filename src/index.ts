@@ -8,18 +8,23 @@
  *     Do not expand this into a script-level or module-level monitor. Doing so will 
  *     break the hidden function-context assumptions used throughout this codebase.
  *  
- *  2. TYPESCRIPT & UNMODIFIED CODE:
+ *  2. TYPESCRIPT COMPLAINTS:
  *     Parts of the codebase that consist of pure, unmodified `sval` code may have 
  *     TypeScript complaints. Since they function correctly, they have been left as-is 
  *     to preserve the original behavior, marked with `@ts-nocheck`.
  *  
- *  3. SVAL COMPATIBILITY:
+ *  3. ES-NODE EXPORT:
+ *     The @types/estree pkg is intentionally installed as a dependency and not as a dev dependency 
+ *     because the codebase directly exports one of its types for intellisense. It prevents users
+ *     from having to install an extra package just to get full intellisense.
+ * 
+ *  4. SVAL COMPATIBILITY:
  *     The `SvalPlus` class must remain a strict drop-in replacement for `Sval`. Its constructor and 
  *     public API must be strictly identical or additive to ensure upstream `sval` test suites 
  *     run seamlessly. Avoid breaking changes to core internals unless rigorously tested to 
  *     preserve compatibility (e.g., the evaluator modifications).
  *  
- *  4. TEST COVERAGE:
+ *  5. TEST COVERAGE:
  *      - Quick note, 
  *          - There are two evaluator implementations--the nomalized version under the  
  *          evaluate_n folder and the generator version which is under the evaluate folder
@@ -178,7 +183,9 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
 }
 
 
-export type {Metadata} from "./sval-plus.ts";
+export type { 
+    Metadata 
+} from "./sval-plus.ts";
 
 export type {
     Inspector,
@@ -190,8 +197,6 @@ export type {
     Visit,
     InspectorGenerator,
     ExeResult,
-
-    //!!The estree types pkg is intentionally made as a dependency and not a dev dep because the project is directly exporting its types for intellisense
     EsNode,
 } from "./custom-types.ts"
 
