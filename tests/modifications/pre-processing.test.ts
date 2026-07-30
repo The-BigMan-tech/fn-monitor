@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 import { WrapperError } from '../../src/custom-types';
 
-describe('Wrapper Constraints', () => {
+describe('Pre-processing Behaviour', () => {
 
     it('[Pre] should augment the returned monitored function with the alreadyMonitored flag', () => {
         const monitoredFn = monitor({
