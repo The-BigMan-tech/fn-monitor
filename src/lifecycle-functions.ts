@@ -18,18 +18,14 @@ function inUserCode(scope:Scope) {
 }
 export function callOnStep(scope:Scope) {
     const interpreter:SvalPlus = scope.interpreter;
-    const onStepIsAvailable = (typeof interpreter.onStep === "function");
-
-    if (inUserCode(scope) && onStepIsAvailable) {
+    if (inUserCode(scope) && (interpreter.onStep !== null)) {
         interpreter.onStep!();
     }
 }
 export function useModifiedEvaluator(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
-    const inspectorIsAvailable = (typeof interpreter.inspector === "function");
-
     return ( 
-        inUserCode(scope) && inspectorIsAvailable
+        inUserCode(scope) && (interpreter.inspector !== null)
     )
 }
 
