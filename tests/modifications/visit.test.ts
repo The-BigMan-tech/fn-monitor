@@ -82,7 +82,7 @@ describe('Visit Object Behaviour',()=>{
         expect(afterHookCount).toBe(1)
     })
 
-    it('[Sync] should ensure that visit.is eagerly evaluates the query and discards the callback right after',()=>{
+    it('[Sync] should ensure that visit.is eagerly evaluates the query and discards the callback right after.',()=>{
         let checkedQuery = false;
         let hits = 0;
 
@@ -188,6 +188,27 @@ describe('Visit Object Behaviour',()=>{
             ReturnStatement:1// return res
         } as Record<keyof typeof hitCounts,number>)
     });
+
+    it('[Sync] should ensure that querying for \'Any\' node with visit.is() will match for all nodes',()=>{
+        let executedNodes = 0;
+        let queryHits = 0;
+
+        const fn = monitor({
+            main:{
+                ref:(x: number)=>{
+                    return 10 + x
+                }
+            },
+            inspector:(visit)=> {  
+                executedNodes += 1;  
+                visit.is('Any',()=>{
+                    queryHits += 1;
+                })
+            }
+        })
+        fn(10);
+        expect(queryHits).toBe(executedNodes)
+    })
 
     it('[Sync] should ensure that the perExecution hook is fired exactly once for every executed node',()=>{
         let executedNodes = 0;
