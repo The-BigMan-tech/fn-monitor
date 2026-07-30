@@ -3,7 +3,7 @@ import { monitor } from '../../src/index';
 import { Visit } from '../../src/sval-plus';
 
 describe('Hook Behaviour',()=>{
-    
+
     it('[Sync] should ensure that all the hooks are fired when set and together with their proper arguments',()=>{
         let calledBeforeCallHook = false;
         let calledAfterCallHook = false;
@@ -150,7 +150,5 @@ describe('Hook Behaviour',()=>{
 
         expect(inspectorHookCalls).toBe(0);
         expect(onStepHookCalls).toBe(0);
-
-        console.log('Generated code:\n',generatedCode.value);
     })
 })
