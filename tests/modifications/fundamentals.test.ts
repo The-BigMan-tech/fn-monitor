@@ -274,6 +274,9 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(inspectorHookCalls).toBe(onStepHookCalls)
     })
 
+    //this test is marked as sync even though its checking the correctness of the 
+    // pre-processing phase because its relying on specific runtime hooks that are handled by the evaluators
+
     it('[Sync] should ensure that the inspector and onStep hooks are not fired during the wrapping phase',()=>{
         let inspectorHookCalls = 0;
         let onStepHookCalls = 0;
@@ -291,6 +294,19 @@ describe('Fundamental Runtime Behaviour',()=>{
         })
         expect(onStepHookCalls).toBe(0);
         expect(inspectorHookCalls).toBe(0)
+    })
+
+    it('[Pre] should ensure that the monitored function doesn\'t execute during the wrapping phase',()=>{
+        let calledFn = false;
+
+        monitor({
+            main:{
+                ref:()=>{
+                    calledFn = true
+                }
+            }
+        })
+        expect(calledFn).toBe(false);
     })
 
     it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',()=>{
