@@ -27,7 +27,8 @@ import {
     executedManually, 
     isGenerator,pushedManually,pushResult,
     overwriteReusables,
-    useModifiedEvaluator, // Use the Generator version
+    useModifiedEvaluator,
+    callOnStep, // Use the Generator version
 } from '../lifecycle-functions.ts'
 
 
@@ -79,17 +80,15 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
-
-    const interpreter:SvalPlus = scope.interpreter;
-    if (interpreter.onStep) {
-        interpreter.onStep();
-    }
+    
+    callOnStep(scope);
 
     if (!useModifiedEvaluator(scope)) {
         return yield* handler(node,scope);
     }
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
+    const interpreter:SvalPlus = scope.interpreter;
     const parentReusables = copyReusables(interpreter);
 
     try {

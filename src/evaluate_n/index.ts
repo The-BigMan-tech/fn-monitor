@@ -22,7 +22,8 @@ import {
     useModifiedEvaluator, 
     pushResult, 
     executedManually, 
-    pushedManually 
+    pushedManually, 
+    callOnStep
 } from '../lifecycle-functions.ts'
 
 let evaluateOps: any
@@ -56,16 +57,14 @@ export default function evaluate(node: Node, scope: Scope) {
     const handler = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
 
-    const interpreter:SvalPlus = scope.interpreter;
-    if (interpreter.onStep) {
-        interpreter.onStep();//this is intentionally called before each step and not after,because the inspector could arbitrary execute a node anytime which will make where the hook will run unpredictable and with more edge cases to watch out for
-    }
+    callOnStep(scope);
 
     if (!useModifiedEvaluator(scope)) {
         return handler(node,scope);
     };
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
+    const interpreter:SvalPlus = scope.interpreter;
     const parentReusables = copyReusables(interpreter);
 
     try {

@@ -7,13 +7,32 @@ import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./custom-types.ts"
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]';
 }
+
+
+function inUserCode(scope:Scope) {
+    const interpreter:SvalPlus = scope.interpreter;
+    return (
+        (interpreter.stage === 'MONITORING') &&
+        scope.scopeDepth >= 2//its only the generated code thats at depth 1 and 0.
+    );
+}
+export function callOnStep(scope:Scope) {
+    const interpreter:SvalPlus = scope.interpreter;
+    const onStepIsAvailable = (typeof interpreter.onStep === "function");
+
+    if (inUserCode(scope) && onStepIsAvailable) {
+        interpreter.onStep!();
+    }
+}
 export function useModifiedEvaluator(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
-    const inUserCode = scope.scopeDepth >= 2;//its only the generated code thats at depth 1 and 0.
-    const availableInspector = (typeof interpreter.inspector === "function");
-    const use = ((interpreter.stage === 'MONITORING') && inUserCode && availableInspector);
-    return use;
+    const inspectorIsAvailable = (typeof interpreter.inspector === "function");
+
+    return ( 
+        inUserCode(scope) && inspectorIsAvailable
+    )
 }
+
 
 export const stackHandler = {
     start:(interpreter:SvalPlus)=>{
