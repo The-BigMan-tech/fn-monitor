@@ -303,8 +303,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             };
             SvalPlus.fnAstCache.set(fnCodeHash, ast);
         }
-
-        this.run(ast.fnCode);//run the generated ast instead of the string to prevent re-parsing
+        
+        //run the generated ast instead of the string to prevent re-parsing
+        this.run(ast.fnCode);
         this.fnCallAst = ast.fnCall;
     }
 
@@ -361,7 +362,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             ansis.white(
                 `\n${err.message}\n` +
                 `\n-Monitored functions cannot access variables from the outside.` + 
-                `\n-They must be either be passed as an argument on each call or captured/embedded into the monitored fn upon creation.\n`
+                `\n-They must be either be passed as an argument on each call or captured/embedded upon creation.\n`
             )
         )
     };
