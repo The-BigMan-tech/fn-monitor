@@ -38,7 +38,7 @@
  * 
  *      - There are two test folders,the interpreter tests and the modifications tests:
  *          - The interpreter tests consists of the 200+ tests inherited from `sval`
- *          - The modifications tests consist of the 30+ tests made for the custom modifications
+ *          - The modifications tests consist of the 40+ tests made for the custom modifications
  *      
  *      - These tests do not rigorously cover the generator evaluator as much as the normalized
  *      version.   
