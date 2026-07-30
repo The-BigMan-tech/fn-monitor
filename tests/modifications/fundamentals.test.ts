@@ -296,19 +296,6 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(inspectorHookCalls).toBe(0)
     })
 
-    it('[Pre] should ensure that the monitored function doesn\'t execute during the wrapping phase',()=>{
-        let calledFn = false;
-
-        monitor({
-            main:{
-                ref:()=>{
-                    calledFn = true
-                }
-            }
-        })
-        expect(calledFn).toBe(false);
-    })
-
     it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',()=>{
         let beforeHookCount = 0;
         let afterHookCount = 0;

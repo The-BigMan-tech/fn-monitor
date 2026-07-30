@@ -73,4 +73,17 @@ describe('Pre-processing Behaviour', () => {
         
         expect(monitoredOuterFn(5)).toBe(110);// Execute and verify
     });
+
+    it('[Pre] should ensure that the monitored function doesn\'t execute during the wrapping phase',()=>{
+        let calledFn = false;
+
+        monitor({
+            main:{
+                ref:()=>{
+                    calledFn = true
+                }
+            }
+        })
+        expect(calledFn).toBe(false);
+    })
 });
