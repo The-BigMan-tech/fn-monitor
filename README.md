@@ -448,7 +448,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 * **`EsNode`**: The union of all ast nodes. This type is just an alias to the Node type from estree.
   
-* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` and `variables.search(name)` properties can be used to get all variable values, and the `depth` property returns the depth of the scope. It is strictly 0-indexed and it starts from the wrapped function's root.
+* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` property is a record of each variable name to their value in that local scope while the `variables.search(name)` property can be used to get a variable's value from its identifier within that scope even if it was defined outside the local scope and captured. The `depth` property returns the depth of the scope. It is strictly 0-indexed and it starts from the wrapped function's root.
 
 * **`LocalExeStack`**: A custom, optimized deque (double-ended queue) with random array access, used internally to manage the execution stack. It is exposed to the user as a read-only view to prevent state corruption.
   
@@ -523,7 +523,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 - **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
 
-- **Supported Function Types:** This package fully supports step-by-step monitoring of synchronous and async/await functions. However, native generator functions (function*) are not supported. This is because, for generators, the function body does not run during the initial call. Instead, the returned iterator object executes natively in JavaScript, entirely bypassing the interpreter.
+- **Supported Function Types:** This package fully supports step-by-step monitoring of synchronous and async/await functions. However, native generator functions (function*) cannot be monitored although they can be wrapped. This is because, for generators, the function body does not run during the initial call. Instead, the returned iterator object executes natively in JavaScript, entirely bypassing the interpreter.
 
 - **Wrapper Constraints:** The `monitor` function can wrap any standard JavaScript function, but it **cannot** wrap a function that has already been wrapped by `monitor` (i.e., you cannot double-wrap a function via the `ref` property). However, you **can** include an already-monitored function within the `captures` object. This is fully supported because captured functions execute in the native JavaScript runtime, completely outside the AST interpreter's context.
 
