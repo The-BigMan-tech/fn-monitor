@@ -160,4 +160,63 @@ describe('Fundamental Runtime Behaviour',()=>{
         expect(hitReturnNode).toBe(true)
         expect(sum).toBe(4);
     })
+
+    it('[Sync] should ensure that anonymous and normal function definitions are parsed correctly no matter how they are passed to the monitor function.',()=>{
+        function add1(a:number,b:number) {
+            return a + b
+        }
+        const add2 = (a:number,b:number)=> {
+            return a + b
+        }
+        const add3 = function (a:number,b:number) {
+            return a + b
+        };
+        const add4 = function* (a:number,b:number) {
+            return a + b
+        };
+        function* add5(a:number,b:number) {
+            return a + b
+        }
+
+        const monitoredAdd1 = monitor({
+            main:{
+                ref:add1
+            }
+        })
+        const monitoredAdd2 = monitor({
+            main:{
+                ref:add2
+            }
+        })
+        const monitoredAdd3 = monitor({
+            main:{
+                ref:add3
+            }
+        });
+        const monitoredAdd4 = monitor({
+            main:{
+                ref:add4
+            }
+        });
+        const monitoredAdd5 = monitor({
+            main:{
+                ref:add5
+            }
+        });
+
+        const result1 = monitoredAdd1(2,2)
+        expect(result1).toBe(4);
+
+        const result2 = monitoredAdd2(2,2)
+        expect(result2).toBe(4);
+
+        const result3 = monitoredAdd3(2,2)
+        expect(result3).toBe(4);
+
+        const result4 = monitoredAdd4(2,2).next().value
+        expect(result4).toBe(4);
+
+        const result5 = monitoredAdd5(2,2).next().value
+        expect(result5).toBe(4);
+    })
 })
