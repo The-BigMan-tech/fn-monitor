@@ -271,7 +271,26 @@ describe('Fundamental Runtime Behaviour',()=>{
             }
         })
         fn(2,2);
-        expect(onStepHookCalls).toBe(inspectorHookCalls)
+        expect(inspectorHookCalls).toBe(onStepHookCalls)
+    })
+
+    it('[Sync] should ensure that the inspector and onStep hooks are not fired during the wrapping phase',()=>{
+        let inspectorHookCalls = 0;
+        let onStepHookCalls = 0;
+
+        monitor({
+            main:{
+                ref:(a:number,b:number)=>(a + b) * (a - b)
+            },
+            onStep:()=>{
+                onStepHookCalls += 1
+            },
+            inspector:()=>{
+                inspectorHookCalls += 1
+            }
+        })
+        expect(onStepHookCalls).toBe(0);
+        expect(inspectorHookCalls).toBe(0)
     })
 
     it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are only fired once per function call',()=>{
