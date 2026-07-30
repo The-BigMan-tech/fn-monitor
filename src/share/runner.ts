@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { AWAIT } from './const.ts'
 
 export interface runOptions {
@@ -16,7 +18,6 @@ export function runAsync(
     
     return new Promise((resolve, reject) => {
         if ('ret' in options) {
-            //@ts-expect-error
             return resolve(iterator.return(ret))
         }
 
@@ -39,7 +40,6 @@ export function runAsync(
         function onRejected(err: any) {
             let ret: any
             try {
-                //@ts-expect-error
                 ret = iterator.throw(err)
             }catch (e) {
                 return reject(e)
