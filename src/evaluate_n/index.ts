@@ -65,7 +65,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
     const interpreter:SvalPlus = scope.interpreter;
-    const parentReusables = copyReusables(interpreter);
+    const parentReusables = copyReusables(interpreter,'optional');
 
     try {
         stackHandler.start(interpreter)

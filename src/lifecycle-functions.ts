@@ -34,18 +34,23 @@ export const stackHandler = {
     start:(interpreter:SvalPlus)=>{
         interpreter.reusables.shared.evalStack.value += 1;
     },
-    finish:(interpreter:SvalPlus,parentReusables:Reusables)=> {
+    finish:(interpreter:SvalPlus,parentReusables:Reusables | null)=> {
         interpreter.reusables.shared.evalStack.value -= 1;
         const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
 
         if (zeroNodesLeft) {
             clearStack(interpreter);
         }else {
+            if (parentReusables === null) {//if a user ever encounters this error,they can paste it along with their code in an issues page
+                throw new Error(`Internal logic error: The stack handler cannot recover the parent node state because it was given 'null'.`)
+            };
             overwriteReusables(interpreter, parentReusables);
         }
     }
 }
 
+
+//These two call* functions dont check inUserCode because in the evaluators,they only run if useMModifiedEvaluator is true
 
 export function callPerExe(interpreter:SvalPlus) {
     const perExe = interpreter.reusables.shared.perExe;
@@ -63,6 +68,68 @@ export function callInspector(acornNode:AcornNode,currentScope:Scope<SvalPlus>,h
     const interpreter = currentScope.interpreter!;
     updateReusables(acornNode,currentScope,handler)
     return interpreter.inspector!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
+}
+
+
+function updateReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+    const interpreter = currentScope.interpreter!;
+    interpreter.reusables.node = acornNode as EsNode;
+    interpreter.reusables.currentScope = currentScope;
+    interpreter.reusables.handler = handler;
+    interpreter.reusables.result = UNASSIGNED;
+    interpreter.reusables.currentEvent = NOT_ALLOCATED;
+    //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation.Its lifecycle's end is handled in another function
+    //we dont touch the evalstack pointer here.
+}
+function clearStack(interpreter:SvalPlus) {
+    interpreter.reusables.node = null;
+    interpreter.reusables.currentScope = null;
+    interpreter.reusables.handler = null;
+    interpreter.reusables.result = UNASSIGNED;
+    interpreter.reusables.currentEvent = NOT_ALLOCATED;
+    interpreter.reusables.shared.evalStack.value = 0;
+    interpreter.reusables.shared.exeStack.clear();
+    //we dont touch perExe here because its lifecycle's end is handled in another function
+    //we dont touch the readonlyExeStack because its just a live reference to the exe stack
+}
+
+
+export function copyReusables<
+    T extends 'compulsory' | 'optional',
+    R extends Reusables | null = T extends 'compulsory'?Reusables: null
+>
+(interpreter:SvalPlus,flag:T):R {
+    const reusables = interpreter.reusables;
+    const canSkipOp = (flag === "optional") && (reusables.shared.evalStack.value <= 0);
+
+    //if the evalstack is 0,it means that the reusables are cleared and if they are cleared,it means that the evaluator can safely overwrite it without having to pay copy overhead
+    if (canSkipOp) {
+        return null as R;
+    }
+    return {
+        node:reusables.node,
+        currentScope:reusables.currentScope,
+        handler:reusables.handler,
+        result:reusables.result,
+        currentEvent:reusables.currentEvent,
+        shared:{
+            evalStack:reusables.shared.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
+            exeStack:reusables.shared.exeStack,
+            readonlyExeStack:reusables.shared.readonlyExeStack,
+            perExe:reusables.shared.perExe
+        }
+    } as R;
+}
+export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables) {
+    interpreter.reusables.node = srcReusables.node;
+    interpreter.reusables.currentScope = srcReusables.currentScope;
+    interpreter.reusables.handler = srcReusables.handler;
+    interpreter.reusables.result = srcReusables.result;
+    interpreter.reusables.currentEvent = srcReusables.currentEvent;
+    interpreter.reusables.shared.evalStack = srcReusables.shared.evalStack;
+    interpreter.reusables.shared.exeStack = srcReusables.shared.exeStack;
+    interpreter.reusables.shared.readonlyExeStack = srcReusables.shared.readonlyExeStack;
+    interpreter.reusables.shared.perExe = srcReusables.shared.perExe
 }
 
 
@@ -85,56 +152,4 @@ export function pushResult(interpreter:SvalPlus,final:any) {
             ?NOT_ALLOCATED:
             currentEvent.scope
     });
-}
-
-
-
-function updateReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = currentScope.interpreter!;
-    interpreter.reusables.node = acornNode as EsNode;
-    interpreter.reusables.currentScope = currentScope;
-    interpreter.reusables.handler = handler;
-    interpreter.reusables.result = UNASSIGNED;
-    interpreter.reusables.currentEvent = NOT_ALLOCATED;
-    //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation.Its lifecycle's end is handled in another function
-    //we dont touch the evalstack pointer here.
-}
-function clearStack(interpreter:SvalPlus) {
-    interpreter.reusables.node = null;
-    interpreter.reusables.currentScope = null;
-    interpreter.reusables.handler = null;
-    interpreter.reusables.result = UNASSIGNED;
-    interpreter.reusables.currentEvent = NOT_ALLOCATED;
-    interpreter.reusables.shared.evalStack.value = 0;
-    interpreter.reusables.shared.exeStack.clear();
-    //we dont touch perExe here because its lifecycle's end is handled in another function
-    //we dont touch the readonly exe stack because its just a live reference to the exe stack
-}
-
-
-export function copyReusables(interpreter:SvalPlus):Reusables {
-    return {
-        node: interpreter.reusables.node,
-        currentScope:interpreter.reusables.currentScope,
-        handler: interpreter.reusables.handler,
-        result: interpreter.reusables.result,
-        currentEvent:interpreter.reusables.currentEvent,
-        shared:{
-            evalStack:interpreter.reusables.shared.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
-            exeStack:interpreter.reusables.shared.exeStack,
-            readonlyExeStack:interpreter.reusables.shared.readonlyExeStack,
-            perExe:interpreter.reusables.shared.perExe
-        }
-    };
-}
-export function overwriteReusables(interpreter:SvalPlus,prevReusables:Reusables) {
-    interpreter.reusables.node = prevReusables.node;
-    interpreter.reusables.currentScope = prevReusables.currentScope;
-    interpreter.reusables.handler = prevReusables.handler;
-    interpreter.reusables.result = prevReusables.result;
-    interpreter.reusables.currentEvent = prevReusables.currentEvent;
-    interpreter.reusables.shared.evalStack = prevReusables.shared.evalStack;
-    interpreter.reusables.shared.exeStack = prevReusables.shared.exeStack;
-    interpreter.reusables.shared.readonlyExeStack = prevReusables.shared.readonlyExeStack;
-    interpreter.reusables.shared.perExe = prevReusables.shared.perExe
 }

@@ -89,13 +89,13 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
     const interpreter:SvalPlus = scope.interpreter;
-    const parentReusables = copyReusables(interpreter);
+    const parentReusables = copyReusables(interpreter,'optional');
 
     try {
         stackHandler.start(interpreter)
 
         const response = callInspector(node, scope, handler);
-        const localReusables = copyReusables(interpreter);//capture the reusbales after the callInspector method has updated it to the local node and scope
+        const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
 
         if (isGenerator(response)) {
             const next = response.next();//the generator must be advanced before evaluating the final result
