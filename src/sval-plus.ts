@@ -29,10 +29,10 @@ import { isGenerator, pushResult } from './lifecycle-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
-export interface FnSrc {
-    fnName:string 
+export interface FnSrc<T extends boolean> {
+    fnName:string
     fnCode:string,
-    fnCall:string,
+    fnCall:T extends true?string:null,
 }
 export interface FnAst {
     fnCode:Node,
@@ -214,7 +214,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
     
 
-    public getFnSrc(fn:Fn,capturesLabel:string):FnSrc  {
+    public getFnSrc<T extends boolean>(fn:Fn,capturesLabel:string,isMainFn:T):FnSrc<T>  {
         const fnString = fn.toString();
         const hash = SvalPlus.sha256Key(fnString);
 
@@ -245,15 +245,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return ${intermediateFn};
         })();`
 
-        const finalFnCall = (
-            `\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
+        const finalFnCall = !isMainFn?null
+            :`\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
             `\n\nexports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});`
-        )
 
         return { 
             fnName:finalFnName ,
             fnCode:finalFnCode,
-            fnCall:finalFnCall
+            fnCall:finalFnCall as FnSrc<T>['fnCall'] 
         };
     }
     public getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
@@ -270,7 +269,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);//prepending embeddedFn ensures that it wont conflct with existing generated commonLabels
 
                 this.exports[capturesLabel] = fn.captures || Object.create(null);
-                const fnSrc = this.getFnSrc(fn.ref,capturesLabel);//passing undefined here prevents infinite recursion
+                const fnSrc = this.getFnSrc(fn.ref,capturesLabel,false);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
@@ -286,7 +285,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
         return fnCode;
     };
-    public useFn(fnSrc:FnSrc):void {
+    public useFn(fnSrc:FnSrc<true>):void {
         if (this.fnCallAst !== null) {
             throw new Error(ansis.red(`The interpreter can only use one function`))
         };

@@ -164,7 +164,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
     interpreter.exports[capturesLabel] = captures || Object.create(null);
     
-    const fnSrc = interpreter.getFnSrc(mainFn,capturesLabel);
+    const fnSrc = interpreter.getFnSrc(mainFn,capturesLabel,true);
     fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
 
     fnSrc.fnCode = `'use strict'\n${fnSrc.fnCode}`;//ensure that it runs in strict mode
