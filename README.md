@@ -1,7 +1,7 @@
 # @typescript-guy/fn-monitor
 
-![npm](https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor)
-![license](https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor)
+[![npm version](https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor)](https://www.npmjs.com/package/@typescript-guy/fn-monitor)
+[![license](https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor)](https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md)
 
 `@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
@@ -12,13 +12,14 @@
 npm install @typescript-guy/fn-monitor
 ```
 
+> 📌 **If you are integrating this package for production:** Please review the [Important Notes & Limitations](#important-notes--limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
+
+---
+
 
 ## API Introduction
 
 The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
-
-> 📌 Before integrating this package, please review the [Important Notes & Limitations](#important-notes--limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports
-
 
 
 ## Quick Examples
@@ -544,109 +545,83 @@ Error: The monitored function used 50.521ms when only given a budget of 50.000ms
 
 ## Full API Reference
 
-### Core Functions & Interfaces
+### Core Functions
 
-#### monitor`<T>`(setup: MonitorFnSetup`<T>`)
-The main export. Accepts a configuration object and returns a new function that can be called exactly as the original, but is executed by the custom interpreter. The returned function is augmented with an `alreadyMonitored: true` property.
+#### `monitor<T>(setup: MonitorFnSetup<T>)`
+The main export. Accepts a configuration object and returns a new function with an identical call signature to the original, but executed by the custom interpreter.
 
-#### MonitorFnSetup`<T>`
+#### `MonitorFnSetup<T>`
 | Property | Type | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
-| `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the same interpreter context. |
-| `inspector` | `Inspector` | The main hook fed the interpreter's context (`visit` object) to inspect, modify, and manually execute nodes. It can be defined as either a regular function or a generator.<br><br>💡 **Type Clarification:** You do **not** need to match the inspector's type to the monitored function's type (e.g., a regular function works fine for async code, and a generator works fine for sync code). Both will work universally, except for the specific behavioral nuance when paired with `visit.execute()`. |
-| `onStep` | `OnStep` | Lightweight hook called before each interpreted step. It does not get the rich `visit` object, making it significantly faster than using the inspector. |
+| `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
+| `inspector` | `Inspector` | The main hook fed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below)*. |
+| `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
 | `sourceOut` | `{ value: string }` | Overwrites the `value` property with the generated code used in the interpreter. |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
-#### Metadata`<T>`
+> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on async nodes (generators can `yield` the `LAZY_NODE` symbol to await the result).
+
+#### `Metadata<T>`
 | Property | Type | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
-| `captures` | `Record<string, any>` | Maps variable names to their values stored outside the wrapped function's scope. The values are injected as constants into the monitored functions during parsing. Follows copy-by-value (primitives) and copy-by-reference (objects) semantics. |
+| `captures` | `Record<string, any>` | Maps variable names to their values stored outside the wrapped function's scope. Follows standard JS copy-by-value (primitives) and copy-by-reference (objects) semantics. |
 
+---
 
-### The Inspector Context
+### The Inspector Context: `Visit`
 
-#### Visit
-The rich object that gives inspectors their ability to participate in the interpretation. Every monitored function has exactly one `visit` object allocated to save memory. **It must be used strictly within the `inspector` hook.**
+The rich object that gives inspectors their ability to participate in the interpretation. Every monitored function has exactly one `visit` object allocated to save memory. It must be used strictly within the `inspector` hook.
 
 | Method/Property | Description |
-| :--- | :--- |
-| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it together with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This design decision keeps the interpreter simple and saves memory. |
-| `set perExecution(fn)` | A setter for a callback fired on each executed node. It is short-lived meaning that it is discarded after evaluating the current node and its children. |
-| `execute()` | Manually executes the current node and returns the result. <br><br>For an async node like an await statement, it defers the execution and returns the LAZY_NODE symbol. If you use a generator for the inspector, you can yield it to get the resolved value.|
-| `localExeStack()` | Returns a readonly stack of the latest evaluated child node results. |
+| --- | --- |
+| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient. |
+| `set perExecution(fn)` | A setter for a callback fired on each executed child node. It is short-lived and discarded after evaluating the current node and its children. |
+| `execute()` | Manually executes the current node and returns the result. For async nodes (like `await`), it defers execution and returns the `LAZY_NODE` symbol. |
+| `localExeStack()` | Returns a readonly stack (deque) of the latest evaluated child node results. |
 
-#### ExeResult
+#### `ExeResult`
 | Property | Type | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `evaluation` | `unknown` | The result of the node's evaluation. |
-| `type` | `EsNode['type']` | The type of the node. |
+| `type` | `EsNode['type']` | The type of the AST node. |
 | `node` | `EsNode` | The AST node itself. |
-| `scope` | `ScopeForEvent \| typeof NOT_ALLOCATED` | The safe scope created for the caller. |
+| `scope` | `ScopeForEvent \| NOT_ALLOCATED` | The safe, read-only scope snapshot created for the caller. |
 
+---
 
 ### Utility Types & Classes
 
-* **`EsNode`**: The union of all ast nodes. This type is just an alias to the Node type from estree.
+- **`EsNode`**: Union of all AST nodes (alias to `Node` from `estree`).
   
-* **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. The `variables.local` property is a record of each variable name to their value in that local scope while the `variables.search(name)` property can be used to get a variable's value from its identifier within that scope even if it was defined outside the local scope and captured. The `depth` property returns the depth of the scope. It is strictly 0-indexed and it starts from the wrapped function's root.
-
-* **`LocalExeStack`**: A custom, optimized deque (double-ended queue) with random array access, used internally to manage the execution stack. It is exposed to the user as a read-only view to prevent state corruption.
+- **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. `variables.local` holds local variables, while `variables.search(name)` searches up the scope chain. `depth` is strictly 0-indexed from the wrapped function's root.
   
-* **`Query`**: A string union of all possible EsNode types you can use in a `visit.is` query. It also includes `'Any'` , which matches all nodes and node types that did not get their own explicit classes.
+- **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
   
-* **`EventMap`**: Maps each node query to its dedicated Event class for tailored intellisense.
+- **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes.
   
-* **`NOT_ALLOCATED`** A symbol used to mark scopes that were not allocated when their respective nodes were visited. The interpreter only allocates scopes that match a visit.is() query.You can use visit.is('Any',...) to forcefully allocate scope objects for all nodes
-
-
-### Event Classes
-All events extend the base `LangEvent` class, which provides the `node` and `scope` properties. There are over 30 specific event classes, including:
-
-`BinaryExprEvent`, `CallExprEvent`, `AssignmentExprEvent`, 
-
-`UpdateExprEvent`, `LogicalExprEvent`, `MemberExprEvent`, 
-
-`AwaitExprEvent`, `FuncExprEvent`, `ArrowFnExprEvent`, 
-
-`TernaryExprEvent`, `NewExprEvent`, `SequenceExprEvent`
-
-`ReturnStmtEvent`, `IfStmtEvent`, `SwitchStmtEvent`, 
-
-`ThrowStmtEvent`, `TryStmtEvent`, `CatchClauseEvent`, 
-
-`VarDeclEvent`, `FuncDeclEvent`, `ForStmtEvent`, 
-
-`WhileStmtEvent`, `DoWhileStmtEvent`, `ForOfStmtEvent`,
-
-`ForInStmtEvent`, `LabeledStmtEvent`, `BreakStmtEvent`, 
-
-`ContinueStmtEvent`, `LiteralEvent`, `ExpressionStmtEvent`, 
-
-`ArrayExprEvent`, `ObjectExprEvent`, `TemplateLiteralEvent`, 
-
-`UnaryExprEvent`.
+- **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
+  
+- **Event Classes**: Over 30 specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
 
 ---
 
 
 ## How it Works
 
-Under the hood, this package utilizes an **AST-walker interpreter** (rather than a bytecode implementation) to evaluate functions. 
+Under the hood, this package utilizes an AST-walking interpreter (rather than a bytecode implementation) to evaluate functions.
 
 - **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
-- **Reusables Architecture:** 
-    - To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects. This prevents allocation of intermediate objects mid-evaluation.
-    
-    - To safely handle complex async/await state transitions while sharing objects, the interpreter copies the reusable objects at certain points, and restores their original values once it finishes working with the overwritten values
+- **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects, preventing the allocation of intermediate objects mid-evaluation. The async evaluator safely copies and restores these objects across event loop pauses.
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
-
-- **Scope Allocation & Safety:** Unlike AST nodes which are parsed once and reused, the scope objects exposed to the inspector is always freshly allocated for each event. This design choice prevents accidental mutations of the interpreter's internal state.
+  
+- **Strict Mode Enforcement:** All generated wrapper code is executed in strict mode.
+  
+- **Scope Allocation & Safety:** Unlike AST nodes (which are parsed once and reused), the scope objects exposed to the inspector are always freshly allocated for each event. This prevents accidental mutations of the interpreter's internal state.
 
 ---
 
@@ -655,47 +630,41 @@ Under the hood, this package utilizes an **AST-walker interpreter** (rather than
 
 Please keep the following architectural constraints in mind when using this package:
 
-- **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+1. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
-- **Runtime-Agnostic Architecture:** The interpreter is built on a pure JavaScript AST-walking engine and was not designed to rely on any environment-specific APIs, binaries, or global objects (such as Node's `vm`/`fs` or the browser's `window`/`document`).
+2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure js.
+    
+3. **Native Generator Functions (`function*`):** Deep, step-by-step monitoring of native generators is **not supported**. Because calling a native generator immediately returns an Iterator object without executing the body, the interpreter cannot intercept the subsequent `.next()` calls driven by the JS engine.
 
-- **Debugging & Stack Traces:** Because monitored functions execute within an isolated interpreter context, errors thrown inside them will not map directly to their original source locations in your editor. It is highly recommended to debug functions in their unmonitored state first. *(Note: The inspector hook itself runs in the native JS runtime, so it will still display a standard stack trace if the inspector throws an error.)*
+4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-- **AST Mutation Persistence:** To maximize performance, the monitored function's code is parsed into an AST only once. Consequently, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
+5. **Performance Critical:** The `monitor()` function performs heavy AST parsing and interpreter instantiation. **Always call `monitor()` outside of hot loops**, and execute the returned function inside your loops or handlers.
 
-- **Performance Critical:** The monitor() function performs heavy AST parsing and interpreter instantiation. Calling it inside a loop, request handler, or component render cycle will cause performance bottlenecks. **Always call `monitor()` outside of hot loops**, and execute the *returned* function in your loops or handlers.
+6. **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
+   
+7. **Wrapper Constraints:** You cannot double-wrap a function via the `ref` property (a monitored function cannot be passed as `ref` to another `monitor`). However, you *can* include an already-monitored function within the `captures` object, as it will execute natively.
 
-- **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting nodes via the `inspector` and `onStep` hooks.
+8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. Debug functions in their unmonitored state first. (Note: The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws).
 
-- **Supported Function Types:** This package fully supports step-by-step monitoring of synchronous and async/await functions. However, native generator functions (function*) cannot be monitored although they can be wrapped. This is because, for generators, the function body does not run during the initial call. Instead, the returned iterator object executes natively in JavaScript, entirely bypassing the interpreter.
+9.  **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting execution via the `inspector` and `onStep` hooks.
 
-- **Wrapper Constraints:** The `monitor` function can wrap any standard JavaScript function, but it **cannot** wrap a function that has already been wrapped by `monitor` (i.e., you cannot double-wrap a function via the `ref` property). However, you **can** include an already-monitored function within the `captures` object. This is fully supported because captured functions execute in the native JavaScript runtime, completely outside the AST interpreter's context.
-
-- **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property. This design decision ensures that module resolution remains handled by your native JS engine, preserving the interpreter's isolation and preventing unexpected network or filesystem side-effects during execution.
-  
 ---
 
 
 ## Questions & Support
 
-If you want to play around with the package, there is an `examples` folder in the repository. *(Note: If you copy the examples, you will need to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*. 
+Want to play around with the package? Check out the [`examples`](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples) folder in the repository. *(Note: If you copy the examples, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
-🔗 **[View Examples](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples)**
+- 💬 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
+- 🐛 **Bugs & Features:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
-If you have questions about how to use this package, need help with a specific implementation, or want to discuss architecture:
-* **Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions)**: This is the best place for Q&A and community help.
-  
-* **Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues)**: If you've found a bug or want to request a new feature.
-
-*Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues to see if your question has already been answered!*
+*Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 
 ---
 
 
 ## Acknowledgements
 
-The core execution engine of this project is a modified and extended version of [`sval`](https://github.com/Siubaak/sval), a JavaScript interpreter written in JavaScript, originally authored by Siubaak.
+The core execution engine of this project is a modified and extended version of [`sval`](https://github.com/Siubaak/sval), a JavaScript interpreter written in JavaScript, originally authored by Siubaak. 
 
-*Please note: This project is an independent extension and is not affiliated with, endorsed by, or sponsored by the original `sval` project or its authors.*
-
-`sval` is licensed under the MIT License.
+*Please note: This project is an independent extension and is not affiliated with, endorsed by, or sponsored by the original `sval` project or its authors. `sval` is licensed under the MIT License.*
