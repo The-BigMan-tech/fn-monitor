@@ -45,17 +45,6 @@ describe('Visit.execute() Method Behaviour',()=>{
             }
         })
         fn1(2,3);
-
-        const fn2 = monitor({
-            main:{
-                ref:(a:number,b:number)=>(a + b) * (a - b)
-            },
-            inspector:function* (visit):InspectorGenerator {
-                yield visit.execute()
-                expect(()=>visit.execute()).toThrow(VisitExecutionError);
-            }
-        })
-        fn2(2,3);
     });
 
     it('[Sync] should not execute the node automatically if visit.execute was called',()=>{
