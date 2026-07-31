@@ -239,10 +239,11 @@ const monitoredAsyncSqrt = monitor({
 
                 //in the stack,the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
                 const element = stack.get(-(stackLenAtCallee + 1));
-                const isFunction = typeof element.evaluation === 'function';
+                const evaluation = element.evaluation;
+                const isFunction = typeof evaluation === 'function';
 
                 if (isFunction && !callees.has(element)) {
-                    console.log('Callee:',element);
+                    console.log('Callee:',evaluation);
                     callees.add(element);
                     return
                 }
@@ -263,57 +264,198 @@ console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2));
 ```text
 SHOWCASE 3
 
-Callee: {
-  evaluation: [Function: sqrt],
-  type: 'Identifier',
-  node: {
-    type: 'Identifier',
-    name: 'sqrtFn',
-    start: 230,
-    end: 236,
-    range: [ 230, 236 ],
-    loc: { start: [Object], end: [Object] }
-  },
-  scope: Symbol(NOT_ALLOCATED)
-}
-Callee: {
-  evaluation: [Function: Number],
-  type: 'Identifier',
-  node: {
-    type: 'Identifier',
-    name: 'Number',
-    start: 263,
-    end: 269,
-    range: [ 263, 269 ],
-    loc: { start: [Object], end: [Object] }
-  },
-  scope: Symbol(NOT_ALLOCATED)
-}
-Callee: {
-  evaluation: [Function: Promise],
-  type: 'Identifier',
-  node: {
-    type: 'Identifier',
-    name: 'Promise',
-    start: 313,
-    end: 320,
-    range: [ 313, 320 ],
-    loc: { start: [Object], end: [Object] }
-  },
-  scope: Symbol(NOT_ALLOCATED)
-}
-
+Callee: [Function: sqrt]
+Callee: [Function: Number]
+Callee: [Function: Promise]
 Awaited result:  1.414
 Monitored async sqrt:  1.414
 ```
 
-### Showcase 4: High-Performance Timeouts
+### Showcase 4: Execution History
+This example will focus on getting the full execution history of a fn call
+
+```typescript
+console.log('\n\nSHOWCASE 4\n');
+
+const exeHistory:ExeResult[] = [];
+
+const fn = monitor({
+    main:{
+        ref:(a:number,b:number)=>{
+            const result = (a + b) * (a - b);
+            return result;
+        }
+    },
+    inspector:(visit)=>{
+        visit.is('Any',()=>undefined);//force the interprter to allocate all the scopes
+
+        //Wrapping our exe history logic under perExecution is important to 
+        //ensure that we are only querying the stack when the executed results of 
+        // the node have actually been inserted
+
+        visit.perExecution = ()=>{
+            const head = visit.localExeStack().get(0)
+            exeHistory.push(head);
+        }
+    }
+})
+fn(2,3);
+console.log('Execution history:\n',exeHistory);
+```
+
+**Output:**
+```text
+SHOWCASE 4
+
+Execution history:
+ [
+  {
+    evaluation: 2,
+    type: 'Identifier',
+    node: {
+      type: 'Identifier',
+      name: 'a',
+      start: 192,
+      end: 193,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: 3,
+    type: 'Identifier',
+    node: {
+      type: 'Identifier',
+      name: 'b',
+      start: 196,
+      end: 197,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: 5,
+    type: 'BinaryExpression',
+    node: {
+      type: 'BinaryExpression',
+      left: [Object],
+      right: [Object],
+      operator: '+',
+      start: 192,
+      end: 197,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: 2,
+    type: 'Identifier',
+    node: {
+      type: 'Identifier',
+      name: 'a',
+      start: 202,
+      end: 203,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: 3,
+    type: 'Identifier',
+    node: {
+      type: 'Identifier',
+      name: 'b',
+      start: 206,
+      end: 207,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: -1,
+    type: 'BinaryExpression',
+    node: {
+      type: 'BinaryExpression',
+      left: [Object],
+      right: [Object],
+      operator: '-',
+      start: 202,
+      end: 207,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: -5,
+    type: 'BinaryExpression',
+    node: {
+      type: 'BinaryExpression',
+      left: [Object],
+      right: [Object],
+      operator: '*',
+      start: 191,
+      end: 208,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: undefined,
+    type: 'VariableDeclaration',
+    node: {
+      type: 'VariableDeclaration',
+      kind: 'const',
+      declarations: [Array],
+      start: 176,
+      end: 209,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: -5,
+    type: 'Identifier',
+    node: {
+      type: 'Identifier',
+      name: 'result',
+      start: 223,
+      end: 229,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  },
+  {
+    evaluation: { RES: -5 },
+    type: 'ReturnStatement',
+    node: {
+      type: 'ReturnStatement',
+      argument: [Object],
+      start: 216,
+      end: 230,
+      range: [Array],
+      loc: [Object]
+    },
+    scope: EventScope { depth: 0, variables: [Object] }
+  }
+]
+```
+
+### Showcase 5: High-Performance Timeouts
 This example uses the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 4');
+console.log('\n\nSHOWCASE 5');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
@@ -388,7 +530,7 @@ console.log('\nThe average from the timed fn is: ',avg2);
 **Output:**
 ```text
 
-SHOWCASE 4
+SHOWCASE 5
 
 The average is:  61.833
 Finished building the fn in 1.736ms

@@ -1,4 +1,4 @@
-import { type InspectorGenerator, monitor } from "../src/index.ts";
+import { ExeResult, type InspectorGenerator, monitor } from "../src/index.ts";
 
 
 //SHOWCASE 1
@@ -130,10 +130,11 @@ const monitoredAsyncSqrt = monitor({
 
                 //in the stack,the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
                 const element = stack.get(-(stackLenAtCallee + 1));
-                const isFunction = typeof element.evaluation === 'function';
+                const evaluation = element.evaluation;
+                const isFunction = typeof evaluation === 'function';
 
                 if (isFunction && !callees.has(element)) {
-                    console.log('Callee:',element);
+                    console.log('Callee:',evaluation);
                     callees.add(element);
                     return
                 }
@@ -149,11 +150,42 @@ const monitoredAsyncSqrt = monitor({
 
 console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2)); 
 
+
 //SHOWCASE 4
+//This showcase will focus on getting the full execution history of a fn call
+
+console.log('\n\nSHOWCASE 4\n');
+
+const exeHistory:ExeResult[] = [];
+
+const fn = monitor({
+    main:{
+        ref:(a:number,b:number)=>{
+            const result = (a + b) * (a - b);
+            return result;
+        }
+    },
+    inspector:(visit)=>{
+        visit.is('Any',()=>undefined);//force the interprter to allocate all the scopes
+
+        //Wrapping our exe history logic under perExecution is important to 
+        //ensure that we are only querying the stack when the executed results of 
+        // the node have actually been inserted
+        
+        visit.perExecution = ()=>{
+            const head = visit.localExeStack().get(0)
+            exeHistory.push(head);
+        }
+    }
+})
+fn(2,3);
+console.log('Execution history:\n',exeHistory);
+
+
+//SHOWCASE 5
 //Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
 
-
-console.log('\n\nSHOWCASE 4');
+console.log('\n\nSHOWCASE 5');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
