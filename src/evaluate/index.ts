@@ -15,7 +15,6 @@ import * as program from './program.ts'
 import { 
     LAZY_NODE, 
     Reusables, 
-    SEEN, 
     SvalPlus 
 } from '../custom-types.ts';
 
@@ -32,16 +31,6 @@ import {
 } from '../lifecycle-functions.ts'
 
 
-function assertIsLazy(value:any) {
-    if (value !== LAZY_NODE) {
-        throw new Error(ansis.red(`[Generator Evaluator] When the interpreter visit a LAZY_NODE,generator-based inspectors can only yield that lazy node but saw ${String(value)}.`))
-    };
-}
-function assertIsDone(done:boolean | undefined) {
-    if (!done) {
-        throw new Error(ansis.red(`[Generator Evaluator] Generator-based inspectors can only yield once.`))
-    }
-}
 function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:Reusables):Generator {
     let iterResult = iterator.next();
 
@@ -94,40 +83,14 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     try {
         stackHandler.start(interpreter)
-
         const response = callInspector(node, scope, handler);
+
         const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
 
-        if (isGenerator(response)) {
-            const next = response.next();//the generator must be advanced before evaluating the final result
+        const genResult = isGenerator(response) ? response.next() : null;  
+        const finished = (genResult === null) ? true : genResult.done
 
-            const final = executedManually(interpreter.reusables.result)//this result variable must be called strictly after resuming the generator if the inspector is a generator
-                ?yield* higherHandler(
-                    interpreter.reusables.result,
-                    interpreter,
-                    localReusables
-                )
-                :yield* higherHandler(
-                    handler(node,scope),
-                    interpreter,
-                    localReusables
-                );
-
-            if (!pushedManually(interpreter.reusables.result)){
-                pushResult(interpreter,final);
-            }
-            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.
-            
-            if (!next.done) {
-                assertIsLazy(next.value)
-                const next2 = response.next(final);
-                assertIsDone(next2.done)
-            };
-            
-            callPerExe(interpreter);
-            return final;
-        }
-        else {
+        if (finished) {
             const final = executedManually(interpreter.reusables.result)
                 ?yield* higherHandler(
                     interpreter.reusables.result,
@@ -143,10 +106,36 @@ export default function* evaluate(node: Node, scope: Scope) {
             if (!pushedManually(interpreter.reusables.result)) {
                 pushResult(interpreter,final);
             }
-            interpreter.reusables.result = SEEN;
-            
+        
             callPerExe(interpreter);
             return final;
+        }
+        else {
+            if (!executedManually(interpreter.reusables.result)) {//this assetion is the important piece that justifies the removal of the SEEN symbol in one refactor
+                throw new Error(ansis.red(`[Generator Evaluator] Generator-based inspectors can only yield after executing the node.`))
+            };
+
+            const final = yield* higherHandler(
+                interpreter.reusables.result,
+                interpreter,
+                localReusables
+            )
+            if (!pushedManually(interpreter.reusables.result)) {
+                pushResult(interpreter,final);
+            };
+
+            const yieldedValue = genResult!.value;
+            if (yieldedValue !== LAZY_NODE) {
+                throw new Error(ansis.red(`[Generator Evaluator] When the interpreter visit a LAZY_NODE,generator-based inspectors can only yield that lazy node but saw ${String(yieldedValue)}.`))
+            };
+
+            const isDone = response!.next(final).done;
+            if (!isDone) {
+                throw new Error(ansis.red(`[Generator Evaluator] Generator-based inspectors can only yield once.`))
+            }
+
+            callPerExe(interpreter);
+            return final
         }
     } 
     finally {
