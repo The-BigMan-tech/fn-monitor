@@ -29,7 +29,7 @@ This example demonstrates how to get started, capture external variables, and us
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 1');
+console.log('\n\nSHOWCASE 1\n');
 
 const zero = 0;
 
@@ -81,6 +81,7 @@ console.log('Result 2',result2);
 **Output:**
 ```text
 SHOWCASE 1
+
 Result 1 55
 Entered the monitored sum up function with the nums:  [
   1, 2, 3, 4,  5,
@@ -110,7 +111,7 @@ It also demonstrates how to extract the generated code used in the interpreter u
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 2');
+console.log('\n\nSHOWCASE 2\n');
 
 const Printed = 'Printed: ';
 
@@ -162,25 +163,27 @@ console.log('\nGenerated code: \n',generatedCode.value);
 **Output:**
 ```text
 SHOWCASE 2
+
 Printed:  Hello world
 Hello  person
 
 Generated code: 
- const sayHello = (() => {
+ 'use strict'
+
+const sayHello = (() => {
 
     const {
         printName
-    } = exports.generated_2d9457560f1192de6a8da998971a4cfc3c773887307d984c32cb5701ca397688;
+    } = exports.generated_0249747779b91d28bdf9a5b9a54b1a4b77419d023e5a8fcb9c0998ceedab858e;
 
-    const intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d = (() => {
+    const intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d =
         function sayHello(name) {
             print('Hello world');
             printName(name);
         };
-        return sayHello
-    })();
     return intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d;
 })();
+
 var print;
 print = (() => {
 
@@ -188,14 +191,12 @@ print = (() => {
 
         const {
             Printed
-        } = exports.generated_fb3b5ed8b028f3b1a1075a448cde71ecb3b8e731a2493d3f9880e5d6c4b4ee20;
+        } = exports.generated_611bd43541d359f16acc4603b22fa7b216bf07433ea52afa710ed34bea12a6a7;
 
-        const intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee = (() => {
+        const intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee =
             function print(str) {
                 console.log(Printed, str);
             };
-            return print
-        })();
         return intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee;
     })();
     return print;
@@ -213,7 +214,7 @@ This example tests the execution stack (`localExeStack`) to track all called fun
 ```typescript
 import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 3');
+console.log('\n\nSHOWCASE 3\n');
 
 const monitoredAsyncSqrt = monitor({
     main:{
@@ -268,9 +269,9 @@ Callee: {
   node: {
     type: 'Identifier',
     name: 'sqrtFn',
-    start: 210,
-    end: 216,
-    range: [ 210, 216 ],
+    start: 230,
+    end: 236,
+    range: [ 230, 236 ],
     loc: { start: [Object], end: [Object] }
   },
   scope: Symbol(NOT_ALLOCATED)
@@ -281,9 +282,9 @@ Callee: {
   node: {
     type: 'Identifier',
     name: 'Number',
-    start: 243,
-    end: 249,
-    range: [ 243, 249 ],
+    start: 263,
+    end: 269,
+    range: [ 263, 269 ],
     loc: { start: [Object], end: [Object] }
   },
   scope: Symbol(NOT_ALLOCATED)
@@ -294,13 +295,14 @@ Callee: {
   node: {
     type: 'Identifier',
     name: 'Promise',
-    start: 287,
-    end: 294,
-    range: [ 287, 294 ],
+    start: 313,
+    end: 320,
+    range: [ 313, 320 ],
     loc: { start: [Object], end: [Object] }
   },
   scope: Symbol(NOT_ALLOCATED)
 }
+
 Awaited result:  1.414
 Monitored async sqrt:  1.414
 ```
@@ -385,13 +387,12 @@ console.log('\nThe average from the timed fn is: ',avg2);
 
 **Output:**
 ```text
+
 SHOWCASE 4
 
 The average is:  61.833
-Finished building the fn in 3.393ms
-Error: 
-Error in Monitored Function:
-The monitored function used 50.580ms when only given a budget of 50.000ms.
+Finished building the fn in 1.736ms
+Error: The monitored function used 50.521ms when only given a budget of 50.000ms.
 ....
 ```
 
