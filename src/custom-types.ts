@@ -13,7 +13,7 @@ import type {
 
     BreakStatement,ContinueStatement,LabeledStatement,
     
-    YieldExpression,BinaryExpression, CallExpression, AssignmentExpression, 
+    BinaryExpression, CallExpression, AssignmentExpression, 
     UpdateExpression, LogicalExpression, MemberExpression,AwaitExpression,FunctionExpression,
     ArrowFunctionExpression,ConditionalExpression,NewExpression,
     ExpressionStatement,ArrayExpression,ObjectExpression,TemplateLiteral,SequenceExpression,UnaryExpression
@@ -70,7 +70,6 @@ export type Query =
     | ArrowFunctionExpression['type']
     | ConditionalExpression['type']
     | NewExpression['type']
-    | YieldExpression['type']
     | ExpressionStatement['type']
     | ArrayExpression['type']
     | ObjectExpression['type']
@@ -112,7 +111,6 @@ export type EventMap = (
     Record<ArrowFunctionExpression['type'],ArrowFnExprEvent> &
     Record<ConditionalExpression['type'],TernaryExprEvent> &
     Record<NewExpression['type'],NewExprEvent> &
-    Record<YieldExpression['type'],YieldExprEvent> &
     Record<ExpressionStatement['type'],ExpressionStmtEvent> &
     Record<ArrayExpression['type'],ArrayExprEvent> &
     Record<ObjectExpression['type'],ObjectExprEvent> &
@@ -318,9 +316,6 @@ export class NewExprEvent extends LangEvent<NewExpression> {
     constructor(interpreter: SvalPlus) { super(interpreter); }
 }
 
-export class YieldExprEvent extends LangEvent<YieldExpression> {
-    constructor(interpreter: SvalPlus) { super(interpreter); }
-}
 
 // Statements & Control Flow
 export class ReturnStmtEvent extends LangEvent<ReturnStatement> {
@@ -508,10 +503,6 @@ export function createEvent<T extends Query>(query:Query,interpreter:SvalPlus):E
         }
         case 'ConditionalExpression': {
             event = new TernaryExprEvent(interpreter);
-            break;
-        }
-        case 'YieldExpression': {
-            event = new YieldExprEvent(interpreter);
             break;
         }
         case 'ExpressionStatement': {

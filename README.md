@@ -469,7 +469,7 @@ All events extend the base `LangEvent` class, which provides the `node` and `sco
 
 `AwaitExprEvent`, `FuncExprEvent`, `ArrowFnExprEvent`, 
 
-`TernaryExprEvent`, `NewExprEvent`, `YieldExprEvent`, 
+`TernaryExprEvent`, `NewExprEvent`, `SequenceExprEvent`
 
 `ReturnStmtEvent`, `IfStmtEvent`, `SwitchStmtEvent`, 
 
@@ -485,7 +485,7 @@ All events extend the base `LangEvent` class, which provides the `node` and `sco
 
 `ArrayExprEvent`, `ObjectExprEvent`, `TemplateLiteralEvent`, 
 
-`SequenceExprEvent`, `UnaryExprEvent`.
+`UnaryExprEvent`.
 
 ---
 
