@@ -3,7 +3,7 @@ import { type InspectorGenerator, monitor } from "../src/index.ts";
 
 //SHOWCASE 1
 //This shows how to get started and a general use case
-console.log('\n\nSHOWCASE 1');
+console.log('\n\nSHOWCASE 1\n');
 
 const zero = 0;
 
@@ -54,7 +54,7 @@ console.log('Result 2',result2);
 //SHOWCASE 2
 //This example will focus on embedding external functions used in the monitored function.This example will not integrate the inspector hook to keep it simple
 
-console.log('\n\nSHOWCASE 2');
+console.log('\n\nSHOWCASE 2\n');
 
 const Printed = 'Printed: ';
 
@@ -105,7 +105,7 @@ console.log('\nGenerated code: \n',generatedCode.value);
 //Testing the exe stack to get all the callees during the function execution.
 //We are testing this on async code to see the full capability
 
-console.log('\n\nSHOWCASE 3');
+console.log('\n\nSHOWCASE 3\n');
 
 const monitoredAsyncSqrt = monitor({
     main:{
@@ -152,16 +152,17 @@ console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2));
 //SHOWCASE 4
 //Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
 
+
 console.log('\n\nSHOWCASE 4');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
-        while (true) {}//simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
+        //simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
+        while (true) {}
     }
     if (!numbers || numbers.length === 0) {
         return 0;
     }
-    
     let sum = 0;
     for (let i = 0; i < numbers.length; i++) {
         sum += numbers[i];
@@ -179,8 +180,8 @@ type milliseconds = number;
 
 function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
     const fnBuildStart = performance.now();
-
     const graceTime = 0.5 as milliseconds;
+
     let startTime = 0 as milliseconds;
     let usedTime = 0 as milliseconds;
     let step = 0;
@@ -202,20 +203,23 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
         },
         onStep:() => {
             step += 1;
-            const shouldCheckBudget = (step & 1023) === 0;// Binary bitmask check: Only execute the inner code once every 1024 steps since perf.now is heavy
+            // Binary bitmask check: Only execute the inner code once every 1024 steps since perf.now is heavy
+            const shouldCheckBudget = (step & 1023) === 0;
             if (shouldCheckBudget) checkBudget();
         },
         afterEachCall:(result)=>{
-            if (!(result instanceof Error)) {//if the result is an error,we let the interpreter bubble it up
-                checkBudget();//in case the function doesnt use up to the number of steps required to recheck the budget,we check the budget here to be accurate and safe
+            //if the result is an error,we let the interpreter bubble it up
+            if (!(result instanceof Error)) {
+                //in case the function doesn't use up to the number of steps required to recheck the budget,we check the budget here to be accurate and safe
+                checkBudget();
             }
         }
     });
-
     console.log(`Finished building the fn in ${(performance.now()-fnBuildStart).toFixed(3)}ms`);
     return monitoredFn
-}
+};
 
 const timedAvg = timeFn(calculateAverage,50);
 const avg2 = timedAvg(listForAvg,'monitor');
+
 console.log('\nThe average from the timed fn is: ',avg2);
