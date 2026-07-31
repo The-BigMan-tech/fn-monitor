@@ -221,7 +221,6 @@ export {
     NewExprEvent,
     ArrowFnExprEvent,
     TernaryExprEvent,
-    YieldExprEvent,
 
     ExpressionStmtEvent,
     ArrayExprEvent,
