@@ -81,6 +81,24 @@ describe('Hook Behaviour',()=>{
         expect(afterHookCount).toBe(1)
     })
 
+    it('[Sync] should ensure that the beforeEachCall and afterEachCall hooks are fired in order',()=>{
+        let hookCalls:('before' | 'after')[] = [];
+
+        const fn = monitor({
+            main:{
+                ref:()=>undefined
+            },
+            beforeEachCall:()=>{
+                hookCalls.push('before')
+            },
+            afterEachCall:()=>{
+                hookCalls.push('after')
+            }
+        })
+        fn();
+        expect(hookCalls).toEqual(['before','after'])
+    })
+
     it('[Sync] should ensure that when both the inspector and the onStep hooks are defined, each one is called the exact number of times as the other',()=>{
         let inspectorHookCalls = 0;
         let onStepHookCalls = 0;
