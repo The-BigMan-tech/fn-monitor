@@ -267,7 +267,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                     return ${fnSrc.fnName};
                 })();`
 
-                declarations += `\nvar ${name};`;
+                declarations += `\n\nvar ${name};`;
                 assignments += `\n${name} = ${scopedFn};`;
             }
             // Prepend embedded logic so it's available to the main function
