@@ -122,7 +122,7 @@ export type EventMap = (
 
 
 export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,any>;
-export type Inspector = (visit:Visit)=> void | InspectorGenerator;
+export type Inspector = (visit:Visit)=> undefined | InspectorGenerator;
 export type OnStep = ()=>void;
 export type PerExe = ()=>void;
 
