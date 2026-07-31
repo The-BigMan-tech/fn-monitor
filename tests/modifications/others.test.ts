@@ -15,6 +15,47 @@ describe('Other Runtime Behaviours',()=>{
         expect(()=>fn()).toThrow(ReferenceError);
     });
 
+    it('[Sync] should ensure that the captures of the main function and the embedded ones are properly isolated to themselves',()=>{
+        //these declarations are just to prevent TS from complaining
+        let count;
+        let secondFn;
+        let thirdFn;
+
+        const fn = monitor({
+            main: {
+                ref:()=>{
+                    return {
+                        mainFn:count,
+                        secondFn:secondFn!(),
+                        thirdFn:thirdFn!()
+                    }
+                },
+                captures:{
+                    count:10
+                }
+            },
+            embed:{
+                secondFn:{
+                    ref:()=>count,
+                    captures:{
+                        count:20
+                    }
+                },
+                thirdFn:{
+                    ref:()=>count,
+                    captures:{
+                        count:30
+                    }
+                }
+            }
+        });
+        expect(fn()).toEqual({
+            mainFn:10,
+            secondFn:20,
+            thirdFn:30
+        });
+    })
+
     it('[Sync] should ensure that an inspector always watches the monitored function on every call.',()=>{
         let count = 0;
         let calledInspector = false;
