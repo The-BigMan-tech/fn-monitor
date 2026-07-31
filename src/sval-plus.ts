@@ -219,7 +219,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const hash = SvalPlus.sha256Key(fnString);
 
         const intermediateFn:string = 'intermediateFn_' + hash;
-        const intermediateFnCode:string = `\nconst ${intermediateFn} = ${fnString};`
+        const intermediateFnCode:string = `\nconst ${intermediateFn} = \n${fnString};`
 
         const capturedKeys = Object.keys(this.exports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
 
