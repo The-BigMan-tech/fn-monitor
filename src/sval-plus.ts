@@ -126,7 +126,9 @@ export class Visit implements VisitContract {
     }
 } 
 export class SvalPlus extends Sval implements SvalPlusContract {
-    //this can safely be static because its just used to store common names.Its used in a per-instance object to ensure isolation
+    //This one is static to prevent recomputing the same keys for each instance
+    //This is safe because each instance uses this as a readonly view. They are still isolated
+
     public static commonLabels = {
         resultExport:SvalPlus.sha256Key('result'),
         args:SvalPlus.sha256Key('args'),
