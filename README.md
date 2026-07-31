@@ -275,6 +275,8 @@ Monitored async sqrt:  1.414
 This example will focus on getting the full execution history of a fn call
 
 ```typescript
+import { type ExeResult, monitor } from "@typescript-guy/fn-monitor";
+
 console.log('\n\nSHOWCASE 4\n');
 
 const exeHistory:ExeResult[] = [];
