@@ -68,10 +68,8 @@ export default function evaluate(node: Node, scope: Scope) {
         stackHandler.start(interpreter);
         const response = callInspector(node, scope, handler);//call this before the node is executed
         
-        const genResult = isGenerator(response)?response.next():null;  
-        const finished = (genResult === null)
-            ?true
-            :genResult.done
+        const genResult = isGenerator(response) ? response.next() : null;  
+        const finished = (genResult === null) ? true : genResult.done
 
         if (finished) {
             const final = executedManually(interpreter.reusables.result)
