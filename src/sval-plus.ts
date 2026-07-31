@@ -218,18 +218,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const fnString = fn.toString();
         const hash = SvalPlus.sha256Key(fnString);
 
-        const namedFnPattern = /^(async\s+)?function(\s*\*)?\s+[a-zA-Z_$][a-zA-Z0-9_$]*/
-        const isNamedDefinition = namedFnPattern.test(fnString);
-
         const intermediateFn:string = 'intermediateFn_' + hash;
-        const intermediateFnCode:string = (isNamedDefinition)
-            ?(
-                `\nconst ${intermediateFn} = (()=>{
-                    ${fnString};
-                    return ${fn.name}
-                })();`
-            )
-            :`\nconst ${intermediateFn} = ${fnString};`
+        const intermediateFnCode:string = `\nconst ${intermediateFn} = ${fnString};`
 
         const capturedKeys = Object.keys(this.exports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
 
