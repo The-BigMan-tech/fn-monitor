@@ -457,7 +457,7 @@ This example uses the `onStep` hook to implement a live timeout on a function, h
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 5');
+console.log('\n\nSHOWCASE 5\n');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
@@ -531,7 +531,6 @@ console.log('\nThe average from the timed fn is: ',avg2);
 
 **Output:**
 ```text
-
 SHOWCASE 5
 
 The average is:  61.833

@@ -173,7 +173,7 @@ const fn = monitor({
         // the node have actually been inserted
         
         visit.perExecution = ()=>{
-            const head = visit.localExeStack().get(0)
+            const head = visit.localExeStack().get(0);
             exeHistory.push(head);
         }
     }
@@ -185,7 +185,7 @@ console.log('Execution history:\n',exeHistory);
 //SHOWCASE 5
 //Using the on step hook to implement a live timeout on a function to halt it if it attempts to hang the main thread.
 
-console.log('\n\nSHOWCASE 5');
+console.log('\n\nSHOWCASE 5\n');
 
 function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
     if (caller === "monitor") {
