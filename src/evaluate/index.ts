@@ -49,7 +49,8 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:R
         let feedback;
         try {
             feedback = yield iterResult.value;
-            overwriteReusables(interpreter,localReusables);//since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs
+            //since this is a generator,an arbitary amount of time would have passed between when it yielded and when it got resumed.another monitored fn would have ran.so we restore the localReusables to prevent state bugs.This is only unique to this evaluator
+            overwriteReusables(interpreter,localReusables);
         }catch (e) {
             iterResult = iterator.throw(e);
             continue;

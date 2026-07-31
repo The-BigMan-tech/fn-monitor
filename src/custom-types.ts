@@ -31,10 +31,8 @@ export class VisitExecutionError extends Error {};
 export const LAZY_NODE = Symbol('LAZY_NODE');
 export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
-//These two symbols are internal and wont be encountered by the caller/library user
+//This symbol are internal and wont be encountered by the caller/library user
 export const UNASSIGNED = Symbol('UNASSIGNED');
-export const SEEN = Symbol('SEEN');
-
 
 /**
  * This is a string union of all the possible nodes the caller can query in the visit.is callback.
@@ -214,7 +212,7 @@ export interface Reusables {
     node:EsNode | null,
     currentScope:Scope | null,
     handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
-    result:any | typeof UNASSIGNED | typeof SEEN,
+    result:any | typeof UNASSIGNED,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,
     shared:{
         exeStack:QList<ExeResult>,

@@ -12,7 +12,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { SEEN, SvalPlus } from '../custom-types.ts'
+import { SvalPlus } from '../custom-types.ts'
 import { 
     callInspector, 
     copyReusables, 
@@ -28,16 +28,10 @@ import {
 
 let evaluateOps: any
 
-function assertIsManualResult(value:any,manualResult:any) {
-    if (value !== manualResult) {
-        throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield the result of the current node but saw: ${String(value)} instead of: ${String(manualResult)}.`))
-    }
-}
-function assertIsDone(done:boolean | undefined) {
-    if (!done) {
-        throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield once.`))
-    }
-}
+//Leave the frequent access of interpreter.reusables.result the way it is.
+//Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
+//'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
+
 export default function evaluate(node: Node, scope: Scope) {
     if (!node) {
         return;
@@ -53,9 +47,12 @@ export default function evaluate(node: Node, scope: Scope) {
             pattern,  
             program
         )
-    }
+    };
+
     const handler = evaluateOps[node.type];
-    if (!handler) throw new Error(`${node.type} isn't implemented`);
+    if (!handler) {
+        throw new Error(`${node.type} isn't implemented`);
+    }
 
     callOnStep(scope);
 
@@ -68,46 +65,48 @@ export default function evaluate(node: Node, scope: Scope) {
     const parentReusables = copyReusables(interpreter,'optional');
 
     try {
-        stackHandler.start(interpreter)
-
+        stackHandler.start(interpreter);
         const response = callInspector(node, scope, handler);//call this before the node is executed
-        //If you noticed,I didnt capture nor restore the reusables local to this evaluation because it runs to completion and the reusables wont be overwritten by another evaluation
+        
+        const genResult = isGenerator(response)?response.next():null;  
+        const finished = (genResult === null)
+            ?true
+            :genResult.done
 
-        if (isGenerator(response)) {
-            const next = response.next();//the generator must be advanced before evaluating the final result
-            
+        if (finished) {
             const final = executedManually(interpreter.reusables.result)
                 ?interpreter.reusables.result
-                :handler(node,scope)//must be done after calling next
+                :handler(node,scope)
 
-            if (!pushedManually(interpreter.reusables.result)) {
+            if (!pushedManually(interpreter.reusables.result)) {//this check must pass the value of the result directly and not the 'final' variable
                 pushResult(interpreter,final);
             }
-            
-            const manualResult = interpreter.reusables.result//save it before marking the result as seen.this extra line is special just to the generator part under the normalized evaluator cuz its not needed in other branches as a medium for safety check.This allows this evaluator to support geerator inspectors that yield without crashing.
-            interpreter.reusables.result = SEEN;//this will cause further calls to visit.execute to justifiably crash when the generator is resumed.So this must be done before resuming it.          
-
-            if (!next.done) {
-                assertIsManualResult(next.value,manualResult)
-                const next2 = response.next(final);
-                assertIsDone(next2.done);
-            };
 
             callPerExe(interpreter);
             return final;
         }
         else {
-            const final = executedManually(interpreter.reusables.result)
-                ?interpreter.reusables.result
-                :handler(node,scope)//must be done after calling next
+            if (!executedManually(interpreter.reusables.result)) {//this assetion is the important piece that justifies the removal of the SEEN symbol in one refactor
+                throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield after executing the node.`))
+            }
 
+            const final = interpreter.reusables.result;
             if (!pushedManually(interpreter.reusables.result)) {
                 pushResult(interpreter,final);
+            };
+
+            const yieldedValue = genResult!.value;
+            if (yieldedValue !== final) {
+                throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield the result of the current node but saw: ${String(yieldedValue)} instead of: ${String(final)}.`))
+            };
+
+            const isDone = response!.next(final).done;//since this evaluator will only be used for sync code,we just resume the generator with the result directly.
+            if (!isDone) {
+                throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield once.`))
             }
-            interpreter.reusables.result = SEEN;
 
             callPerExe(interpreter);
-            return final;
+            return final
         }
     }finally {
         stackHandler.finish(interpreter,parentReusables)
