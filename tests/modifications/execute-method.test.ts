@@ -5,7 +5,7 @@ import { VisitExecutionError } from '../../src/custom-types';
 
 describe('Visit.execute() Method Behaviour',()=>{
 
-    it('[Sync] should ensure that visit.execute manually executes a node and it is not allowed to be called twice',()=>{
+    it('[Sync] should ensure that visit.execute manually executes a node.',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
 
@@ -23,10 +23,9 @@ describe('Visit.execute() Method Behaviour',()=>{
                 hitAssignNode = false
             },
             inspector:(visit)=>{
-                visit.is('AssignmentExpression',()=>{
+                visit.is('AssignmentExpression',()=>{//target outsideVar.value = x
                     visit.execute()
                     expect(outsideVar.value).toBe(10);
-                    expect(()=>visit.execute()).toThrow(VisitExecutionError);
                     hitAssignNode = true;
                 })
             }
@@ -35,6 +34,30 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(hitAssignNode).toBe(true)
     });
     
+    it('[Sync] should ensure that visit.execute cannot be called more than once',()=>{
+        const fn1 = monitor({
+            main:{
+                ref:(a:number,b:number)=>(a + b) * (a - b)
+            },
+            inspector:(visit)=>{
+                visit.execute()
+                expect(()=>visit.execute()).toThrow(VisitExecutionError);
+            }
+        })
+        fn1(2,3);
+
+        const fn2 = monitor({
+            main:{
+                ref:(a:number,b:number)=>(a + b) * (a - b)
+            },
+            inspector:function* (visit):InspectorGenerator {
+                yield visit.execute()
+                expect(()=>visit.execute()).toThrow(VisitExecutionError);
+            }
+        })
+        fn2(2,3);
+    });
+
     it('[Sync] should not execute the node automatically if visit.execute was called',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;
