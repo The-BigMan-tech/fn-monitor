@@ -169,4 +169,31 @@ describe('Hook Behaviour',()=>{
         expect(inspectorHookCalls).toBe(0);
         expect(onStepHookCalls).toBe(0);
     })
+
+    it('[Sync] should ensure that the inspector is fired before executing the node.',()=>{
+        const outsideVar = {value:0};
+        let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    outsideVar.value = 10;
+                },
+                captures:{
+                    outsideVar
+                }
+            },
+            beforeEachCall:()=>{
+                hitAssignNode = false
+            },
+            inspector:(visit)=>{
+                visit.is('AssignmentExpression',()=>{
+                    expect(outsideVar.value).toBe(0);
+                    hitAssignNode = true;
+                })
+            }
+        })
+        fn();
+        expect(hitAssignNode).toBe(true)
+    });
 })
