@@ -25,7 +25,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         await fn(2,3);
     })
 
-    it('[Async] should ensure that the interpreter can handle multiple pending async contexts correctly',async()=>{
+    it('[Async-only] should ensure that the interpreter can handle multiple pending async contexts correctly',async()=>{
         const fn = monitor({
             main:{
                 ref:async (a:number,b:number)=>{
