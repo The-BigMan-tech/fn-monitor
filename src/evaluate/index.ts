@@ -31,7 +31,8 @@ import {
 } from '../lifecycle-functions.ts'
 
 
-function* higherHandler(iterator:Generator,interpreter:SvalPlus,localReusables:Reusables):Generator {
+function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
+    const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
     let iterResult = iterator.next();
 
     while (!iterResult.done) {
@@ -85,8 +86,6 @@ export default function* evaluate(node: Node, scope: Scope) {
         stackHandler.start(interpreter)
         const response = callInspector(node, scope, handler);
 
-        const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
-
         const genResult = isGenerator(response) ? response.next() : null;  
         const finished = (genResult === null) ? true : genResult.done
 
@@ -94,13 +93,11 @@ export default function* evaluate(node: Node, scope: Scope) {
             const final = executedManually(interpreter.reusables.result)
                 ?yield* higherHandler(
                     interpreter.reusables.result,
-                    interpreter,
-                    localReusables
+                    interpreter
                 )
                 :yield* higherHandler(
                     handler(node,scope),
-                    interpreter,
-                    localReusables
+                    interpreter
                 );
 
             if (!pushedManually(interpreter.reusables.result)) {
@@ -117,8 +114,7 @@ export default function* evaluate(node: Node, scope: Scope) {
 
             const final = yield* higherHandler(
                 interpreter.reusables.result,
-                interpreter,
-                localReusables
+                interpreter
             )
             if (!pushedManually(interpreter.reusables.result)) {
                 pushResult(interpreter,final);
