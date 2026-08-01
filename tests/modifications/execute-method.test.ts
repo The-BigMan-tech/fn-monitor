@@ -5,6 +5,9 @@ import { NOT_ALLOCATED, VisitExecutionError } from '../../src/custom-types';
 
 describe('Visit.execute() Method Behaviour',()=>{
 
+    //This particular test specifically uses the scope instead of the node because the scope of an exe result is only available if the internal current event is allocated.and the current event unlike the node,always starts out unallocated from the beginning.
+    //This test catches where in the generator evaluator that the local reusables,which are used to restore context in async code, is captured.
+
     it('[Async] should ensure that the scope of the latest executed result belonging to the current node is allocated if it was allocated for the node before calling visit.execute',async()=>{
         const fn = monitor({
             main:{
@@ -20,6 +23,35 @@ describe('Visit.execute() Method Behaviour',()=>{
             }
         })
         await fn(2,3);
+    })
+
+    it('[Async] should ensure that the interpreter can handle multiple pending async contexts correctly',async()=>{
+        const fn = monitor({
+            main:{
+                ref:async (a:number,b:number)=>{
+                    const promise = Promise.resolve((a + b) * (a - b));
+                    return await promise;
+                }
+            },
+            inspector:function* (visit):InspectorGenerator {
+                let scope;
+
+                visit.is('Any',(event)=>{//forcefully allocate the scope
+                    scope = event.scope
+                });
+                
+                yield visit.execute();
+
+                const head = visit.localExeStack().get(0);
+                expect(head.scope).toBe(scope)
+            }
+        })
+        const result1 = fn(2,3);
+        const result2 = fn(4,9);
+
+        //I intentionally awaited the second call before the first one to simulate a chaotic order
+        await result2;
+        await result1;
     })
 
     it('[Sync] should ensure that visit.execute manually executes a node and returns the result.',()=>{
