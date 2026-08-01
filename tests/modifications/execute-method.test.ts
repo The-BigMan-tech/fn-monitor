@@ -1,9 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import { monitor,LAZY_NODE,InspectorGenerator,EsNode } from '../../src/index'; 
-import { VisitExecutionError } from '../../src/custom-types';
+import { NOT_ALLOCATED, VisitExecutionError } from '../../src/custom-types';
 
 
 describe('Visit.execute() Method Behaviour',()=>{
+
+    it('[Async] should ensure that the scope of the latest executed result belonging to the current node is allocated if it was allocated for the node before calling visit.execute',async()=>{
+        const fn = monitor({
+            main:{
+                ref:async (a:number,b:number)=>{
+                    return await Promise.resolve((a + b) * (a - b))
+                }
+            },
+            inspector:function* (visit):InspectorGenerator {
+                visit.is('Any',()=>undefined);//forcefully allocate the scope
+                yield visit.execute();
+                const head = visit.localExeStack().get(0);
+                expect(head.scope).not.toBe(NOT_ALLOCATED)
+            }
+        })
+        await fn(2,3);
+    })
 
     it('[Sync] should ensure that visit.execute manually executes a node.',()=>{
         const outsideVar = {value:0};
