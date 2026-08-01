@@ -1,4 +1,27 @@
 
+## v1.2.0...v1.2.1
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.2.0...v1.2.1)
+
+### 🩹 Fixes
+
+- Capture the local reusables in the generator evaluator after advancing the generator. ([036f20b](https://github.com/The-BigMan-tech/fn-monitor/commit/036f20b))
+- Make the generator evaluator to always copy the reusables ([cebd28c](https://github.com/The-BigMan-tech/fn-monitor/commit/cebd28c))
+- Bump to v1.2.1 ([36b9deb](https://github.com/The-BigMan-tech/fn-monitor/commit/36b9deb))
+
+### ♻️ Refactor
+
+- **types:** Improve type quality of the handler function in the evaluators ([e05415e](https://github.com/The-BigMan-tech/fn-monitor/commit/e05415e))
+
+### 📖 Documentation
+
+- Update the changelog ([0688716](https://github.com/The-BigMan-tech/fn-monitor/commit/0688716))
+- Improve maintainer's note ([52cb77b](https://github.com/The-BigMan-tech/fn-monitor/commit/52cb77b))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.1.5...v1.2.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.1.5...v1.2.0)
