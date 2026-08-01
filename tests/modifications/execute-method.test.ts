@@ -22,7 +22,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         await fn(2,3);
     })
 
-    it('[Sync] should ensure that visit.execute manually executes a node.',()=>{
+    it('[Sync] should ensure that visit.execute manually executes a node and returns the result.',()=>{
         const outsideVar = {value:0};
         let hitAssignNode = false;//having this flag makes the test extra safe even if the visit.is method is already tested on a few nodes
 
@@ -41,7 +41,7 @@ describe('Visit.execute() Method Behaviour',()=>{
             },
             inspector:(visit)=>{
                 visit.is('AssignmentExpression',()=>{//target outsideVar.value = x
-                    visit.execute()
+                    expect(visit.execute()).toBe(10)
                     expect(outsideVar.value).toBe(10);
                     hitAssignNode = true;
                 })
