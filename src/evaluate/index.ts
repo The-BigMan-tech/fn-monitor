@@ -14,7 +14,6 @@ import * as program from './program.ts'
 
 import { 
     LAZY_NODE, 
-    Reusables, 
     SvalPlus 
 } from '../custom-types.ts';
 
@@ -49,6 +48,10 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
     }
     return iterResult.value; 
 }
+
+//Leave the frequent access of interpreter.reusables.result the way it is.
+//Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
+//'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
 
 let evaluateOps: any
 

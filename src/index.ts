@@ -18,13 +18,17 @@
  *     because the codebase directly exports one of its types for intellisense. It prevents users
  *     from having to install an extra package just to get full intellisense.
  * 
- *  4. SVAL COMPATIBILITY:
+ *  4. INTERPRETER IMPLEMENTATION:
+ *     The package will continue to use AST-walking to interprete code and will not transition to
+ *     a bytecode implementation for very practical reasons
+ * 
+ *  5. SVAL COMPATIBILITY:
  *     The `SvalPlus` class must remain a strict drop-in replacement for `Sval`. Its constructor and 
  *     public API must be strictly identical or additive to ensure upstream `sval` test suites 
  *     run seamlessly. Avoid breaking changes to core internals unless rigorously tested to 
  *     preserve compatibility (e.g., the evaluator modifications).
  *  
- *  5. TEST COVERAGE:
+ *  6. TEST COVERAGE:
  *      - Quick note, 
  *          - There are two evaluator implementations--the nomalized version under the  
  *          evaluate_n folder and the generator version which is under the evaluate folder
