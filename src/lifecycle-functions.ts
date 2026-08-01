@@ -50,7 +50,7 @@ export const stackHandler = {
 }
 
 
-//These two call* functions dont check inUserCode because in the evaluators,they only run if useMModifiedEvaluator is true
+//These two call* functions dont check for inUserCode because in the evaluators,they only run if useModifiedEvaluator is true
 
 export function callPerExe(interpreter:SvalPlus) {
     const perExe = interpreter.reusables.shared.perExe;
@@ -67,7 +67,7 @@ export function callPerExe(interpreter:SvalPlus) {
 export function callInspector(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
     updateReusables(acornNode,currentScope,handler)
-    return interpreter.inspector!(interpreter.visit);//by the time the call monitor is called,this is guaranteed to not be null
+    return interpreter.inspector!(interpreter.visit);//by the time the callInspector function is called,this is guaranteed to not be null because useModifiedEvaluator checks for the inspector's type
 }
 
 

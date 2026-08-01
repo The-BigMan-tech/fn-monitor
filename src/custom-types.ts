@@ -2,6 +2,8 @@
 
 import Scope from "./scope/index.ts";
 import type { Node as EsTreeNode} from "estree";
+import {type Node as AcornNode} from "acorn";
+
 import type { 
     Literal,VariableDeclaration, FunctionDeclaration,
 
@@ -207,11 +209,14 @@ export interface ExeResult {
      */
     scope:ScopeForEvent | typeof NOT_ALLOCATED;
 }
+
+export type NodeHandler = (node:AcornNode | EsNode,scope:Scope<SvalPlus>)=>any
+
 /**This type describes an internal object */
 export interface Reusables {
     node:EsNode | null,
     currentScope:Scope | null,
-    handler:null | ((node:EsNode,scope:Scope<SvalPlus>)=>any),
+    handler:null | NodeHandler,
     result:any | typeof UNASSIGNED,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,
     shared:{

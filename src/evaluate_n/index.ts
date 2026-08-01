@@ -12,7 +12,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { SvalPlus } from '../custom-types.ts'
+import { NodeHandler, SvalPlus } from '../custom-types.ts'
 import { 
     callInspector, 
     copyReusables, 
@@ -49,7 +49,7 @@ export default function evaluate(node: Node, scope: Scope) {
         )
     };
 
-    const handler = evaluateOps[node.type];
+    const handler:NodeHandler | undefined  = evaluateOps[node.type];
     if (!handler) {
         throw new Error(`${node.type} isn't implemented`);
     }

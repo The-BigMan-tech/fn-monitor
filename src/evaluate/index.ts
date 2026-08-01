@@ -14,6 +14,7 @@ import * as program from './program.ts'
 
 import { 
     LAZY_NODE, 
+    NodeHandler, 
     SvalPlus 
 } from '../custom-types.ts';
 
@@ -72,7 +73,7 @@ export default function* evaluate(node: Node, scope: Scope) {
         )
     };
 
-    const handler = evaluateOps[node.type];
+    const handler:NodeHandler | undefined = evaluateOps[node.type];
     if (!handler) throw new Error(`${node.type} isn't implemented`);
     
     callOnStep(scope);
