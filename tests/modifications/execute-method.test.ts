@@ -50,8 +50,8 @@ describe('Visit.execute() Method Behaviour',()=>{
         const result2 = fn(4,9);
 
         //I intentionally awaited the second call before the first one to simulate a chaotic order
-        await result2;
-        await result1;
+        expect(await result2).toBe(-65);
+        expect(await result1).toBe(-5);
     })
 
     it('[Sync] should ensure that visit.execute manually executes a node and returns the result.',()=>{
