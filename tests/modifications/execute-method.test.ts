@@ -84,16 +84,16 @@ describe('Visit.execute() Method Behaviour',()=>{
     });
     
     it('[Sync] should ensure that visit.execute cannot be called more than once',()=>{
-        const fn1 = monitor({
+        const fn = monitor({
             main:{
-                ref:(a:number,b:number)=>(a + b) * (a - b)
+                ref:()=>undefined
             },
             inspector:(visit)=>{
                 visit.execute()
                 expect(()=>visit.execute()).toThrow(VisitExecutionError);
             }
         })
-        fn1(2,3);
+        fn();
     });
 
     it('[Sync] should not execute the node automatically if visit.execute was called',()=>{
