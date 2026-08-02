@@ -212,7 +212,14 @@ export interface ExeResult {
 
 export type NodeHandler = (node:AcornNode | EsNode,scope:Scope<SvalPlus>)=>any
 
-/**This type describes an internal object */
+/**
+ * This type describes an internal object 
+ * 
+ * The eval-stack is a number that represents how many recursions deep the interpreter is, during a specific evaluation
+ * It is a wrapper around a value to prevent the cognitive overhead of tracking copy-by-value and copy-by-ref when mutating it
+ * 
+ * The exe-stack contains the results of each evaluated node
+*/
 export interface Reusables {
     node:EsNode | null,
     currentScope:Scope | null,
