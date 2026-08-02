@@ -149,7 +149,7 @@ export function pushResult(interpreter:SvalPlus,final:any) {
         type:node.type,
         node,
         scope:(currentEvent === NOT_ALLOCATED)
-            ?NOT_ALLOCATED:
-            currentEvent.scope
+            ?NOT_ALLOCATED
+            :currentEvent.scope
     });
 }
