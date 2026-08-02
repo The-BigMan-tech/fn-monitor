@@ -31,19 +31,23 @@ export function useModifiedEvaluator(scope:Scope):boolean {
 
 
 export const stackHandler = {
-    start:(interpreter:SvalPlus)=>{
+    start:(interpreter:SvalPlus):void => {
         interpreter.reusables.shared.evalStack.value += 1;
     },
-    finish:(interpreter:SvalPlus,parentReusables:Reusables | null)=> {
-        interpreter.reusables.shared.evalStack.value -= 1;
-        const zeroNodesLeft = (interpreter.reusables.shared.evalStack.value <= 0);
+    finish:(interpreter:SvalPlus,parentReusables:Reusables | null):void => {
+        const evalStack = interpreter.reusables.shared.evalStack;
+        evalStack.value -= 1;
 
-        if (zeroNodesLeft) {
+        if (evalStack.value < 0) {
+            throw new Error(`Internal logic error: The evalstack pointer has been mishandled. It is supposed to be >=0 but found: ${evalStack.value}`);
+        }
+        
+        if (evalStack.value === 0) {
             clearStack(interpreter);
         }else {
             if (parentReusables === null) {//if a user ever encounters this error,they can paste it along with their code in an issues page
                 throw new Error(`Internal logic error: The stack handler cannot recover the parent node state because it was given 'null'.`)
-            };
+            }
             overwriteReusables(interpreter, parentReusables);
         }
     }
