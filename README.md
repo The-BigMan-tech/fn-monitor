@@ -638,7 +638,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-5. Performance Critical: The monitor() function incurs overhead from AST parsing and interpreter instantiation. Always call monitor() once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing overhead.)
+5. **Performance Critical:** The monitor() function incurs overhead from AST parsing and interpreter instantiation. Always call monitor() once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing overhead.)
 
 6. **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
