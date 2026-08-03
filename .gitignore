@@ -3,6 +3,7 @@ dist/
 build/
 notes/
 coverage/
+articles/
 .vscode/
 .env
 
