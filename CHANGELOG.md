@@ -1,4 +1,24 @@
 
+## v1.2.1...v1.2.2
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.2.1...v1.2.2)
+
+### ♻️ Refactor
+
+- Make a ternary op neater ([abb06fb](https://github.com/The-BigMan-tech/fn-monitor/commit/abb06fb))
+- Add an assertion about the evalStack value ([7bc7b99](https://github.com/The-BigMan-tech/fn-monitor/commit/7bc7b99))
+- Rename a variable ([d7f889b](https://github.com/The-BigMan-tech/fn-monitor/commit/d7f889b))
+- Bump to v1.2.2 ([b9c536d](https://github.com/The-BigMan-tech/fn-monitor/commit/b9c536d))
+
+### 📖 Documentation
+
+- **comment:** Clarify the difference between the evalStack and the exeStack ([055e8e5](https://github.com/The-BigMan-tech/fn-monitor/commit/055e8e5))
+- **readme:** Make the performance critical note punchier ([e98cf34](https://github.com/The-BigMan-tech/fn-monitor/commit/e98cf34))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.2.0...v1.2.1
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.2.0...v1.2.1)
