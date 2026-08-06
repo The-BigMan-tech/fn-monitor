@@ -654,7 +654,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 6. **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
-7. **Wrapper Constraints:** You cannot double-wrap a function via the `ref` property (a monitored function cannot be passed as `ref` to another `monitor`). However, you *can* include an already-monitored function within the `captures` object, as it will execute natively.
+7. **Wrapper Constraints:** You cannot double-wrap a function via the `ref` property (a monitored function cannot be passed as `ref` to another `monitor` call). However, you *can* include an already-monitored function within the `captures` object, as it will execute natively.
 
 8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. Debug functions in their unmonitored state first. (Note: The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws).
 
