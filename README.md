@@ -1,7 +1,21 @@
 # @typescript-guy/fn-monitor
 
-[![npm version](https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor)](https://www.npmjs.com/package/@typescript-guy/fn-monitor)
-[![license](https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor)](https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md)
+<p align="center">
+    <img 
+      src="./logo.svg" 
+      width="120" 
+      alt="fn-monitor logo featuring 'fn' with a cyan terminal cursor"
+    />
+</p>
+
+<p align="center">
+    <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor">
+        <img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor" alt="npm version" />
+    </a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md">
+        <img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor" alt="license" />
+    </a>
+</p>
 
 `@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
