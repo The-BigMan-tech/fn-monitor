@@ -64,7 +64,7 @@ That interpreter layer is what makes runtime AST inspection and mutation possibl
 - `inspector`
 - `onStep`
 
-The most interesting one for AST mutation is the inspector
+The most interesting one for AST mutation is the `inspector`.
 
 ---
 
@@ -195,7 +195,7 @@ sum -= num
 
 That is why the sum becomes `-55` instead of `55`.
 
-Then the example intercepts the return statement and changes the final returned value
+Then the example intercepts the return statement and changes the final returned value:
 
 ```ts
 visit.is('ReturnStatement', event => {
@@ -207,7 +207,7 @@ visit.is('ReturnStatement', event => {
 });
 ```
 
-So the function started as a simple summing function and without modifying the original source code, the monitored version returns:
+So the function started as a simple summing function, and without modifying the original source code, the monitored version returns:
 
 ```ts
 "I CHANGED THE VALUE"
@@ -227,7 +227,7 @@ Here, `event.scope` gives us a snapshot of the interpreted function’s scope at
 
 This snapshot is read-only and freshly allocated for the event, so it lets you inspect the function’s internal state without directly exposing or mutating the interpreter’s internals.
 
-This searches the scope chain for a variable named sum
+This searches the scope chain for a variable named `sum`
 
 ```ts
 event.scope.variables.search('sum')
