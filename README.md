@@ -623,15 +623,13 @@ The rich object that gives inspectors their ability to participate in the interp
 ---
 
 
-## How it Works
-
-Under the hood, this package utilizes an AST-walking interpreter (rather than a bytecode implementation) to evaluate functions.
+## Mechanics
 
 - **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
-- **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects, preventing the allocation of intermediate objects mid-evaluation. The async evaluator safely copies and restores these objects across event loop pauses.
-  
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
+  
+- **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects, preventing the allocation of intermediate objects mid-evaluation. The async evaluator safely copies and restores these objects across event loop pauses.
   
 - **Strict Mode Enforcement:** All generated wrapper code is executed in strict mode.
   
