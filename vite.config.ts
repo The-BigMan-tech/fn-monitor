@@ -25,9 +25,11 @@ export default defineConfig({
                 generatedCode: {
                     symbols: true,
                 },
-                preserveModules: true, // Optional: keeps files separate instead of one big bundle
+                
+                preserveModules: true, //keep files separate instead of one big bundle
                 preserveModulesRoot: 'src',
                 entryFileNames: '[name].js',// This forces Rollup to keep the original file name and path
+                
                 // Ensures that even chunks keep their original folder structure
                 chunkFileNames: '[name].js',
                 assetFileNames: '[name][extname]',
