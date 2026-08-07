@@ -1,5 +1,5 @@
 ---
-title: Stopping a function call from hanging the main thread without using web workers
+title: Stop a Function Call From hanging the Main Thread Without Using Web Workers
 description: Using a hook into a JS-in-JS interpreter to implement budget allocation on the same thread
 tags: javascript, typescript, interpreter, web-workers
 ---
