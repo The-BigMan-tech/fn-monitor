@@ -4,27 +4,27 @@ description: Using a hook into a JS-in-JS interpreter to implement budget alloca
 tags: javascript, typescript, interpreter, web-workers
 ---
 
-In JavaScript, the de facto way to stop a function call from hanging the main thread in JavaScript is asynchronous non-blocking execution, typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using setTimeout or queueMicrotask to yield control back to the event loop
+In JavaScript, the de facto standard to stop a function call from hanging the main thread is asynchronous non-blocking execution, typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using setTimeout or queueMicrotask to yield control back to the event loop
 
 Today, we are going to take a different approach by using the package, `@typescript-guy/fn-monitor`
 
-Here is a quick overview of the package: 
+Before we start this article, let us get a quick overview of the package:
 
-- It is a wrapper over a JS-in-JS interpreter that lets you to deeply monitor functions as they execute with an api that abstracts the interpreter's mechanics
+- It is a wrapper over a JS-in-JS interpreter that lets you to deeply monitor functions as they execute through an api that abstracts the underlying interpreter's mechanics
 
-- It allows you to plug in hooks at any part of the function's lifecyle to observe data and mutate nodes at runtime
+- It allows you to plug in hooks at any part of the function's lifecyle to observe data and mutate nodes at runtime while remaining on the same thread
 
-- It exposes a function called `monitor` which takes in a configuration object that includes a function reference(the function you want to monitor), a captures object(for including external variables that the function uses) and a bunch of hooks. It returns a brand new function that has an identical call signature as the original.
+- It exports a function called `monitor` which takes in a configuration object that includes a function reference (the function you want to monitor), a captures object (to include any external variable that the function will use) and a bunch of hooks. It returns a brand new function that has an identical call signature to the original
 
-- It works for synchronous and asynchronous functions and although it cant accept a generator function, it cannot monitor them
-
-
-Before diving into this article, here is a link to the first article to read later if you want to understand the fundamentals.[link goes here] 
+- It works for both synchronous and asynchronous functions. And although it can accept a generator function, it cannot monitor them
 
 
-Back to the topic:
+If you want to dig more into its fundamentals later, you can read the [first article]()
 
-Let us first write out our imports and custom types:
+
+# Making our timeout function
+
+To begin, let us first write out our imports and custom types:
 
 ```typescript
 import { monitor, Metadata } from "@typescript-guy/fn-monitor";
