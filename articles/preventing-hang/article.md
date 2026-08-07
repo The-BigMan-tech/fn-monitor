@@ -1,28 +1,27 @@
 ---
-title: Stop a Function Call From hanging the Main Thread Without Using Web Workers
-description: Using a hook into a JS-in-JS interpreter to implement budget allocation on the same thread
+title: Stop a Function Call From Hanging the Main Thread Without Using Web Workers
+description: Using hooks into a JS-in-JS interpreter to enforce a time budget on the same thread
 tags: javascript, typescript, interpreter, web-workers
 ---
 
 In JavaScript, the de facto standard to stop a function call from hanging the main thread is asynchronous non-blocking execution, typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using setTimeout or queueMicrotask to yield control back to the event loop. 
 
-While this works, these setups usually requires you to change how you call or implement your functions. Today, we are going to take a different approach that will address these limitations by using the package, `@typescript-guy/fn-monitor`
+While this works, these setups usually require you to change how you call or implement your functions. Today, we are going to take a different approach that will address these limitations by using the package, `@typescript-guy/fn-monitor`.
 
 Before we start this article, let us get a quick overview of the package:
 
-- It is a wrapper over a JS-in-JS interpreter that lets you to deeply monitor functions as they execute through an api that abstracts the underlying interpreter's mechanics
+- It is a wrapper over a JS-in-JS interpreter that lets you deeply monitor functions as they execute through an API that abstracts the underlying interpreter's mechanics
 
-- It allows you to plug in hooks at any part of the function's lifecyle to observe data and mutate nodes at runtime while remaining on the same thread
+- It allows you to plug in hooks at any part of the function's lifecycle to observe data and mutate nodes at runtime while remaining on the same thread
 
 - Its main export is a function called `monitor` which takes in a configuration object. It returns a brand new function that has an identical call signature to the original. The config object includes:
+   - A function reference — the function you want to monitor
+   - A captures object — to include any external variables the function will use
+   - Various hooks for different lifecycle events
 
-    -  A function reference — the function you want to monitor, 
-    -  A captures object — to include any external variable that the function will use 
-    -  A bunch of hooks. 
+- It works for both synchronous and asynchronous functions. And although it can accept a generator function, it cannot monitor them.
 
-- It works for both synchronous and asynchronous functions. And although it can accept a generator function, it cannot monitor them
-
-If you ever want to dive deeper into its fundamentals later, you can read the [first article]()
+If you ever want to dive deeper into its fundamentals later, you can read the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
 To try this out locally, you can install the package from npm:
 
@@ -85,13 +84,13 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
 
         //This hook is fired before each interpreted step
 
-        //Unlike the inspector hook, this hook does not get the rich visit object which is used to mutate or observe ast nodes as the function executes
+        //Unlike the inspector hook, this hook does not get the rich visit object which is used to mutate or observe AST nodes as the function executes
         //But our monitored function will run much faster this way because it will skip any extra allocations
 
         onStep:() => {
             step += 1;
 
-            //Only check the budget every 1024 steps since perf.now is heavy
+            //Only check the budget every 1024 steps since performance.now is heavy
             //we use a bitwise operator here to be fast
             const shouldCheckBudget = (step & 1023) === 0;
             if (shouldCheckBudget) checkBudget();
@@ -100,7 +99,7 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
         //From the name, this will run after each call to our monitored function
         afterEachCall:(result)=>{
 
-            //if the result is an error,we let the interpreter to bubble it up rather than checking the budget
+            //if the result is an error, we let the interpreter bubble it up rather than checking the budget
             if (!(result instanceof Error)) {
                 //in case the function doesn't use up to the number of steps required to check the budget, we check the budget here to be accurate and safe
                 checkBudget();
@@ -116,7 +115,7 @@ We can try this on an example function that gets the price of an item. But when 
 ```typescript
 function getPrice(item?:string):number {
     if (!item) {
-        //Calling this natively in js will hang the main thread.
+        //Calling this natively in JS will hang the main thread.
         //but our monitored function setup should halt it and throw an error.
 
         while (true) {
@@ -149,7 +148,7 @@ Lag
 ....
 ```
 
-But if we call the timed version, it should throw an error
+But if we call the timed version, it should throw an error.
 
 ```typescript
 timedGetPrice()
@@ -172,17 +171,17 @@ Error: The monitored function used 53.961ms when only given a budget of 50.000ms
 ...
 ```
 
-Because we only check the budget every now and then, and because the interprter steps off while the native js engine executes the logs, our timeout function isnt 100% accurate. And the exact millisecond it will halt is not deterministic. 
+Because we only check the budget every now and then, and because the interpreter steps off while the native JS engine executes the logs, our timeout function isn't 100% accurate. And the exact millisecond it will halt is not deterministic. 
 
-But if we are being pragmatic, it is far better to loose a few milliseconds than to hang our main thread. 
+But if we are being pragmatic, it is far better to lose a few milliseconds than to hang our main thread. 
 
-While our setup works, you cant just use our timer on any arbitrary function. If that function uses external variables, you have to ensure that you capture them through the captures property as discussed in the last article. 
+Our timeout function works great for simple cases, but real-world functions rarely exist in isolation. If that function uses external variables, you have to ensure that you capture them as stated in the README.
 
-We will address this in a nuance where we want our timed function to call another function.
+We'll address this in a scenario where our timed function needs to call another function.
 
 
 ## Capturing vs Embedding Functions
-Assuming that we want to time a function that calls an external function
+Assuming that we want to time a function that calls an external function:
 
 ```typescript
 function getDetails(item?:string):{name?:string,price:number} {
@@ -194,7 +193,7 @@ function getDetails(item?:string):{name?:string,price:number} {
 const timedGetDetails = timeFn(getDetails,50);
 ```
 
-If we attempt to call it, it will crash and we will get a Reference Error: 
+If we attempt to call it, it will crash and we will get a ReferenceError: 
 
 ```typescript
 timedGetDetails()
@@ -233,7 +232,7 @@ const timedGetDetails = timeFn(getDetails,50,{
 timedGetDetails()
 ```
 
-Because it is captured, calling it will make it run in the native JS engine and hang our main thread
+Because it is captured, calling it will make it run in the native JS engine and hang our main thread.
 
 ### Output
 ```text
@@ -258,7 +257,7 @@ const timedGetDetails = timeFn(getDetails,50,{
 timedGetDetails()
 ```
 
-When we run it, we will expect our timeout to work as usual and halt it. 
+When we run it, we expect our timeout to work as usual and halt it. 
 
 ### Output:
 ```text
@@ -278,15 +277,15 @@ Error: The monitored function used 58.440ms when only given a budget of 50.000ms
 
 This solves our immediate problem because not only does it allow the `timedGetDetails` function to call an external function without having to change its original source code, but it also allows us to put it under a strict budget.
 
-The problem with this approach though, is that it forces us to time every single function that our timed function will call and it makes the timer fragmanted — one for the outer function and one for the captured one. We can solve these problems with a more strealined solution.
+The problem with this approach, though, is that it forces us to time every single function that our timed function will call and it makes the timer fragmented — one for the outer function and one for the captured one. We can solve these problems with a more streamlined solution.
 
 ### What is Embedding?
 
-In contrast to capturing, which works for all data types and simply gives the interpreter direct references/values, embedding is exclusive to function references and it tells the interpreter to copy its source code into the same context as our monitored function and parse it altogether. 
+In contrast to capturing, which works for all data types and simply gives the interpreter direct references/values, embedding is exclusive to function references and it tells the interpreter to copy its source code into the same context as our monitored function and parse it together. 
 
 This allows the onStep hook for the `timedGetDetails` function alone to contain the entire execution under a strict budget. 
 
-This will require us to extend our timeout function. We will pack both the captures and embed configurations into a single object to make it neat
+This will require us to extend our timeout function. We will pack both the captures and embed configurations into a single object to make it neat.
 
 
 ```typescript
@@ -347,10 +346,10 @@ Error: The monitored function used 58.161ms when only given a budget of 50.000ms
 
 ## Conclusion
 
-Because JavaScript is single-threaded, any code running on the main thread must finish completely before your browser can update the UI or before your server can respond to user requests meaning that there is no seamless, single-thread solution to stop a function call from hanging the application
+Because JavaScript is single-threaded, any code running on the main thread must finish completely before your browser can update the UI or before your server can respond to user requests, meaning that there is no seamless, single-thread solution to stop a function call from hanging the application
 
 This package, although providing a single-threaded solution, is not free in terms of performance and you have to capture any external variables that your functions will use.
 
-But if you are fine about being explicit on how external data is passed or if you are working in an environment that cannot spin off a worker or running a function that is guaranteed to halt far outweighs any overhead, then this package is worth considering.
+But if you're comfortable being explicit about how external data is passed, or if you're working in an environment that can't spawn workers, or if guaranteeing a function halts outweighs any performance overhead — then this package is worth considering.
 
 If you have questions or ideas, drop a comment — I read all of them. The project is open source on [GitHub](https://github.com/The-BigMan-tech/fn-monitor) for more details and published on npm as `@typescript-guy/fn-monitor`, with runnable examples in the repo.
