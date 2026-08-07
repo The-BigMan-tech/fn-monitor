@@ -67,7 +67,7 @@ We can call the monitoredFn and log the result:
 console.log(monitoredFn());
 ```
 
-### Output:
+### Output
 
 ```text
 Hello World
@@ -75,11 +75,11 @@ Hello World
 
 So to the caller, the raw function and the monitored version are structurally the same
 
-But under the hood, the wrapper;
-- read the function's source code through the .toString() method 
-- parsed it
-- spun up an interpreter just for it
-- and told the interpreter to parse the source code. 
+But under the hood, the wrapper:
+- reads the function's source code through the .toString() method
+- parses it
+- spins up an interpreter just for it
+- and tells the interpreter to run the parsed code
   
 Then whenever you call it, it just requests the interpreter to run a virtual function call with the provided arguments as imports, and then return the result.
 
@@ -120,7 +120,7 @@ When we call this function as it is, we expect to get our result as usual:
 console.log('Result: ',sumUp([1,2,3,4,5]));
 ```
 
-### Output:
+### Output
 
 ```text
 Result:  15
@@ -145,13 +145,13 @@ const monitoredSumUp = monitor({
 });
 ```
 
-When we call it, we get a different result from `sumUp`"
+When we call it, we get a different result from `sumUp`
 
 ```typescript
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
 
-### Output:
+### Output
 
 ```text
 Result:  -15
@@ -193,7 +193,7 @@ So when we call it with our arguments, we can see the logs:
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
 
-### Output:
+### Output
 
 ```text
 intermediate result:  -1
@@ -223,7 +223,7 @@ const sumWithNoLoops = monitor({
 console.log('Result: ',sumWithNoLoops([1,2,3,4,5]));
 ```
 
-### Output:
+### Output
 
 ```text
 Error: For of statements are not allowed.
@@ -253,7 +253,7 @@ When we call it we can see when they are called through the logs:
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
 
-### Output:
+### Output
 
 ```text
 Logging args:  [ 1, 2, 3, 4, 5 ]
@@ -298,7 +298,7 @@ When we call it, the returned result is changed before it reaches the caller and
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
 
-### Output:
+### Output
 
 ```text
 Logging args:  [ 1, 2, 3, 4, 5 ]
@@ -322,7 +322,7 @@ const finalSum = event.scope.variables.search('sum');
 
 Here, `event.scope` gives us a snapshot of the interpreted function’s scope at the point where the `ReturnStatement` is being handled.
 
-For safety reasons, the scope cannot be mutated like the node through the `visit` object and thus,a snapshot is freshly allocated for the event.
+For safety reasons, the scope cannot be mutated like the node through the `visit` object and thus, a snapshot is freshly allocated for the event.
 
 This searches the scope chain for a variable named `sum`.
 
@@ -342,7 +342,7 @@ By the time the return statement is reached, the loop has already finished execu
 console.log('final sum: ', finalSum);
 ```
 
-#### Output:
+#### Output
 
 ```text
 final sum:  -15
