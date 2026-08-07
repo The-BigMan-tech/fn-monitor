@@ -667,7 +667,8 @@ Please keep the following architectural constraints in mind when using this pack
 
 Want to play around with the package? Check out the [`examples`](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples) folder in the repository. *(Note: If you copy the examples, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
-- 💬 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
+- 💬 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
+  
 - 🐛 **Bugs & Features:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
