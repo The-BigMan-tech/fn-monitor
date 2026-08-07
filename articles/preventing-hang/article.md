@@ -33,31 +33,51 @@ type milliseconds = number;
 type Fn = (...args:any[])=>void
 ```
 
-Then we can create our timer function. You can implement your own, but here, we have a bare minimum example
+Then we can create our timeout function. You can write your own implementation, but to follow along with the article, you can use this bare minimum example. We will extend it as we go:
 
 ```typescript
 function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
+    //We create a grace period to account for floating point errors in performance.now()
     const graceTime = 0.5 as milliseconds;
 
+    //A snapshot of roughly the exact millisecond the function was called
     let startTime = 0 as milliseconds;
+
+    //A volatile variable that continuously tracks how much time the function has used
     let usedTime = 0 as milliseconds;
+
+    //A buffer to prevent us from checking performance.now() for every single interpreted step which will hurt its performance
     let step = 0;
 
+    //This is a function that implements our budget tracking
     const checkBudget = ()=>{
-        usedTime = (performance.now() - startTime);
-        if (usedTime > (budget + graceTime)) {
+        //UsedTime is calculated as the difference between the currentTime and the time as when the function was called
+        const currentTime = performance.now();
+        usedTime = (currentTime - startTime);
+
+        const timeIsUp = usedTime > (budget + graceTime)
+        if (timeIsUp) {
             throw new Error(`The monitored function used ${usedTime.toFixed(3)}ms when only given a budget of ${budget.toFixed(3)}ms.`);
         };
     };
+
+    //The monitored function that we will return to the caller
     const monitoredFn = monitor({
         main:{
             ref:fn,
         },
+        
+        //From the name, this will run before each call to our monitored function
         beforeEachCall: () => {
             startTime = performance.now()
             usedTime = 0;
             step = 0;
         },
+
+        //This hook is fired before each interpreted step
+        //Unlike the inspector hook, this hook does not get the rich visit object which is used to mutate or observe ast nodes as the function executes
+        //But our monitored function will run much faster this way because it will skip any extra allocations
+
         onStep:() => {
             step += 1;
 
@@ -66,10 +86,13 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
             const shouldCheckBudget = (step & 1023) === 0;
             if (shouldCheckBudget) checkBudget();
         },
+
+        //From the name, this will run after each call to our monitored function
         afterEachCall:(result)=>{
-            //if the result is an error,we let the interpreter bubble it up
+
+            //if the result is an error,we let the interpreter to bubble it up rather than checking the budget
             if (!(result instanceof Error)) {
-                //in case the function doesn't use up to the number of steps required to recheck the budget,we check the budget here to be accurate and safe
+                //in case the function doesn't use up to the number of steps required to check the budget, we check the budget here to be accurate and safe
                 checkBudget();
             }
         }
@@ -78,28 +101,29 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
 };
 ```
 
-we can try to time a sample function
+We can use it on a sample function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
 
 ```typescript
-function hangingOp():void {
-    //This simulates a lagging operation.
-    //calling this natively in js will hang the main thread.
-    //but our monitored function setup should halt it and throw an error.
+function getPrice(item?:string):number {
+    if (!item) {
+        //Calling this natively in js will hang the main thread.
+        //but our monitored function setup should halt it and throw an error.
 
-    while (true) {
-        console.log('Lag');
+        while (true) {
+            console.log('Lag');
+        }
     }
     //some other implementation
+    return 10
 }
-const timedOp = timeFn(hangingOp,50);
+const timedGetPrice = timeFn(getPrice,50);
 ```
 
-then we call it
+Then when we call our function, our timeout function should throw an error
+
 ```typescript
-timedOp()
+timedGetPrice()
 ```
-
-when we run it, we get:
 
 **Output:**
 ```text
@@ -111,11 +135,15 @@ Lag
 Lag
 Lag
 Lag
-Error: The monitored function used 62.281ms when only given a budget of 50.000ms.
+Lag
+Lag
+Error: The monitored function used 53.961ms when only given a budget of 50.000ms.
 ...
 ```
 
-The timer isnt 100% accurate because the interprter steps off while the native js engine runs those logs. And the exact millisecond it will halt is not deterministic. But if we are being pragmatic, it is far better to loose a few milliseconds than to hang our main thread.
+Because the interprter steps off while the native js engine executes those logs and because we only check the budget every now and then, the timer isnt 100% accurate. And the exact millisecond it will halt is not deterministic. 
+
+But if we are being pragmatic, it is far better to loose a few milliseconds than to hang our main thread.
 
 While this works, you cant just use our timer on any arbitrary function. If that function uses external variables, you have to make sure that you capture them with the captures property as discussed in the last article. But let us see a nuance when our timed function calls another function.
 
