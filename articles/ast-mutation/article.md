@@ -128,7 +128,7 @@ Result:  15
 
 Let us now define our modified version of this function by wrapping it in `monitor` while utilizing the inspector hook
 
-The inspector hook is fired before each interpreted step. The interpreter passes it a `visit` object that contains four methods but we will only use two for this example — `visit.execute` and `visit.is` .
+The inspector hook is fired as the interpreter walks the AST. The interpreter passes it a `visit` object that contains four methods but we will only use two for this example — `visit.execute` and `visit.is` .
 
 Let us start with `visit.is`
 
@@ -159,7 +159,7 @@ Result:  -15
 
 When we run it, we get -15 because our inspector used `visit.is` to query for an `AssignmentExpression` and when it matched, the interpreter fired the callback passed alongside the query with an event object. The event object contains a `node` property which is the AST node that matched the query.
 
-Originally in the source code, the assignement expression was this:
+Originally in the source code, the assignment expression was this:
 
 ```typescript
 sum += num;
@@ -292,7 +292,7 @@ const monitoredSumUp = monitor({
 });
 ```
 
-When we call it, the returned result is changed before it reaches the caller and the `afterEachCall` hook
+When we call it, the returned result is changed before it reaches the caller and the `afterEachCall` hook.
 
 ```typescript
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
@@ -385,14 +385,14 @@ Logging result:  ReferenceError:
 zero is not defined
 
 -Monitored functions cannot access variables from the outside.
--They must be either be passed as an argument on each call or captured/embedded upon creation.
+-They must either be passed as an argument on each call or captured/embedded upon creation.
 ...
 
 ReferenceError: 
 zero is not defined
 
 -Monitored functions cannot access variables from the outside.
--They m.ust be either be passed as an argument on each call or captured/embedded upon creation.
+-They must either be passed as an argument on each call or captured/embedded upon creation.
 ...
 ```
 
@@ -547,7 +547,7 @@ So if you build something with AST mutation, be intentional about whether the mu
 ---
 ### What this package is good for
 
-This kind of tool is especially interesting if you are building something beyond just metrics:
+This kind of tool is especially interesting if you are building something like:
 
 - experimentation tools
 - runtime transformations
@@ -575,6 +575,25 @@ The package is not a one-size-fits-all solution and thus, it has its own constra
 - native generator functions (`function*`) cannot be monitored because they run outside the interpreter context
 - you cannot wrap a monitored function in another
 - errors inside monitored functions will not map directly to original source locations in your editor
+  
+---
+## A good way to think about this package
+
+It is less like a metric tool and more like a **runtime execution layer**.
+
+Instead of asking:
+
+> "What did this function return?"
+> "How long did it run for?"
+
+you can ask:
+
+> "What AST nodes executed?"
+> "Can I intercept them?"
+> "Can I inspect their results?"
+> "Can I inspect the scope around them?"
+> "Can I change their behavior while they run?"
+
 
 ---
 ## Final thoughts
