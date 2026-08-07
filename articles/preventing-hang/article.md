@@ -6,7 +6,7 @@ tags: javascript, typescript, interpreter, web-workers
 
 In JavaScript, the de facto standard to stop a function call from hanging the main thread is asynchronous non-blocking execution, typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using setTimeout or queueMicrotask to yield control back to the event loop. 
 
-While this works, these setups usually requires you to change how you call or implement your functios. Today, we are going to take a different approach that will address these limitations by using the package, `@typescript-guy/fn-monitor`
+While this works, these setups usually requires you to change how you call or implement your functions. Today, we are going to take a different approach that will address these limitations by using the package, `@typescript-guy/fn-monitor`
 
 Before we start this article, let us get a quick overview of the package:
 
@@ -14,20 +14,29 @@ Before we start this article, let us get a quick overview of the package:
 
 - It allows you to plug in hooks at any part of the function's lifecyle to observe data and mutate nodes at runtime while remaining on the same thread
 
-- It exports a function called `monitor` which takes in a configuration object that includes a function reference (the function you want to monitor), a captures object (to include any external variable that the function will use) and a bunch of hooks. It returns a brand new function that has an identical call signature to the original
+- Its main export is a function called `monitor` which takes in a configuration object. It returns a brand new function that has an identical call signature to the original. The config object includes:
+
+    -  A function reference — the function you want to monitor, 
+    -  A captures object — to include any external variable that the function will use 
+    -  A bunch of hooks. 
 
 - It works for both synchronous and asynchronous functions. And although it can accept a generator function, it cannot monitor them
 
+If you ever want to dive deeper into its fundamentals later, you can read the [first article]()
 
-If you want to dig more into its fundamentals later, you can read the [first article]()
+To try this out locally, you can install the package from npm:
+
+```bash
+npm install @typescript-guy/fn-monitor
+```
 
 
-# Making our timeout function
+## Making our timeout function
 
 To begin, let us first write out our imports and custom types:
 
 ```typescript
-import { monitor, Metadata } from "@typescript-guy/fn-monitor";
+import { monitor, type Metadata } from "@typescript-guy/fn-monitor";
 
 type milliseconds = number;
 type Fn = (...args:any[])=>void
@@ -75,6 +84,7 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
         },
 
         //This hook is fired before each interpreted step
+
         //Unlike the inspector hook, this hook does not get the rich visit object which is used to mutate or observe ast nodes as the function executes
         //But our monitored function will run much faster this way because it will skip any extra allocations
 
@@ -101,7 +111,7 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
 };
 ```
 
-We can use it on a sample function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
+We can try this on an example function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
 
 ```typescript
 function getPrice(item?:string):number {
@@ -119,7 +129,27 @@ function getPrice(item?:string):number {
 const timedGetPrice = timeFn(getPrice,50);
 ```
 
-Then when we call our function, our timeout function should throw an error
+Calling the bare `getPrice` function will hang our thread as expected:
+
+```typescript
+getPrice();
+```
+
+### Output
+```text
+Lag
+Lag
+Lag
+Lag
+Lag
+Lag
+Lag
+Lag
+Lag
+....
+```
+
+But if we call the timed version, it should throw an error
 
 ```typescript
 timedGetPrice()
@@ -142,29 +172,9 @@ Error: The monitored function used 53.961ms when only given a budget of 50.000ms
 ...
 ```
 
-Because we only check the budget every now and then, and because the interprter steps off while the native js engine executes those logs, our timeout function isnt 100% accurate. And the exact millisecond it will halt is not deterministic. 
+Because we only check the budget every now and then, and because the interprter steps off while the native js engine executes the logs, our timeout function isnt 100% accurate. And the exact millisecond it will halt is not deterministic. 
 
-But if we are being pragmatic, it is far better to loose a few milliseconds than to hang our main thread. Calling the bare `getPrice` function would have hanged it as expected:
-
-```typescript
-getPrice();
-```
-
-### Output:
-
-### Output
-```text
-Lag
-Lag
-Lag
-Lag
-Lag
-Lag
-Lag
-Lag
-Lag
-....
-```
+But if we are being pragmatic, it is far better to loose a few milliseconds than to hang our main thread. 
 
 While our setup works, you cant just use our timer on any arbitrary function. If that function uses external variables, you have to ensure that you capture them through the captures property as discussed in the last article. 
 
@@ -198,7 +208,7 @@ Reference Error
 getPrice is not defined
 ```
 
-To solve this, we will have to extend our custom timeout to accept a captures object and include it in the interpreter's context:
+To solve this, we will have to extend our custom timeout function to accept a captures object and include it in the interpreter's context:
 
 ```typescript
 function timeFn<T extends Fn>(fn:T,budget:milliseconds,captures?:Record<string,any>):T {
@@ -214,7 +224,7 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds,captures?:Record<string,a
 }
 ```
 
-If we now call the `timedGetDetails` function with the captures, we will bypass the error but run into another problem:
+If we now setup the `timedGetDetails` function with its captures and call it, we will bypass the error but we will run into another problem:
 
 ```typescript
 const timedGetDetails = timeFn(getDetails,50,{
@@ -239,7 +249,7 @@ Lag
 ....
 ```
 
-One way to solve this is to make it call the `timedGetPrice` function instead by using it as the captures:
+One way to solve this is to force it to use the `timedGetPrice` function by using it in the captures:
 
 ```typescript
 const timedGetDetails = timeFn(getDetails,50,{
@@ -248,7 +258,7 @@ const timedGetDetails = timeFn(getDetails,50,{
 timedGetDetails()
 ```
 
-When we run it, we will expect our timeout function to work as usual and halt it. 
+When we run it, we will expect our timeout to work as usual and halt it. 
 
 ### Output:
 ```text
@@ -262,20 +272,21 @@ Lag
 Lag
 Lag
 Lag
-Error: The monitored function used 53.961ms when only given a budget of 50.000ms.
+Error: The monitored function used 58.440ms when only given a budget of 50.000ms.
+...
 ```
 
 This solves our immediate problem because not only does it allow the `timedGetDetails` function to call an external function without having to change its original source code, but it also allows us to put it under a strict budget.
 
-The problem with this approach though, is that it forces us to time every single function that our timed function will call and it makes the timer fragmanted -- one for the outer function and one for the inner one. We can solve these problems with a more strealined solution.
+The problem with this approach though, is that it forces us to time every single function that our timed function will call and it makes the timer fragmanted — one for the outer function and one for the captured one. We can solve these problems with a more strealined solution.
 
 ### What is Embedding?
 
-Unlike capturing, which tells the interpreter to take direct references, embedding tells it to take that reference, copy its source code into the same context as our monitored function and parse it altogether. 
+In contrast to capturing, which works for all data types and simply gives the interpreter direct references/values, embedding is exclusive to function references and it tells the interpreter to copy its source code into the same context as our monitored function and parse it altogether. 
 
-This allows the onStep hook for the `timedGetDetails` function alone toput its whole execution under a strict budget. 
+This allows the onStep hook for the `timedGetDetails` function alone to contain the entire execution under a strict budget. 
 
-This will require us to extend our timeout function. We will pack both the captures and embed configurations in a single object to make it neat
+This will require us to extend our timeout function. We will pack both the captures and embed configurations into a single object to make it neat
 
 
 ```typescript
@@ -340,6 +351,6 @@ Because JavaScript is single-threaded, any code running on the main thread must 
 
 This package, although providing a single-threaded solution, is not free in terms of performance and you have to capture any external variables that your functions will use.
 
-But if performance is not critical or you are working in an environment that cannot spin off a worker or you are fine about being explicit on how external data is passed, then this package is worth considering.
+But if you are fine about being explicit on how external data is passed or if you are working in an environment that cannot spin off a worker or running a function that is guaranteed to halt far outweighs any overhead, then this package is worth considering.
 
 If you have questions or ideas, drop a comment — I read all of them. The project is open source on [GitHub](https://github.com/The-BigMan-tech/fn-monitor) for more details and published on npm as `@typescript-guy/fn-monitor`, with runnable examples in the repo.
