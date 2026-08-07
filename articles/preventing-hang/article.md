@@ -19,7 +19,7 @@ Before we start this article, let us get a quick overview of the package:
    - A captures object — to include any external variables the function will use
    - Various hooks for different lifecycle events
 
-- It works for both synchronous and asynchronous functions. And although it can accept a generator function, it cannot monitor them.
+- It works for both synchronous and asynchronous functions. And although it can accept generators,it cannot monitor them.
 
 If you ever want to dive deeper into its fundamentals later, you can read the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
