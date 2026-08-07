@@ -29,7 +29,7 @@ To try this out locally, you can install the package from npm:
 npm install @typescript-guy/fn-monitor
 ```
 
-
+---
 ## Making our timeout function
 
 To begin, let us first write out our imports and custom types:
@@ -135,6 +135,7 @@ getPrice();
 ```
 
 ### Output
+
 ```text
 Lag
 Lag
@@ -154,7 +155,7 @@ But if we call the timed version, it should throw an error.
 timedGetPrice()
 ```
 
-### Output:
+### Output
 
 ```text
 Lag
@@ -179,7 +180,7 @@ Our timeout function works great for simple cases, but real-world functions rare
 
 We'll address this in a scenario where our timed function needs to call another function.
 
-
+---
 ## Capturing vs Embedding Functions
 Assuming that we want to time a function that calls an external function:
 
@@ -203,9 +204,6 @@ timedGetDetails()
 
 ```text
 ReferenceError: 
-
-Reference Error
-----------------
 getPrice is not defined
 
 -Monitored functions cannot access variables from the outside.
@@ -241,6 +239,7 @@ timedGetDetails()
 Because it is captured, calling it will make it run in the native JS engine and hang our main thread.
 
 ### Output
+
 ```text
 Lag
 Lag
@@ -265,7 +264,8 @@ timedGetDetails()
 
 When we run it, we expect our timeout to work as usual and halt it. 
 
-### Output:
+### Output
+
 ```text
 Lag
 Lag
@@ -335,6 +335,7 @@ timedGetDetails()
 ```
 
 ### Output
+
 ```text
 Lag
 Lag
@@ -349,7 +350,7 @@ Error: The monitored function used 58.161ms when only given a budget of 50.000ms
 ...
 ```
 
-
+---
 ## Conclusion
 
 Because JavaScript is single-threaded, any code running on the main thread must finish completely before your browser can update the UI or before your server can respond to user requests, meaning that there is no seamless, single-thread solution to stop a function call from hanging the application.
