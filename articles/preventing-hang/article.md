@@ -202,9 +202,15 @@ timedGetDetails()
 ### Output
 
 ```text
+ReferenceError: 
+
 Reference Error
 ----------------
 getPrice is not defined
+
+-Monitored functions cannot access variables from the outside.
+-They must be either be passed as an argument on each call or captured/embedded upon creation.
+
 ```
 
 To solve this, we will have to extend our custom timeout function to accept a captures object and include it in the interpreter's context:
