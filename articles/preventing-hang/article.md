@@ -352,7 +352,7 @@ Error: The monitored function used 58.161ms when only given a budget of 50.000ms
 
 ## Conclusion
 
-Because JavaScript is single-threaded, any code running on the main thread must finish completely before your browser can update the UI or before your server can respond to user requests, meaning that there is no seamless, single-thread solution to stop a function call from hanging the application
+Because JavaScript is single-threaded, any code running on the main thread must finish completely before your browser can update the UI or before your server can respond to user requests, meaning that there is no seamless, single-thread solution to stop a function call from hanging the application.
 
 This package, although providing a single-threaded solution, is not free in terms of performance and you have to capture any external variables that your functions will use.
 
