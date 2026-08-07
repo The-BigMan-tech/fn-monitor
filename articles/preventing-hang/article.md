@@ -1,7 +1,7 @@
 ---
 title: Stop a Function Call From Hanging the Main Thread Without Using Web Workers
 description: Using hooks into a JS-in-JS interpreter to enforce a time budget on the same thread
-tags: javascript, typescript, interpreter, web-workers
+tags: javascript, typescript, interpreter, webworkers
 ---
 
 In JavaScript, the de facto standard to stop a function call from hanging the main thread is asynchronous non-blocking execution, typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using setTimeout or queueMicrotask to yield control back to the event loop. 
