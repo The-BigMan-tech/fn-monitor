@@ -125,7 +125,8 @@ Then when we call our function, our timeout function should throw an error
 timedGetPrice()
 ```
 
-**Output:**
+### Output:
+
 ```text
 Lag
 Lag
@@ -141,35 +142,43 @@ Error: The monitored function used 53.961ms when only given a budget of 50.000ms
 ...
 ```
 
-Because the interprter steps off while the native js engine executes those logs and because we only check the budget every now and then, the timer isnt 100% accurate. And the exact millisecond it will halt is not deterministic. 
+Because we only check the budget every now and then, and because the interprter steps off while the native js engine executes those logs, our timeout function isnt 100% accurate. And the exact millisecond it will halt is not deterministic. 
 
 But if we are being pragmatic, it is far better to loose a few milliseconds than to hang our main thread.
 
-While this works, you cant just use our timer on any arbitrary function. If that function uses external variables, you have to make sure that you capture them with the captures property as discussed in the last article. But let us see a nuance when our timed function calls another function.
+While this works, you cant just use our timer on any arbitrary function. If that function uses external variables, you have to ensure that you capture them through the captures property as discussed in the last article. 
 
-## Capturing vs Embedding
-Assuming we have time a function that needs to call another, we can't just do:
+We will address this in a nuance where we want our timed function to call another function.
+
+
+## Capturing vs Embedding Functions
+Assuming that we want to time a function that calls an external function
 
 ```typescript
-function hangingOp2():void {
-    hangingOp()
+function getDetails(item:string):{name:string,price:number} {
+    return {
+        name:item,
+        price:getPrice(item)
+    }
 }
-const timedOp2 = timeFn(hangingOp2,50,{
-    hangingOp
-});
-timedOp2()
+const timedGetDetails = timeFn(getDetails,50);
 ```
 
-this will crash and we will get a Reference Error: 
+If we attempt to call it, it will crash and we will get a Reference Error: 
+
+```typescript
+timedGetDetails('flour')
+```
 
 ### Output
+
 ```text
 Reference Error
 ----------------
-hangingOp is not defined
+getPrice is not defined
 ```
 
-so we will have to extends our custom timeout to accept a captures object:
+To solve this, we will have to extend our custom timeout to accept a captures object:
 
 ```typescript
 type milliseconds = number;
