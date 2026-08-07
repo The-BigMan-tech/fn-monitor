@@ -15,7 +15,7 @@ In JavaScript, functions are fixed units. You define one, call it, and the code 
 - running code in a worker or sandbox
 - manually patching every internal call site
 
-`@typescript-guy/fn-monitor` offers a different approach.
+`fn-monitor` offers a different approach.
 
 It lets you execute a function through a JS-in-JS interpreter, and gives you hooks into the function’s AST while it executes.
 
@@ -24,7 +24,7 @@ That means you can do things like:
 - intercept specific AST nodes
 - inspect evaluated values
 - mutate operators
-- change return results
+- change returned results
 - observe execution flow
 - build runtime control layers
 
@@ -35,189 +35,286 @@ npm install @typescript-guy/fn-monitor
 ```
 
 ---
+## How to Wrap a Function in an Interpreter Context
 
-## The core idea
-
-The main API looks like this:
+We will start by writing our import:
 
 ```ts
 import { monitor } from "@typescript-guy/fn-monitor";
+```
 
+The core export is `monitor`.
+
+You give it a function, and it returns a new function with the **same call signature** but it runs through the custom interpretation layer when called
+
+Wrapping a function is straightforward. You create and pass an object with the key, `main`, which is the config of the function that we want to wrap. We then pass the reference through the `ref` property under `main`
+
+```typescript
 const originalFn = ()=>{
-    //some implementation
+    return 'Hello World'
 }
+
 const monitoredFn = monitor({
     main: {
         ref: originalFn
     }
-});
+})
 ```
 
-Its core export is `monitor`.
+We can call the monitoredFn and log the result:
 
-You give it a function, and it returns a new function with the **same call signature**, but that function is executed by a custom interpreter instead of directly by the JS engine.
+```typescript
+console.log(monitoredFn());
+```
 
-That interpreter layer is what makes runtime AST inspection and mutation possible. You can attach hooks such as:
+### Output:
+
+```text
+Hello World
+```
+
+So to the caller, the raw function and the monitored version are structurally the same
+
+But under the hood, the wrapper;
+- read the function's source code through the .toString() method 
+- parsed it
+- spun up an interpreter just for it
+- and told the interpreter to parse the source code. 
+  
+Then whenever you call it, it just requests the interpreter to run a virtual function call with the provided arguments as imports, and then return the result.
+
+But just running a function in an interpreter's context is not the benefit of using this package.
+Instead, we will see what we can do by attaching hooks such as:
 
 - `beforeEachCall`
 - `afterEachCall`
 - `inspector`
-- `onStep`
 
+There is a fourth hook called `onStep` but it is reserved for another article.
 The most interesting one for AST mutation is the `inspector`.
 
 ---
+## Mutating an Assignment Operator at Runtime
 
-## Example: mutating an assignment operator at runtime
-
-Here’s the first showcase from the README.
-
-It demonstrates three important ideas at once:
+We will code an example to demonstrate three important ideas and gradually extend it as we go:
 
 1. intercepting AST nodes during execution
 2. mutating execution behavior without changing the original source
 3. capturing external variables into the interpreter context
    
+We first start by defining the function that we want to wrap. We will use a function called `sumUp`, that will take an array of numbers, sum all the elements and return the result.
+
 ```ts
-import { monitor } from "@typescript-guy/fn-monitor";
-
-const zero = 0;
-
 const sumUp = (nums: number[]) => {
-    let sum: number = zero;
+    let sum: number = 0;
     for (const num of nums) {
         sum += num;
     }
     return sum;
 }
+```
 
+When we call this function as it is, we expect to get our result as usual:
+
+```typescript
+console.log('Result: ',sumUp([1,2,3,4,5]));
+```
+
+### Output:
+
+```text
+Result:  15
+```
+
+Let us now define our modified version of this function by wrapping it in `monitor` while utilizing the inspector hook
+
+The inspector hook is fired before each interpreted step. The interpreter passes it a `visit` object that contains four methods but we will only use two for this example — `visit.execute` and `visit.is` .
+
+Let us start with `visit.is`
+
+```typescript
 const monitoredSumUp = monitor({
     main: {
         ref: sumUp,
-        captures: {
-            // since 'zero' is used by sumUp and is outside its scope,
-            // we capture it into the interpreter's context
-            zero
-        }
-    },
-    beforeEachCall: (nums) => {
-        console.log('Entered the monitored sum up function with the nums: ', nums);
     },
     inspector: (visit) => {
         visit.is('AssignmentExpression', event => {
             event.node.operator = "-="; // silently change the operator
-            console.log('assignment result', visit.execute());
         });
+    }
+});
+```
 
+When we call it, we get a different result from `sumUp`"
+
+```typescript
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
+```
+
+### Output:
+
+```text
+Result:  -15
+```
+
+When we run it, we get -15 because our inspector used `visit.is` to query for an `AssignmentExpression` and when it matched, the interpreter fired the callback passed alongside the query with an event object. The event object contains a `node` property which is the AST node that matched the query.
+
+Originally in the source code, the assignement expression was this:
+
+```typescript
+sum += num;
+```
+
+But when we ran the following line, we told it to change the operator right before it could execute the node.
+
+```typescript
+event.node.operator = "-=";
+```
+
+We can extend our inspector to log each intermediate result by using `visit.execute`. It explicitly tells the interpreter to execute the node right now and return the result. 
+
+```typescript
+const monitoredSumUp = monitor({
+    main: {
+        ref: sumUp,
+    },
+    inspector: (visit) => {
+        visit.is('AssignmentExpression', event => {
+            event.node.operator = "-="; // silently change the operator
+            console.log('intermediate result: ',visit.execute());
+        });
+    }
+});
+```
+
+So when we call it with our arguments, we can see the logs:
+
+```typescript
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
+```
+
+### Output:
+
+```text
+intermediate result:  -1
+intermediate result:  -3
+intermediate result:  -6
+intermediate result:  -10
+intermediate result:  -15
+Result:  -15
+```
+
+The interpreter will automatically execute nodes if `visit.execute` is not called and for safety reasons, you cannot stop it from executing a node unless you throw an error.
+
+So if you detect wrong behaviour according to your custom rules, you can do this:
+
+```typescript
+const sumWithNoLoops = monitor({
+    main: {
+        ref: sumUp,
+    },
+    inspector: (visit) => {
+        visit.is('ForOfStatement',()=>{
+            throw new Error('For of statements are not allowed.')
+        })
+    }
+});
+
+console.log('Result: ',sumWithNoLoops([1,2,3,4,5]));
+```
+
+### Output:
+
+```text
+Error: For of statements are not allowed.
+```
+
+For telemetry reasons, we can also use the `beforeEachCall` and `afterEachCall` hooks. 
+`beforeEachCall` receives the arguments before the function is called while `afterEachCall` receives the result or an error after the function is called:
+
+```ts
+const monitoredSumUp = monitor({
+    main: {
+        ref: sumUp,
+    },
+    beforeEachCall:(nums)=>{
+        console.log('Logging args: ',nums);
+    },
+    afterEachCall:(result)=>{
+        console.log('Logging result: ',result);
+    },
+    //...Our inspector hook
+});
+```
+
+When we call it we can see when they are called through the logs:
+
+```typescript
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
+```
+
+### Output:
+
+```text
+Logging args:  [ 1, 2, 3, 4, 5 ]
+intermediate result:  -1
+intermediate result:  -3
+intermediate result:  -6
+intermediate result:  -10
+intermediate result:  -15
+Logging result:  -15
+Result:  -15
+```
+
+---
+## Extending our Example by Modifying the Return Statement
+
+We can add this query to our inspector hook to do two things:
+- modify the returned value
+- query the scope for the `sum` before mutating the result
+
+```ts
+const monitoredSumUp = monitor({
+    main: {
+        ref: sumUp,
+    },
+    inspector:(visit)=>{
+        //...Our other query
         visit.is('ReturnStatement', event => {
             const result = visit.execute();
             const finalSum = event.scope.variables.search('sum');
 
-            console.log('final sum: ', finalSum, 'Is result:', finalSum === result.RES);
+            console.log('final sum: ', finalSum);
             result.RES = 'I CHANGED THE VALUE';
         });
-    },
-    afterEachCall: (result) => {
-        console.log('result of the monitored function: ', result);
     }
+    //...Our other hooks
 });
-
-const arrToSum = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
-const result1 = sumUp(arrToSum);
-console.log('Result 1', result1);
-
-const result2 = monitoredSumUp(arrToSum); // the exact same call signature
-console.log('Result 2', result2);
 ```
 
-### Output
+When we call it, the returned result is changed before it reaches the caller and the `afterEachCall` hook
+
+```typescript
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
+```
+
+### Output:
 
 ```text
-Result 1 55
-
-Entered the monitored sum up function with the nums:  [
-  1, 2, 3, 4,  5,
-  6, 7, 8, 9, 10
-]
-assignment result -1
-assignment result -3
-assignment result -6
-assignment result -10
-assignment result -15
-assignment result -21
-assignment result -28
-assignment result -36
-assignment result -45
-assignment result -55
-final sum:  -55 Is result: true
-result of the monitored function:  I CHANGED THE VALUE
-Result 2 I CHANGED THE VALUE
+Logging args:  [ 1, 2, 3, 4, 5 ]
+intermediate result:  -1
+intermediate result:  -3
+intermediate result:  -6
+intermediate result:  -10
+intermediate result:  -15
+final sum:  -15
+Logging result:  I CHANGED THE VALUE
+Result:  I CHANGED THE VALUE
 ```
 
----
+### A closer look at querying the scope
 
-## What just happened?
-
-The original function is still this:
-
-```ts
-const sumUp = (nums: number[]) => {
-    let sum: number = zero;
-    for (const num of nums) {
-        sum += num;
-    }
-    return sum;
-}
-```
-
-But when it runs through the monitored version, the interpreter gives us a chance to intercept the AST node for the assignment expression.
-
-This line is the key:
-
-```ts
-event.node.operator = "-=";
-```
-
-That mutates the AST node itself.
-
-So instead of executing:
-
-```ts
-sum += num
-```
-
-the interpreted execution effectively behaves like:
-
-```ts
-sum -= num
-```
-
-That is why the sum becomes `-55` instead of `55`.
-
-Then the example intercepts the return statement and changes the final returned value:
-
-```ts
-visit.is('ReturnStatement', event => {
-    const result = visit.execute();
-    const finalSum = event.scope.variables.search('sum');
-
-    console.log('final sum: ', finalSum, 'Is result:', finalSum === result.RES);
-    result.RES = 'I CHANGED THE VALUE';
-});
-```
-
-So the function started as a simple summing function, and without modifying the original source code, the monitored version returns:
-
-```ts
-"I CHANGED THE VALUE"
-```
-
----
-
-## A closer look at querying the scope
-
-One subtle but powerful line in the example is this:
+Let us look at this line: 
 
 ```ts
 const finalSum = event.scope.variables.search('sum');
@@ -225,7 +322,7 @@ const finalSum = event.scope.variables.search('sum');
 
 Here, `event.scope` gives us a snapshot of the interpreted function’s scope at the point where the `ReturnStatement` is being handled.
 
-This snapshot is read-only and freshly allocated for the event, so it lets you inspect the function’s internal state without directly exposing or mutating the interpreter’s internals.
+For safety reasons, the scope cannot be mutated like the node through the `visit` object and thus,a snapshot is freshly allocated for the event.
 
 This searches the scope chain for a variable named `sum`.
 
@@ -236,24 +333,19 @@ event.scope.variables.search('sum')
 In this case, it finds the `sum` variable declared inside the monitored function:
 
 ```ts
-let sum: number = zero;
+let sum: number = 0;
 ```
 
 By the time the return statement is reached, the loop has already finished executing, so `sum` holds the final interpreted value:
 
 ```ts
--55
+console.log('final sum: ', finalSum);
 ```
 
-That is why when we log this:
+#### Output:
 
-```ts
-console.log('final sum: ', finalSum, 'Is result:', finalSum === result.RES);
-```
-
-we get: 
 ```text
-final sum:  -55 Is result: true
+final sum:  -15
 ```
 
 At that moment, before we mutate the return value, the value inside the function scope and the value produced by the return statement are still the same.
@@ -264,43 +356,152 @@ Then we change the return result:
 result.RES = 'I CHANGED THE VALUE';
 ```
 
-So the function still completes normally from the caller’s perspective, but the value it returns has been replaced.
-
-This is one of the nice things about the API:
-
-You are not limited to inspecting AST nodes only.
-
-You can also inspect the interpreted scope around the node you intercepted.
-
 ---
-
 ## Captures: bringing outside values into the interpreter context
 
-In the example above, `sumUp` uses `zero`, which lives outside the function.
+If our `sumUp` function wasn't self contained and used an outside variable, we will need a way to pass it into the interpreter's context, else we will get a reference error if we tried to call the `monitoredSumUp` function:
 
-Because the function is executed by the interpreter, outside values need to be explicitly provided.
+In this example above, `sumUp` uses `zero`, which lives outside the function.
 
-That’s what `captures` does:
+```typescript
+const zero = 0;
 
-```ts
-main: {
-    ref: sumUp,
-    captures: {
-        zero
+const sumUp = (nums: number[]) => {
+    let sum: number = zero;
+    for (const num of nums) {
+        sum += num;
     }
-}
+    return sum;
+};
+//...Our monitored function  setup
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
 
-This maps the name `zero` to the actual value from the surrounding JavaScript environment.
+### Output
 
-This is one of the practical parts of the API:
+```text
+Logging args:  [ 1, 2, 3, 4, 5 ]
+Logging result:  ReferenceError: 
+zero is not defined
 
-- if your function depends on external primitives, objects, or functions
-- and those dependencies are not embedded into the interpreter context
-- you pass them in through `captures`
+-Monitored functions cannot access variables from the outside.
+-They must be either be passed as an argument on each call or captured/embedded upon creation.
+...
+
+ReferenceError: 
+zero is not defined
+
+-Monitored functions cannot access variables from the outside.
+-They m.ust be either be passed as an argument on each call or captured/embedded upon creation.
+...
+```
+
+The error is logged twice because the `afterEachCall` hook receives and logs it in addition to js throwing the error natively.
+
+We can adjust that by adding an if-check, but this is totally optional:
+
+```typescript
+const monitoredSumUp = monitor({
+    main: {
+        ref: sumUp,
+    },
+    afterEachCall:(result)=>{
+        if (!(result instanceof Error)) {
+            console.log('Logging result: ',result);
+        }
+    },
+    //...Our other hooks
+})
+```
+
+So we can address the error by extending the `monitoredSumUp` configuration to capture it. We map the name `zero` to the actual value from the surrounding JavaScript environment.
+
+
+```typescript
+const monitoredSumUp = monitor({
+    main: {
+        ref: sumUp,
+        captures:{
+            zero
+        }
+    },
+    //...Our other hooks
+})
+```
+
+When we then call it, it will run as expected:
+
+```typescript
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
+```
+
+### Output
+
+```text
+Logging args:  [ 1, 2, 3, 4, 5 ]
+intermediate result:  -1
+intermediate result:  -3
+intermediate result:  -6
+intermediate result:  -10
+intermediate result:  -15
+final sum:  -15
+Logging result:  I CHANGED THE VALUE
+Result:  I CHANGED THE VALUE
+```
 
 ---
+## The Full Example
 
+Here is the full example provided as a snippet that you can paste:
+
+```typescript
+import { monitor } from "@typescript-guy/fn-monitor"
+
+const zero = 0;
+
+const sumUp = (nums: number[]) => {
+    let sum: number = zero;
+    for (const num of nums) {
+        sum += num;
+    }
+    return sum;
+};
+
+const monitoredSumUp = monitor({
+    main: {
+        ref: sumUp,
+        captures:{
+            zero
+        }
+    },
+    beforeEachCall:(nums)=>{
+        console.log('Logging args: ',nums);
+    },
+    afterEachCall:(result)=>{
+        if (!(result instanceof Error)) {
+            console.log('Logging result: ',result);
+        }
+    },
+    inspector: (visit) => {
+        visit.is('AssignmentExpression', event => {
+            event.node.operator = "-="; // silently change the operator
+            console.log('intermediate result: ',visit.execute());
+        });
+
+        visit.is('ReturnStatement', event => {
+            const result = visit.execute();
+            const finalSum = event.scope.variables.search('sum');
+
+            console.log('final sum: ', finalSum);
+            result.RES = 'I CHANGED THE VALUE';
+        });
+    }
+});
+
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
+```
+
+---
 ## Important caveats: 
 
 ### `visit.is` is eager
@@ -344,10 +545,9 @@ So if you build something with AST mutation, be intentional about whether the mu
 - permanent for that monitored function instance
 
 ---
-
 ### What this package is good for
 
-This kind of tool is especially interesting if you are building:
+This kind of tool is especially interesting if you are building something beyond just metrics:
 
 - experimentation tools
 - runtime transformations
@@ -365,7 +565,6 @@ Even though monitored functions have basic isolation, this package is not a secu
 You can build stricter execution boundaries using hooks, but isolation is not the default guarantee.
 
 ---
-
 ## Other limitations worth knowing
 
 The package is not a one-size-fits-all solution and thus, it has its own constraints as documented in the README:
@@ -378,26 +577,6 @@ The package is not a one-size-fits-all solution and thus, it has its own constra
 - errors inside monitored functions will not map directly to original source locations in your editor
 
 ---
-
-## A good way to think about this package
-
-It is less like a metric tool and more like a **runtime execution layer**.
-
-Instead of asking:
-
-> "What did this function return?"
-> "How long did it run for?"
-
-you can ask:
-
-> "What AST nodes executed?"
-> "Can I intercept them?"
-> "Can I inspect their results?"
-> "Can I inspect the scope around them?"
-> "Can I change their behavior while they run?"
-
----
-
 ## Final thoughts
 
 JavaScript usually gives you very little control over what happens inside a function once it starts executing.
