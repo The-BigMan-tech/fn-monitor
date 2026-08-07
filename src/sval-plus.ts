@@ -349,7 +349,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
     public refErrMsg(err:ReferenceError) {
         return (
-            ansis.red.underline(`\nReference Error`) +
             ansis.white(
                 `\n${err.message}\n` +
                 `\n-Monitored functions cannot access variables from the outside.` + 
