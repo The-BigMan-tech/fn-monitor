@@ -352,7 +352,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             ansis.white(
                 `\n${err.message}\n` +
                 `\n-Monitored functions cannot access variables from the outside.` + 
-                `\n-They must be either be passed as an argument on each call or captured/embedded upon creation.\n`
+                `\n-They must either be passed as an argument on each call or captured/embedded upon creation.\n`
             )
         )
     };
