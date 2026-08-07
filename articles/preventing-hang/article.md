@@ -82,11 +82,6 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
             step = 0;
         },
 
-        //This hook is fired before each interpreted step
-
-        //Unlike the inspector hook, this hook does not get the rich visit object which is used to mutate or observe AST nodes as the function executes
-        //But our monitored function will run much faster this way because it will skip any extra allocations
-
         onStep:() => {
             step += 1;
 
@@ -110,7 +105,17 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
 };
 ```
 
-We can try this on an example function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
+Our custom timeout uses the `onStep` hook instead of the `inspector`. You can learn more about the `inspector` later in the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6).
+
+Although they are similar, they have their differences:
+
+- The `onStep` hook is fired before each interpreted step, while the `inspector` hook is fired as the interpreter walks the AST.
+
+- Unlike the `inspector` hook, it does not get the rich `visit` object which is used to observe and mutate AST nodes as the function executes.
+
+- The advantage of using `onStep` for this use case is that our monitored function will run much faster because it skips any extra allocations.
+
+With that clarified, we can use our custom timeout on a function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
 
 ```typescript
 function getPrice(item?:string):number {
@@ -207,7 +212,7 @@ ReferenceError:
 getPrice is not defined
 
 -Monitored functions cannot access variables from the outside.
--They must be either be passed as an argument on each call or captured/embedded upon creation.
+-They must either be passed as an argument on each call or captured/embedded upon creation.
 
 ```
 
