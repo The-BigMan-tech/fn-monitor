@@ -594,7 +594,6 @@ you can ask:
 > "Can I inspect the scope around them?"
 > "Can I change their behavior while they run?"
 
-
 ---
 ## Final thoughts
 
