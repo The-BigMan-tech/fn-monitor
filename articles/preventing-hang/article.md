@@ -331,12 +331,12 @@ Error: The monitored function used 58.161ms when only given a budget of 50.000ms
 ```
 
 ---
-## Peeking at the generated code (Only when you need it)
+## Peeking at the generated code (only when you need it)
 
 So far, how the values are captured or embedded has been treated as a black-box.
 
 But if a captured or embedded function ever behaves unexpectedly, you don't have to guess — you can
-read the exact code the interpreter runs by passing an object to the `sourceOut` property under monitor. 
+read the exact code the interpreter runs by passing an object to the `sourceOut` property when calling `monitor`. 
 
 Let us quickly add that to our timeout function and extend our interface:
 
@@ -371,13 +371,15 @@ const timedGetDetails = timeFn(getDetails,50,{
 });
 ```
 
-The package overwrites the `value` property with the generated code. But the variable names in it aren't pretty because they must be unique.
+The package overwrites the `value` property with the generated code. But the variable names in it aren't pretty because they must be unique. 
+
+The package ensures that the `inspector` hook is only fired when executing the actual logic of your functions and not the generated boilerplate.
 
 When we run this, we will be able to see it:
 
 ```typescript
 console.log(generatedCode.value);
-//We skip the call so that it doesnt cut off the generated code from the logs
+//We skip the call so that it doesn't cut off the generated code from the logs
 ```
 
 <details>
