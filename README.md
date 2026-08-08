@@ -38,9 +38,6 @@ The core of the package is the `monitor` function. It accepts a configuration ob
 
 These are snippets that you can quickly copy and paste to see what the package can do but the details on how they work are included under each subheading with few notes or a link.
 
-<details>
-<summary><strong>Click to expand</strong></summary>
-
 ### Using the `inspector` hook to intercept and modify AST nodes during execution.
 
 A deep dive into this is available in this [article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
@@ -361,8 +358,6 @@ console.log(exeHistory);
   }
 ]
 ```
-
-</details>
 
 ### Seeing the result of every awaited promise in a function call
 
