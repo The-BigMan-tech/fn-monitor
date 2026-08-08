@@ -6,6 +6,5 @@ coverage/
 .vscode/
 .env
 
-#These are just to help make the readme file.
-guide-for-readme/
+#This is just to help make the type doc for the readme file.
 rollup.config.ts
