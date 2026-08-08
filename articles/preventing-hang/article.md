@@ -146,11 +146,6 @@ Lag
 Lag
 Lag
 Lag
-Lag
-Lag
-Lag
-Lag
-Lag
 ....
 ```
 
@@ -163,12 +158,6 @@ timedGetPrice()
 ### Output
 
 ```text
-Lag
-Lag
-Lag
-Lag
-Lag
-Lag
 Lag
 Lag
 Lag
@@ -227,8 +216,9 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds,captures?:Record<string,a
             ref:fn,
             captures
         },
-        //...Other hooks
-    })
+        //...Other properties
+    });
+    return monitoredFn
 }
 ```
 
@@ -250,11 +240,6 @@ Lag
 Lag
 Lag
 Lag
-Lag
-Lag
-Lag
-Lag
-Lag
 ....
 ```
 
@@ -272,12 +257,6 @@ When we run it, we expect our timeout to work as usual and halt it.
 ### Output
 
 ```text
-Lag
-Lag
-Lag
-Lag
-Lag
-Lag
 Lag
 Lag
 Lag
@@ -315,8 +294,9 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds,external?:ExternalData):T
             captures:external?.captures
         },
         embed:external?.embed,
-        //...Other hooks
+        //...Other properties
     })
+    return monitoredFn
 }
 ```
 
@@ -346,14 +326,109 @@ Lag
 Lag
 Lag
 Lag
-Lag
-Lag
-Lag
-Lag
-Lag
 Error: The monitored function used 58.161ms when only given a budget of 50.000ms.
 ...
 ```
+
+---
+## Peeking at the generated code (Only when you need it)
+
+So far, how the values are captured or embedded has been treated as a black-box.
+
+But if a captured or embedded function ever behaves unexpectedly, you don't have to guess — you can
+read the exact code the interpreter runs by passing an object to the `sourceOut` property under monitor. 
+
+Let us quickly add that to our timeout function and extend our interface:
+
+```typescript
+interface ExternalData {
+    //...Other properties
+    sourceOut?:{value:string}//Add this to the interface
+};
+
+function timeFn<T extends Fn>(fn:T,budget:milliseconds,external?:ExternalData):T {
+    //...Variable declarations and checkBudget implementation
+    const monitoredFn = monitor({
+       sourceOut:external?.sourceOut,
+       //...Other properties
+    })
+    return monitoredFn
+}
+```
+
+Then in the `timedGetDetails` function:
+
+```ts
+const generatedCode = { value: "" };
+
+const timedGetDetails = timeFn(getDetails,50,{
+    embed:{
+        getPrice:{
+            ref:getPrice
+        }
+    },
+    sourceOut:generatedCode
+});
+```
+
+The package overwrites the `value` property with the generated code. But the variable names in it aren't pretty because they must be unique.
+
+When we run this, we will be able to see it:
+
+```typescript
+console.log(generatedCode.value);
+//We skip the call so that it doesnt cut off the generated code from the logs
+```
+
+<details>
+<summary><strong>Output</strong> (click to expand)</summary>
+
+```typescript
+'use strict'
+
+const getDetails = (() => {
+
+
+    const intermediateFn_generated_1de912009fe409ac0c51bb82c6c939ecad3227fe8d36ede3aae906089a513ade =
+        function getDetails(item) {
+            return {
+                name: item,
+                price: getPrice(item)
+            };
+        };
+    return intermediateFn_generated_1de912009fe409ac0c51bb82c6c939ecad3227fe8d36ede3aae906089a513ade;
+})();
+
+var getPrice;
+getPrice = (() => {
+
+    const getPrice = (() => {
+
+
+        const intermediateFn_generated_8ce88bfc0fe7f0c48f18013aa0d9b67fdf80fbd257ce4526aaa8d0c33afbeb5c =
+            function getPrice(item) {
+                if (!item) {
+                    //Calling this natively in JS will hang the main thread.
+                    //but our monitored function setup should halt it and throw an error.
+
+                    while (true) {
+                        console.log('Lag');
+                    }
+                }
+                //some other implementation
+                return 10;
+            };
+        return intermediateFn_generated_8ce88bfc0fe7f0c48f18013aa0d9b67fdf80fbd257ce4526aaa8d0c33afbeb5c;
+    })();
+    return getPrice;
+})();;
+
+//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
+
+exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68 = getDetails(...generated_090772cf4068973daad3f715eb788d39fe2c02be42efd86de81f0e59198d6237);
+```
+
+</details>
 
 ---
 ## Conclusion
