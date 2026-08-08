@@ -1,9 +1,7 @@
 # @typescript-guy/fn-monitor
 
 <p align="center">
-    <img 
-      src="./logo.svg" 
-      width="120" 
+    <img src="./logo.svg" width="120" 
       alt="fn-monitor logo featuring 'fn' with a cyan terminal cursor"
     />
 </p>
@@ -20,7 +18,7 @@
 `@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
 
-## Installation
+## Installation 📦
 
 ```bash
 npm install @typescript-guy/fn-monitor
@@ -31,14 +29,17 @@ npm install @typescript-guy/fn-monitor
 ---
 
 
-## API Introduction
+## API Introduction ✨
 
 The core of the package is the `monitor` function. It accepts a configuration object of the type,   `MonitorFnSetup` and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
 
-## Quick Examples
+## Quick Examples ⚡
 
 These are snippets that you can quickly copy and paste to see what the package can do but the details on how they work are included under each subheading with few notes or a link.
+
+<details>
+<summary><strong>Click to expand</strong></summary>
 
 ### Using the `inspector` hook to intercept and modify AST nodes during execution.
 
@@ -217,7 +218,7 @@ console.log(exeHistory);
 #### Output
 
 <details>
-<summary>Click to expand</summary>
+<summary><strong>Click to expand</strong></summary>
 
 ```typescript
  [
@@ -546,10 +547,12 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 ....
 ```
 
+</details>
+
 ---
 
 
-## Full API Reference
+## Full API Reference 📚 
 
 ### Core Functions
 
@@ -615,7 +618,7 @@ The rich object that gives inspectors their ability to participate in the interp
 ---
 
 
-## Mechanics
+## Mechanics ⚙️
 
 - **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
   
@@ -630,7 +633,7 @@ The rich object that gives inspectors their ability to participate in the interp
 ---
 
 
-## Important Notes & Limitations
+## Important Notes & Limitations ⚠️
 
 Please keep the following architectural constraints in mind when using this package:
 
@@ -655,11 +658,11 @@ Please keep the following architectural constraints in mind when using this pack
 ---
 
 
-## Questions & Support
+## Questions & Support 💬
 
 All the examples in this README are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
-- 💬 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
+- 👥 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
   
 - 🐛 **Bugs & Features:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
@@ -668,14 +671,14 @@ All the examples in this README are available in [this file](https://github.com/
 ---
 
 
-## Contributing
+## Contributing 🤝
 
 Pull requests are welcome! Before opening one, please read the [maintainer's note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/src/index.ts) at the top of `src/index.ts`. It outlines critical architectural invariants that all contributions must preserve.
 
 ---
 
 
-## Acknowledgements
+## Acknowledgements 🙏
 
 The core execution engine of this project is a modified and extended version of [sval](https://github.com/Siubaak/sval), a JavaScript interpreter written in JavaScript, originally authored by Siubaak. 
 
