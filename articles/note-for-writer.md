@@ -1,8 +1,8 @@
 # Note for Writer
 
-If you are a community member or contributor, you can skip this note and are free to publish your own articles explaining the package to others **without needing to follow these constraints**
+If you are a community member or contributor, you can skip this note and are free to publish your own articles explaining the package to others **without needing to follow these constraints**.
 
-If you are the maintainer of the articles page of this repository and you are sure that you need to write an article to explain something, please read **this before you start writing**
+If you are the maintainer of the articles page of this repository and you are sure that you need to write an article to explain something, please read **this before you start writing**:
 
 ## Avoid these traps
 
@@ -26,7 +26,7 @@ If you are the maintainer of the articles page of this repository and you are su
     with fn-monitor") rather than "here's another API demo."
 
 - **The README is for reference.** It answers "what else can it do?" for readers
-  the articles already pulled in. For reference purposes, the README may contain code that an article already explains but it should explicitly point to the articles for the explanations
+  the articles already pulled in. For reference purposes, the README may contain code that an article already explains, but it should explicitly point to the articles for the explanations.
   
 
 ## When to create a dedicated documentation site
