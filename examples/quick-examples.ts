@@ -2,7 +2,7 @@ import {
     monitor,
     type InspectorGenerator,
     type ExeResult 
-} from "../src/index"
+} from "../src/index.ts"
 
 console.log('\nQUICK EXAMPLE 1');
 
@@ -52,38 +52,56 @@ console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 
 console.log('\nQUICK EXAMPLE 2');
 
+const currentFn:{value?:string} = {value:undefined};
+const interceptedFns = new Set();
+
 const Printed = 'Printed: ';
 
 function print(str:string) {
+    currentFn.value = 'print'
     console.log(Printed,str);
+    currentFn.value = undefined
 }
+
 function printName(name:string) {
+    currentFn.value = 'printName'
     console.log('Hello ',name);
+    currentFn.value = undefined
 }
 
 function sayHello(name:string) {
-    print('Hello world')
+    currentFn.value = 'sayHello';
     printName(name)
+    print('Hello world');
+    currentFn.value = undefined;
 }
 
 const monitoredSayHello = monitor({
     main:{
         ref:sayHello,
         captures:{
-            printName
+            printName,
+            currentFn
         }
     },
     embed:{
         print:{
             ref:print,
             captures:{
-                Printed
+                Printed,
+                currentFn
             }
+        }
+    },
+    onStep:()=>{
+        if (currentFn.value) {
+            interceptedFns.add(currentFn.value)
         }
     }
 })
 
 monitoredSayHello('person');
+console.log('Intercepted functions: ',interceptedFns);
 
 
 console.log('\nQUICK EXAMPLE 3');
@@ -123,7 +141,7 @@ const fetchPrice = monitor({
     },
     inspector:function* (visit):InspectorGenerator {
         const result = yield visit.execute();
-        
+
         visit.is('AwaitExpression',()=>{
             console.log('Awaited promise: ',result);
         })
