@@ -107,7 +107,7 @@ Result:  I CHANGED THE VALUE
 
 ### Capturing values and Embedding Functions
 
-Because monitored function run in an interpreted context, the interpreter needs a way to access external values. That is where capturing and embedding come into play.
+Because monitored functions run in an interpreted context, the interpreter needs a way to access external values. That is where capturing and embedding come into play.
 
 Capturing simply gives the interpreter direct references or values and it works for all data types.
 
@@ -399,6 +399,8 @@ await fetchPrice('flour')
 Awaited promise:  10
 Awaited promise:  100
 ```
+
+> 💡 **Note:** The monitored function will use additional memory if its `inspector` is a generator.
 
 ### Tracking all function calls during the execution of a function including methods
 
