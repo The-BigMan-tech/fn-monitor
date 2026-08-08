@@ -358,6 +358,7 @@ console.log(exeHistory);
   }
 ]
 ```
+</details>
 
 ### Seeing the result of every awaited promise in a function call
 
