@@ -542,8 +542,6 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 ....
 ```
 
-</details>
-
 ---
 
 
