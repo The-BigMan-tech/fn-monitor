@@ -33,266 +33,163 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction
 
-The core of the package is the `monitor` function. It accepts a configuration object (`MonitorFnSetup`) and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
+The core of the package is the `monitor` function. It accepts a configuration object of the type,   `MonitorFnSetup` and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
 
 ## Quick Examples
 
-### Showcase 1: Basic Usage & AST Inspection
-This example demonstrates how to get started, capture external variables, and use the `inspector` hook to intercept and modify AST nodes during execution.
+These are snippets that you can quickly copy and paste to see what the package can do but the details on how they work are included under each subheading with few notes or a link.
+
+### Using the `inspector` hook to intercept and modify AST nodes during execution.
+
+A deep dive into this is available in this [article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
 ```typescript
-import { monitor } from "@typescript-guy/fn-monitor";
-
-console.log('\n\nSHOWCASE 1\n');
+import { monitor } from "@typescript-guy/fn-monitor"
 
 const zero = 0;
 
-const sumUp = (nums:number[])=> {
-    let sum:number = zero;
+const sumUp = (nums: number[]) => {
+    let sum: number = zero;
     for (const num of nums) {
-        sum += num
+        sum += num;
     }
     return sum;
-}
+};
+
 const monitoredSumUp = monitor({
-    main:{
-        ref:sumUp,
+    main: {
+        ref: sumUp,
         captures:{
-             //since 'zero' is used by sumUp and is outside its scope,we capture it into the interpreter's context
             zero
-        } 
+        }
     },
     beforeEachCall:(nums)=>{
-        console.log('Entered the monitored sum up function with the nums: ',nums);
+        console.log('Logging args: ',nums);
     },
-    inspector:(visit) => {
-        visit.is('AssignmentExpression',event => {
-            event.node.operator = "-=";//silently change the operator
-            console.log('assignment result',visit.execute());
-        })
-        visit.is('ReturnStatement',event=>{
+    afterEachCall:(result)=>{
+        if (!(result instanceof Error)) {
+            console.log('Logging result: ',result);
+        }
+    },
+    inspector: (visit) => {
+        visit.is('AssignmentExpression', event => {
+            event.node.operator = "-="; // silently change the operator
+            console.log('intermediate result: ',visit.execute());
+        });
+
+        visit.is('ReturnStatement', event => {
             const result = visit.execute();
             const finalSum = event.scope.variables.search('sum');
 
-            console.log('final sum: ',finalSum,'Is result:',finalSum===result.RES);
+            console.log('final sum: ', finalSum);
             result.RES = 'I CHANGED THE VALUE';
-        })
-    },
-    afterEachCall:(result)=>{
-        console.log('result of the monitored function: ',result);
+        });
     }
 });
 
-const arrToSum = [1,2,3,4,5,6,7,8,9,10];
-
-const result1 = sumUp(arrToSum)
-console.log('Result 1',result1);
-
-const result2 = monitoredSumUp(arrToSum)//the exact same call signature
-console.log('Result 2',result2);
+console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
 
-**Output:**
+#### Output
+
 ```text
-SHOWCASE 1
-
-Result 1 55
-Entered the monitored sum up function with the nums:  [
-  1, 2, 3, 4,  5,
-  6, 7, 8, 9, 10
-]
-assignment result -1
-assignment result -3
-assignment result -6
-assignment result -10
-assignment result -15
-assignment result -21
-assignment result -28
-assignment result -36
-assignment result -45
-assignment result -55
-final sum:  -55 Is result: true
-result of the monitored function:  I CHANGED THE VALUE
-Result 2 I CHANGED THE VALUE
+Logging args:  [ 1, 2, 3, 4, 5 ]
+intermediate result:  -1
+intermediate result:  -3
+intermediate result:  -6
+intermediate result:  -10
+intermediate result:  -15
+final sum:  -15
+Logging result:  I CHANGED THE VALUE
+Result:  I CHANGED THE VALUE
 ```
 
-### Showcase 2: Embedding External Functions
-This example focuses on embedding external functions that are called in the monitored function and how they are different from captured ones.
+### Capturing values and Embedding Functions
 
-It also demonstrates how to extract the generated code used in the interpreter using `sourceOut`. 
+Because monitored function run in an interpreted context, the interpreter needs a way to access external values. That is where capturing and embedding come into play.
 
+Capturing simply gives the interpreter direct references or values and it works for all data types.
+
+Embedding is exclusive to functions and it tells the interpreter to copy its source code into the same context as our monitored function and parse it together. 
+
+The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 2\n');
+const currentFn:{value?:string} = {value:undefined};
+const interceptedFns = new Set();
 
 const Printed = 'Printed: ';
 
 function print(str:string) {
+    currentFn.value = 'print'
     console.log(Printed,str);
+    currentFn.value = undefined
 }
+
 function printName(name:string) {
+    currentFn.value = 'printName'
     console.log('Hello ',name);
+    currentFn.value = undefined
 }
 
 function sayHello(name:string) {
-    print('Hello world')
+    currentFn.value = 'sayHello';
     printName(name)
+    print('Hello world');
+    currentFn.value = undefined;
 }
-
-const generatedCode = {value:''}
 
 const monitoredSayHello = monitor({
     main:{
         ref:sayHello,
         captures:{
-            //since this function is captured directly,it will run in your js engine when called.
-            printName
+            printName,
+            currentFn
         }
     },
-
-    //'embed' is an object that maps a name to a function's reference and captured variables.
-
-    // It tells the interpreter to directly include each of their source code in the same context which allows us to also monitor it when it is called by our main function.But we will not use the inspector hook here to keep it simple.
-
     embed:{
         print:{
             ref:print,
-            //It can also state its own captures.
-            //If we want,we could embed more functions and have the embedded print function call that.But lets keep things simple.
             captures:{
-                Printed
+                Printed,
+                currentFn
             }
         }
     },
-    sourceOut:generatedCode
+    onStep:()=>{
+        if (currentFn.value) {
+            interceptedFns.add(currentFn.value)
+        }
+    }
 })
 
 monitoredSayHello('person');
-console.log('\nGenerated code: \n',generatedCode.value);
-
+console.log('Intercepted functions: ',interceptedFns);
 ```
 
-**Output:**
-```text
-SHOWCASE 2
+In this example, our main function being monitored is `sayHello`. We capture `printName` but we embed `print`. Since `print` relies on the external variable, `Printed`, we capture it into the same context as `print` to avoid a `ReferenceError`.
 
-Printed:  Hello world
+We also capture `currentFn` into both the main function and the embedded one. The reason why it is a value wrapped under a constant rather than a bare string declared as a `let` variable, is because captured values are injected as constants and reassigning them in a monitored function will throw a `TypeError`
+
+#### Output
+
+```text
 Hello  person
-
-Generated code: 
- 'use strict'
-
-const sayHello = (() => {
-
-    const {
-        printName
-    } = exports.generated_0249747779b91d28bdf9a5b9a54b1a4b77419d023e5a8fcb9c0998ceedab858e;
-
-    const intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d =
-        function sayHello(name) {
-            print('Hello world');
-            printName(name);
-        };
-    return intermediateFn_generated_785f6d12aca06b1fbcacb04fbde1d2c3a721a2f45e737bd2c6e8bc9c1f4fff6d;
-})();
-
-var print;
-print = (() => {
-
-    const print = (() => {
-
-        const {
-            Printed
-        } = exports.generated_611bd43541d359f16acc4603b22fa7b216bf07433ea52afa710ed34bea12a6a7;
-
-        const intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee =
-            function print(str) {
-                console.log(Printed, str);
-            };
-        return intermediateFn_generated_bd04ecec97eacf8f3168937c0f0b67b96bc144540b9c918765cf4237dc2bbfee;
-    })();
-    return print;
-})();;
-
-//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
-
-exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68 = sayHello(...generated_090772cf4068973daad3f715eb788d39fe2c02be42efd86de81f0e59198d6237);
-
+Printed:  Hello world
+Intercepted functions:  Set(2) { 'sayHello', 'print' }
 ```
 
-### Showcase 3: Async Execution & The Execution Stack
-This example tests the execution stack (`localExeStack`) to track all called functions during execution, specifically testing on async code to see its full capability.
+### Getting the full execution history of a function call
+
+We first call visit.is('Any',...) to force the interprter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
+
+So what this basically does is that for every executed node, it will query the execution stack for the head element. This is because the latest evaluation is always inserted at the head/left end of the stack. It will then push that result to our custom array
 
 ```typescript
-import { type InspectorGenerator, monitor } from "@typescript-guy/fn-monitor";
-
-console.log('\n\nSHOWCASE 3\n');
-
-const monitoredAsyncSqrt = monitor({
-    main:{
-        ref:async (a: number)=>{
-            const sqrtFn = Math.sqrt;
-            const sqrtResult = sqrtFn(a);
-            const rounded = Number(sqrtResult.toFixed(3))
-            return await Promise.resolve(rounded);
-        }
-    },
-    inspector:function* (visit):InspectorGenerator {
-        visit.is('CallExpression',()=>{
-            const stackLenAtCallee = visit.localExeStack().length;
-            const callees = new Set()
-
-            //by setting perExecution here,we guarantee that the hook will only fire from this particular CallExpr node going forward.
-            
-            //After the interpreter has branched to other nodes while evaluating this one,it will terminate the hook once it has arrived back to this specific CallExpr node.This makes the hook short-lived and focused
-            
-            visit.perExecution = ()=>{
-                const stack = visit.localExeStack();//we dont consume the whole thing into an array to save performance
-
-                //in the stack,the latest values stay at the head/left end and the oldest stay at the tail/right end.The callee node will stay at the tail as each execution inserts a new result to the stack
-                const element = stack.get(-(stackLenAtCallee + 1));
-                const evaluation = element.evaluation;
-                const isFunction = typeof evaluation === 'function';
-
-                if (isFunction && !callees.has(element)) {
-                    console.log('Callee:',evaluation);
-                    callees.add(element);
-                    return
-                }
-            }
-        });
-        
-        const result = yield visit.execute();//we yield outside visit.is queries
-        visit.is('AwaitExpression',()=>{
-            console.log('Awaited result: ',result);
-        })
-    },
-});
-
-console.log('Monitored async sqrt: ',await monitoredAsyncSqrt(2)); 
-```
-
-**Output:**
-```text
-SHOWCASE 3
-
-Callee: [Function: sqrt]
-Callee: [Function: Number]
-Callee: [Function: Promise]
-Awaited result:  1.414
-Monitored async sqrt:  1.414
-```
-
-### Showcase 4: Execution History
-This example will focus on getting the full execution history of a fn call
-
-```typescript
-import { type ExeResult, monitor } from "@typescript-guy/fn-monitor";
-
-console.log('\n\nSHOWCASE 4\n');
+import { monitor,type ExeResult } from "@typescript-guy/fn-monitor";
 
 const exeHistory:ExeResult[] = [];
 
@@ -304,27 +201,25 @@ const fn = monitor({
         }
     },
     inspector:(visit)=>{
-        visit.is('Any',()=>undefined);//force the interprter to allocate all the scopes
-
-        //Wrapping our exe history logic under perExecution is important to 
-        //ensure that we are only querying the stack when the executed results of 
-        // the node have actually been inserted
+        visit.is('Any',()=>undefined);
 
         visit.perExecution = ()=>{
-            const head = visit.localExeStack().get(0)
+            const stack = visit.localExeStack();
+            const head = stack.get(0)
             exeHistory.push(head);
         }
     }
 })
 fn(2,3);
-console.log('Execution history:\n',exeHistory);
+console.log(exeHistory);
 ```
 
-**Output:**
-```text
-SHOWCASE 4
+#### Output
 
-Execution history:
+<details>
+<summary>Click to expand</summary>
+
+```typescript
  [
   {
     evaluation: 2,
@@ -466,39 +361,131 @@ Execution history:
 ]
 ```
 
-### Showcase 5: High-Performance Timeouts
-This example uses the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.
+</details>
+
+### Seeing the result of every awaited promise in a function call
+
+This example is unique because it uses a generator as the inspector rather than a regular function.
+
+This is important because when the interpreter walks through an async node like an `AwaitExpression`, `visit.execute` becomes lazy.
+
+Yielding it is the only way to get the resolved value but we have to yield it directly in the inspector's body and not in any `visit.is` query.
+
+```typescript 
+import { monitor,type InspectorGenerator } from "@typescript-guy/fn-monitor";
+
+const fetchPrice = monitor({
+    main:{
+        //it uses dummy calculations to keep the example simple
+        ref:async (item:string)=>{
+            const price = await Promise.resolve(10)
+            return await Promise.resolve(price**2);
+        }
+    },
+    inspector:function* (visit):InspectorGenerator {
+        const result = yield visit.execute();
+        
+        visit.is('AwaitExpression',()=>{
+            console.log('Awaited promise: ',result);
+        })
+    },
+});
+await fetchPrice('flour')
+```
+
+#### Output
+
+```text
+Awaited promise:  10
+Awaited promise:  100
+```
+
+### Tracking all function calls during the execution of a function including methods
+
+This example is quite advanced, but all it does is to:
+
+- query for all `CallExpression` nodes
+- crawl through the event object to retrieve its scope 
+- store the `search` method of the scope
+- store the callee
+- perform a switch statement on the callee
+    - If the callee is an `Identifier`, it will search for its name in the scope and add it to the `callees` set
+  
+    - Else if it is a `MemberExpression`, which is the node type for method calls, it retrieves the object, search it up in the scope only if its an `Identifier`, then access the method through the callee's property.
+  
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-console.log('\n\nSHOWCASE 5\n');
-
-function calculateAverage(numbers: number[],caller:'monitor' | 'js'): number {
-    if (caller === "monitor") {
-        //simulate an infinite loop.calling this natively in js will hang the main thread.but our monitored function setup should halt it and throw an error.
-        while (true) {}
-    }
-    if (!numbers || numbers.length === 0) {
-        return 0;
-    }
-    let sum = 0;
-    for (let i = 0; i < numbers.length; i++) {
-        sum += numbers[i];
-    }
-    return Number((sum / numbers.length).toFixed(3));
+function getSqrt(num: number) {
+    const squareRoot = Math.sqrt(num);
+    const rounded = Number(squareRoot.toFixed(3));
+    return rounded;
 }
 
-const listForAvg = [20,30,70,88,91,72]
+const callees = new Set();
 
-const avg = calculateAverage(listForAvg,'js');
-console.log('\nThe average is: ',avg);
+const monitoredGetSqrt = monitor({
+    main: {
+        ref: getSqrt
+    },
+    inspector:(visit):undefined => {
+        visit.is('CallExpression', (event) => {
+            const scope = event.scope;
+            const search = scope.variables.search;
 
+            const callee = event.node.callee;
+
+            switch(callee.type) {
+                case "Identifier":
+                    const func = search(callee.name);
+                    callees.add(func)
+                    break
+
+                case "MemberExpression":
+                    const calleeObj = callee.object;     
+
+                    if (calleeObj.type === "Identifier") {
+                        const obj = search(calleeObj.name) as any;
+                        const property = callee.property;
+
+                        if (property.type === "Identifier") {
+                            const func = obj[property.name];
+                            callees.add(func)
+                        }
+                    }
+                    break  
+            }
+        });
+    },
+});
+
+monitoredGetSqrt(2);
+console.log('Callees during execution: ', callees);
+
+```
+
+#### Output
+
+```text
+Callees during execution:  Set(3) { 
+    [Function: sqrt], 
+    [Function: Number], 
+    [Function: toFixed] 
+}
+```
+
+### Using the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.
+
+A deep dive into this is available in this [article](https://dev.to/typescript-guy/stop-a-function-call-from-hanging-the-main-thread-without-using-web-workers-15me)
+
+```typescript
+import { monitor } from "@typescript-guy/fn-monitor";
 
 type milliseconds = number;
+type Fn = (...args:any[])=>void
 
-function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
-    const fnBuildStart = performance.now();
+function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
     const graceTime = 0.5 as milliseconds;
 
     let startTime = 0 as milliseconds;
@@ -506,11 +493,15 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
     let step = 0;
 
     const checkBudget = ()=>{
-        usedTime = (performance.now() - startTime);
-        if (usedTime > (budget + graceTime)) {
+        const currentTime = performance.now();
+        usedTime = (currentTime - startTime);
+
+        const timeIsUp = usedTime > (budget + graceTime)
+        if (timeIsUp) {
             throw new Error(`The monitored function used ${usedTime.toFixed(3)}ms when only given a budget of ${budget.toFixed(3)}ms.`);
         };
     };
+
     const monitoredFn = monitor({
         main:{
             ref:fn,
@@ -520,37 +511,36 @@ function timeFn<T extends (...args:any[])=>void>(fn:T,budget:milliseconds):T {
             usedTime = 0;
             step = 0;
         },
+
         onStep:() => {
             step += 1;
-            // Binary bitmask check: Only execute the inner code once every 1024 steps since perf.now is heavy
             const shouldCheckBudget = (step & 1023) === 0;
             if (shouldCheckBudget) checkBudget();
         },
         afterEachCall:(result)=>{
-            //if the result is an error,we let the interpreter bubble it up
             if (!(result instanceof Error)) {
-                //in case the function doesn't use up to the number of steps required to recheck the budget,we check the budget here to be accurate and safe
                 checkBudget();
             }
         }
     });
-    console.log(`Finished building the fn in ${(performance.now()-fnBuildStart).toFixed(3)}ms`);
     return monitoredFn
 };
-
-const timedAvg = timeFn(calculateAverage,50);
-const avg2 = timedAvg(listForAvg,'monitor');
-
-console.log('\nThe average from the timed fn is: ',avg2);
+function getPrice(item?:string):number {
+    if (!item) {
+        while (true) {
+            //simulate the function hanging forever in an attempt to fetch the price of an undefined item
+        }
+    }
+    return 10
+}
+const timedGetPrice = timeFn(getPrice,50);
+timedGetPrice()
 ```
 
-**Output:**
-```text
-SHOWCASE 5
+#### Output
 
-The average is:  61.833
-Finished building the fn in 1.736ms
-Error: The monitored function used 50.521ms when only given a budget of 50.000ms.
+```text
+Error: The monitored function used 50.745ms when only given a budget of 50.000ms.
 ....
 ```
 
@@ -575,7 +565,7 @@ The main export. Accepts a configuration object and returns a new function with 
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
-> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on async nodes (generators can `yield` the `LAZY_NODE` symbol to await the result).
+> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on async nodes (generators can `yield` the `LAZY_NODE` symbol to defer the result).
 
 #### `Metadata<T>`
 | Property | Type | Description |
@@ -650,9 +640,9 @@ Please keep the following architectural constraints in mind when using this pack
 
 4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-5. **Performance Critical:** The monitor() function incurs overhead from AST parsing and interpreter instantiation. Always call monitor() once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing overhead.)
+5. **Performance Critical:** The monitor() function incurs overhead from AST parsing and interpreter instantiation. Always call monitor() once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.)
 
-6. **Dynamic Imports:** The interpreter intentionally blocks dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
+6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
 7. **Wrapper Constraints:** You cannot double-wrap a function via the `ref` property (a monitored function cannot be passed as `ref` to another `monitor` call). However, you *can* include an already-monitored function within the `captures` object, as it will execute natively.
 
@@ -665,13 +655,20 @@ Please keep the following architectural constraints in mind when using this pack
 
 ## Questions & Support
 
-Want to play around with the package? Check out the [`examples`](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples) folder in the repository. *(Note: If you copy the examples, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
+All the examples in this README are available in one [`file`](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/quick-examples.ts) in the repository. *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
 - 💬 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
   
 - 🐛 **Bugs & Features:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
+
+---
+
+
+## Contributing
+
+Pull requests are welcome! Before opening one, please read the [maintainer's note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/src/index.ts) at the top of `src/index.ts`. It outlines critical architectural invariants that all contributions must preserve.
 
 ---
 
