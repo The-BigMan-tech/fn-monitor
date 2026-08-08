@@ -333,7 +333,7 @@ Error: The monitored function used 58.161ms when only given a budget of 50.000ms
 ---
 ## Peeking at the generated code (only when you need it)
 
-So far, how the values are captured or embedded has been treated as a black-box.
+So far, how the values are captured or embedded has been treated as a black box.
 
 But if a captured or embedded function ever behaves unexpectedly, you don't have to guess — you can
 read the exact code the interpreter runs by passing an object to the `sourceOut` property when calling `monitor`. 
@@ -379,7 +379,7 @@ When we run this, we will be able to see it:
 
 ```typescript
 console.log(generatedCode.value);
-//We skip the call so that it doesn't cut off the generated code from the logs
+//We dont call `timedGetDetails` so that it doesn't cut off the generated code from the logs
 ```
 
 <details>
