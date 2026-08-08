@@ -113,7 +113,7 @@ Capturing simply gives the interpreter direct references or values and it works 
 
 Embedding is exclusive to functions and it tells the interpreter to copy its source code into the same context as our monitored function and parse it together. 
 
-The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function
+The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
@@ -172,7 +172,7 @@ console.log('Intercepted functions: ',interceptedFns);
 
 In this example, our main function being monitored is `sayHello`. We capture `printName` but we embed `print`. Since `print` relies on the external variable, `Printed`, we capture it into the same context as `print` to avoid a `ReferenceError`.
 
-We also capture `currentFn` into both the main function and the embedded one. The reason why it is a value wrapped under a constant rather than a bare string declared as a `let` variable, is because captured values are injected as constants and reassigning them in a monitored function will throw a `TypeError`
+We also capture `currentFn` into both the main function and the embedded one. The reason why it is a value wrapped under a constant rather than a bare string declared as a `let` variable, is because captured values are injected as constants and reassigning them in a monitored function will throw a `TypeError`.
 
 #### Output
 
@@ -184,9 +184,9 @@ Intercepted functions:  Set(2) { 'sayHello', 'print' }
 
 ### Getting the full execution history of a function call
 
-We first call visit.is('Any',...) to force the interprter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
+We first call `visit.is('Any',...)` to force the interpreter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
 
-So what this basically does is that for every executed node, it will query the execution stack for the head element. This is because the latest evaluation is always inserted at the head/left end of the stack. It will then push that result to our custom array
+So what this basically does is that for every executed node, it will query the execution stack for the head element. This is because the latest evaluation is always inserted at the head/left end of the stack. It will then push that result to our custom array.
 
 ```typescript
 import { monitor,type ExeResult } from "@typescript-guy/fn-monitor";
@@ -409,9 +409,9 @@ This example is quite advanced, but all it does is to:
 - store the `search` method of the scope
 - store the callee
 - perform a switch statement on the callee
-    - If the callee is an `Identifier`, it will search for its name in the scope and add it to the `callees` set
+    - If the callee is an `Identifier`, it will search for its name in the scope and add it to the `callees` set.
   
-    - Else if it is a `MemberExpression`, which is the node type for method calls, it retrieves the object, search it up in the scope only if its an `Identifier`, then access the method through the callee's property.
+    - Else if it is a `MemberExpression`, which is the node type for method calls, it retrieves the object, searches it up in the scope only if it's an `Identifier`, then accesses the method through the callee's property.
   
 
 ```typescript
@@ -559,7 +559,7 @@ The main export. Accepts a configuration object and returns a new function with 
 | --- | --- | --- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
 | `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
-| `inspector` | `Inspector` | The main hook fed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below)*. |
+| `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below)*. |
 | `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
 | `sourceOut` | `{ value: string }` | Overwrites the `value` property with the generated code used in the interpreter. |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
@@ -634,13 +634,13 @@ Please keep the following architectural constraints in mind when using this pack
 
 1. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
-2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure js.
+2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
     
 3. **Native Generator Functions (`function*`):** Deep, step-by-step monitoring of native generators is **not supported**. Because calling a native generator immediately returns an Iterator object without executing the body, the interpreter cannot intercept the subsequent `.next()` calls driven by the JS engine.
 
 4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-5. **Performance Critical:** The monitor() function incurs overhead from AST parsing and interpreter instantiation. Always call monitor() once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.)
+5. **Performance Critical:** The `monitor()` function incurs overhead from AST parsing and interpreter instantiation. Always call `monitor()` once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.)
 
 6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
@@ -655,7 +655,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 ## Questions & Support
 
-All the examples in this README are available in one [`file`](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/quick-examples.ts) in the repository. *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
+All the examples in this README are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
 - 💬 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
   
@@ -675,6 +675,6 @@ Pull requests are welcome! Before opening one, please read the [maintainer's not
 
 ## Acknowledgements
 
-The core execution engine of this project is a modified and extended version of [`sval`](https://github.com/Siubaak/sval), a JavaScript interpreter written in JavaScript, originally authored by Siubaak. 
+The core execution engine of this project is a modified and extended version of [sval](https://github.com/Siubaak/sval), a JavaScript interpreter written in JavaScript, originally authored by Siubaak. 
 
 *Please note: This project is an independent extension and is not affiliated with, endorsed by, or sponsored by the original `sval` project or its authors. `sval` is licensed under the MIT License.*
