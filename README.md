@@ -24,7 +24,7 @@
 npm install @typescript-guy/fn-monitor
 ```
 
-> 📌 **If you are integrating this package for production:** Please review the [Important Notes & Limitations](#important-notes--limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
+> 📌 **If you are integrating this package for production:** Please review the [Important Notes & Limitations](#important-notes--limitations-️) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
 
 ---
 
