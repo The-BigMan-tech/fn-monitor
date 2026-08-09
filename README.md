@@ -13,6 +13,9 @@
     <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md">
         <img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor" alt="license" />
     </a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml">
+        <img src="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml/badge.svg" alt="CI" />
+    </a>
 </p>
 
 `@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
