@@ -43,7 +43,7 @@
         "test:interpreter": "vitest run ./tests/interpreter",
         "test:modifications": "vitest run ./tests/modifications",
         "publish:public": "npm publish --registry=https://registry.npmjs.org/ --access public",
-        "write-changelog":"tsx ./scripts/write-changelog.ts"
+        "write-changelog": "tsx ./scripts/write-changelog.ts"
     },
     "dependencies": {
         "@types/estree": "^1.0.8",
@@ -58,14 +58,16 @@
         "@swc/core": "^1.11.24",
         "@types/js-beautify": "^1.14.3",
         "@types/node": "^22.15.3",
+        "@typescript/typescript6": "^6.0.2",
         "@vitest/coverage-v8": "^3.1.2",
         "changelogen": "^0.6.2",
         "happy-dom": "^20.0.11",
         "rollup": "^4.62.2",
         "rollup-plugin-dts": "^6.4.1",
         "tsx": "^4.23.1",
+        "typescript": "^7.0.2",
+        "unplugin-dts": "^1.0.3",
         "vite": "^6.3.4",
-        "vite-plugin-dts": "^4.5.3",
         "vitest": "^3.1.2"
     }
 }

@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 import { builtinModules } from 'node:module'
 
 import { readFileSync } from 'node:fs';
