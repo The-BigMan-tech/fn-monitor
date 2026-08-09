@@ -210,7 +210,8 @@ export {
     NOT_ALLOCATED,
     LAZY_NODE,
 
-    //the reason why i didnt export these as just types is because of possible instance-of checks 
+    //the reason why i didnt export these as just types is because the caller may perform runtime class checks
+
     //Default Event
     LangEvent,
 

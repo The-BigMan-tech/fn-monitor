@@ -639,8 +639,16 @@ Please keep the following architectural constraints in mind when using this pack
 1. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
 2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
-    
-3. **Native Generator Functions (`function*`):** Deep, step-by-step monitoring of native generators is **not supported**. Because calling a native generator immediately returns an Iterator object without executing the body, the interpreter cannot intercept the subsequent `.next()` calls driven by the JS engine.
+   
+3. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
+   
+    >💡 **Tip:** There is a workaround. 
+    >
+    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [generator-workarounds.ts](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/generator-workarounds.ts) example for a quick demonstration.
+    > 
+    > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
+    >
+    > Support for the `YieldExprEvent` class will be added in the v1.3.0 release.
 
 4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
@@ -648,7 +656,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
-7. **Wrapper Constraints:** You cannot double-wrap a function via the `ref` property (a monitored function cannot be passed as `ref` to another `monitor` call). However, you *can* include an already-monitored function within the `captures` object, as it will execute natively.
+7. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed`. However, you *can* include an already-monitored function in any of their `captures` objects, as it will execute natively.
 
 8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. Debug functions in their unmonitored state first. (Note: The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws).
 
