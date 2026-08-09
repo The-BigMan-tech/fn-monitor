@@ -644,7 +644,7 @@ Please keep the following architectural constraints in mind when using this pack
    
     >💡 **Tip:** There is a workaround. 
     >
-    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [generator-workarounds.ts](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/generator-workaround.ts) example for a quick demonstration.
+    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/generator-workaround.ts) example for a quick demonstration.
     > 
     > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
     >
