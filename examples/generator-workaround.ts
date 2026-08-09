@@ -23,12 +23,14 @@ const monitoredFn = monitor({
         }
     },
     inspector:(visit):undefined =>{
-        visit.is('YieldExpression',(event)=>{ 
-            const yieldedVar = event.node.argument;
-            const search = event.scope.variables.search;
+        visit.is('Any',(event)=>{
+            if (event.node.type === "YieldExpression") {
+                const yieldedVar = event.node.argument;
+                const search = event.scope.variables.search;
 
-            if (yieldedVar?.type === "Identifier") {
-                console.log('yielded: ',search(yieldedVar.name));
+                if (yieldedVar?.type === "Identifier") {
+                    console.log('yielded: ',search(yieldedVar.name));
+                }
             }
         })
     }
