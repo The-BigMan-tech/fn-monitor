@@ -4,6 +4,10 @@ If you are a community member or contributor, you can skip this note and are fre
 
 If you are the maintainer of the articles page of this repository and you are sure that you need to write an article to explain something, please read **this before you start writing**:
 
+## Dev.to markdown rendering
+
+The use of the `{% details ...%}` syntax instead of the native details tag for markdown is because of dev.to's unique rendering
+
 ## Avoid these traps
 
 1. **Do not summarize the README into an article.**
