@@ -374,7 +374,7 @@ const timedGetDetails = timeFn(getDetails,50,{
 
 The package overwrites the `value` property with the generated code. But the variable names in it aren't pretty because they must be unique. 
 
-The package ensures that the `inspector` hook is only fired when executing the actual logic of your functions and not the generated boilerplate.
+The package ensures that the `inspector` and `onStep` hooks are only fired when executing the actual logic of your functions and not the generated boilerplate.
 
 When we run this, we will be able to see it:
 
