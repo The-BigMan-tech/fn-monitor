@@ -511,7 +511,7 @@ One thing worth understanding early is that `visit.is(...)` is not a global pers
 From the README:
 
 > `visit.is(query, callback)` evaluates the query against the current node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.
-
+>
 > This does not register a persistent hook for future nodes. It is an eager, single-use check against the node currently being evaluated.
 
 That design choice is intentional.
@@ -572,7 +572,7 @@ The package is not a one-size-fits-all solution and thus, it has its own constra
 - the interpreter supports JavaScript syntax up to **ES2024**
 - `monitor()` has overhead, so call it once outside hot loops
 - you cannot use dynamic imports inside monitored functions 
-- native generator functions (`function*`) cannot be monitored because they run outside the interpreter context
+- There is a specific nuance when it comes to monitoring generators, which is detailed in the [Important Notes & Limitations](https://github.com/The-BigMan-tech/fn-monitor#important-notes--limitations-%EF%B8%8F) section of the README
 - you cannot wrap a monitored function in another
 - errors inside monitored functions will not map directly to original source locations in your editor
   

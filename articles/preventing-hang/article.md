@@ -15,11 +15,12 @@ Before we start this article, let us get a quick overview of the package:
 - It allows you to plug in hooks at any part of the function's lifecycle to observe data and mutate nodes at runtime while remaining on the same thread
 
 - Its main export is a function called `monitor` which takes in a configuration object. It returns a brand new function that has an identical call signature to the original. The config object includes:
+  
    - A function reference — the function you want to monitor
    - A captures object — to include any external variables the function will use
    - Various hooks for different lifecycle events
 
-- It works for both synchronous and asynchronous functions. And although it can accept generators, it cannot monitor them.
+- It works for both synchronous and asynchronous functions. There is a specific nuance to how it handles generators, which is detailed in the [Important Notes & Limitations](https://github.com/The-BigMan-tech/fn-monitor#important-notes--limitations-%EF%B8%8F) section of the README
 
 If you ever want to dive deeper into its fundamentals later, you can read the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
@@ -382,8 +383,8 @@ console.log(generatedCode.value);
 //We dont call `timedGetDetails` so that it doesn't cut off the generated code from the logs
 ```
 
-<details>
-<summary><strong>Output</strong> (click to expand)</summary>
+<strong>Output</strong>
+{% details Click to expand %}
 
 ```typescript
 'use strict'
@@ -430,7 +431,7 @@ getPrice = (() => {
 exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68 = getDetails(...generated_090772cf4068973daad3f715eb788d39fe2c02be42efd86de81f0e59198d6237);
 ```
 
-</details>
+{% enddetails %}
 
 ---
 ## Conclusion
