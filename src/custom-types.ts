@@ -18,7 +18,7 @@ import type {
     BinaryExpression, CallExpression, AssignmentExpression, 
     UpdateExpression, LogicalExpression, MemberExpression,AwaitExpression,FunctionExpression,
     ArrowFunctionExpression,ConditionalExpression,NewExpression,
-    ExpressionStatement,ArrayExpression,ObjectExpression,TemplateLiteral,SequenceExpression,UnaryExpression
+    ExpressionStatement,ArrayExpression,ObjectExpression,TemplateLiteral,SequenceExpression,UnaryExpression,YieldExpression
 } from "estree";
 
 import { QList,ReadonlyQList } from "./q-list.ts";
@@ -76,6 +76,7 @@ export type Query =
     | TemplateLiteral['type']
     | SequenceExpression['type']
     | UnaryExpression['type']
+    | YieldExpression['type']
     | 'Any'; // The fallback / default
 
 /**
@@ -117,6 +118,7 @@ export type EventMap = (
     Record<TemplateLiteral['type'],TemplateLiteralEvent> &
     Record<SequenceExpression['type'],SequenceExprEvent> &
     Record<UnaryExpression['type'],UnaryExprEvent> &
+    Record<YieldExpression['type'],YieldExprEvent> &
     Record<'Any', LangEvent>
 );
 
@@ -266,6 +268,9 @@ export class ArrayExprEvent extends LangEvent<ArrayExpression> {
 }
 
 export class ObjectExprEvent extends LangEvent<ObjectExpression> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+export class YieldExprEvent extends LangEvent<YieldExpression> {
     constructor(interpreter: SvalPlus) { super(interpreter); }
 }
 
@@ -421,6 +426,10 @@ export function createEvent<T extends Query>(query:Query,interpreter:SvalPlus):E
         }
         case 'LogicalExpression': {
             event = new LogicalExprEvent(interpreter);
+            break;
+        }
+        case 'YieldExpression':{
+            event = new YieldExprEvent(interpreter);
             break;
         }
         case 'MemberExpression': {
