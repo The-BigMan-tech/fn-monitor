@@ -1,7 +1,7 @@
 import { monitor } from "../src/index.ts"
 
 
-//Assuming that we have a generator that we would like to monitor
+// Let us define the generator that we would like to monitor
 
 function* getResult() {
     for (let i=0;i<10;i++) {
@@ -9,7 +9,14 @@ function* getResult() {
     }
 }
 
-//We can monitor the generator's internals by having a monitored sync or async function consume it while also having it embedded
+/** 
+    If a monitored sync or async function fully consumes an embedded generator 
+    (rather than captured), the generator's internals — including YieldExpression 
+    nodes — become visible to the inspector.   
+    
+    Note that the consuming function itself cannot be a generator; if it is, the
+    native JS engine reclaims control of the iteration and the inspector goes blind.
+*/
 
 const monitoredFn = monitor({
     main:{
@@ -23,9 +30,13 @@ const monitoredFn = monitor({
         }
     },
     inspector:(visit):undefined =>{
-        //This example uses `visit.is('Any',...) to prevent typescript complaints when pasting it with the v1.2.x series.
-        //If you are using v1.3.0, please prefer to use `visit.is('YieldExpression',...)` as it saves more memory
+        /** 
+            This example uses `visit.is('Any',...) to prevent typescript complaints when 
+            pasting it with version 1.2.x of the package.
 
+            If you are using v1.3.0, please prefer to use `visit.is('YieldExpression',...)` 
+            as it saves more memory
+        */
         visit.is('Any',(event)=>{
             if (event.node.type === "YieldExpression") {
                 const yieldedVar = event.node.argument;
