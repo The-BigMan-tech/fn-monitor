@@ -23,6 +23,9 @@ const monitoredFn = monitor({
         }
     },
     inspector:(visit):undefined =>{
+        //This example uses visit.is 'Any' to prevent type errors when pasting it to the v1.2.x series.
+        //If you are using v1.3.0, please prefer to use visit.is('YieldExpression',...) as it saves more memory
+        
         visit.is('Any',(event)=>{
             if (event.node.type === "YieldExpression") {
                 const yieldedVar = event.node.argument;
