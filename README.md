@@ -32,7 +32,20 @@
 
 `fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
+## Table of Contents 📑
 
+- [Installation](#installation-)
+- [API Introduction](#api-introduction-)
+- [Quick Examples](#quick-examples-)
+- [Full API Reference](#full-api-reference-)
+- [Mechanics](#mechanics-️)
+- [Important Notes & Limitations](#important-notes--limitations-️)
+- [Questions & Support](#questions--support-)
+- [Contributing](#contributing-)
+- [Brand & Forking Guidelines](#brand--forking-guidelines-️)
+- [Inspiration](#inspiration-)
+- [Acknowledgements](#acknowledgements-)
+  
 ## Installation 📦
 
 ```bash
