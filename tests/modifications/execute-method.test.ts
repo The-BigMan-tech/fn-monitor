@@ -156,7 +156,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(outsideVar.value).toBe(10);
     })
 
-    it('[Async-only] should ensure that visit.execute returns LAZY_NODE for async nodes',async ()=>{
+    it('[Async-only] should ensure that visit.execute returns LAZY_NODE for await expressions',async ()=>{
         let hitAwaitNode = false;
 
         const fn = monitor({
