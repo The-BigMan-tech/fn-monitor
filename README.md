@@ -641,7 +641,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | --- | --- |
 | `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed child node. It is short-lived and discarded after evaluating the current node and its children. |
-| `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
+| `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
 
 #### `ExeResult`

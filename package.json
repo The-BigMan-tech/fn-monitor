@@ -36,7 +36,10 @@
         "runtime",
         "sandbox",
         "hooks",
-        "function-inspection"
+        "function-inspection",
+        "runtime-analysis",
+        "timeout",
+        "instrumentation"
     ],
     "scripts": {
         "build": "vite build",
