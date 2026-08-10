@@ -3,7 +3,7 @@ import { monitor } from "../src/index.ts"
 
 // Let us define the generator that we would like to monitor
 
-function* getResult() {
+function* yieldResult() {
     for (let i=0;i<10;i++) {
         yield i
     }
@@ -21,12 +21,12 @@ function* getResult() {
 const monitoredFn = monitor({
     main:{
         ref:()=> {
-            return [...getResult()]
+            return [...yieldResult()]
         }
     },
     embed:{
-        getResult:{
-            ref:getResult
+        yieldResult:{
+            ref:yieldResult
         }
     },
     inspector:(visit):undefined =>{
