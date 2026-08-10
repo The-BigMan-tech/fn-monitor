@@ -30,7 +30,7 @@
     </a>
 </p>
 
-`fn-monitor` is a deep instrumentation layer built over the sval JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behaviour of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
+`fn-monitor` is a deep instrumentation layer built over the `sval` JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behaviour of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
 ## Table of Contents 📑
 
@@ -52,7 +52,7 @@
 npm install @typescript-guy/fn-monitor
 ```
 
-> 📌 **If you are integrating this package for production:** Please review the [Important Notes & Limitations](#important-notes--limitations-️) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
+> 📌 **If you are integrating this package for production:** Please review the [Important Notes and Limitations](#important-notes--limitations-️) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
 
 ---
 
