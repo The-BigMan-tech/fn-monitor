@@ -1,11 +1,25 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import type {Node as EsNode} from "estree";
-import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED } from "./custom-types.ts";
+import {sha256} from "js-sha256"
+import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED, NodeHandler, EvaluatorType } from "./custom-types.ts";
 
 const generatorPrint = '[object Generator]';
+
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === generatorPrint
+}
+
+export function isLazyNode(interpreter:SvalPlus):boolean {
+    return interpreter.reusables.currentEvaluator === "lazy";
+}
+
+
+export function getHandler(evaluateOps:Record<string,any>,nodeType:string):NodeHandler | undefined {
+    return evaluateOps[nodeType];
+}
+export function getSHA256Key(str:string):string {
+    return 'generated_' + sha256.create().update(str).hex();
 }
 
 
@@ -13,7 +27,7 @@ function inUserCode(scope:Scope) {
     const interpreter:SvalPlus = scope.interpreter;
     return (
         (interpreter.stage === 'MONITORING') &&
-        scope.scopeDepth >= 2//its only the generated code thats at depth 1 and 0.
+        scope.scopeDepth >= 2//its only the boilerplate in the generated code that is at depth 0 and 1.
     );
 }
 export function callOnStep(scope:Scope) {
@@ -66,24 +80,28 @@ export function callPerExe(interpreter:SvalPlus) {
             interpreter.reusables.shared.perExe = null;
         }
     }
-}
-//we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
-export function callInspector(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+};
+
+//This function uses positional args because its called in the hot path of the whole interpreter
+//In this function, we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
+
+export function callInspector(evaluatorType:EvaluatorType, acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
-    updateReusables(acornNode,currentScope,handler)
+    updateReusables(evaluatorType,acornNode,currentScope,handler);
     return interpreter.inspector!(interpreter.visit);//by the time the callInspector function is called,this is guaranteed to not be null because useModifiedEvaluator checks for the inspector's type
 }
 
 
-function updateReusables(acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
+function updateReusables(evaluatorType:EvaluatorType, acornNode:AcornNode,currentScope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = currentScope.interpreter!;
     interpreter.reusables.node = acornNode as EsNode;
     interpreter.reusables.currentScope = currentScope;
     interpreter.reusables.handler = handler;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
-    //we dont touch the exe stack here to retain it across a chain of evaluations originating from the root of another evaluation.Its lifecycle's end is handled in another function
-    //we dont touch the evalstack pointer here.
+    interpreter.reusables.currentEvaluator = evaluatorType;
+    //we dont touch the exe stack here because its usage and end of lifecycle are handled elsewhere
+    //we dont touch the evalstack pointer here because its handled in stackHandler
 }
 function clearStack(interpreter:SvalPlus) {
     interpreter.reusables.node = null;
@@ -91,6 +109,7 @@ function clearStack(interpreter:SvalPlus) {
     interpreter.reusables.handler = null;
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.currentEvent = NOT_ALLOCATED;
+    interpreter.reusables.currentEvaluator = null;
     interpreter.reusables.shared.evalStack.value = 0;
     interpreter.reusables.shared.exeStack.clear();
     //we dont touch perExe here because its lifecycle's end is handled in another function
@@ -116,6 +135,7 @@ export function copyReusables<
         handler:reusables.handler,
         result:reusables.result,
         currentEvent:reusables.currentEvent,
+        currentEvaluator:reusables.currentEvaluator,
         shared:{
             evalStack:reusables.shared.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
             exeStack:reusables.shared.exeStack,
@@ -130,6 +150,7 @@ export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables) 
     interpreter.reusables.handler = srcReusables.handler;
     interpreter.reusables.result = srcReusables.result;
     interpreter.reusables.currentEvent = srcReusables.currentEvent;
+    interpreter.reusables.currentEvaluator = srcReusables.currentEvaluator;
     interpreter.reusables.shared.evalStack = srcReusables.shared.evalStack;
     interpreter.reusables.shared.exeStack = srcReusables.shared.exeStack;
     interpreter.reusables.shared.readonlyExeStack = srcReusables.shared.readonlyExeStack;
@@ -140,8 +161,11 @@ export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables) 
 export function executedManually(result:any):boolean {
     return (result !== UNASSIGNED)
 }
-export function pushedManually(result:any):boolean {
-    return executedManually(result) && !(isGenerator(result));//the visit.execute method doesnt and cant push the result if it is a generator
+export function pushedManually(interpreter:SvalPlus):boolean {
+    return (
+        !(isLazyNode(interpreter)) &&//the visit.execute method couldn't have pushed any result if it is lazy
+        executedManually(interpreter.reusables.result) 
+    )
 }
 export function pushResult(interpreter:SvalPlus,final:any) {
     const currentEvent = interpreter.reusables.currentEvent;

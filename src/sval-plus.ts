@@ -6,7 +6,6 @@ import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
 
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache'
-import {sha256} from "js-sha256"
 
 import { 
     Inspector,
@@ -25,7 +24,7 @@ import {
     VisitExecutionError,
 } from './custom-types.ts'
 
-import { isGenerator, pushResult } from './lifecycle-functions.ts';
+import { executedManually, getSHA256Key, isLazyNode, pushResult } from './lifecycle-functions.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
@@ -99,18 +98,22 @@ export class Visit implements VisitContract {
             this.#interpreter.reusables.currentEvent = event;
         }
     };
+
     public execute = ()=>{
         const handler = this.#interpreter.reusables.handler;
+
         if (handler !== null) {
-            if (this.#interpreter.reusables.result !== UNASSIGNED) {
+            if (executedManually(this.#interpreter.reusables.result)) {
                 throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
             };
+            //the node cannot be null if the handler is not null. If it is, it will rightfully fail with a loud type error
 
             this.#interpreter.reusables.result = handler(
                 this.#interpreter.reusables.node!,
                 this.#interpreter.reusables.currentScope!
             );
-            if (isGenerator(this.#interpreter.reusables.result)) {
+
+            if (isLazyNode(this.#interpreter)) {
                 return LAZY_NODE;
             }else {
                 pushResult(this.#interpreter,this.#interpreter.reusables.result);
@@ -130,10 +133,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     //This is safe because each instance uses this as a readonly view. They are still isolated
 
     public static commonLabels = {
-        resultExport:SvalPlus.sha256Key('result'),
-        args:SvalPlus.sha256Key('args'),
+        resultExport:getSHA256Key('result'),
+        args:getSHA256Key('args'),
         captures:(fnName:string)=>{
-            return SvalPlus.sha256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
+            return getSHA256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
         }
     }
 
@@ -170,6 +173,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         node:null,
         result:UNASSIGNED,
         handler:null,
+        currentEvaluator:null,
         shared:{
             evalStack:{value:0},
             exeStack:new QList(),
@@ -209,14 +213,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.reusables.shared.readonlyExeStack.swapSrc(this.reusables.shared.exeStack);
     };
 
-    private static sha256Key(str:string):string {
-        return 'generated_' + sha256.create().update(str).hex();
-    }
-    
-
     public getFnSrc<T extends boolean>(fn:Fn,capturesLabel:string,isMainFn:T):FnSrc<T>  {
         const fnString = fn.toString();
-        const hash = SvalPlus.sha256Key(fnString);
+        const hash = getSHA256Key(fnString);
 
         const intermediateFnName:string = 'intermediateFn_' + hash;
         const intermediateFnCode:string = `\nconst ${intermediateFnName} = \n${fnString};`
@@ -281,7 +280,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         };
         let ast:FnAst;
 
-        const fnCodeHash = SvalPlus.sha256Key(fnSrc.fnCode);
+        const fnCodeHash = getSHA256Key(fnSrc.fnCode);
         const cachedAst = SvalPlus.fnAstCache.get(fnCodeHash);
 
         if (cachedAst) {

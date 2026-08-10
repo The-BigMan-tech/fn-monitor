@@ -213,7 +213,7 @@ export interface ExeResult {
 }
 
 export type NodeHandler = (node:AcornNode | EsNode,scope:Scope<SvalPlus>)=>any
-
+export type EvaluatorType = 'eager' | 'lazy';
 /**
  * This type describes an internal object 
  * 
@@ -228,6 +228,7 @@ export interface Reusables {
     handler:null | NodeHandler,
     result:any | typeof UNASSIGNED,
     currentEvent:LangEvent | typeof NOT_ALLOCATED,
+    currentEvaluator:EvaluatorType | null,
     shared:{
         exeStack:QList<ExeResult>,
         readonlyExeStack:ReadonlyQList<ExeResult>,

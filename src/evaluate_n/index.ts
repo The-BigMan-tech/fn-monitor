@@ -12,7 +12,7 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { NodeHandler, SvalPlus } from '../custom-types.ts'
+import { SvalPlus } from '../custom-types.ts'
 import { 
     callInspector, 
     copyReusables, 
@@ -23,10 +23,11 @@ import {
     pushResult, 
     executedManually, 
     pushedManually, 
-    callOnStep
+    callOnStep,
+    getHandler
 } from '../lifecycle-functions.ts'
 
-let evaluateOps: any
+let evaluateOps:Record<string,any>;
 
 //Leave the frequent access of interpreter.reusables.result the way it is.
 //Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
@@ -49,7 +50,7 @@ export default function evaluate(node: Node, scope: Scope) {
         )
     };
 
-    const handler:NodeHandler | undefined  = evaluateOps[node.type];
+    const handler = getHandler(evaluateOps,node.type);
     if (!handler) {
         throw new Error(`${node.type} isn't implemented`);
     }
@@ -66,7 +67,7 @@ export default function evaluate(node: Node, scope: Scope) {
 
     try {
         stackHandler.start(interpreter);
-        const response = callInspector(node, scope, handler);//call this before the node is executed
+        const response = callInspector('eager',node, scope, handler);//call this before the node is executed
         
         const genResult = isGenerator(response) ? response.next() : null;  
         const finished = (genResult === null) ? true : genResult.done
@@ -76,7 +77,9 @@ export default function evaluate(node: Node, scope: Scope) {
                 ?interpreter.reusables.result
                 :handler(node,scope)
 
-            if (!pushedManually(interpreter.reusables.result)) {//this check must pass the value of the result directly and not the 'final' variable
+            //this check must pass the value of the result directly and not the 'final' variable
+
+            if (!pushedManually(interpreter)) {
                 pushResult(interpreter,final);
             }
 
@@ -89,13 +92,13 @@ export default function evaluate(node: Node, scope: Scope) {
             }
 
             const final = interpreter.reusables.result;
-            if (!pushedManually(interpreter.reusables.result)) {
+            if (!pushedManually(interpreter)) {
                 pushResult(interpreter,final);
-            };
+            }
 
             const yieldedValue = genResult!.value;
             if (yieldedValue !== final) {
-                throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield the result of the current node but saw: ${String(yieldedValue)} instead of: ${String(final)}.`))
+                throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield the result of the current node but saw: ${String(yieldedValue)} instead of: ${String(final)}. Node Type: ${node.type}`))
             };
 
             const isDone = response!.next(final).done;//since this evaluator will only be used for sync code,we just resume the generator with the result directly.

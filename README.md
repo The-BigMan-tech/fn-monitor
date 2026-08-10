@@ -419,7 +419,7 @@ console.log(exeHistory);
 
 This example is unique because it uses a generator as the inspector rather than a regular function.
 
-This is important because when the interpreter walks through an async node like an `AwaitExpression`, `visit.execute` becomes lazy.
+This is important because when the interpreter walks through an `AwaitExpression` node, `visit.execute` becomes lazy.
 
 Yielding it is the only way to get the resolved value but we have to yield it directly in the inspector's body and not in any `visit.is` query.
 
@@ -623,7 +623,7 @@ The main export. Accepts a configuration object and returns a new function with 
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
-> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on async nodes (generators can `yield` the `LAZY_NODE` symbol to defer the result).
+> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on lazy nodes (generators can `yield` the `LAZY_NODE` symbol to defer the result).
 
 #### `Metadata<T>`
 | Property | Type | Description |
@@ -641,7 +641,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | --- | --- |
 | `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed child node. It is short-lived and discarded after evaluating the current node and its children. |
-| `execute()` | Manually executes the current node and returns the result. For async nodes (like `await`), it defers execution and returns the `LAZY_NODE` symbol. |
+| `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
 
 #### `ExeResult`
@@ -721,7 +721,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 - 👥 **Questions & Feature Requests:** You can read my [articles](https://dev.to/typescript-guy) or open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
   
-- 🐛 **Bugs:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
+- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. If you encounter unexpected behaviour in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 

@@ -14,7 +14,6 @@ import * as program from './program.ts'
 
 import { 
     LAZY_NODE, 
-    NodeHandler, 
     SvalPlus 
 } from '../custom-types.ts';
 
@@ -27,9 +26,11 @@ import {
     isGenerator,pushedManually,pushResult,
     overwriteReusables,
     useModifiedEvaluator,
-    callOnStep, // Use the Generator version
+    callOnStep,
+    getHandler, // Use the Generator version
 } from '../lifecycle-functions.ts'
 
+let evaluateOps:Record<string,any>;
 
 function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
     const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
@@ -54,8 +55,6 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
 //Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
 //'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
 
-let evaluateOps: any
-
 export default function* evaluate(node: Node, scope: Scope) {
     if (!node) {
         return;
@@ -73,9 +72,11 @@ export default function* evaluate(node: Node, scope: Scope) {
         )
     };
 
-    const handler:NodeHandler | undefined = evaluateOps[node.type];
-    if (!handler) throw new Error(`${node.type} isn't implemented`);
-    
+    const handler = getHandler(evaluateOps,node.type);
+    if (!handler) {
+        throw new Error(`${node.type} isn't implemented`);
+    }
+
     callOnStep(scope);
 
     if (!useModifiedEvaluator(scope)) {
@@ -88,7 +89,7 @@ export default function* evaluate(node: Node, scope: Scope) {
 
     try {
         stackHandler.start(interpreter)
-        const response = callInspector(node, scope, handler);
+        const response = callInspector('lazy', node, scope, handler);
 
         const genResult = isGenerator(response) ? response.next() : null;  
         const finished = (genResult === null) ? true : genResult.done
@@ -104,7 +105,7 @@ export default function* evaluate(node: Node, scope: Scope) {
                     interpreter
                 );
 
-            if (!pushedManually(interpreter.reusables.result)) {
+            if (!pushedManually(interpreter)) {
                 pushResult(interpreter,final);
             }
         
@@ -120,13 +121,13 @@ export default function* evaluate(node: Node, scope: Scope) {
                 interpreter.reusables.result,
                 interpreter
             )
-            if (!pushedManually(interpreter.reusables.result)) {
+            if (!pushedManually(interpreter)) {
                 pushResult(interpreter,final);
             };
 
             const yieldedValue = genResult!.value;
             if (yieldedValue !== LAZY_NODE) {
-                throw new Error(ansis.red(`[Generator Evaluator] When the interpreter visit a LAZY_NODE,generator-based inspectors can only yield that lazy node but saw ${String(yieldedValue)}.`))
+                throw new Error(ansis.red(`[Generator Evaluator] When the interpreter visits a LAZY_NODE, generator-based inspectors can only yield that lazy node but saw ${String(yieldedValue)}. Node Type: ${node.type}`))
             };
 
             const isDone = response!.next(final).done;

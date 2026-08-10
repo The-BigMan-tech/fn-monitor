@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { monitor,LAZY_NODE,InspectorGenerator,EsNode } from '../../src/index'; 
 import { NOT_ALLOCATED, VisitExecutionError } from '../../src/custom-types';
+import { isGenerator } from '../../src/lifecycle-functions';
 
 
 describe('Visit.execute() Method Behaviour',()=>{
@@ -156,7 +157,7 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(outsideVar.value).toBe(10);
     })
 
-    it('[Async-only] should ensure that visit.execute returns LAZY_NODE for await expressions',async ()=>{
+    it('[Async-only] should ensure that visit.execute returns LAZY_NODE for AwaitExpressions',async ()=>{
         let hitAwaitNode = false;
 
         const fn = monitor({
@@ -179,7 +180,108 @@ describe('Visit.execute() Method Behaviour',()=>{
         expect(hitAwaitNode).toBe(true)
     })
 
-    it('[Async-only] should ensure that yielding LAZY_NODE resumes the generator back with the resolved value',async ()=>{
+    it('[Async-only] should ensure that visit.execute returns LAZY_NODE for for ForOfStatement (for await...of)',async ()=>{  
+        let hitForAwaitNode = false;
+
+        async function* asyncGen() { 
+            yield 1; 
+            yield 2; 
+        }
+
+        const monitoredFn = monitor({
+            main: { 
+                ref:async () => { 
+                    for await (const x of asyncGen()) { 
+                        //
+                    }
+                } 
+            },
+            embed:{
+                asyncGen:{
+                    ref:asyncGen
+                }
+            },
+            beforeEachCall:()=>{
+                hitForAwaitNode = false;
+            },
+            inspector:(visit):undefined =>{
+                visit.is('ForOfStatement',()=> {
+                    expect(visit.execute()).toBe(LAZY_NODE);
+                    hitForAwaitNode = true;
+                })
+            }
+        })
+        await monitoredFn();
+        expect(hitForAwaitNode).toBe(true)
+    })
+
+    it('[Sync] should ensure that visit.execute returns LAZY_NODE for YieldExpressions',()=>{  
+        let hitYieldNode = false;
+
+        function* yieldResult() {
+            for (let i=0;i<10;i++) {
+                yield i
+            }
+        }
+        const monitoredFn = monitor({
+            main:{
+                ref:()=> [...yieldResult()]
+            },
+            embed:{
+                yieldResult:{
+                    ref:yieldResult
+                }
+            },
+            beforeEachCall:()=>{
+                hitYieldNode = false;
+            },
+            inspector:(visit):undefined =>{
+                visit.is('YieldExpression',()=> {
+                    expect(visit.execute()).toBe(LAZY_NODE);
+                    hitYieldNode = true;
+                })
+            }
+        })
+        monitoredFn();
+        expect(hitYieldNode).toBe(true);
+    })
+
+    it('[Sync] should ensure that executing a generator call will return the actual generator object rather than confusing the interpreter that it is a LAZY_NODE',()=>{     
+        let hitCallExprNode = false;
+
+        function* yieldResult() {
+            for (let i=0;i<10;i++) {
+                yield i
+            }
+        }
+        const monitoredFn = monitor({
+            main:{
+                ref:()=> yieldResult()
+            },
+            embed:{
+                yieldResult:{
+                    ref:yieldResult
+                }
+            },
+            beforeEachCall:()=>{
+                hitCallExprNode = false;
+            },
+            inspector:(visit):undefined =>{
+                visit.is('CallExpression',()=> {
+                    const result = visit.execute();
+
+                    expect(result).not.toBe(LAZY_NODE);
+                    expect(isGenerator(result)).toBe(true);
+
+                    hitCallExprNode = true;
+                })
+            }
+        })
+        monitoredFn();
+        expect(hitCallExprNode).toBe(true);
+    })
+
+    it('[Async-only] should ensure that yielding LAZY_NODE for AwaitExpressions resume the generator back with the resolved value',async ()=>{
         let hitAwaitNode = false;
 
         const fn = monitor({
