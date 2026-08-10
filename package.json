@@ -25,6 +25,7 @@
         "sval",
         "ast",
         "ast-walker",
+        "function-monitor",
         "interpreter",
         "monitor",
         "monitoring-tool",

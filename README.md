@@ -51,7 +51,9 @@ The core of the package is the `monitor` function. It accepts a configuration ob
 
 ## Quick Examples ⚡
 
-These are snippets that you can quickly copy and paste to see what the package can do but the details on how they work are included under each subheading with few notes or a link.
+These are snippets that you can quickly copy and paste to see what the package can do.
+
+The details on how they work are included under each subheading either as notes or a link.
 
 ### Using the `inspector` hook to intercept and modify AST nodes during execution.
 
@@ -60,10 +62,8 @@ A deep dive into this is available in this [article](https://dev.to/typescript-g
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor"
 
-const zero = 0;
-
 const sumUp = (nums: number[]) => {
-    let sum: number = zero;
+    let sum: number = 0;
     for (const num of nums) {
         sum += num;
     }
@@ -73,30 +73,11 @@ const sumUp = (nums: number[]) => {
 const monitoredSumUp = monitor({
     main: {
         ref: sumUp,
-        captures:{
-            zero
-        }
-    },
-    beforeEachCall:(nums)=>{
-        console.log('Logging args: ',nums);
-    },
-    afterEachCall:(result)=>{
-        if (!(result instanceof Error)) {
-            console.log('Logging result: ',result);
-        }
     },
     inspector: (visit) => {
         visit.is('AssignmentExpression', event => {
             event.node.operator = "-="; // silently change the operator
             console.log('intermediate result: ',visit.execute());
-        });
-
-        visit.is('ReturnStatement', event => {
-            const result = visit.execute();
-            const finalSum = event.scope.variables.search('sum');
-
-            console.log('final sum: ', finalSum);
-            result.RES = 'I CHANGED THE VALUE';
         });
     }
 });
@@ -107,57 +88,63 @@ console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 #### Output
 
 ```text
-Logging args:  [ 1, 2, 3, 4, 5 ]
 intermediate result:  -1
 intermediate result:  -3
 intermediate result:  -6
 intermediate result:  -10
 intermediate result:  -15
-final sum:  -15
-Logging result:  I CHANGED THE VALUE
-Result:  I CHANGED THE VALUE
+Result:  -15
 ```
 
 ### Capturing values and Embedding Functions
 
-Because monitored functions run in an interpreted context, the interpreter needs a way to access external values. That is where capturing and embedding come into play.
+Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding
 
-Capturing simply gives the interpreter direct references or values and it works for all data types.
+- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you cant reassign them.
+  
+- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with our monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
 
-Embedding is exclusive to functions and it tells the interpreter to copy its source code into the same context as our monitored function and parse it together. 
+In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` also captures `label` because it depends on it.
 
-The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
+They both capture `currentFn` and wrap it in an object because of how captured variables are injected.
+
+The output shows that only `sayHello` and `print` appear in the intercepted set.
+
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-const currentFn:{value?:string} = {value:undefined};
+const currentFn = {value:'' as any}
 const interceptedFns = new Set();
 
-const Printed = 'Printed: ';
+const label = 'Printed: ';
 
 function print(str:string) {
-    currentFn.value = 'print'
-    console.log(Printed,str);
+    currentFn.value = "print";
+
+    console.log(label,str);
+
     currentFn.value = undefined
 }
 
 function printName(name:string) {
-    currentFn.value = 'printName'
+    currentFn.value = "printName"
+
     console.log('Hello ',name);
+
     currentFn.value = undefined
 }
 
-function sayHello(name:string) {
-    currentFn.value = 'sayHello';
-    printName(name)
-    print('Hello world');
-    currentFn.value = undefined;
-}
-
-const monitoredSayHello = monitor({
+const sayHello = monitor({
     main:{
-        ref:sayHello,
+        ref:(name:string)=>{
+            currentFn.value = "sayHello";
+
+            printName(name)
+            print('Hello world');
+
+            currentFn.value = undefined
+        },
         captures:{
             printName,
             currentFn
@@ -167,7 +154,7 @@ const monitoredSayHello = monitor({
         print:{
             ref:print,
             captures:{
-                Printed,
+                label,
                 currentFn
             }
         }
@@ -177,15 +164,12 @@ const monitoredSayHello = monitor({
             interceptedFns.add(currentFn.value)
         }
     }
-})
+});
 
-monitoredSayHello('person');
+sayHello('person');
 console.log('Intercepted functions: ',interceptedFns);
+
 ```
-
-In this example, the function that we want to monitor is `sayHello`. We capture `printName` but we embed `print`. Since `print` relies on the external variable, `Printed`, we capture it into the same context as `print` to avoid a `ReferenceError`.
-
-We also capture `currentFn` into both the main function and the embedded one. The reason why it is a value wrapped under a constant rather than a bare string declared as a `let` variable, is because captured values are injected as constants and reassigning them in a monitored function will throw a `TypeError`.
 
 #### Output
 
@@ -193,6 +177,49 @@ We also capture `currentFn` into both the main function and the embedded one. Th
 Hello  person
 Printed:  Hello world
 Intercepted functions:  Set(2) { 'sayHello', 'print' }
+```
+
+### Scoping: Captures vs Embedding
+
+Within the interpreted context of a monitored function, it is important to understand how scoping works for each approach:
+
+- Captures are function-scoped. They are bound directly to the specific function they are passed to.A captured variable in one function is not automatically available to another. 
+
+- Embedded functions are context-scoped. This means not only can the main function call it, but any other embedded function can call it too.
+
+This example emphasizes the scoping mechanics of embedding
+
+```typescript
+import { monitor } from "@typescript-guy/fn-monitor"
+
+const nested = ()=>{
+    return 'Hello World'
+}
+
+const inner = ()=>{
+    return nested()
+}
+
+const outer = monitor({
+    main:{
+        ref:()=>inner(),
+    },
+    embed:{
+        inner:{
+            ref:inner
+        },
+        nested:{
+            ref:nested
+        }
+    }
+});
+console.log(outer());
+```
+
+#### Output
+
+```text
+Hello world
 ```
 
 ### Getting the full execution history of a function call
@@ -558,6 +585,8 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 ....
 ```
 
+All examples are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
+
 ---
 
 
@@ -657,8 +686,6 @@ Please keep the following architectural constraints in mind when using this pack
     > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
     > 
     > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
-    >
-    > Support for the `YieldExprEvent` class will be added in the v1.3.0 release.
 
 4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
@@ -677,11 +704,9 @@ Please keep the following architectural constraints in mind when using this pack
 
 ## Questions & Support 💬
 
-All the examples in this README are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
-
-- 👥 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
+- 👥 **Questions & Feature Requests:** You can read my [articles](https://dev.to/typescript-guy) or open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
   
-- 🐛 **Bugs & Features:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
+- 🐛 **Bugs:** Open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 
@@ -704,6 +729,15 @@ This project actively encourages community forks, variations, and modifications!
 * **Branding:** Please remove or replace the official project logo in your documentation so users know they are interacting with a custom variation.
   
 * **License:** The source code remains open under the MIT license, but the project name and logo are reserved for the official release.
+
+---
+
+
+## Inspiration 🎯
+
+I built this package because I needed a reliable way to throw an error if an arbitrary function uses loops at runtime. My goal wasn't just to prevent a function from hanging the main thread—I needed to literally ban the presence of loops in the code itself. 
+
+Existing solutions could only enforce this at build time. I later grew `fn-monitor` into a general-purpose tool for runtime AST control, far beyond that original use case.
 
 ---
 

@@ -1,15 +1,13 @@
 import { 
     monitor,
     type InspectorGenerator,
-    type ExeResult 
+    type ExeResult
 } from "../src/index.ts"
 
 console.log('\nQUICK EXAMPLE 1');
 
-const zero = 0;
-
 const sumUp = (nums: number[]) => {
-    let sum: number = zero;
+    let sum: number = 0;
     for (const num of nums) {
         sum += num;
     }
@@ -19,66 +17,50 @@ const sumUp = (nums: number[]) => {
 const monitoredSumUp = monitor({
     main: {
         ref: sumUp,
-        captures:{
-            zero
-        }
-    },
-    beforeEachCall:(nums)=>{
-        console.log('Logging args: ',nums);
-    },
-    afterEachCall:(result)=>{
-        if (!(result instanceof Error)) {
-            console.log('Logging result: ',result);
-        }
     },
     inspector: (visit) => {
         visit.is('AssignmentExpression', event => {
             event.node.operator = "-="; // silently change the operator
             console.log('intermediate result: ',visit.execute());
         });
-
-        visit.is('ReturnStatement', event => {
-            const result = visit.execute();
-            const finalSum = event.scope.variables.search('sum');
-
-            console.log('final sum: ', finalSum);
-            result.RES = 'I CHANGED THE VALUE';
-        });
     }
 });
 
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 
+console.log('\nQUICK EXAMPLE 2: I');
 
-console.log('\nQUICK EXAMPLE 2');
-
-const currentFn:{value?:string} = {value:undefined};
+const currentFn = {value:'' as any}
 const interceptedFns = new Set();
 
-const Printed = 'Printed: ';
+const label = 'Printed: ';
 
 function print(str:string) {
-    currentFn.value = 'print'
-    console.log(Printed,str);
+    currentFn.value = "print";
+
+    console.log(label,str);
+
     currentFn.value = undefined
 }
 
 function printName(name:string) {
-    currentFn.value = 'printName'
+    currentFn.value = "printName"
+
     console.log('Hello ',name);
+
     currentFn.value = undefined
 }
 
-function sayHello(name:string) {
-    currentFn.value = 'sayHello';
-    printName(name)
-    print('Hello world');
-    currentFn.value = undefined;
-}
-
-const monitoredSayHello = monitor({
+const sayHello = monitor({
     main:{
-        ref:sayHello,
+        ref:(name:string)=>{
+            currentFn.value = "sayHello";
+
+            printName(name)
+            print('Hello world');
+
+            currentFn.value = undefined
+        },
         captures:{
             printName,
             currentFn
@@ -88,7 +70,7 @@ const monitoredSayHello = monitor({
         print:{
             ref:print,
             captures:{
-                Printed,
+                label,
                 currentFn
             }
         }
@@ -98,11 +80,36 @@ const monitoredSayHello = monitor({
             interceptedFns.add(currentFn.value)
         }
     }
-})
+});
 
-monitoredSayHello('person');
+sayHello('person');
 console.log('Intercepted functions: ',interceptedFns);
 
+
+console.log('\nQUICK EXAMPLE 2: II');
+
+const nested = ()=>{
+    return 'Hello World'
+}
+
+const inner = ()=>{
+    return nested()
+}
+
+const outer = monitor({
+    main:{
+        ref:()=>inner(),
+    },
+    embed:{
+        inner:{
+            ref:inner
+        },
+        nested:{
+            ref:nested
+        }
+    }
+});
+console.log(outer());
 
 console.log('\nQUICK EXAMPLE 3');
 
