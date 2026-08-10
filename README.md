@@ -100,13 +100,13 @@ Result:  -15
 
 Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding
 
-- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you cant reassign them.
+- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you can't reassign them.
   
-- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with our monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
+- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
 
 In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` also captures `label` because it depends on it.
 
-They both capture `currentFn` and wrap it in an object because of how captured variables are injected.
+The value of `currentFn` is wrapped in an object because of how captured variables are injected. We also capture it into `sayHello` and `print`.
 
 The output shows that only `sayHello` and `print` appear in the intercepted set.
 
@@ -183,7 +183,7 @@ Intercepted functions:  Set(2) { 'sayHello', 'print' }
 
 Within the interpreted context of a monitored function, it is important to understand how scoping works for each approach:
 
-- Captures are function-scoped. They are bound directly to the specific function they are passed to.A captured variable in one function is not automatically available to another. 
+- Captures are function-scoped. They are bound directly to the specific function they are passed to. A captured variable in one function is not automatically available to another. 
 
 - Embedded functions are context-scoped. This means not only can the main function call it, but any other embedded function can call it too.
 
