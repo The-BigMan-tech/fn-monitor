@@ -25,7 +25,7 @@ import {
     pushedManually, 
     callOnStep,
     getHandler
-} from '../lifecycle-functions.ts'
+} from '../lifecycle.ts'
 
 let evaluateOps:Record<string,any>;
 

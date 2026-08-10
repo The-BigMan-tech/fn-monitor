@@ -28,7 +28,7 @@ import {
     useModifiedEvaluator,
     callOnStep,
     getHandler, // Use the Generator version
-} from '../lifecycle-functions.ts'
+} from '../lifecycle.ts'
 
 let evaluateOps:Record<string,any>;
 

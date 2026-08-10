@@ -24,7 +24,7 @@ import {
     VisitExecutionError,
 } from './custom-types.ts'
 
-import { executedManually, getSHA256Key, isLazyNode, pushResult } from './lifecycle-functions.ts';
+import { executedManually, getSHA256Key, isLazyNode, pushResult } from './lifecycle.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
