@@ -20,7 +20,17 @@
     </a>
 </p>
 
-`@typescript-guy/fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
+<p align="center">
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/tsconfig.json">
+        <img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=white" alt="100% typescript">
+    </a>
+     &nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="https://bundlephobia.com/package/@typescript-guy/fn-monitor">
+        <img src="https://img.shields.io/badge/minzipped-127%20kB-3178C6" alt="bundle size" />
+    </a>
+</p>
+
+`fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
 
 ## Installation 📦
@@ -173,7 +183,7 @@ monitoredSayHello('person');
 console.log('Intercepted functions: ',interceptedFns);
 ```
 
-In this example, our main function being monitored is `sayHello`. We capture `printName` but we embed `print`. Since `print` relies on the external variable, `Printed`, we capture it into the same context as `print` to avoid a `ReferenceError`.
+In this example, the function that we want to monitor is `sayHello`. We capture `printName` but we embed `print`. Since `print` relies on the external variable, `Printed`, we capture it into the same context as `print` to avoid a `ReferenceError`.
 
 We also capture `currentFn` into both the main function and the embedded one. The reason why it is a value wrapped under a constant rather than a bare string declared as a `let` variable, is because captured values are injected as constants and reassigning them in a monitored function will throw a `TypeError`.
 
@@ -644,7 +654,7 @@ Please keep the following architectural constraints in mind when using this pack
    
     >💡 **Tip:** There is a workaround. 
     >
-    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/generator-workaround.ts) example for a quick demonstration.
+    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
     > 
     > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
     >
@@ -667,7 +677,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 ## Questions & Support 💬
 
-All the examples in this README are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/tree/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
+All the examples in this README are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
 - 👥 **Questions & Help:** Open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions) or read my [articles](https://dev.to/typescript-guy).
   
