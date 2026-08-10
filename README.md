@@ -117,7 +117,7 @@ Because monitored functions run in an interpreted context, they need a way to ac
   
 - Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
 
-In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` also captures `label` because it depends on it.
+In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
 The value of `currentFn` is wrapped in an object because of how captured variables are injected. We also capture it into `sayHello` and `print`.
 
@@ -598,7 +598,9 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 ....
 ```
 
-All examples are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
+---
+
+>💡 **All examples** are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
 
 ---
 
