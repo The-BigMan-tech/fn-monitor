@@ -30,7 +30,7 @@
     </a>
 </p>
 
-`fn-monitor` is an augmentation of the `sval` JS-in-JS interpreter designed to monitor functions as they execute. It allows developers to deeply inspect, debug, and control JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
+`fn-monitor` is a deep instrumentation layer built over the sval JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behaviour of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
 ## Table of Contents 📑
 
