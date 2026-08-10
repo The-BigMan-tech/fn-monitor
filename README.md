@@ -111,7 +111,7 @@ Result:  -15
 
 ### Capturing values and Embedding Functions
 
-Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding
+Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding:
 
 - Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you can't reassign them.
   
@@ -642,7 +642,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient. |
 | `set perExecution(fn)` | A setter for a callback fired on each executed child node. It is short-lived and discarded after evaluating the current node and its children. |
 | `execute()` | Manually executes the current node and returns the result. For async nodes (like `await`), it defers execution and returns the `LAZY_NODE` symbol. |
-| `localExeStack()` | Returns a readonly stack (deque) of the latest evaluated child node results. |
+| `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
 
 #### `ExeResult`
 | Property | Type | Description |
