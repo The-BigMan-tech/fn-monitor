@@ -1,4 +1,106 @@
 
+## v1.2.2...v1.3.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.2.2...v1.3.0)
+
+### 🚀 Features
+
+- Add back support for YieldExprEvent. The reason will be later explained in the next few commits ([ad9bb8a](https://github.com/The-BigMan-tech/fn-monitor/commit/ad9bb8a))
+- Bump to v1.3.0 ([2048d57](https://github.com/The-BigMan-tech/fn-monitor/commit/2048d57))
+
+### 🩹 Fixes
+
+- **core:** Resolve LAZY_NODE leak by tracking evaluator context ([0057580](https://github.com/The-BigMan-tech/fn-monitor/commit/0057580))
+
+### ♻️ Refactor
+
+- Remove the unnecessary heading in a ReferenceError message ([4f5628e](https://github.com/The-BigMan-tech/fn-monitor/commit/4f5628e))
+- Remove double use of 'be' in an err msg ([43df293](https://github.com/The-BigMan-tech/fn-monitor/commit/43df293))
+- Make the reference err msg more helpful ([ad0c933](https://github.com/The-BigMan-tech/fn-monitor/commit/ad0c933))
+- Rename the lifecycle-functions file ([d8e8bea](https://github.com/The-BigMan-tech/fn-monitor/commit/d8e8bea))
+
+### 📖 Documentation
+
+<details>
+<summary>Click to expand</summary>
+
+- **changelog:** Update changelog.md for v1.2.2 ([9f2b76e](https://github.com/The-BigMan-tech/fn-monitor/commit/9f2b76e))
+- **readme:** Bolden a subheading ([ae777b5](https://github.com/The-BigMan-tech/fn-monitor/commit/ae777b5))
+- Add logo and polish README header ([a3d6296](https://github.com/The-BigMan-tech/fn-monitor/commit/a3d6296))
+- Improve a comment in the vite config file ([dc8445c](https://github.com/The-BigMan-tech/fn-monitor/commit/dc8445c))
+- Rename "How it Works" to "Mechanics" in the README and change the background color of the logo ([21daeb9](https://github.com/The-BigMan-tech/fn-monitor/commit/21daeb9))
+- Include the articles in the repo and tweak a note in the README ([059ecb1](https://github.com/The-BigMan-tech/fn-monitor/commit/059ecb1))
+- **article:** Add a period ([9778d9d](https://github.com/The-BigMan-tech/fn-monitor/commit/9778d9d))
+- **article:** Add the cover image for the second article ([a111154](https://github.com/The-BigMan-tech/fn-monitor/commit/a111154))
+- **article:** Rename a folder and add rough content for the second article ([d5d22dc](https://github.com/The-BigMan-tech/fn-monitor/commit/d5d22dc))
+- **article:** Write a draft of the second article ([c20485e](https://github.com/The-BigMan-tech/fn-monitor/commit/c20485e))
+- **article:** Polish the intro of the 2nd article ([d21670e](https://github.com/The-BigMan-tech/fn-monitor/commit/d21670e))
+- **article:** Polish the body of the 2nd article ([aac4153](https://github.com/The-BigMan-tech/fn-monitor/commit/aac4153))
+- **article:** Improve the title of the 2nd articl ([683667b](https://github.com/The-BigMan-tech/fn-monitor/commit/683667b))
+- **article:** Improve the code example in the 2nd article ([9c6e757](https://github.com/The-BigMan-tech/fn-monitor/commit/9c6e757))
+- **article:** Overhaul the 2nd article ([8f37d47](https://github.com/The-BigMan-tech/fn-monitor/commit/8f37d47))
+- **article:** Add minor touches to the 2nd articl ([55cb961](https://github.com/The-BigMan-tech/fn-monitor/commit/55cb961))
+- **readme:** Add a link to the articles ([e3ea1e5](https://github.com/The-BigMan-tech/fn-monitor/commit/e3ea1e5))
+- **article:** Add final touches to the 2nd article ([0bb6a87](https://github.com/The-BigMan-tech/fn-monitor/commit/0bb6a87))
+- **article:** Complete the ReferenceError output ([b9b5ad7](https://github.com/The-BigMan-tech/fn-monitor/commit/b9b5ad7))
+- **article:** Add a period ([a33e0ed](https://github.com/The-BigMan-tech/fn-monitor/commit/a33e0ed))
+- **article:** Fix the web workers tag ([621fade](https://github.com/The-BigMan-tech/fn-monitor/commit/621fade))
+- **article:** Improve formatting of the lag handling article ([7066028](https://github.com/The-BigMan-tech/fn-monitor/commit/7066028))
+- **article:** Heavily improve the ast mutation article ([3acf478](https://github.com/The-BigMan-tech/fn-monitor/commit/3acf478))
+- **article:** Remove a comment in the preventing-hang article and place directly in its text ([4aeb078](https://github.com/The-BigMan-tech/fn-monitor/commit/4aeb078))
+- **article:** Ast-mutation.md, add adjustments and restore back a block ([1269e72](https://github.com/The-BigMan-tech/fn-monitor/commit/1269e72))
+- **article:** Ast-mutation.md, make final adjustments ([6683f7e](https://github.com/The-BigMan-tech/fn-monitor/commit/6683f7e))
+- **article:** Ast-mutation.md, remove an extra space ([c065a13](https://github.com/The-BigMan-tech/fn-monitor/commit/c065a13))
+- **article:** Preventing-hang.md, improve grammar ([70616c8](https://github.com/The-BigMan-tech/fn-monitor/commit/70616c8))
+- **article:** Preventing-hang.md, add a space after a comma ([0f37d3c](https://github.com/The-BigMan-tech/fn-monitor/commit/0f37d3c))
+- **examples:** Remove the showcase.ts file in favor of a more concise and cleaner version ([520612e](https://github.com/The-BigMan-tech/fn-monitor/commit/520612e))
+- **examples:** Update the 2nd quick example to log the intercepted functions ([dc8e548](https://github.com/The-BigMan-tech/fn-monitor/commit/dc8e548))
+- **readme:** Heavily improve the readme ([1ddb1bc](https://github.com/The-BigMan-tech/fn-monitor/commit/1ddb1bc))
+- **readme:** Add minor touches ([e708ef8](https://github.com/The-BigMan-tech/fn-monitor/commit/e708ef8))
+- **article:** Add a note explaining the constraints for the maintainer of the articles page ([1ddaccc](https://github.com/The-BigMan-tech/fn-monitor/commit/1ddaccc))
+- **article:** Add final touches to the writer's note ([8d001ca](https://github.com/The-BigMan-tech/fn-monitor/commit/8d001ca))
+- **readme:** Add a note about gen inspectors ([f751316](https://github.com/The-BigMan-tech/fn-monitor/commit/f751316))
+- **readme:** Add emojis to the headings. ([7ce1f1c](https://github.com/The-BigMan-tech/fn-monitor/commit/7ce1f1c))
+- **readme:** Uncollapse the quick examples section. The reason for collapsing it was to preserve space but it ruins the reader's experience ([7ba9aff](https://github.com/The-BigMan-tech/fn-monitor/commit/7ba9aff))
+- **readme:** Remove a lingering details tag ([dda7f09](https://github.com/The-BigMan-tech/fn-monitor/commit/dda7f09))
+- **readme:** Fix the details tag rendering for the quick example ([89a6d3f](https://github.com/The-BigMan-tech/fn-monitor/commit/89a6d3f))
+- **readme:** Fix an internal markdown link ([9d4d65d](https://github.com/The-BigMan-tech/fn-monitor/commit/9d4d65d))
+- **readme:** Add a badge for the CI ([c7d8b4c](https://github.com/The-BigMan-tech/fn-monitor/commit/c7d8b4c))
+- **readme:** Add space between the badges ([ebcaf38](https://github.com/The-BigMan-tech/fn-monitor/commit/ebcaf38))
+- **readme:** Add a note explaining the nuance about monitoring generators ([9ed12f1](https://github.com/The-BigMan-tech/fn-monitor/commit/9ed12f1))
+- **readme:** Fix a broken link ([19f2fc0](https://github.com/The-BigMan-tech/fn-monitor/commit/19f2fc0))
+- **readme:** Change a link's name ([d5c8267](https://github.com/The-BigMan-tech/fn-monitor/commit/d5c8267))
+- **article:** Add a note for the article writer ([79e16c0](https://github.com/The-BigMan-tech/fn-monitor/commit/79e16c0))
+- **articles:** Update the articles to reflect the new nuance discovered with generators ([13b929e](https://github.com/The-BigMan-tech/fn-monitor/commit/13b929e))
+- **readme:** Explicitly document on branding and logo ([f455563](https://github.com/The-BigMan-tech/fn-monitor/commit/f455563))
+- **readme:** Remove an extra bullet point ([0d2632f](https://github.com/The-BigMan-tech/fn-monitor/commit/0d2632f))
+- **example:** Update the generator-workaround to use visit.is 'Any' to prevent type errors when pasting it to the v1.2.x series ([daa0bc4](https://github.com/The-BigMan-tech/fn-monitor/commit/daa0bc4))
+- **example:** Add a comment to the workaround ([bc146e6](https://github.com/The-BigMan-tech/fn-monitor/commit/bc146e6))
+- **example:** Improve the generator workaround ([1f29853](https://github.com/The-BigMan-tech/fn-monitor/commit/1f29853))
+- **example:** Make the comment in the generator workaround example neater ([7dff485](https://github.com/The-BigMan-tech/fn-monitor/commit/7dff485))
+- **readme:** Add another row of badges, improve a sentence. ([43faa7b](https://github.com/The-BigMan-tech/fn-monitor/commit/43faa7b))
+- **readme:** Polish the README ([7e99751](https://github.com/The-BigMan-tech/fn-monitor/commit/7e99751))
+- **readme:** Make extra grammar adjustments ([167b8d7](https://github.com/The-BigMan-tech/fn-monitor/commit/167b8d7))
+- **readme:** Add table of contents ([2a0d33b](https://github.com/The-BigMan-tech/fn-monitor/commit/2a0d33b))
+- **readme:** Visually pop up the tip to the examples file ([f33deb9](https://github.com/The-BigMan-tech/fn-monitor/commit/f33deb9))
+- **readme:** Clarify the semantics of the exe stack ([673043d](https://github.com/The-BigMan-tech/fn-monitor/commit/673043d))
+- **examples:** Rename a function in the generator workaround ([b513b97](https://github.com/The-BigMan-tech/fn-monitor/commit/b513b97))
+- Update the package description ([580faaf](https://github.com/The-BigMan-tech/fn-monitor/commit/580faaf))
+- **readme:** Add backticks to a word ([3f2a0d6](https://github.com/The-BigMan-tech/fn-monitor/commit/3f2a0d6))
+
+</details>
+
+### 🤖 CI
+
+- Add GitHub Actions workflow to run the test suite ([6046eed](https://github.com/The-BigMan-tech/fn-monitor/commit/6046eed))
+- Comment out the local repo in the .npmrc file ([6a74e6e](https://github.com/The-BigMan-tech/fn-monitor/commit/6a74e6e))
+- Change install cmd in test file in an attempt to fix an issue ([ee70dde](https://github.com/The-BigMan-tech/fn-monitor/commit/ee70dde))
+- Change my test ci file to use npm ([eec08d6](https://github.com/The-BigMan-tech/fn-monitor/commit/eec08d6))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.2.1...v1.2.2
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.2.1...v1.2.2)
