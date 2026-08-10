@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { monitor,LAZY_NODE,InspectorGenerator,EsNode } from '../../src/index'; 
 import { NOT_ALLOCATED, VisitExecutionError } from '../../src/custom-types';
-import { isGenerator } from '../../src/lifecycle-functions';
+import { isGenerator } from '../../src/lifecycle';
 
 
 describe('Visit.execute() Method Behaviour',()=>{
