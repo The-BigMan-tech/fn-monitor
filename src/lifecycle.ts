@@ -2,7 +2,7 @@ import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import type {Node as EsNode} from "estree";
 import {sha256} from "js-sha256"
-import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED, NodeHandler, EvaluatorType } from "./custom-types.ts";
+import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED, NodeHandler, EvaluatorType, EvaluateOps, NodeResult } from "./custom-types.ts";
 
 const generatorPrint = '[object Generator]';
 
@@ -15,8 +15,8 @@ export function inLazyMode(interpreter:SvalPlus):boolean {
 }
 
 
-export function getHandler(evaluateOps:Record<string,any>,nodeType:string):NodeHandler | undefined {
-    return evaluateOps[nodeType];
+export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode):NodeHandler<T> | undefined {
+    return evaluateOps[(node as EsNode).type];
 }
 export function getSHA256Key(str:string):string {
     return 'generated_' + sha256.create().update(str).hex();
@@ -158,7 +158,7 @@ export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables) 
 }
 
 
-export function executedManually(result:any):boolean {
+export function executedManually<T extends NodeResult<unknown>>(result:T | typeof UNASSIGNED):result is T {
     return (result !== UNASSIGNED)
 }
 export function pushedManually(interpreter:SvalPlus):boolean {
@@ -167,7 +167,7 @@ export function pushedManually(interpreter:SvalPlus):boolean {
         executedManually(interpreter.reusables.result) 
     )
 }
-export function pushResult(interpreter:SvalPlus,final:any) {
+export function pushResult<T extends NodeResult<unknown>>(interpreter:SvalPlus,final:T) {
     const event = interpreter.reusables.event;
     const node = interpreter.reusables.node!;
 

@@ -1,5 +1,5 @@
 import { getOwnNames, createSandBox, globalObj  } from './share/util.ts'
-import { parse, Options, Node, Program } from 'acorn'
+import { parse, Options, Node as AcornNode, Program } from 'acorn'
 import { EXPORTS, IMPORT, STRICT } from './share/const.ts'
 import Scope from './scope/index.ts'
 
@@ -112,7 +112,7 @@ export default class Sval {
         }
     }
 
-    public parse(code: string, parser?: (code: string, options: Options) => Node) {
+    public parse(code: string, parser?: (code: string, options: Options) => AcornNode) {
         if (typeof parser === 'function') {
             return parser(code, this.options)
         }
@@ -132,7 +132,7 @@ export default class Sval {
         evaluate(ast, scope)
     }
 
-    public run(code: string | Node):void {
+    public run(code: string | AcornNode):void {
         const ast = typeof code === 'string' ? this.parse(code) : code
         const scope = this.scope
 

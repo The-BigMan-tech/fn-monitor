@@ -1,6 +1,6 @@
 import ansis from 'ansis'
 
-import { Node } from 'acorn'
+import { Node as AcornNode } from 'acorn'
 import { assign } from '../share/util.ts'
 import Scope from '../scope/index.ts'
 
@@ -12,7 +12,12 @@ import * as literal from './literal.ts'
 import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
-import { SvalPlus } from '../custom-types.ts'
+import { 
+    EvaluateOps, 
+    NodeResult, 
+    SvalPlus 
+} from '../custom-types.ts';
+
 import { 
     callInspector, 
     copyReusables, 
@@ -27,16 +32,21 @@ import {
     getHandler
 } from '../lifecycle.ts'
 
-let evaluateOps:Record<string,any>;
+let evaluateOps:EvaluateOps<unknown>;
 
 //Leave the frequent access of interpreter.reusables.result the way it is.
 //Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
 //'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
 
-export default function evaluate(node: Node, scope: Scope) {
+export default function evaluate(
+    node:AcornNode | null | undefined, 
+    scope: Scope
+):NodeResult<unknown> | undefined 
+{
     if (!node) {
         return;
-    }
+    };
+
     if (!evaluateOps) {// delay initalizing to remove circular reference issue for jest
         evaluateOps = assign(
             {},
@@ -50,7 +60,7 @@ export default function evaluate(node: Node, scope: Scope) {
         )
     };
 
-    const handler = getHandler(evaluateOps,node.type);
+    const handler = getHandler(evaluateOps,node);
     if (!handler) {
         throw new Error(`${node.type} isn't implemented`);
     }
@@ -62,7 +72,7 @@ export default function evaluate(node: Node, scope: Scope) {
     };
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
-    const interpreter:SvalPlus = scope.interpreter;
+    const interpreter:SvalPlus<unknown> = scope.interpreter;
     const parentReusables = copyReusables(interpreter,'optional');
 
     try {
@@ -96,7 +106,7 @@ export default function evaluate(node: Node, scope: Scope) {
                 pushResult(interpreter,final);
             }
 
-            const yieldedValue = genResult!.value;
+            const yieldedValue:unknown = genResult!.value;//we cast it to unknown to make an assertion on an edge case
             if (yieldedValue !== final) {
                 throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield the result of the current node but saw: ${String(yieldedValue)} instead of: ${String(final)}. Node Type: ${node.type}`))
             };

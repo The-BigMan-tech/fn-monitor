@@ -1,4 +1,4 @@
-//My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough to narrow down the nodes with just instanceof checks 
+//My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough by narrowing down the nodes through the event classes
 
 import Scope from "./scope/index.ts";
 import type { Node as EsTreeNode} from "estree";
@@ -22,19 +22,6 @@ import type {
 } from "estree";
 
 import { QList,ReadonlyQList } from "./q-list.ts";
-
-export type Fn = (...args:any[])=>any;
-
-export type EsNode = EsTreeNode;//i couldnt directly export it from the module because its only a types file
-
-export class WrapperError extends Error {};
-export class VisitExecutionError extends Error {};
-
-export const LAZY_NODE = Symbol('LAZY_NODE');
-export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
-
-//This symbol are internal and wont be encountered by the caller/library user
-export const UNASSIGNED = Symbol('UNASSIGNED');
 
 /**
  * This is a string union of all the possible nodes the caller can query in the visit.is callback.
@@ -123,12 +110,37 @@ export type EventMap = (
 );
 
 
-export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,any>;
+type Brand<T, K extends string> = T & { __brand: K };
+
+export type Fn = (...args:any[])=>any;
+export type EsNode = EsTreeNode;//i couldnt directly export it from the module because its only a types file
+
+export class WrapperError extends Error {};
+export class VisitExecutionError extends Error {};
+
+export const LAZY_NODE = Symbol('LAZY_NODE');
+export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
+
+//This symbol are internal and wont be encountered by the caller/library user
+export const UNASSIGNED = Symbol('UNASSIGNED');
+
+export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,NodeResult<unknown>>;
 export type Inspector = (visit:Visit)=> undefined | InspectorGenerator;
+
 export type OnStep = ()=>void;
 export type PerExe = ()=>void;
 
 export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
+
+export type NodeResult<T extends unknown> = Brand<T,'NodeResult'>
+export type NodeHandler<T extends unknown> = (node:AcornNode | EsNode,scope:Scope<SvalPlus>)=>NodeResult<T>
+
+export type EvaluatorType = 'eager' | 'lazy';
+export type EvaluateOps<T extends unknown> = Partial<
+    Record<
+        EsNode['type'],NodeHandler<T>
+    >
+>
 
 /**
  * The rich object that gives inspectors their ability to participate in the interpretation of the function
@@ -171,7 +183,7 @@ export interface Visit {
      * The interpreter will execute the node manually if you never call this.
      * There is no way to directly stop the interpreter from executing a node.This is to prevent a half broken state.If required,the inspector hook must throw an error
      */
-    execute:<T extends any=any>()=>T,
+    execute:()=>unknown,
 
     /**
      * This is a stack data structure that contains the results of a node and each of its evaluated child node.
@@ -193,11 +205,15 @@ export interface ScopeForEvent {
     },
     /**The depth of the scope of the current node*/
     depth:number
-}
+};
+
+
 export interface ExeResult {
     /**The result of the node's evaluation */
     evaluation:unknown,
+
     /**The type of the node*/
+
     type:EsNode['type'],
     /**
      * The node itself.Unlike the scope object,the nodes are always allocated.
@@ -212,8 +228,6 @@ export interface ExeResult {
     scope:ScopeForEvent | typeof NOT_ALLOCATED;
 }
 
-export type NodeHandler = (node:AcornNode | EsNode,scope:Scope<SvalPlus>)=>any
-export type EvaluatorType = 'eager' | 'lazy';
 /**
  * This type describes an internal object 
  * 
@@ -222,11 +236,11 @@ export type EvaluatorType = 'eager' | 'lazy';
  * 
  * The exe-stack contains the results of each evaluated node
 */
-export interface Reusables {
+export interface Reusables<T extends unknown | Generator = unknown | Generator> {
     node:EsNode | null,
     scope:Scope | null,
-    handler:null | NodeHandler,
-    result:any | typeof UNASSIGNED,
+    handler:NodeHandler<T> | null,
+    result:NodeResult<T> | typeof UNASSIGNED,
     event:LangEvent | typeof NOT_ALLOCATED,
     mode:EvaluatorType | null,
     execution:{
@@ -239,10 +253,10 @@ export interface Reusables {
         }
     }
 }
-export interface SvalPlus {
+export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     inspector:Inspector | null,
     onStep:OnStep | null,
-    reusables:Reusables,
+    reusables:Reusables<T>,
     visit:Visit,
     stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';//the purpose of this is to prevent the interpreter from hitting the inspector during the parsing stage and also when its not explicitly running the monitored function
     createEventScope:()=>ScopeForEvent,

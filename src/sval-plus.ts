@@ -117,7 +117,7 @@ export class Visit implements VisitContract {
                 return LAZY_NODE;
             }else {
                 pushResult(this.#interpreter,this.#interpreter.reusables.result);
-                return this.#interpreter.reusables.result;
+                return this.#interpreter.reusables.result as unknown;
             }
         }
     };

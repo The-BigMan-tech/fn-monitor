@@ -1,6 +1,6 @@
 import ansis from 'ansis';
 
-import { Node } from 'acorn'
+import { Node as AcornNode } from 'acorn'
 import { assign } from '../share/util.ts'
 import Scope from '../scope/index.ts'
 
@@ -13,7 +13,9 @@ import * as pattern from './pattern.ts'
 import * as program from './program.ts'
 
 import { 
+    EvaluateOps,
     LAZY_NODE, 
+    NodeResult, 
     SvalPlus 
 } from '../custom-types.ts';
 
@@ -30,9 +32,13 @@ import {
     getHandler, // Use the Generator version
 } from '../lifecycle.ts'
 
-let evaluateOps:Record<string,any>;
+let evaluateOps:EvaluateOps<Generator>;
 
-function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
+function* higherHandler(
+    iterator:Generator<unknown,NodeResult<unknown>>,
+    interpreter:SvalPlus
+):Generator<unknown,NodeResult<unknown>> 
+{
     const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
     let iterResult = iterator.next();
 
@@ -55,7 +61,11 @@ function* higherHandler(iterator:Generator,interpreter:SvalPlus):Generator {
 //Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
 //'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
 
-export default function* evaluate(node: Node, scope: Scope) {
+export default function* evaluate(
+    node:AcornNode | null | undefined, 
+    scope: Scope
+):Generator<unknown,NodeResult<unknown>> | undefined 
+{
     if (!node) {
         return;
     }
@@ -72,7 +82,7 @@ export default function* evaluate(node: Node, scope: Scope) {
         )
     };
 
-    const handler = getHandler(evaluateOps,node.type);
+    const handler = getHandler(evaluateOps,node);
     if (!handler) {
         throw new Error(`${node.type} isn't implemented`);
     }
@@ -84,7 +94,7 @@ export default function* evaluate(node: Node, scope: Scope) {
     }
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
-    const interpreter:SvalPlus = scope.interpreter;
+    const interpreter:SvalPlus<Generator> = scope.interpreter;
     const parentReusables = copyReusables(interpreter,'compulsory');//unlike the normalized evaluator,this one must be compulsory because making it optional failed a test concerning the handling of multiple async contexts
 
     try {
