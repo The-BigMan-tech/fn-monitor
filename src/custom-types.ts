@@ -124,7 +124,12 @@ export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 //This symbol are internal and wont be encountered by the caller/library user
 export const UNASSIGNED = Symbol('UNASSIGNED');
 
-export type InspectorGenerator = Generator<typeof LAZY_NODE,undefined,NodeResult<unknown>>;
+//allowing unknown means that the lib user can always yield visit.execute() without having to use an if-check and the evaluators will handle that case
+export type InspectorGenerator = Generator<
+    unknown | typeof LAZY_NODE,
+    undefined,
+    NodeResult<unknown>
+>;
 export type Inspector = (visit:Visit)=> undefined | InspectorGenerator;
 
 export type OnStep = ()=>void;
@@ -183,7 +188,7 @@ export interface Visit {
      * The interpreter will execute the node manually if you never call this.
      * There is no way to directly stop the interpreter from executing a node.This is to prevent a half broken state.If required,the inspector hook must throw an error
      */
-    execute:()=>unknown,
+    execute:()=>unknown | typeof LAZY_NODE,
 
     /**
      * This is a stack data structure that contains the results of a node and each of its evaluated child node.
