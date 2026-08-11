@@ -21,7 +21,7 @@ import {
     NOT_ALLOCATED,
     PerExe,
     OnStep,
-    VisitExecutionError,
+    VisitExecutionError
 } from './custom-types.ts'
 
 import { executedManually, getSHA256Key, inLazyMode, pushResult } from './lifecycle.ts';
@@ -49,7 +49,7 @@ export interface Metadata<T extends Fn> {
 }
 interface SvalPlusArgs {
     useExtensions:boolean,
-    inspector?:Inspector,
+    inspector?:Inspector<'user'>,
     onStep?:OnStep,
     fnBeforeEachCall?:Fn,
     fnAfterEachCall?:Fn,
@@ -103,7 +103,7 @@ export class Visit implements VisitContract {
         const handler = this.#interpreter.reusables.handler;
 
         if (handler === null) {
-            throw new Error(ansis.red(`Internal logic error: visit.execute received null as the handler`))
+            throw new Error(ansis.red(`Cannot use visit.execute because it received null as the handler`))
         };
         if (executedManually(this.#interpreter.reusables.result)) {
             throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
@@ -157,7 +157,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     };
     
 
-    public inspector:Inspector | null = null;
+    public inspector:Inspector<'internal'> | null = null;
     public onStep:OnStep | null = null;
 
     public fnBeforeEachCall:Fn | null = null;
@@ -208,7 +208,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.fnBeforeEachCall = args.fnBeforeEachCall || null;
         this.fnAfterEachCall = args.fnAfterEachCall || null;
 
-        this.inspector = args.inspector || null;
+        this.inspector = (args.inspector as Inspector<'internal'>) || null;
         this.onStep = args.onStep || null;
 
         this.reusables.execution.readonlyExeStack.swapSrc(this.reusables.execution.exeStack);

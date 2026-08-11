@@ -124,13 +124,22 @@ export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 //This symbol are internal and wont be encountered by the caller/library user
 export const UNASSIGNED = Symbol('UNASSIGNED');
 
-//allowing unknown means that the lib user can always yield visit.execute() without having to use an if-check and the evaluators will handle that case
-export type InspectorGenerator = Generator<
-    unknown | typeof LAZY_NODE,
+/**
+ * using unknown in the yield expr means that the user can always yield visit.execute() without 
+ * having to use a type guard and the evaluators will handle it properly
+ * 
+ * using unknown for the TNext type prevents the user from seeing the branded type while the evaluators 
+ * still use it for safety
+*/
+export type InspectorGenerator<T extends 'internal' | 'user'> = Generator<
+    T extends 'internal'?typeof LAZY_NODE:unknown,
     undefined,
-    NodeResult<unknown>
+    T extends 'internal'?NodeResult<unknown>:unknown
 >;
-export type Inspector = (visit:Visit)=> undefined | InspectorGenerator;
+
+export type Inspector<
+    T extends 'internal' | 'user'
+> = (visit:Visit)=> undefined | InspectorGenerator<T>;
 
 export type OnStep = ()=>void;
 export type PerExe = ()=>void;
@@ -259,7 +268,7 @@ export interface Reusables<T extends unknown | Generator = unknown | Generator> 
     }
 }
 export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
-    inspector:Inspector | null,
+    inspector:Inspector<'internal'> | null,//using node result here forces the evaluator to be type safe
     onStep:OnStep | null,
     reusables:Reusables<T>,
     visit:Visit,

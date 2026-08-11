@@ -85,7 +85,7 @@
 
 
 import jsBeatutify from "js-beautify";
-import { Fn, Inspector, OnStep, WrapperError } from "./custom-types.ts";
+import { Fn, Inspector, InspectorGenerator as InspectorGen, OnStep, WrapperError } from "./custom-types.ts";
 import { Metadata, SvalPlus } from "./sval-plus.ts";
 import ansis from "ansis";
 
@@ -102,7 +102,7 @@ export interface MonitorFnSetup<T extends Fn> {
     /**
      * The main hook that gets fed the interpreter's context as the function executes.The visit object is rich enough to inspect nodes and their scope,modify them before execution and execute nodes manually to see and change their results.
     */
-    inspector?:Inspector,
+    inspector?:Inspector<'user'>,
 
     /**
      *Like the inspector hook,this is called before each interpreted step.but it does not get the rich visit object to inspect or modify nodes
@@ -193,6 +193,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     return newFn;
 }
 
+export  type InspectorGenerator = InspectorGen<'user'>;//this will prevent callers from seeing the branded type
 
 export type { 
     Metadata 
@@ -206,7 +207,6 @@ export type {
     Query,
     EventMap,
     Visit,
-    InspectorGenerator,
     ExeResult,
     EsNode,
 } from "./custom-types.ts"
