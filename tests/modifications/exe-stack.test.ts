@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { monitor,LocalExeStack,InspectorGenerator,EsNode } from '../../src/index'; 
+import { UNASSIGNED } from '../../src/custom-types';
 
 describe('ExeStack Behaviour',()=>{
 
@@ -89,6 +90,42 @@ describe('ExeStack Behaviour',()=>{
         fn(10);
         expect(hitDeclNode).toBe(true);
         expect(setPerExeHook).toBe(true);
+    })
+
+    it('[Sync] should ensure that no result enters the exe stack if it is UNASSIGNED',()=>{
+        const fn = monitor({
+            main:{
+                ref:(a: number,b:number)=>{
+                    const result = (a + b) * (a - b)
+                    return result;
+                }
+            },
+            inspector:(visit)=> { 
+                const stack = visit.localExeStack();
+                for (const element of stack) {
+                    expect(element.evaluation).not.toBe(UNASSIGNED);
+                }
+            }
+        })
+        fn(2,3);
+    })
+
+    it('[Async] should ensure that no result enters the exe stack if it is UNASSIGNED',async ()=>{
+        const fn = monitor({
+            main:{
+                ref:async (a: number,b:number)=>{
+                    const result = (a + b) * (a - b)
+                    return await Promise.resolve(result);
+                }
+            },
+            inspector:(visit)=> { 
+                const stack = visit.localExeStack();
+                for (const element of stack) {
+                    expect(element.evaluation).not.toBe(UNASSIGNED);
+                }
+            }
+        })
+        await fn(2,3);
     })
 
     it('[Sync] should ensure that the local exe stack always has the latest executed node at its head',()=>{
