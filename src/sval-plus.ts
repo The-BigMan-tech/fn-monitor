@@ -24,7 +24,7 @@ import {
     VisitExecutionError,
 } from './custom-types.ts'
 
-import { executedManually, getSHA256Key, isLazyNode, pushResult } from './lifecycle.ts';
+import { executedManually, getSHA256Key, inLazyMode, pushResult } from './lifecycle.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
@@ -113,7 +113,7 @@ export class Visit implements VisitContract {
                 this.#interpreter.reusables.scope!
             );
 
-            if (isLazyNode(this.#interpreter)) {
+            if (inLazyMode(this.#interpreter)) {
                 return LAZY_NODE;
             }else {
                 pushResult(this.#interpreter,this.#interpreter.reusables.result);

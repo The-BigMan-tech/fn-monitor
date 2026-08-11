@@ -10,7 +10,7 @@ export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === generatorPrint
 }
 
-export function isLazyNode(interpreter:SvalPlus):boolean {
+export function inLazyMode(interpreter:SvalPlus):boolean {
     return interpreter.reusables.mode === "lazy";
 }
 
@@ -163,7 +163,7 @@ export function executedManually(result:any):boolean {
 }
 export function pushedManually(interpreter:SvalPlus):boolean {
     return (
-        !(isLazyNode(interpreter)) &&//the visit.execute method couldn't have pushed any result if it is lazy
+        !(inLazyMode(interpreter)) &&//the visit.execute method couldn't have pushed any result if it is lazy
         executedManually(interpreter.reusables.result) 
     )
 }
