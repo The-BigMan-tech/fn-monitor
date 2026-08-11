@@ -4,6 +4,13 @@ import { monitor, ScopeForEvent } from '../../src/index';
 describe('Scope Object Behaviour', () => {
     
     it('[Sync] should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
+        const embeddedFn = ()=>{
+            if (true) {
+                for (const x of [1,2,3]) {
+
+                }
+            }
+        }
         const testFn = (x: number) => {
             let y = x; // Root level of the function body
             
@@ -11,18 +18,26 @@ describe('Scope Object Behaviour', () => {
                 y -= 1; // Inside an 'if' block, which creates a new nested scope
                 testFn(y); // Recursive call to prove that the depth resets correctly
             }
+            embeddedFn()
         };
 
         let hitVarDeclNode = false;
         let hitAssignmentExprNode = false;
+        let hitForOfNode = false;
 
         const monitoredFn = monitor({
             main: { 
                 ref: testFn 
             },
+            embed:{
+                embeddedFn:{
+                    ref:embeddedFn
+                }
+            },
             beforeEachCall:()=>{
                 hitVarDeclNode = false,
                 hitAssignmentExprNode = false;
+                hitForOfNode = false;
             },
             inspector: (visit) => {
                 visit.is('VariableDeclaration', (event) => {
@@ -36,7 +51,13 @@ describe('Scope Object Behaviour', () => {
                     expect(event.scope.depth).toBe(1);
                     hitAssignmentExprNode = true;
                 });
-            }
+
+                visit.is('ForOfStatement',(event)=>{
+                    //the for loop in the embedded function
+                    expect(event.scope.depth).toBe(2);
+                    hitForOfNode = true;
+                })
+            },
         });
 
         monitoredFn(5);
@@ -44,6 +65,7 @@ describe('Scope Object Behaviour', () => {
         // Verify that the interpreter actually fired our callbacks
         expect(hitVarDeclNode).toBe(true);
         expect(hitAssignmentExprNode).toBe(true);
+        expect(hitForOfNode).toBe(true);
     });
 
     it('[Sync] should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{
