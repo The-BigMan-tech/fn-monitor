@@ -63,7 +63,7 @@ class EventScope implements ScopeForEvent {
     public variables:ScopeForEvent['variables'];
 
     constructor(interpreter:SvalPlus) {
-        this.#scope = interpreter.reusables.currentScope!;
+        this.#scope = interpreter.reusables.scope!;
         this.depth = this.#scope.scopeDepth - 2;//We subtract 2 to make it 0-indexed.check the comment next to the variable, 'inUserScope' in one of the files
         
         const local:ScopeForEvent['variables']['local'] = {};
@@ -87,7 +87,7 @@ export class Visit implements VisitContract {
         this.#interpreter = interpreter;
     }
     public localExeStack = ()=>{
-        return this.#interpreter.reusables.shared.readonlyExeStack;
+        return this.#interpreter.reusables.execution.readonlyExeStack;
     }
     public is:VisitContract['is'] = (query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.
         const node = this.#interpreter.reusables.node!;
@@ -95,7 +95,7 @@ export class Visit implements VisitContract {
         if ((query === "Any") || (node.type === query)) {
             const event:EventMap[typeof query] = createEvent(query,this.#interpreter)
             cb(event);
-            this.#interpreter.reusables.currentEvent = event;
+            this.#interpreter.reusables.event = event;
         }
     };
 
@@ -110,7 +110,7 @@ export class Visit implements VisitContract {
 
             this.#interpreter.reusables.result = handler(
                 this.#interpreter.reusables.node!,
-                this.#interpreter.reusables.currentScope!
+                this.#interpreter.reusables.scope!
             );
 
             if (isLazyNode(this.#interpreter)) {
@@ -122,7 +122,7 @@ export class Visit implements VisitContract {
         }
     };
     set perExecution(perExe:PerExe) {
-        this.#interpreter.reusables.shared.perExe = {
+        this.#interpreter.reusables.execution.perExe = {
             fn:perExe,
             owner:this.#interpreter.reusables.node!
         }
@@ -168,13 +168,13 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
 
     public reusables:Reusables = {
-        currentEvent:NOT_ALLOCATED,
-        currentScope:null,
         node:null,
-        result:UNASSIGNED,
+        scope:null,
         handler:null,
-        currentEvaluator:null,
-        shared:{
+        result:UNASSIGNED,
+        event:NOT_ALLOCATED,
+        mode:null,
+        execution:{
             evalStack:{value:0},
             exeStack:new QList(),
             readonlyExeStack:new ReadonlyQList(),
@@ -210,7 +210,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.inspector = args.inspector || null;
         this.onStep = args.onStep || null;
 
-        this.reusables.shared.readonlyExeStack.swapSrc(this.reusables.shared.exeStack);
+        this.reusables.execution.readonlyExeStack.swapSrc(this.reusables.execution.exeStack);
     };
 
     public getFnSrc<T extends boolean>(fn:Fn,capturesLabel:string,isMainFn:T):FnSrc<T>  {

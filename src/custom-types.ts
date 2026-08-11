@@ -218,21 +218,21 @@ export type EvaluatorType = 'eager' | 'lazy';
  * This type describes an internal object 
  * 
  * The eval-stack is a number that represents how many recursions deep the interpreter is, during a specific evaluation
- * It is a wrapper around a value to prevent the cognitive overhead of tracking copy-by-value and copy-by-ref when mutating it
+ * It is a wrapper around a value to prevent the cognitive overhead of tracking copy-by-value and copy-by-ref when mutating it or passing it around
  * 
  * The exe-stack contains the results of each evaluated node
 */
 export interface Reusables {
     node:EsNode | null,
-    currentScope:Scope | null,
+    scope:Scope | null,
     handler:null | NodeHandler,
     result:any | typeof UNASSIGNED,
-    currentEvent:LangEvent | typeof NOT_ALLOCATED,
-    currentEvaluator:EvaluatorType | null,
-    shared:{
+    event:LangEvent | typeof NOT_ALLOCATED,
+    mode:EvaluatorType | null,
+    execution:{
+        evalStack:{value:number},
         exeStack:QList<ExeResult>,
         readonlyExeStack:ReadonlyQList<ExeResult>,
-        evalStack:{value:number},
         perExe:null | {
             owner:EsNode
             fn:PerExe
