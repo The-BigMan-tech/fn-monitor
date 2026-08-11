@@ -45,9 +45,9 @@
  *            monitoring are in their respective index.ts files while everything else were inherited 
  *            from sval and left as they were.
  * 
- *      - There are two test folders,the interpreter tests and the modifications tests:
+ *      - There are two test folders, the interpreter tests and the modifications tests:
  *          - The interpreter tests consists of the 200+ tests inherited from `sval`
- *          - The modification tests consist of the 40+ tests made for the custom modifications
+ *          - The modification tests consist of the 50+ tests made for the custom modifications
  *      
  *      - For the modification tests, 
  *          - Each of them are marked with one of the following prefixes ;
