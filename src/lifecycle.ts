@@ -178,7 +178,7 @@ export function pushedManually(interpreter:SvalPlus):boolean {
         executedManually(interpreter.reusables.result) 
     )
 }
-export function pushResult<T extends NodeResult<unknown>>(interpreter:SvalPlus,final:T) {
+export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>) {
     const event = interpreter.reusables.event;
     const node = interpreter.reusables.node!;
 
