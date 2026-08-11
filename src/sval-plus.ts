@@ -99,26 +99,27 @@ export class Visit implements VisitContract {
         }
     };
 
-    public execute = ()=>{
+    public execute = () =>{
         const handler = this.#interpreter.reusables.handler;
 
-        if (handler !== null) {
-            if (executedManually(this.#interpreter.reusables.result)) {
-                throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
-            };
-            //the node cannot be null if the handler is not null. If it is, it will rightfully fail with a loud type error
+        if (handler === null) {
+            throw new Error(ansis.red(`Internal logic error: visit.execute received null as the handler`))
+        };
+        if (executedManually(this.#interpreter.reusables.result)) {
+            throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
+        };
 
-            this.#interpreter.reusables.result = handler(
-                this.#interpreter.reusables.node!,
-                this.#interpreter.reusables.scope!
-            );
+        //the node cannot be null if the handler is not null. If it is, it will rightfully fail with a loud type error
+        this.#interpreter.reusables.result = handler(
+            this.#interpreter.reusables.node!,
+            this.#interpreter.reusables.scope!
+        );
 
-            if (inLazyMode(this.#interpreter)) {
-                return LAZY_NODE;
-            }else {
-                pushResult(this.#interpreter,this.#interpreter.reusables.result);
-                return this.#interpreter.reusables.result as unknown;
-            }
+        if (inLazyMode(this.#interpreter)) {
+            return LAZY_NODE;
+        }else {
+            pushResult(this.#interpreter,this.#interpreter.reusables.result);
+            return this.#interpreter.reusables.result;
         }
     };
     set perExecution(perExe:PerExe) {

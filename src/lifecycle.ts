@@ -2,7 +2,18 @@ import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import type {Node as EsNode} from "estree";
 import {sha256} from "js-sha256"
-import { UNASSIGNED,SvalPlus,Reusables, NOT_ALLOCATED, NodeHandler, EvaluatorType, EvaluateOps, NodeResult } from "./custom-types.ts";
+import ansis from "ansis";
+
+import { 
+    UNASSIGNED,
+    SvalPlus,
+    Reusables, 
+    NOT_ALLOCATED, 
+    NodeHandler, 
+    EvaluatorType, 
+    EvaluateOps, 
+    NodeResult 
+} from "./custom-types.ts";
 
 const generatorPrint = '[object Generator]';
 
@@ -53,14 +64,14 @@ export const stackHandler = {
         evalStack.value -= 1;
 
         if (evalStack.value < 0) {
-            throw new Error(`Internal logic error: The evalstack pointer has been mishandled. It is supposed to be >=0 but found: ${evalStack.value}`);
+            throw new Error(ansis.red(`Internal logic error: The evalstack pointer has been mishandled. It is supposed to be >=0 but found: ${evalStack.value}`));
         }
         
         if (evalStack.value === 0) {
             clearStack(interpreter);
         }else {
             if (parentReusables === null) {//if a user ever encounters this error,they can paste it along with their code in an issues page
-                throw new Error(`Internal logic error: The stack handler cannot recover the parent node state because it was given 'null'.`)
+                throw new Error(ansis.red(`Internal logic error: The stack handler cannot recover the parent node state because it was given 'null'.`))
             }
             overwriteReusables(interpreter, parentReusables);
         }
