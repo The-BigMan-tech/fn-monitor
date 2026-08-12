@@ -13,11 +13,19 @@ describe('Scope Object Behaviour', () => {
          * 
         */
         function embeddedFn() {
-            for (const x of [1,2,3]) {
-            }
+            for (const x of [1,2,3]) {}
         }
         const embeddedFn2 = function () {
             while (false) {}
+        }
+
+        function* embeddedFn3() {
+            try {} catch {}
+        }
+        const embeddedFn4 = function* () {
+            if (true) {
+                do {} while (false) {}
+            }
         }
 
         const testFn = (x: number)=> {
@@ -25,6 +33,8 @@ describe('Scope Object Behaviour', () => {
             //this will check if the user depth of the embedded functions will leak into the main one
             embeddedFn()
             embeddedFn2()
+            embeddedFn3().next()
+            embeddedFn4().next()
 
             let y = x; // Root level of the function body
             
@@ -38,6 +48,8 @@ describe('Scope Object Behaviour', () => {
         let hitAssignmentExprNode = false;
         let hitForOfNode = false;
         let hitWhileNode = false;
+        let hitDoWhileNode = false;
+        let hitTryStmt = false;
 
         const generatedCode = {value:''};
 
@@ -51,6 +63,12 @@ describe('Scope Object Behaviour', () => {
                 },
                 embeddedFn2:{
                     ref:embeddedFn2
+                },
+                embeddedFn3:{
+                    ref:embeddedFn3
+                },
+                embeddedFn4:{
+                    ref:embeddedFn4
                 }
             },
             beforeEachCall:()=>{
@@ -58,6 +76,8 @@ describe('Scope Object Behaviour', () => {
                 hitAssignmentExprNode = false;
                 hitForOfNode = false;
                 hitWhileNode = false;
+                hitDoWhileNode = false;
+                hitTryStmt = false;
             },
             inspector: (visit) => {
                 visit.is('VariableDeclaration', (event) => {
@@ -83,6 +103,16 @@ describe('Scope Object Behaviour', () => {
                     expect(event.scope.depth).toBe(0);
                     hitWhileNode = true;
                 })
+
+                visit.is('TryStatement',(event)=>{
+                    expect(event.scope.depth).toBe(0);
+                    hitTryStmt = true;
+                })
+
+                visit.is('DoWhileStatement',(event)=>{
+                    expect(event.scope.depth).toBe(1);
+                    hitDoWhileNode = true;
+                })
             },
             // sourceOut:generatedCode
         });
@@ -94,6 +124,8 @@ describe('Scope Object Behaviour', () => {
         expect(hitAssignmentExprNode).toBe(true);
         expect(hitForOfNode).toBe(true);
         expect(hitWhileNode).toBe(true);
+        expect(hitTryStmt).toBe(true);
+        expect(hitDoWhileNode).toBe(true);
     });
 
     it('[Sync] should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{
