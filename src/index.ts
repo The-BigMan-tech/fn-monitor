@@ -38,12 +38,16 @@
  *          - There are two evaluator implementations--the nomalized version under the  
  *          evaluate_n folder and the generator version which is under the evaluate folder
  * 
- *          - The normalized version is used by the interpreter to run a node synchronously 
- *            while the generator version is used to run async nodes
+ *              - The normalized version is used by the interpreter to run a node synchronously 
+ *                while the generator version is used to run async nodes
+ *              
+ *              - The parts of these evaluators that have the custom modifications to enable function
+ *                monitoring are in their respective index.ts files while everything else were inherited 
+ *                from sval and left as they were.
  *          
- *          - The parts of these evaluators that have the custom modifications to enable function
- *            monitoring are in their respective index.ts files while everything else were inherited 
- *            from sval and left as they were.
+ *          - Other places that include the modifications are:
+ *             - The scope class in its respective index.ts file
+ *             - The Sval class in the sval.ts file. It was only given minor adjustments
  * 
  *      - There are two test folders, the interpreter tests and the modifications tests:
  *          - The interpreter tests consists of the 200+ tests inherited from `sval`
