@@ -33,13 +33,16 @@ export default class Scope<T = any> {
      */
     private withContext: object = create(null)
 
+    public interpreter:T | undefined = undefined;
+
+    /**The lexical depth of where the user's function in in the internal generated code starts */
+    public userDepth:number | null = null;
+
     /**
      * Create a simulated scope
      * @param parent the parent scope along the scope chain (default: null)
      * @param isolated true for function scope or false for block scope (default: false)
-     */
-    public interpreter:T | undefined = undefined;
-    public userDepth:number | null = null;
+    */
 
     constructor(
         parent: Scope | null,
@@ -49,24 +52,26 @@ export default class Scope<T = any> {
         this.parent = parent
         this.isolated = isolated;
         this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
-        this.userDepth ||= (parent ? parent.userDepth : null)
+        this.userDepth ||= (parent ? parent.userDepth : null);
     }
 
     public hasParent() {
         return this.parent !== null;
     }
-    public get scopeContext() {
-        return this.context;
-    }
-    public get scopeParent() {
+    public getParent() {
         return this.parent;
     }
-    public get scopeDepth() {
+
+
+    public get local() {
+        return this.context;
+    }
+    public get depth() {
         let depth = 0;
         let currentScope:Scope | null = this;
         while (currentScope && currentScope.hasParent()) {
             depth += 1;
-            currentScope = currentScope.scopeParent;
+            currentScope = currentScope.getParent();
         }
         return depth;
     }

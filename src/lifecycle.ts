@@ -37,16 +37,16 @@ export function getSHA256Key(str:string):string {
 function inUserCode(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
 
-    const currentDepth = scope.scopeDepth;
+    const currentDepth = scope.depth;
 
-    const locals = scope.scopeContext;//we use the locals object instead of the .find() method to preserve performance
-    const anchorValue = locals[interpreter.labels.anchor]?.get();
+    const local = scope.local;//we use the locals object instead of the .find() method to preserve performance
+    const anchorValue = local[interpreter.labels.anchor]?.get();
     
     const isAnchored = (anchorValue === true);//we explicitly check for the value to prevent the condition from falsely evaluating to true when it only contains a deadzone value
     let calculatedUserDepth = (scope.userDepth !== null)
 
     if (isAnchored && !calculatedUserDepth) {
-        const offset = locals[interpreter.labels.offset];
+        const offset = local[interpreter.labels.offset];
         if (!offset) {
             throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
         };

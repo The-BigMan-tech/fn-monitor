@@ -70,10 +70,10 @@ class EventScope implements ScopeForEvent {
             throw new Error(ansis.red(`Internal logic error: Cannot create allocate a scope for an event if null is given as the depth`))
         };
 
-        this.depth = this.#scope.scopeDepth - userDepth;
+        this.depth = this.#scope.depth - userDepth;
 
         const local:ScopeForEvent['variables']['local'] = {};
-        Object.entries(this.#scope.scopeContext).forEach(([k,v])=>{
+        Object.entries(this.#scope.local).forEach(([k,v])=>{
             local[k] = v.get()
         });
 
