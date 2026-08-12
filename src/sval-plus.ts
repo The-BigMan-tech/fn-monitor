@@ -98,7 +98,8 @@ export class Visit implements VisitContract {
     public localExeStack = ()=>{
         return this.#interpreter.reusables.execution.readonlyExeStack;
     }
-    public is:VisitContract['is'] = (query,cb)=>{//the monitor will only create the event object for a node if it meets the demand.
+    //the monitor will only create the event object for a node if it matches the query
+    public is:VisitContract['is'] = (query,cb)=>{
         const node = this.#interpreter.reusables.node!;
 
         if ((query === "Any") || (node.type === query)) {
