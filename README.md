@@ -607,12 +607,12 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ## Full API Reference 📚 
 
-### Core Functions
+### Core Configuration
 
-#### `monitor<T>(setup: MonitorFnSetup<T>)`
+#### monitor`<T>`(setup: MonitorFnSetup`<T>`)
 The main export. Accepts a configuration object and returns a new function with an identical call signature to the original, but executed by the custom interpreter.
 
-#### `MonitorFnSetup<T>`
+#### MonitorFnSetup`<T>`
 | Property | Type | Description |
 | --- | --- | --- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
@@ -625,7 +625,7 @@ The main export. Accepts a configuration object and returns a new function with 
 
 > 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on lazy nodes (generators can `yield` the `LAZY_NODE` symbol to defer the result).
 
-#### `Metadata<T>`
+#### Metadata`<T>`
 | Property | Type | Description |
 | --- | --- | --- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
@@ -644,7 +644,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
 
-#### `ExeResult`
+#### ExeResult
 | Property | Type | Description |
 | --- | --- | --- |
 | `evaluation` | `unknown` | The result of the node's evaluation. |
@@ -658,7 +658,10 @@ The rich object that gives inspectors their ability to participate in the interp
 
 - **`EsNode`**: Union of all AST nodes (alias to `Node` from `estree`).
   
-- **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. `variables.local` holds local variables, while `variables.search(name)` searches up the scope chain. `depth` is strictly 0-indexed from the wrapped function's root.
+- **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. 
+    - `variables.local` holds local variables
+    - `variables.search(name)` searches up the scope chain. 
+    - `depth` is a measure of lexical nesting. It maps directly to the physical structure of the AST and measured relative to the root of the current function call.
   
 - **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
   
