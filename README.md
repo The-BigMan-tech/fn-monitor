@@ -658,10 +658,11 @@ The rich object that gives inspectors their ability to participate in the interp
 
 - **`EsNode`**: Union of all AST nodes (alias to `Node` from `estree`).
   
-- **`ScopeForEvent`**: A freshly allocated, read-only snapshot of the scope. 
-    - `variables.local` holds local variables
-    - `variables.search(name)` searches up the scope chain. 
+- **`ScopeForEvent`**: A freshly allocated, snapshot of the scope. 
+    - `variables.local` is an object that maps variable identifiers to their values
+    - `variables.search(name)` searches up the scope chain for a variable through its identifier. 
     - `depth` is a measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the current function call.
+    - `callDepth` is a runtime metric representing the current size of the call stack
   
 - **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
   

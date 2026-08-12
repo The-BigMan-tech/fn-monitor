@@ -59,8 +59,10 @@ interface SvalPlusArgs {
 class EventScope implements ScopeForEvent {
     #scope:Scope;
 
-    public depth:number;
     public variables:ScopeForEvent['variables'];
+
+    public depth:number;
+    public callDepth:number;
 
     constructor(interpreter:SvalPlus) {
         this.#scope = interpreter.reusables.scope!;
@@ -71,6 +73,7 @@ class EventScope implements ScopeForEvent {
         };
 
         this.depth = this.#scope.depth - userDepth;
+        this.callDepth = this.#scope.callStackSize;
 
         const local:ScopeForEvent['variables']['local'] = {};
         Object.entries(this.#scope.local).forEach(([k,v])=>{

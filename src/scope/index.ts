@@ -33,10 +33,13 @@ export default class Scope<T = any> {
      */
     private withContext: object = create(null)
 
-    public interpreter:T | undefined = undefined;
+    public interpreter:T | undefined;
 
     /**The lexical depth of where the user's function in in the internal generated code starts */
-    public userDepth:number | null = null;
+    public userDepth:number | null;
+
+    //this is intentionally not a static variable to ensure that it is wiped out after the scope is garbage collected
+    public callStackSize:number;
 
     /**
      * Create a simulated scope
@@ -51,9 +54,14 @@ export default class Scope<T = any> {
     ) { 
         this.parent = parent
         this.isolated = isolated;
+
         this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
-        this.userDepth ||= (parent ? parent.userDepth : null);
+        this.userDepth = parent ? parent.userDepth : null;
+        
+        this.callStackSize = parent ? parent.callStackSize : 0
+        this.callStackSize += isolated ? 1 : 0;
     }
+
 
     public hasParent() {
         return this.parent !== null;

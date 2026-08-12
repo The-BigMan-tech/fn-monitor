@@ -217,8 +217,10 @@ export interface ScopeForEvent {
         search:(name: string)=>unknown | undefined,
         local:Record<string,unknown>
     },
-    /**The depth of the scope of the current node*/
-    depth:number
+    /**The lexical depth of the scope relative to the current running function*/
+    depth:number,
+    /**a runtime metric representing the current size of the call stack*/
+    callDepth:number
 };
 
 
