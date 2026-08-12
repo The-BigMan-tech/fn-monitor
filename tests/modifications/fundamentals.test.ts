@@ -150,7 +150,7 @@ describe('Fundamental Runtime Behaviour',()=>{
                 hitReturnNode = false;
             },
             inspector:function* (visit):InspectorGenerator {
-                const result = yield visit.execute();//since our monitored function is synchronous,it will be handled by our normalized evaluator
+                const result:any = yield visit.execute();//since our monitored function is synchronous,it will be handled by our normalized evaluator
                 visit.is('ReturnStatement',()=>{
                     sum = result.RES;
                     hitReturnNode = true;
