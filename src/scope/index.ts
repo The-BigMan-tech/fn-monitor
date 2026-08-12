@@ -59,12 +59,11 @@ export default class Scope<T = any> {
         this.isolated = isolated;
 
         this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
+        this.depth = parent ? parent.depth + 1 : 0;
         this.userDepth = parent ? parent.userDepth : null;
         
         this.callStackSize = parent ? parent.callStackSize : 0
         this.callStackSize += isolated ? 1 : 0;
-
-        this.depth = this.getDepth();
     }
 
 
@@ -74,19 +73,8 @@ export default class Scope<T = any> {
     public getParent() {
         return this.parent;
     }
-
-
     public get local() {
         return this.context;
-    }
-    public getDepth() {
-        let depth = 0;
-        let currentScope:Scope | null = this;
-        while (currentScope && currentScope.hasParent()) {
-            depth += 1;
-            currentScope = currentScope.getParent();
-        }
-        return depth;
     }
 
 
