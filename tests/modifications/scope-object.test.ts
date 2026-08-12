@@ -105,11 +105,13 @@ describe('Scope Object Behaviour', () => {
                 })
 
                 visit.is('TryStatement',(event)=>{
+                    //in the third embedded fn
                     expect(event.scope.depth).toBe(0);
                     hitTryStmt = true;
                 })
 
                 visit.is('DoWhileStatement',(event)=>{
+                    //in the fourth embedded fn
                     expect(event.scope.depth).toBe(1);
                     hitDoWhileNode = true;
                 })
