@@ -58,7 +58,7 @@ export default class Scope<T = any> {
         this.parent = parent
         this.isolated = isolated;
 
-        this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
+        this.interpreter = interpreter || (parent ? parent.interpreter : undefined);
         this.depth = parent ? parent.depth + 1 : 0;
         this.userDepth = parent ? parent.userDepth : null;
         
