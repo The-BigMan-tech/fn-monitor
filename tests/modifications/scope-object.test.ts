@@ -21,14 +21,17 @@ describe('Scope Object Behaviour', () => {
         }
 
         const testFn = (x: number)=> {
+            //call the embedded functions before running the main function's logic
+            //this will check if the user depth of the embedded functions will leak into the main one
+            embeddedFn()
+            embeddedFn2()
+
             let y = x; // Root level of the function body
             
             if (y !== 0) {
                 y -= 1; // Inside an 'if' block, which creates a new nested scope
                 testFn(y); // Recursive call to prove that the depth resets correctly
             }
-            embeddedFn()
-            embeddedFn2()
         };
 
         let hitVarDeclNode = false;
