@@ -41,8 +41,8 @@ function inUserCode(scope:Scope):boolean {
     const locals = scope.scopeContext;//we use the locals object instead of the .find() method to preserve performance
     const anchorValue = locals[interpreter.labels.anchor]?.get();
     
-    const isAnchored = (anchorValue === true);
-    const calculatedUserDepth = (scope.userDepth !== null)
+    const isAnchored = (anchorValue === true);//we explicitly check for the value to prevent the condition from falsely evaluating to true when it only contains a deadzone value
+    let calculatedUserDepth = (scope.userDepth !== null)
 
     if (isAnchored && !calculatedUserDepth) {
         const offset = locals[interpreter.labels.offset];
@@ -50,6 +50,7 @@ function inUserCode(scope:Scope):boolean {
             throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
         };
         scope.userDepth = currentDepth + offset.get();
+        calculatedUserDepth = true;
     };
     return (
         (interpreter.stage === 'MONITORING') &&
