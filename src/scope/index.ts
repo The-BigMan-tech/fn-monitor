@@ -35,6 +35,9 @@ export default class Scope<T = any> {
 
     public interpreter:T | undefined;
 
+    /**The lexical depth of the scope */
+    public depth:number;
+
     /**The lexical depth of where the user's function in in the internal generated code starts */
     public userDepth:number | null;
 
@@ -60,6 +63,8 @@ export default class Scope<T = any> {
         
         this.callStackSize = parent ? parent.callStackSize : 0
         this.callStackSize += isolated ? 1 : 0;
+
+        this.depth = this.getDepth();
     }
 
 
@@ -74,7 +79,7 @@ export default class Scope<T = any> {
     public get local() {
         return this.context;
     }
-    public get depth() {
+    public getDepth() {
         let depth = 0;
         let currentScope:Scope | null = this;
         while (currentScope && currentScope.hasParent()) {
