@@ -39,29 +39,22 @@ function inUserCode(scope:Scope):boolean {
     const currentDepth = scope.scopeDepth;
 
     const locals = scope.scopeContext;//we use the locals object instead of the .find() method to preserve performance
-    const boundary = interpreter.userCodeBoundary;
-
-    const anchorValue = locals[boundary.labels.anchor]?.get();
+    const anchorValue = locals[interpreter.labels.anchor]?.get();
+    
     const isAnchored = (anchorValue === true);
-
-    const calculatedUserDepth = (boundary.scope === scope)
+    const calculatedUserDepth = (scope.userDepth !== null)
 
     if (isAnchored && !calculatedUserDepth) {
-        const offset = locals[boundary.labels.offset];
+        const offset = locals[interpreter.labels.offset];
         if (!offset) {
             throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
         };
-
-        boundary.depth = currentDepth + offset.get();
-        boundary.scope = scope;
-
-        console.log('hit monitored fn','Depth: ',boundary.depth);
-        console.log('🚀 => :55 => inUserCode => depthOffset.get():',offset.get());
-        console.log('🚀 => :55 => inUserCode => currentDepth:', currentDepth);
+        scope.userDepth = currentDepth + offset.get();
     };
     return (
         (interpreter.stage === 'MONITORING') &&
-        (boundary.depth !== null) && (currentDepth >= boundary.depth)
+        calculatedUserDepth && 
+        (currentDepth >= scope.userDepth!)
     )
 }
 export function callOnStep(scope:Scope) {

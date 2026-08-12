@@ -39,6 +39,7 @@ export default class Scope<T = any> {
      * @param isolated true for function scope or false for block scope (default: false)
      */
     public interpreter:T | undefined = undefined;
+    public userDepth:number | null = null;
 
     constructor(
         parent: Scope | null,
@@ -48,6 +49,7 @@ export default class Scope<T = any> {
         this.parent = parent
         this.isolated = isolated;
         this.interpreter = interpreter || (parent ? parent.interpreter : undefined)
+        this.userDepth ||= (parent ? parent.userDepth : null)
     }
 
     public hasParent() {

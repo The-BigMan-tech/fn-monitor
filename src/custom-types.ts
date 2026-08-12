@@ -275,22 +275,18 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     onStep: OnStep | null,
     reusables: Reusables<T>,
     visit: Visit,
+
+    labels:{
+        anchor:string,
+        offset:string
+    }
+    createEventScope: () => ScopeForEvent,
     
     /** 
      * Prevents the interpreter from firing inspector hooks during the AST parsing 
      * stage, or when the monitored function is not actively executing. 
      */
     stage: 'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
-    
-    userCodeBoundary: {
-        scope:Scope | null,
-        depth:number | null,
-        labels:{
-            anchor: string,
-            offset: string
-        }
-    }
-    createEventScope: () => ScopeForEvent,
 }
 
 export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event

@@ -63,12 +63,13 @@ class EventScope implements ScopeForEvent {
     public variables:ScopeForEvent['variables'];
 
     constructor(interpreter:SvalPlus) {
-        const userDepth = interpreter.userCodeBoundary.depth
+        this.#scope = interpreter.reusables.scope!;
+
+        const userDepth = this.#scope.userDepth;
         if (userDepth === null) {
             throw new Error(ansis.red(`Internal logic error: Cannot create allocate a scope for an event if null is given as the depth`))
         };
 
-        this.#scope = interpreter.reusables.scope!;
         this.depth = this.#scope.scopeDepth - userDepth;
 
         const local:ScopeForEvent['variables']['local'] = {};
@@ -180,16 +181,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     
     public fnCallAst:Node | null = null;
     public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-    
-    public userCodeBoundary = {
-        scope:null,
-        depth:null,
-        labels:{
-            anchor: SvalPlus.commonLabels.anchor,
-            offset: SvalPlus.commonLabels.offset
-        }
-    };
 
+    public labels = {
+        offset:SvalPlus.commonLabels.offset,
+        anchor:SvalPlus.commonLabels.anchor
+    }
     public reusables:Reusables = {
         node:null,
         scope:null,
@@ -255,13 +251,13 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
             // it starts at 1 to ensure that it always points to the inner part of the function's body
-            let ${this.userCodeBoundary.labels.offset} = 1;
-            ${this.userCodeBoundary.labels.offset} += ${
+            let ${this.labels.offset} = 1;
+            ${this.labels.offset} += ${
                 isStandardFunction?1:0
             }
             
             //It is important that this is set after assigning the relative depth 
-            const ${this.userCodeBoundary.labels.anchor} = true;
+            const ${this.labels.anchor} = true;
 
             ${unpackCaptures};
             ${intermediateFnCode}
