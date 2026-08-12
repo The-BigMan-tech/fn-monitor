@@ -36,6 +36,7 @@ export function getSHA256Key(str:string):string {
 
 function inUserCode(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
+
     const currentDepth = scope.scopeDepth;
 
     const locals = scope.scopeContext;//we use the locals object instead of the .find() method to preserve performance
@@ -52,12 +53,18 @@ function inUserCode(scope:Scope):boolean {
         scope.userDepth = currentDepth + offset.get();
         calculatedUserDepth = true;
     };
-    return (
-        (interpreter.stage === 'MONITORING') &&
-        calculatedUserDepth && 
-        (currentDepth >= scope.userDepth!)
+
+    const enteredUserCode = (
+        //this particular condition must be done after calculating the user depth. If you take it to the top,the interpreter will miss its only chance to calculate it
+        interpreter.stage === "MONITORING" && 
+        calculatedUserDepth &&
+        currentDepth >= scope.userDepth!
     )
-}
+    
+    return enteredUserCode;
+};
+
+
 export function callOnStep(scope:Scope) {
     const interpreter:SvalPlus = scope.interpreter;
     if (inUserCode(scope) && (interpreter.onStep !== null)) {
