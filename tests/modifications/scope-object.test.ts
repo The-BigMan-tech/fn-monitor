@@ -5,13 +5,21 @@ describe('Scope Object Behaviour', () => {
     
     it('[Sync] should ensure that the depth is a 0-indexed structural measure, starting from the root of the current running function which is either the main one or an embedded one', () => {
         /**
-         * for the test to be very effective, the embedded function must always be a standard declaration while the other can be defined in any style.
+         * for the test to be very effective, the first embedded functions must be a standard declaration.
          * This will cause their internal depths to drift which is the factor that tests if the depth calculation is actually robust
+         * 
+         * The second embedded function must be an anonymous function expression to test the regex
+         * While the main one must be a closure to also test the regex
+         * 
         */
         function embeddedFn() {
             for (const x of [1,2,3]) {
             }
         }
+        const embeddedFn2 = function () {
+            while (false) {}
+        }
+
         const testFn = (x: number)=> {
             let y = x; // Root level of the function body
             
@@ -20,13 +28,15 @@ describe('Scope Object Behaviour', () => {
                 testFn(y); // Recursive call to prove that the depth resets correctly
             }
             embeddedFn()
+            embeddedFn2()
         };
 
         let hitVarDeclNode = false;
         let hitAssignmentExprNode = false;
         let hitForOfNode = false;
+        let hitWhileNode = false;
 
-        // const generatedCode = {value:''};
+        const generatedCode = {value:''};
 
         const monitoredFn = monitor({
             main: { 
@@ -35,12 +45,16 @@ describe('Scope Object Behaviour', () => {
             embed:{
                 embeddedFn:{
                     ref:embeddedFn
+                },
+                embeddedFn2:{
+                    ref:embeddedFn2
                 }
             },
             beforeEachCall:()=>{
                 hitVarDeclNode = false,
                 hitAssignmentExprNode = false;
                 hitForOfNode = false;
+                hitWhileNode = false;
             },
             inspector: (visit) => {
                 visit.is('VariableDeclaration', (event) => {
@@ -56,9 +70,15 @@ describe('Scope Object Behaviour', () => {
                 });
 
                 visit.is('ForOfStatement',(event)=>{
-                    //the for loop in the embedded function
+                    //the for loop in the first embedded function
                     expect(event.scope.depth).toBe(0);
                     hitForOfNode = true;
+                })
+
+                visit.is('WhileStatement',(event)=>{
+                    //the while loop in the second embedded function
+                    expect(event.scope.depth).toBe(0);
+                    hitWhileNode = true;
                 })
             },
             // sourceOut:generatedCode
@@ -70,6 +90,7 @@ describe('Scope Object Behaviour', () => {
         expect(hitVarDeclNode).toBe(true);
         expect(hitAssignmentExprNode).toBe(true);
         expect(hitForOfNode).toBe(true);
+        expect(hitWhileNode).toBe(true);
     });
 
     it('[Sync] should verify that you can query for a variable through the local object or the search method of event.scope.variables',()=>{

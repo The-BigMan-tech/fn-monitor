@@ -247,8 +247,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             :'';
 
         const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
-        const isStandardFunction = /^\s*(async\s+)?function\b/.test(fnString);
-
+        const isStandardFunction = /^\s*(async\s+)?function\s+[a-zA-Z_$]/.test(fnString);
+        
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
             // it starts at 1 to ensure that it always points to the inner part of the function's body
             let ${this.labels.offset} = 1;
