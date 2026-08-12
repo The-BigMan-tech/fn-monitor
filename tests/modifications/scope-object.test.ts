@@ -5,11 +5,11 @@ describe('Scope Object Behaviour', () => {
     
     it('[Sync] should ensure that the depth is a 0-indexed structural measure, starting from the root of the current running function which is either the main one or an embedded one', () => {
         /**
-         * for the test to be very effective, the first embedded functions must be a standard declaration.
+         * for the test to be very effective, the first embedded function must be a standard declaration.
          * This will cause their internal depths to drift which is the factor that tests if the depth calculation is actually robust
          * 
-         * The second embedded function must be an anonymous function expression to test the regex
-         * While the main one must be a closure to also test the regex
+         * The other embedded functions must be declared the way they currently are to test the internal regex used to catch their declr type
+         * While the main one must be an arrow fn to also test the regex
          * 
         */
         function embeddedFn() {
