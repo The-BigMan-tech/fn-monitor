@@ -49,7 +49,7 @@ function inUserCode(scope:Scope):boolean {
     if (isAnchored && !calculatedUserDepth) {
         const offset = locals[boundary.labels.offset];
         if (!offset) {
-            throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'inMonitoredFn' label exists in the current scope`))
+            throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
         };
 
         boundary.depth = currentDepth + offset.get();

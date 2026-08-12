@@ -254,6 +254,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const isStandardFunction = /^\s*(async\s+)?function\b/.test(fnString);
 
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
+            // it starts at 1 to ensure that it always points to the inner part of the function's body
             let ${this.userCodeBoundary.labels.offset} = 1;
             ${this.userCodeBoundary.labels.offset} += ${
                 isStandardFunction?1:0
