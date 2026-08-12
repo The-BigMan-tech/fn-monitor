@@ -661,8 +661,10 @@ The rich object that gives inspectors their ability to participate in the interp
 - **`ScopeForEvent`**:  A freshly allocated snapshot of the scope. 
     - `variables.local` is an object that maps variable identifiers to their values
     - `variables.search(name)` searches up the scope chain for a variable through its identifier. 
-    - `depth` is a measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the current function call.
-    - `callDepth` is a runtime metric representing the current size of the call stack
+    - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the current function call.
+    - `callDepth` is a 0-indexed value representing the current size of the call stack starting from a monitored function.
+  
+  > 💡 callDepth will be available in v1.4.0
   
 - **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
   
