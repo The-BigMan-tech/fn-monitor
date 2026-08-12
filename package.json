@@ -8,7 +8,9 @@
     "files": [
         "dist/**/*.js",
         "dist/**/*.d.ts",
-        "ACKNOWLEDGEMENTS.md"
+        "logo.svg",
+        "ACKNOWLEDGEMENTS.md",
+        "CHANGELOG.md"
     ],
     "author": {
         "name": "typescript-guy",
