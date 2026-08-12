@@ -3,16 +3,16 @@ import { monitor, ScopeForEvent } from '../../src/index';
 
 describe('Scope Object Behaviour', () => {
     
-    it('[Sync] should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
-        //for the test to be very effective,one of these function definitions must be a standard declaration while the other must be an arrow function
+    it('[Sync] should ensure that the depth is a 0-indexed structural measure, starting from the root of the current running function which is either the main one or an embedded one', () => {
+        /**
+         * for the test to be very effective, the embedded function must always be a standard declaration while the other can be defined in any style.
+         * This will cause their internal depths to drift which is the factor that tests if the depth calculation is actually robust
+        */
         function embeddedFn() {
-            if (true) {
-                for (const x of [1,2,3]) {
-
-                }
+            for (const x of [1,2,3]) {
             }
         }
-        const testFn = (x: number)=>{
+        const testFn = (x: number)=> {
             let y = x; // Root level of the function body
             
             if (y !== 0) {
@@ -25,6 +25,8 @@ describe('Scope Object Behaviour', () => {
         let hitVarDeclNode = false;
         let hitAssignmentExprNode = false;
         let hitForOfNode = false;
+
+        // const generatedCode = {value:''};
 
         const monitoredFn = monitor({
             main: { 
@@ -55,12 +57,13 @@ describe('Scope Object Behaviour', () => {
 
                 visit.is('ForOfStatement',(event)=>{
                     //the for loop in the embedded function
-                    expect(event.scope.depth).toBe(2);
+                    expect(event.scope.depth).toBe(0);
                     hitForOfNode = true;
                 })
             },
+            // sourceOut:generatedCode
         });
-
+        // console.log('CODE:\n',generatedCode.value);
         monitoredFn(5);
 
         // Verify that the interpreter actually fired our callbacks
