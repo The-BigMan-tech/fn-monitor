@@ -267,16 +267,31 @@ export interface Reusables<T extends unknown | Generator = unknown | Generator> 
         }
     }
 }
+
 export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
-    inspector:Inspector<'internal'> | null,//using node result here forces the evaluator to be type safe
-    onStep:OnStep | null,
-    reusables:Reusables<T>,
-    visit:Visit,
-    stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING';//the purpose of this is to prevent the interpreter from hitting the inspector during the parsing stage and also when its not explicitly running the monitored function
-    createEventScope:()=>ScopeForEvent,
+    /** Using the internal Inspector type forces the evaluator to maintain strict type safety with NodeResult */
+    inspector: Inspector<'internal'> | null, 
+
+    onStep: OnStep | null,
+    reusables: Reusables<T>,
+    visit: Visit,
+    
+    /** 
+     * Prevents the interpreter from firing inspector hooks during the AST parsing 
+     * stage, or when the monitored function is not actively executing. 
+     */
+    stage: 'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
+    
+    userCodeBoundary: {
+        scope:Scope | null,
+        depth:number | null,
+        labels:{
+            anchor: string,
+            offset: string
+        }
+    }
+    createEventScope: () => ScopeForEvent,
 }
-
-
 
 export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event
     public node:NodeType;

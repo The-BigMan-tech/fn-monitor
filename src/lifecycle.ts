@@ -34,12 +34,35 @@ export function getSHA256Key(str:string):string {
 }
 
 
-function inUserCode(scope:Scope) {
+function inUserCode(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
+    const currentDepth = scope.scopeDepth;
+
+    const locals = scope.scopeContext;
+    const boundary = interpreter.userCodeBoundary;
+
+    const anchorValue = locals[boundary.labels.anchor]?.get();
+    const isAnchored = (anchorValue === true);
+
+    const calculatedUserDepth = (boundary.scope === scope)
+
+    if (isAnchored && !calculatedUserDepth) {
+        const offset = locals[boundary.labels.offset];
+        if (!offset) {
+            throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'inMonitoredFn' label exists in the current scope`))
+        };
+
+        boundary.depth = currentDepth + offset.get();
+        boundary.scope = scope;
+
+        console.log('hit monitored fn','Depth: ',boundary.depth);
+        console.log('🚀 => :55 => inUserCode => depthOffset.get():',offset.get());
+        console.log('🚀 => :55 => inUserCode => currentDepth:', currentDepth);
+    };
     return (
         (interpreter.stage === 'MONITORING') &&
-        scope.scopeDepth >= 2//its only the boilerplate in the generated code that is at depth 0 and 1.
-    );
+        (boundary.depth !== null) && (currentDepth >= boundary.depth)
+    )
 }
 export function callOnStep(scope:Scope) {
     const interpreter:SvalPlus = scope.interpreter;

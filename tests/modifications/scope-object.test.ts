@@ -4,14 +4,16 @@ import { monitor, ScopeForEvent } from '../../src/index';
 describe('Scope Object Behaviour', () => {
     
     it('[Sync] should ensure that the depth is 0-indexed, starting from the root of the wrapped function', () => {
-        const embeddedFn = ()=>{
+        //at least one of these function definitions must be a standard declaration for the test to be very effective
+        
+        function embeddedFn() {
             if (true) {
                 for (const x of [1,2,3]) {
 
                 }
             }
         }
-        const testFn = (x: number) => {
+        const testFn = (x: number)=>{
             let y = x; // Root level of the function body
             
             if (y !== 0) {

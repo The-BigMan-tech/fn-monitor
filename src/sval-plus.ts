@@ -63,9 +63,14 @@ class EventScope implements ScopeForEvent {
     public variables:ScopeForEvent['variables'];
 
     constructor(interpreter:SvalPlus) {
+        const userDepth = interpreter.userCodeBoundary.depth
+        if (userDepth === null) {
+            throw new Error(ansis.red(`Internal logic error: Cannot create allocate a scope for an event if null is given as the depth`))
+        };
+
         this.#scope = interpreter.reusables.scope!;
-        this.depth = this.#scope.scopeDepth - 2;//We subtract 2 to make it 0-indexed.check the comment next to the variable, 'inUserScope' in one of the files
-        
+        this.depth = this.#scope.scopeDepth - userDepth;
+
         const local:ScopeForEvent['variables']['local'] = {};
         Object.entries(this.#scope.scopeContext).forEach(([k,v])=>{
             local[k] = v.get()
@@ -130,12 +135,21 @@ export class Visit implements VisitContract {
     }
 } 
 export class SvalPlus extends Sval implements SvalPlusContract {
-    //This one is static to prevent recomputing the same keys for each instance
-    //This is safe because each instance uses this as a readonly view. They are still isolated
-
+    /**
+     * Shared, pre-computed identifier labels for the generated wrapper code.
+     *
+     * - Performance: Computed once at class initialization to avoid redundant 
+     *   SHA-256 hashing overhead for every new interpreter instance.
+     * 
+     * - Safety: Strictly read-only. Sharing these constant keys across concurrent 
+     *   interpreter instances is safe, as the actual execution state remains 
+     *   fully isolated within each instance.
+    */
     public static commonLabels = {
         resultExport:getSHA256Key('result'),
         args:getSHA256Key('args'),
+        anchor:getSHA256Key('anchor'),
+        offset:getSHA256Key('offset'),
         captures:(fnName:string)=>{
             return getSHA256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
         }
@@ -156,7 +170,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         sandBox:true, 
     };
     
-
+    public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE';
+    
     public inspector:Inspector<'internal'> | null = null;
     public onStep:OnStep | null = null;
 
@@ -164,9 +179,16 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public fnAfterEachCall:Fn | null = null;
     
     public fnCallAst:Node | null = null;
-
     public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
-    public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE'
+    
+    public userCodeBoundary = {
+        scope:null,
+        depth:null,
+        labels:{
+            anchor: SvalPlus.commonLabels.anchor,
+            offset: SvalPlus.commonLabels.offset
+        }
+    };
 
     public reusables:Reusables = {
         node:null,
@@ -187,10 +209,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
 
 
-    // Accepting either SvalOptions,SvalPlusArgs or nothing allows this class to be instantiated exactly like the parent class. 
-    // This backward-compatible behavior is utilized in the core tests.
-    // Any code utilizing the SvalPlus extensions is required to always pass true to 'useExtensions'
-
+    /**
+     * Accepting either SvalOptions,SvalPlusArgs or nothing allows this class to be instantiated exactly like the parent class.
+     * This backward-compatible behavior is utilized in the core tests.
+     * Any code utilizing the SvalPlus extensions is required to always pass true to 'useExtensions'
+    */
     constructor(args?:SvalPlusArgs | SvalOptions) {
         const useExtensions:boolean = 
             (args !== undefined) && (args as SvalPlusArgs).useExtensions
@@ -228,9 +251,18 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             :'';
 
         const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
+        const isStandardFunction = /^\s*(async\s+)?function\b/.test(fnString);
 
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
-            ${unpackCaptures}
+            let ${this.userCodeBoundary.labels.offset} = 1;
+            ${this.userCodeBoundary.labels.offset} += ${
+                isStandardFunction?1:0
+            }
+            
+            //It is important that this is set after assigning the relative depth 
+            const ${this.userCodeBoundary.labels.anchor} = true;
+
+            ${unpackCaptures};
             ${intermediateFnCode}
             return ${intermediateFnName};
         })();`
