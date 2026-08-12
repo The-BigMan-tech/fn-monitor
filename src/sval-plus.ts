@@ -253,14 +253,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
         const isStandardFunction = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/.test(fnString);
         
+        //The depth offset must start at 1 to ensure that it always points to the inner part of the function's body
+        //It is important that the anchor is set after assigning the offset
+
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
-            // it starts at 1 to ensure that it always points to the inner part of the function's body
             let ${this.labels.offset} = 1;
             ${this.labels.offset} += ${
                 isStandardFunction?1:0
             }
-            
-            //It is important that this is set after assigning the relative depth 
             const ${this.labels.anchor} = true;
 
             ${unpackCaptures};
