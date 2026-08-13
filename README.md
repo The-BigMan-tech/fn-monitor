@@ -109,132 +109,6 @@ intermediate result:  -15
 Result:  -15
 ```
 
-### Capturing values and Embedding Functions
-
-Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding:
-
-- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you can't reassign them.
-  
-- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
-
-In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
-
-The value of `currentFn` is wrapped in an object because of how captured variables are injected. We also capture it into `sayHello` and `print`.
-
-The output shows that only `sayHello` and `print` appear in the intercepted set.
-
-
-```typescript
-import { monitor } from "@typescript-guy/fn-monitor";
-
-const currentFn = {value:'' as any}
-const interceptedFns = new Set();
-
-const label = 'Printed: ';
-
-function print(str:string) {
-    currentFn.value = "print";
-
-    console.log(label,str);
-
-    currentFn.value = undefined
-}
-
-function printName(name:string) {
-    currentFn.value = "printName"
-
-    console.log('Hello ',name);
-
-    currentFn.value = undefined
-}
-
-const sayHello = monitor({
-    main:{
-        ref:(name:string)=>{
-            currentFn.value = "sayHello";
-
-            printName(name)
-            print('Hello world');
-
-            currentFn.value = undefined
-        },
-        captures:{
-            printName,
-            currentFn
-        }
-    },
-    embed:{
-        print:{
-            ref:print,
-            captures:{
-                label,
-                currentFn
-            }
-        }
-    },
-    onStep:()=>{
-        if (currentFn.value) {
-            interceptedFns.add(currentFn.value)
-        }
-    }
-});
-
-sayHello('person');
-console.log('Intercepted functions: ',interceptedFns);
-
-```
-
-#### Output
-
-```text
-Hello  person
-Printed:  Hello world
-Intercepted functions:  Set(2) { 'sayHello', 'print' }
-```
-
-### Scoping: Captures vs Embedding
-
-Within the interpreted context of a monitored function, it is important to understand how scoping works for each approach:
-
-- Captures are function-scoped. They are bound directly to the specific function they are passed to. A captured variable in one function is not automatically available to another. 
-
-- Embedded functions are context-scoped. This means not only can the main function call it, but any other embedded function can call it too.
-
-This example emphasizes the scoping mechanics of embedding
-
-```typescript
-import { monitor } from "@typescript-guy/fn-monitor"
-
-const nested = ()=>{
-    return 'Hello World'
-}
-
-const inner = ()=>{
-    return nested()
-}
-
-const outer = monitor({
-    main:{
-        ref:()=>inner(),
-    },
-    embed:{
-        inner:{
-            ref:inner
-        },
-        nested:{
-            ref:nested
-        }
-    }
-});
-console.log(outer());
-```
-
-#### Output
-
-```text
-Hello world
-```
-
 ### Getting the full execution history of a function call
 
 We first call `visit.is('Any',...)` to force the interpreter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
@@ -414,6 +288,134 @@ console.log(exeHistory);
 ]
 ```
 </details>
+
+> ⭐ **Enjoying** `fn-monitor`? Let us know by starring the repo on GitHub! It helps the project grow and keeps the updates coming.
+
+### Capturing values and Embedding Functions
+
+Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding:
+
+- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you can't reassign them.
+  
+- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
+
+In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
+
+The value of `currentFn` is wrapped in an object because of how captured variables are injected. We also capture it into `sayHello` and `print`.
+
+The output shows that only `sayHello` and `print` appear in the intercepted set.
+
+
+```typescript
+import { monitor } from "@typescript-guy/fn-monitor";
+
+const currentFn = {value:'' as any}
+const interceptedFns = new Set();
+
+const label = 'Printed: ';
+
+function print(str:string) {
+    currentFn.value = "print";
+
+    console.log(label,str);
+
+    currentFn.value = undefined
+}
+
+function printName(name:string) {
+    currentFn.value = "printName"
+
+    console.log('Hello ',name);
+
+    currentFn.value = undefined
+}
+
+const sayHello = monitor({
+    main:{
+        ref:(name:string)=>{
+            currentFn.value = "sayHello";
+
+            printName(name)
+            print('Hello world');
+
+            currentFn.value = undefined
+        },
+        captures:{
+            printName,
+            currentFn
+        }
+    },
+    embed:{
+        print:{
+            ref:print,
+            captures:{
+                label,
+                currentFn
+            }
+        }
+    },
+    onStep:()=>{
+        if (currentFn.value) {
+            interceptedFns.add(currentFn.value)
+        }
+    }
+});
+
+sayHello('person');
+console.log('Intercepted functions: ',interceptedFns);
+
+```
+
+#### Output
+
+```text
+Hello  person
+Printed:  Hello world
+Intercepted functions:  Set(2) { 'sayHello', 'print' }
+```
+
+### Scoping: Capturing vs Embedding
+
+Within the interpreted context of a monitored function, it is important to understand how scoping works for each approach:
+
+- Captures are function-scoped. They are bound directly to the specific function they are passed to. A captured variable in one function is not automatically available to another. 
+
+- Embedded functions are context-scoped. This means not only can the main function call it, but any other embedded function can call it too.
+
+This example emphasizes the scoping mechanics of embedding
+
+```typescript
+import { monitor } from "@typescript-guy/fn-monitor"
+
+const nested = ()=>{
+    return 'Hello World'
+}
+
+const inner = ()=>{
+    return nested()
+}
+
+const outer = monitor({
+    main:{
+        ref:()=>inner(),
+    },
+    embed:{
+        inner:{
+            ref:inner
+        },
+        nested:{
+            ref:nested
+        }
+    }
+});
+console.log(outer());
+```
+
+#### Output
+
+```text
+Hello world
+```
 
 ### Seeing the result of every awaited promise in a function call
 
