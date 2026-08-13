@@ -3,7 +3,7 @@ import { monitor } from '../../src/index';
 
 describe('Scope Object Behaviour', () => {
     
-    it('[Sync] should ensure that the depth is a 0-indexed structural measure, starting from the root of the current running function which is either the main one or an embedded one', () => {
+    it('[Sync] should ensure that the depth is a 0-indexed structural measure and starting from the root of the current running function', () => {
         /**
          * for the test to be very effective, the first embedded function must be a standard declaration.
          * This will cause their internal depths to drift which is the factor that tests if the depth calculation is actually robust
@@ -129,4 +129,57 @@ describe('Scope Object Behaviour', () => {
         expect(hitTryStmt).toBe(true);
         expect(hitDoWhileNode).toBe(true);
     })
+
+    it('[Sync] should ensure that callDepth is a 0-indexed measure of the call stack size even across recursive and embedded function boundaries', () => {
+        function embeddedFn() {
+            for (const x of [1, 2, 3]) {}
+        }
+
+        function recursiveFn(x: number) {
+            if (x === 0) return;
+            embeddedFn();
+
+            x -= 1;  
+            recursiveFn(x);
+        }
+
+        // Track the exact sequence of callDepth values to prove temporal accuracy
+        const depthSequence: number[] = [];
+
+        const mainFn = monitor({
+            main: {
+                ref: recursiveFn
+            },
+            embed: {
+                embeddedFn: {
+                    ref: embeddedFn
+                }
+            },
+            inspector: (visit) => {
+                visit.is('ForOfStatement', (event) => {
+                    // embeddedFn is called FROM recursiveFn.
+                    depthSequence.push(event.scope.callDepth);
+                });
+
+                visit.is('AssignmentExpression', (event) => {
+                    // x -= 1 happens AFTER embeddedFn returns.
+                    depthSequence.push(event.scope.callDepth);
+                });
+            }
+        });
+
+        mainFn(3);
+
+        // Verify the exact temporal order and 0-indexed depth values
+        expect(depthSequence).toEqual([
+            1, // embeddedFn called by recursiveFn(3)
+            0, // x -= 1 in recursiveFn(3)
+
+            2, // embeddedFn called by recursiveFn(2)
+            1, // x -= 1 in recursiveFn(2)
+
+            3, // embeddedFn called by recursiveFn(1)
+            2, // x -= 1 in recursiveFn(1)
+        ]);
+    });
 })
