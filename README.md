@@ -34,18 +34,20 @@
 
 ## Table of Contents 📑
 
-- [Installation](#installation-)
-- [API Introduction](#api-introduction-)
-- [Quick Examples](#quick-examples-)
-- [Full API Reference](#full-api-reference-)
-- [Mechanics](#mechanics-️)
-- [Important Notes & Limitations](#important-notes--limitations-️)
-- [Questions & Support](#questions--support-)
-- [Contributing](#contributing-)
-- [Brand & Forking Guidelines](#brand--forking-guidelines-️)
-- [Inspiration](#inspiration-)
-- [Acknowledgements](#acknowledgements-)
-  
+- [Installation](#installation)
+- [API Introduction](#api-introduction)
+- [Quick Examples](#quick-examples)
+- [Full API Reference](#full-api-reference)
+- [Mechanics](#mechanics)
+- [Important Notes & Limitations](#important-notes--limitations)
+- [Questions & Support](#questions--support)
+- [Contributing](#contributing)
+- [Brand & Forking Guidelines](#brand--forking-guidelines)
+- [Inspiration](#inspiration)
+- [Acknowledgements](#acknowledgements)
+
+<a id="installation"></a>
+
 ## Installation 📦
 
 ```bash
@@ -56,11 +58,13 @@ npm install @typescript-guy/fn-monitor
 
 ---
 
+<a id="api-introduction"></a>
 
 ## API Introduction ✨
 
 The core of the package is the `monitor` function. It accepts a configuration object of the type `MonitorFnSetup` and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
+<a id="quick-examples"></a>
 
 ## Quick Examples ⚡
 
@@ -606,6 +610,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ---
 
+<a id="full-api-reference"></a>
 
 ## Full API Reference 📚 
 
@@ -676,6 +681,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ---
 
+<a id="mechanics"></a>
 
 ## Mechanics ⚙️
 
@@ -691,6 +697,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ---
 
+<a id="important-notes--limitations"></a>
 
 ## Important Notes & Limitations ⚠️
 
@@ -722,6 +729,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 ---
 
+<a id="questions--support"></a>
 
 ## Questions & Support 💬
 
@@ -733,6 +741,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 ---
 
+<a id="contributing"></a>
 
 ## Contributing 🤝
 
@@ -740,6 +749,7 @@ Pull requests are welcome! Before opening one, please read the [maintainer's not
 
 ---
 
+<a id="brand--forking-guidelines"></a>
 
 ## Brand & Forking Guidelines 🛡️
 
@@ -753,6 +763,7 @@ This project actively encourages community forks, variations, and modifications!
 
 ---
 
+<a id="inspiration"></a>
 
 ## Inspiration 🎯
 
@@ -762,6 +773,7 @@ Existing solutions could only enforce this at build time. I later grew `fn-monit
 
 ---
 
+<a id="acknowledgements"></a>
 
 ## Acknowledgements 🙏
 
