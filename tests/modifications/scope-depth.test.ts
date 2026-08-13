@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 
+/** 
+* These tests use distinct ast node to distinguish different functions
+* Do not attempt to clean any of them up by using a single node type with `callDepth` to distinguish them
+* It will make the test quality poor and logically contradictive because they will be relying on a depth property to test a depth property
+*/
 describe('Depth Tracking', () => {
     
     it('[Sync] should ensure that the depth is a 0-indexed structural measure and starting from the root of the current running function', () => {
