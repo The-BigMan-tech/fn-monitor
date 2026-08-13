@@ -104,15 +104,23 @@ export const evalStackHandler = {
 }
 
 
+export function callOnStep(scope:Scope):void {
+    const interpreter:SvalPlus = scope.interpreter;
+    if (inUserCode(scope) && (interpreter.onStep !== null)) {
+        interpreter.onStep();
+    }
+}
 
-//This function uses positional args because its called in the hot path of the whole interpreter
-//In this function, we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
-
+/**
+ * This function uses positional args because its called in the hot path of the whole interpreter
+ * In this function, we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
+*/
 export function callInspector(mode:EvaluatorType, node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']) {
     const interpreter = scope.interpreter!;
     updateReusables(mode,node,scope,handler);
     return interpreter.inspector!(interpreter.visit);//by the time the callInspector function is called,this is guaranteed to not be null because useModifiedEvaluator checks for the inspector's type
 }
+
 //This doesnt check for inUserCode because in the evaluators, it only runs if useModifiedEvaluator is true
 export function callPerExe(interpreter:SvalPlus):void {
     const perExe = interpreter.reusables.execution.perExe;
@@ -125,12 +133,6 @@ export function callPerExe(interpreter:SvalPlus):void {
         }
     }
 };
-export function callOnStep(scope:Scope):void {
-    const interpreter:SvalPlus = scope.interpreter;
-    if (inUserCode(scope) && (interpreter.onStep !== null)) {
-        interpreter.onStep();
-    }
-}
 
 
 
