@@ -170,7 +170,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
         onStep,
         fnBeforeEachCall:beforeEachCall,
         fnAfterEachCall:afterEachCall,
-        options:SvalPlus.defaultOptions
+        options:SvalPlus.svalOptions
     });
 
     interpreter.stage = "PRE-PROCESSING";

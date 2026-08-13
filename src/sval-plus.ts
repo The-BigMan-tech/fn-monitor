@@ -42,7 +42,7 @@ export interface Metadata<T extends Fn> {
     ref:T,
 
     /** 
-     *Because the function runs in an isolated interpreter context,any data that it uses from the outside scope has to captured by mapping the variable names to their variables and passing the object here.
+     *Because the function runs in an isolated interpreter context, all variables that it needs from the outside scope has to captured by mapping their names to their values and passing the object here.
      *It is important to keep in mind that the captures object itself follows the semantic of copy primitives by value and copy obects by reference.
     */
     captures?:Record<string,any>
@@ -169,7 +169,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         ranges: true,    // Good for error reporting
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
-    public static defaultOptions:SvalOptions = {
+    public static svalOptions:SvalOptions = {
         sourceType:"script",//This will prevent dynamic imports and top level await.Check README
         ecmaVer:2024, 
         sandBox:true, 
