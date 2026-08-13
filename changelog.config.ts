@@ -7,7 +7,7 @@ const config:Partial<ChangelogConfig> = {
         docs: { title: "📖 Documentation" },
         perf: { title: "⚡ Performance" },
         refactor:{ title: "♻️ Refactor"},
-        build:{ title: "🛠️ Refactor"},
+        build:{ title: "🛠️ Build"},
         test:false,
         chore:false,
     },
