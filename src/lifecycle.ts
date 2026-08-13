@@ -18,28 +18,29 @@ import {
 
 function inUserCode(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
-    const labels = interpreter.userRoot.labels;
-
+    
     const currentDepth = scope.depth;
-    const local = scope.local;//we use the locals object instead of the .find() method to preserve performance
-    
-    const anchorValue = local[labels.anchor]?.get();
-    const isAnchored = (anchorValue === true);//we explicitly check for the value to prevent the condition from falsely evaluating to true when it only contains a deadzone value
-    
     let calculatedUserDepth = (scope.userRoot.depth !== null)
 
-    if (isAnchored && !calculatedUserDepth) {
-        const offset = local[labels.offset];
-        if (!offset) {
-            throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
-        };
-        scope.userRoot.depth = currentDepth + offset.get();
-        calculatedUserDepth = true;
+    if (!calculatedUserDepth) {
+        const local = scope.local;//we use the locals object instead of the .find() method to preserve performance
+        const labels = interpreter.userRoot.labels;
+
+        const anchorValue = local[labels.anchor]?.get();
+        const isAnchored = (anchorValue === true);//we explicitly check for the value to prevent the condition from falsely evaluating to true when it only contains a deadzone value
+        
+        if (isAnchored) {
+            const offset = local[labels.offset];
+            if (!offset) {
+                throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
+            };
+            scope.userRoot.depth = currentDepth + offset.get();
+            calculatedUserDepth = true;
+        }
     };
 
     const inUserCode = (
-        //this particular condition must be done after calculating the user depth. If you take it to the top,the interpreter will miss its only chance to calculate it
-        interpreter.stage === "MONITORING" && 
+        interpreter.stage === "MONITORING" && //this particular condition must be done after calculating the user depth. If you take it to the top,the interpreter will miss its only chance to calculate it
         calculatedUserDepth &&
         currentDepth >= scope.userRoot.depth!
     );
