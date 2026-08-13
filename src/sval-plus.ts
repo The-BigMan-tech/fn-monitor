@@ -64,14 +64,14 @@ class EventScope implements ScopeForEvent {
     public depth:number;
     public callDepth:number;
 
-    private rootDepthErrMsg = ansis.red(`Internal logic error: Cannot allocate a scope for an event if null is given as the user's root depth`)
-
     constructor(interpreter:SvalPlus) {
         this.#scope = interpreter.reusables.scope!;
 
         const userRootDepth = this.#scope.userRoot.depth;
+        const rootDepthErrMsg = ansis.red(`Internal logic error: Cannot allocate a scope for an event if null is given as the user's root depth`)
+
         if (userRootDepth === null) {
-            throw new Error(this.rootDepthErrMsg)
+            throw new Error(rootDepthErrMsg)
         };
 
         this.depth = this.#scope.depth - userRootDepth;
