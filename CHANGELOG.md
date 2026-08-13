@@ -1,4 +1,28 @@
 
+## v1.4.0...v1.4.1
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.0...v1.4.1)
+
+### 📖 Documentation
+
+- **readme:** Remove a feature promise in the readme since the version is already about to be released ([72a1aaa](https://github.com/The-BigMan-tech/fn-monitor/commit/72a1aaa))
+- **changelog:** Update changelog for v1.4.0 ([3223979](https://github.com/The-BigMan-tech/fn-monitor/commit/3223979))
+- **articles:** Adjust a sentence in the writer's notes ([11aa42c](https://github.com/The-BigMan-tech/fn-monitor/commit/11aa42c))
+- **readme:** Slightly re-order the examples and add a CTA component ([27f6a95](https://github.com/The-BigMan-tech/fn-monitor/commit/27f6a95))
+- **readme:** Make minor grammatical adjustments ([211f366](https://github.com/The-BigMan-tech/fn-monitor/commit/211f366))
+- **readme:** Use anchor tags to link the headings to the table of contents ([f245731](https://github.com/The-BigMan-tech/fn-monitor/commit/f245731))
+
+### 🛠️ Build
+
+- Update the changelog config ([b477adb](https://github.com/The-BigMan-tech/fn-monitor/commit/b477adb))
+- Add a pre-publish script ([c0b35a9](https://github.com/The-BigMan-tech/fn-monitor/commit/c0b35a9))
+- Remove ts7 and ts6 alias in favor of just having ts6 standalone ([c40d362](https://github.com/The-BigMan-tech/fn-monitor/commit/c40d362))
+- Bump to v1.4.1 ([2550cea](https://github.com/The-BigMan-tech/fn-monitor/commit/2550cea))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.3.0...v1.4.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.3.0...v1.4.0)
