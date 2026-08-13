@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 
-describe('Scope Object Behaviour', () => {
+describe('Depth Tracking', () => {
     
     it('[Sync] should ensure that the depth is a 0-indexed structural measure and starting from the root of the current running function', () => {
         /**
