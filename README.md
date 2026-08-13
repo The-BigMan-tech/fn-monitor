@@ -59,7 +59,7 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction ✨
 
-The core of the package is the `monitor` function. It accepts a configuration object of the type,   `MonitorFnSetup` and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
+The core of the package is the `monitor` function. It accepts a configuration object of the type `MonitorFnSetup` and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
 
 
 ## Quick Examples ⚡
@@ -619,7 +619,7 @@ The main export. Accepts a configuration object and returns a new function with 
 | --- | --- | --- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
 | `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
-| `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below)*. |
+| `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below).* |
 | `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
 | `sourceOut` | `{ value: string }` | Overwrites the `value` property with the generated code used in the interpreter. |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
