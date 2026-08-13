@@ -130,9 +130,18 @@ describe('Depth Tracking', () => {
         expect(hitDoWhileNode).toBe(true);
     })
 
-    it('[Sync] should ensure that callDepth is a 0-indexed measure of the call stack size even across recursive and embedded function boundaries', () => {
+    it('[Sync] should ensure that callDepth is a 0-indexed measure of the call stack size even across recursive, embedded, and NewExpression boundaries', () => {
         function embeddedFn() {
             for (const x of [1, 2, 3]) {}
+            
+            // We instantiate this class using a NewExpression to prove the call stack increments
+            class TestClass {
+                constructor() {
+                    let temp = 1;
+                    temp++; // We track this UpdateExpression to avoid node collisions with the `x === 0` BinaryExpression
+                }
+            }
+            new TestClass(); 
         }
 
         function recursiveFn(x: number) {
@@ -161,6 +170,11 @@ describe('Depth Tracking', () => {
                     depthSequence.push(event.scope.callDepth);
                 });
 
+                visit.is('UpdateExpression', (event) => {
+                    // Fired ONLY inside the constructor of TestClass (triggered by NewExpression)
+                    depthSequence.push(event.scope.callDepth);
+                });
+
                 visit.is('AssignmentExpression', (event) => {
                     // x -= 1 happens AFTER embeddedFn returns.
                     depthSequence.push(event.scope.callDepth);
@@ -172,14 +186,17 @@ describe('Depth Tracking', () => {
 
         // Verify the exact temporal order and 0-indexed depth values
         expect(depthSequence).toEqual([
-            1, // embeddedFn called by recursiveFn(3)
-            0, // x -= 1 in recursiveFn(3)
+            1, // ForOf in embeddedFn (called by recursiveFn at depth 0)
+            2, // UpdateExpr inside TestClass constructor (via `new` inside embeddedFn)
+            0, // x -= 1 in recursiveFn (after embeddedFn returns)
 
-            2, // embeddedFn called by recursiveFn(2)
-            1, // x -= 1 in recursiveFn(2)
+            2, // ForOf in embeddedFn (called by recursiveFn at depth 1)
+            3, // UpdateExpr inside TestClass constructor
+            1, // x -= 1 in recursiveFn (after embeddedFn returns)
 
-            3, // embeddedFn called by recursiveFn(1)
-            2, // x -= 1 in recursiveFn(1)
+            3, // ForOf in embeddedFn (called by recursiveFn at depth 2)
+            4, // UpdateExpr inside TestClass constructor
+            2, // x -= 1 in recursiveFn (after embeddedFn returns)
         ]);
     });
 })
