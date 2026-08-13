@@ -23,7 +23,7 @@ The use of the `{% details ...%}` syntax instead of the native details tag for m
 - **Articles are for discovery.** One thesis each, full narrative, aimed at a
   reader who doesn't know the package yet.
 
-  A new article should introduce a thesis that doesn't already exist in the series that comes from:
+  A new article should introduce a thesis that doesn't already exist in the series which comes from:
 
   - A **new feature** worth narrating, or
   - A **build-something-real framing** (e.g., "building a call-graph profiler
