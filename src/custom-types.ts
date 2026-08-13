@@ -248,7 +248,7 @@ export interface ExeResult {
  * This type describes an internal object 
  * 
  * The eval-stack is a number that represents how many recursions deep the interpreter is, during a specific evaluation
- * It is a wrapper around a value to prevent the cognitive overhead of tracking copy-by-value and copy-by-ref when mutating it or passing it around
+ * It is a wrapper around a value to prevent the cognitive overhead of tracking copy-by-value and copy-by-ref when trying to store it in a variable to minimize property chaining
  * 
  * The exe-stack contains the results of each evaluated node
 */
@@ -271,24 +271,21 @@ export interface Reusables<T extends unknown | Generator = unknown | Generator> 
 }
 
 export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
+    /** Prevents the interpreter from firing inspector hooks during the AST parsing stage, or when the monitored function is not actively executing. */
+    stage: 'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
     /** Using the internal Inspector type forces the evaluator to maintain strict type safety with NodeResult */
     inspector: Inspector<'internal'> | null, 
-
     onStep: OnStep | null,
     reusables: Reusables<T>,
     visit: Visit,
-
-    labels:{
-        anchor:string,
-        offset:string
-    }
+    userRoot:{
+        callStackSize:number,
+        labels:{
+            anchor:string,
+            offset:string
+        }
+    },
     createEventScope: () => ScopeForEvent,
-    
-    /** 
-     * Prevents the interpreter from firing inspector hooks during the AST parsing 
-     * stage, or when the monitored function is not actively executing. 
-     */
-    stage: 'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
 }
 
 export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event
@@ -304,7 +301,6 @@ export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short f
 export class ExpressionStmtEvent extends LangEvent<ExpressionStatement> {
     constructor(interpreter: SvalPlus) { super(interpreter); }
 }
-
 export class ArrayExprEvent extends LangEvent<ArrayExpression> {
     constructor(interpreter: SvalPlus) { super(interpreter); }
 }

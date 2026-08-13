@@ -23,13 +23,14 @@ import {
     callInspector, 
     callPerExe, 
     copyReusables, 
-    stackHandler, 
+    evalStackHandler, 
     executedManually, 
     isGenerator,pushedManually,pushResult,
     overwriteReusables,
     useModifiedEvaluator,
+    getHandler,
     callOnStep,
-    getHandler, // Use the Generator version
+    adjustCallStackSize, // Use the Generator version
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<Generator>;
@@ -98,10 +99,12 @@ export default function* evaluate(
     const parentReusables = copyReusables(interpreter,'compulsory');//unlike the normalized evaluator,this one must be compulsory because making it optional failed a test concerning the handling of multiple async contexts
 
     try {
-        stackHandler.start(interpreter)
-        const response = callInspector('lazy', node, scope, handler);
+        evalStackHandler.start(interpreter);
+        adjustCallStackSize('start',node,scope);
 
+        const response = callInspector('lazy', node, scope, handler);
         const genResult = isGenerator(response) ? response.next() : null;  
+
         const finished = (genResult === null) ? true : genResult.done
 
         if (finished) {
@@ -150,6 +153,7 @@ export default function* evaluate(
         }
     } 
     finally {
-        stackHandler.finish(interpreter,parentReusables)
+        evalStackHandler.finish(interpreter,parentReusables);
+        adjustCallStackSize('finish',node,scope)
     }
 }

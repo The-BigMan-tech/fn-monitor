@@ -21,15 +21,16 @@ import {
 import { 
     callInspector, 
     copyReusables, 
-    stackHandler,
+    evalStackHandler,
     isGenerator, 
     callPerExe, 
     useModifiedEvaluator, 
     pushResult, 
     executedManually, 
     pushedManually, 
+    getHandler,
     callOnStep,
-    getHandler
+    adjustCallStackSize
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<unknown>;
@@ -76,10 +77,12 @@ export default function evaluate(
     const parentReusables = copyReusables(interpreter,'optional');
 
     try {
-        stackHandler.start(interpreter);
-        const response = callInspector('eager',node, scope, handler);//call this before the node is executed
+        evalStackHandler.start(interpreter);
+        adjustCallStackSize('start',node,scope);
         
+        const response = callInspector('eager',node, scope, handler);//call this before the node is executed
         const genResult = isGenerator(response) ? response.next() : null;  
+        
         const finished = (genResult === null) ? true : genResult.done
 
         if (finished) {
@@ -120,6 +123,7 @@ export default function evaluate(
             return final
         }
     }finally {
-        stackHandler.finish(interpreter,parentReusables)
+        evalStackHandler.finish(interpreter,parentReusables);
+        adjustCallStackSize('finish',node,scope);
     }
 }

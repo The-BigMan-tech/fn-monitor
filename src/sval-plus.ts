@@ -64,22 +64,24 @@ class EventScope implements ScopeForEvent {
     public depth:number;
     public callDepth:number;
 
+    private rootDepthErrMsg = ansis.red(`Internal logic error: Cannot allocate a scope for an event if null is given as the user's root depth`)
+
     constructor(interpreter:SvalPlus) {
         this.#scope = interpreter.reusables.scope!;
 
-        const userDepth = this.#scope.userDepth;
-        if (userDepth === null) {
-            throw new Error(ansis.red(`Internal logic error: Cannot create allocate a scope for an event if null is given as the depth`))
+        const userRootDepth = this.#scope.userRoot.depth;
+        if (userRootDepth === null) {
+            throw new Error(this.rootDepthErrMsg)
         };
 
-        this.depth = this.#scope.depth - userDepth;
-        this.callDepth = this.#scope.callStackSize;
+        this.depth = this.#scope.depth - userRootDepth;
+        this.callDepth = interpreter.userRoot.callStackSize;
 
-        const local:ScopeForEvent['variables']['local'] = {};
-        Object.entries(this.#scope.local).forEach(([k,v])=>{
-            local[k] = v.get()
-        });
-
+        const local:ScopeForEvent['variables']['local'] = Object.create(null)
+        for (const k in this.#scope.local) {
+            local[k] = this.#scope.local[k].get()
+        };
+        
         this.variables = {
             search:(name:string):unknown | undefined =>{
                 const variable = this.#scope.find(name);
@@ -186,10 +188,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public fnCallAst:Node | null = null;
     public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
 
-    public labels = {
-        offset:SvalPlus.commonLabels.offset,
-        anchor:SvalPlus.commonLabels.anchor
-    }
+    public userRoot = {
+        callStackSize:0,
+        labels: {
+            offset:SvalPlus.commonLabels.offset,
+            anchor:SvalPlus.commonLabels.anchor
+        }
+    };
+
     public reusables:Reusables = {
         node:null,
         scope:null,
@@ -257,11 +263,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         //It is important that the anchor is set after assigning the offset
 
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
-            let ${this.labels.offset} = 1;
-            ${this.labels.offset} += ${
+            let ${this.userRoot.labels.offset} = 1;
+            ${this.userRoot.labels.offset} += ${
                 isStandardFunction?1:0
             }
-            const ${this.labels.anchor} = true;
+            const ${this.userRoot.labels.anchor} = true;
 
             ${unpackCaptures};
             ${intermediateFnCode}

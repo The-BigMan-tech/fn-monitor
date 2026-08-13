@@ -38,12 +38,11 @@ export default class Scope<T = any> {
     /**The lexical depth of the scope */
     public depth:number;
 
-    /**The lexical depth of where the user's function in in the internal generated code starts */
-    public userDepth:number | null;
-
-    //this is intentionally not a static variable to ensure that it is wiped out after the scope is garbage collected
-    public callStackSize:number;
-
+    public userRoot:{
+        /**The lexical depth of where the user's function that resides in the internal generated code starts */
+        depth:number | null
+    } = Object.create(null);
+    
     /**
      * Create a simulated scope
      * @param parent the parent scope along the scope chain (default: null)
@@ -60,10 +59,7 @@ export default class Scope<T = any> {
 
         this.interpreter = interpreter || (parent ? parent.interpreter : undefined);
         this.depth = parent ? parent.depth + 1 : 0;
-        this.userDepth = parent ? parent.userDepth : null;
-        
-        this.callStackSize = parent ? parent.callStackSize : 0
-        this.callStackSize += isolated ? 1 : 0;
+        this.userRoot.depth = parent ? parent.userRoot.depth : null;
     }
 
 

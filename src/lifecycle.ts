@@ -15,14 +15,48 @@ import {
     NodeResult 
 } from "./custom-types.ts";
 
-const generatorPrint = '[object Generator]';
+
+function inUserCode(scope:Scope):boolean {
+    const interpreter:SvalPlus = scope.interpreter;
+    const labels = interpreter.userRoot.labels;
+
+    const currentDepth = scope.depth;
+    const local = scope.local;//we use the locals object instead of the .find() method to preserve performance
+    
+    const anchorValue = local[labels.anchor]?.get();
+    const isAnchored = (anchorValue === true);//we explicitly check for the value to prevent the condition from falsely evaluating to true when it only contains a deadzone value
+    
+    let calculatedUserDepth = (scope.userRoot.depth !== null)
+
+    if (isAnchored && !calculatedUserDepth) {
+        const offset = local[labels.offset];
+        if (!offset) {
+            throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
+        };
+        scope.userRoot.depth = currentDepth + offset.get();
+        calculatedUserDepth = true;
+    };
+
+    const inUserCode = (
+        //this particular condition must be done after calculating the user depth. If you take it to the top,the interpreter will miss its only chance to calculate it
+        interpreter.stage === "MONITORING" && 
+        calculatedUserDepth &&
+        currentDepth >= scope.userRoot.depth!
+    );
+    return inUserCode;
+};
+
 
 export function isGenerator(obj:unknown):obj is Generator {
-    return Object.prototype.toString.call(obj) === generatorPrint
+    return Object.prototype.toString.call(obj) === '[object Generator]'
 }
-
 export function inLazyMode(interpreter:SvalPlus):boolean {
     return interpreter.reusables.mode === "lazy";
+}
+export function useModifiedEvaluator(scope:Scope):boolean {
+    const interpreter:SvalPlus = scope.interpreter;
+    const shouldUseIt = inUserCode(scope) && (interpreter.inspector !== null)
+    return shouldUseIt;
 }
 
 
@@ -34,52 +68,19 @@ export function getSHA256Key(str:string):string {
 }
 
 
-function inUserCode(scope:Scope):boolean {
+export function adjustCallStackSize(phase:'start' | 'finish',node:AcornNode,scope:Scope):void  {
     const interpreter:SvalPlus = scope.interpreter;
+    const nodeType = node.type as EsNode['type'];
 
-    const currentDepth = scope.depth;
-
-    const local = scope.local;//we use the locals object instead of the .find() method to preserve performance
-    const anchorValue = local[interpreter.labels.anchor]?.get();
-    
-    const isAnchored = (anchorValue === true);//we explicitly check for the value to prevent the condition from falsely evaluating to true when it only contains a deadzone value
-    let calculatedUserDepth = (scope.userDepth !== null)
-
-    if (isAnchored && !calculatedUserDepth) {
-        const offset = local[interpreter.labels.offset];
-        if (!offset) {
-            throw new Error(ansis.red(`Internal logic error: The depth offset cannot be undefined if the 'anchor' variable is true in the current scope`))
-        };
-        scope.userDepth = currentDepth + offset.get();
-        calculatedUserDepth = true;
-    };
-
-    const enteredUserCode = (
-        //this particular condition must be done after calculating the user depth. If you take it to the top,the interpreter will miss its only chance to calculate it
-        interpreter.stage === "MONITORING" && 
-        calculatedUserDepth &&
-        currentDepth >= scope.userDepth!
-    )
-    
-    return enteredUserCode;
-};
-
-
-export function callOnStep(scope:Scope) {
-    const interpreter:SvalPlus = scope.interpreter;
-    if (inUserCode(scope) && (interpreter.onStep !== null)) {
-        interpreter.onStep();
+    if ((nodeType === "CallExpression") || (nodeType === "NewExpression")) {
+        if (phase === "start") {
+            interpreter.userRoot.callStackSize += 1
+        }else {
+            interpreter.userRoot.callStackSize -= 1
+        }
     }
 }
-export function useModifiedEvaluator(scope:Scope):boolean {
-    const interpreter:SvalPlus = scope.interpreter;
-    return ( 
-        inUserCode(scope) && (interpreter.inspector !== null)
-    )
-}
-
-
-export const stackHandler = {
+export const evalStackHandler = {
     start:(interpreter:SvalPlus):void => {
         interpreter.reusables.execution.evalStack.value += 1;
     },
@@ -92,7 +93,7 @@ export const stackHandler = {
         }
         
         if (evalStack.value === 0) {
-            clearStack(interpreter);
+            clearReusables(interpreter);
         }else {
             if (parentReusables === null) {//if a user ever encounters this error,they can paste it along with their code in an issues page
                 throw new Error(ansis.red(`Internal logic error: The stack handler cannot recover the parent node state because it was given 'null'.`))
@@ -103,9 +104,17 @@ export const stackHandler = {
 }
 
 
-//These two call* functions dont check for inUserCode because in the evaluators,they only run if useModifiedEvaluator is true
 
-export function callPerExe(interpreter:SvalPlus) {
+//This function uses positional args because its called in the hot path of the whole interpreter
+//In this function, we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
+
+export function callInspector(mode:EvaluatorType, node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']) {
+    const interpreter = scope.interpreter!;
+    updateReusables(mode,node,scope,handler);
+    return interpreter.inspector!(interpreter.visit);//by the time the callInspector function is called,this is guaranteed to not be null because useModifiedEvaluator checks for the inspector's type
+}
+//This doesnt check for inUserCode because in the evaluators, it only runs if useModifiedEvaluator is true
+export function callPerExe(interpreter:SvalPlus):void {
     const perExe = interpreter.reusables.execution.perExe;
     const node = interpreter.reusables.node!;
 
@@ -116,40 +125,13 @@ export function callPerExe(interpreter:SvalPlus) {
         }
     }
 };
-
-//This function uses positional args because its called in the hot path of the whole interpreter
-//In this function, we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
-
-export function callInspector(mode:EvaluatorType, node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = scope.interpreter!;
-    updateReusables(mode,node,scope,handler);
-    return interpreter.inspector!(interpreter.visit);//by the time the callInspector function is called,this is guaranteed to not be null because useModifiedEvaluator checks for the inspector's type
+export function callOnStep(scope:Scope):void {
+    const interpreter:SvalPlus = scope.interpreter;
+    if (inUserCode(scope) && (interpreter.onStep !== null)) {
+        interpreter.onStep();
+    }
 }
 
-
-function updateReusables(mode:EvaluatorType,node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']) {
-    const interpreter = scope.interpreter!;
-    interpreter.reusables.node = node as EsNode;
-    interpreter.reusables.scope = scope;
-    interpreter.reusables.handler = handler;
-    interpreter.reusables.result = UNASSIGNED;
-    interpreter.reusables.event = NOT_ALLOCATED;
-    interpreter.reusables.mode = mode;
-    //we dont touch the exe stack here because its usage and end of lifecycle are handled elsewhere
-    //we dont touch the evalstack pointer here because its handled in stackHandler
-}
-function clearStack(interpreter:SvalPlus) {
-    interpreter.reusables.node = null;
-    interpreter.reusables.scope = null;
-    interpreter.reusables.handler = null;
-    interpreter.reusables.result = UNASSIGNED;
-    interpreter.reusables.event = NOT_ALLOCATED;
-    interpreter.reusables.mode = null;
-    interpreter.reusables.execution.evalStack.value = 0;
-    interpreter.reusables.execution.exeStack.clear();
-    //we dont touch perExe here because its lifecycle's end is handled in another function
-    //we dont touch the readonlyExeStack because its just a live reference to the exe stack
-}
 
 
 export function copyReusables<
@@ -179,7 +161,30 @@ export function copyReusables<
         }
     } as R;
 }
-export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables) {
+function updateReusables(mode:EvaluatorType,node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']):void {
+    const interpreter = scope.interpreter!;
+    interpreter.reusables.node = node as EsNode;
+    interpreter.reusables.scope = scope;
+    interpreter.reusables.handler = handler;
+    interpreter.reusables.result = UNASSIGNED;
+    interpreter.reusables.event = NOT_ALLOCATED;
+    interpreter.reusables.mode = mode;
+    //we dont touch the exe stack here because its usage and end of lifecycle are handled elsewhere
+    //we dont touch the evalstack pointer here because its handled in stackHandler
+}
+function clearReusables(interpreter:SvalPlus):void {
+    interpreter.reusables.node = null;
+    interpreter.reusables.scope = null;
+    interpreter.reusables.handler = null;
+    interpreter.reusables.result = UNASSIGNED;
+    interpreter.reusables.event = NOT_ALLOCATED;
+    interpreter.reusables.mode = null;
+    interpreter.reusables.execution.evalStack.value = 0;
+    interpreter.reusables.execution.exeStack.clear();
+    //we dont touch perExe here because its lifecycle's end is handled in another function
+    //we dont touch the readonlyExeStack because its just a live reference to the exe stack
+}
+export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables):void {
     interpreter.reusables.node = srcReusables.node;
     interpreter.reusables.scope = srcReusables.scope;
     interpreter.reusables.handler = srcReusables.handler;
@@ -202,7 +207,7 @@ export function pushedManually(interpreter:SvalPlus):boolean {
         executedManually(interpreter.reusables.result) 
     )
 }
-export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>) {
+export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>):void {
     const event = interpreter.reusables.event;
     const node = interpreter.reusables.node!;
 
