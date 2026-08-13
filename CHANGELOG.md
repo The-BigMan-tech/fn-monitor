@@ -1,4 +1,68 @@
 
+## v1.3.0...v1.4.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.3.0...v1.4.0)
+
+### 🚀 Features
+
+- Add a new property to the event's scope type to return the call stack size ([4b9603c](https://github.com/The-BigMan-tech/fn-monitor/commit/4b9603c))
+- Bump to v1.4.0 ([7481f74](https://github.com/The-BigMan-tech/fn-monitor/commit/7481f74))
+
+### ⚡ Performance
+
+- Ensure that the depth of a scope object is only calculated once ([b1bcf46](https://github.com/The-BigMan-tech/fn-monitor/commit/b1bcf46))
+- Make the .depth calculation O1 ([034e37f](https://github.com/The-BigMan-tech/fn-monitor/commit/034e37f))
+- Prevented redundant lookups when calling inUserCode ([e3e7154](https://github.com/The-BigMan-tech/fn-monitor/commit/e3e7154))
+
+### 🩹 Fixes
+
+- Make the inUserCode function to use runtime calculations over an unreliable static value to check the boundary ([a14c530](https://github.com/The-BigMan-tech/fn-monitor/commit/a14c530))
+- Scoped the depth calculation to individual Scope objects ([7b831db](https://github.com/The-BigMan-tech/fn-monitor/commit/7b831db))
+- Adjust the func declr regex to ignore anonymous func expressions ([5e06470](https://github.com/The-BigMan-tech/fn-monitor/commit/5e06470))
+- Make the funcDeclr regex check for generators ([bb4716d](https://github.com/The-BigMan-tech/fn-monitor/commit/bb4716d))
+- Correct a variable in the inUserCode func that remained stale after a calculation. ([148e64f](https://github.com/The-BigMan-tech/fn-monitor/commit/148e64f))
+- **callDepth:** Track runtime call stack dynamically rather than using a structural guess ([ec183f1](https://github.com/The-BigMan-tech/fn-monitor/commit/ec183f1))
+
+### ♻️ Refactor
+
+- Rename the properties in the Reusables type for clarity ([e89ed1f](https://github.com/The-BigMan-tech/fn-monitor/commit/e89ed1f))
+- Rename a function for clarity ([0eed734](https://github.com/The-BigMan-tech/fn-monitor/commit/0eed734))
+- **types:** Add strict type definitions for the evaluator ([bdc239b](https://github.com/The-BigMan-tech/fn-monitor/commit/bdc239b))
+- Change an if-check to an assertion ([a53ba8e](https://github.com/The-BigMan-tech/fn-monitor/commit/a53ba8e))
+- **types:** Make visit.execute return a union of LAZY_NODE ([9cad967](https://github.com/The-BigMan-tech/fn-monitor/commit/9cad967))
+- **types:** Improve InspectorGenerator ([5992f66](https://github.com/The-BigMan-tech/fn-monitor/commit/5992f66))
+- **types:** Update a function signature ([f522e27](https://github.com/The-BigMan-tech/fn-monitor/commit/f522e27))
+- Re-indent the Scope class ([4e5df71](https://github.com/The-BigMan-tech/fn-monitor/commit/4e5df71))
+- Improve an error msg and add a comment ([dcfc030](https://github.com/The-BigMan-tech/fn-monitor/commit/dcfc030))
+- Lift a condition to a variable ([0a63d02](https://github.com/The-BigMan-tech/fn-monitor/commit/0a63d02))
+- Rename some internal methods of the Scope class ([1b0c1db](https://github.com/The-BigMan-tech/fn-monitor/commit/1b0c1db))
+- Modify a comment ([723f02e](https://github.com/The-BigMan-tech/fn-monitor/commit/723f02e))
+- Lift a comment from the user's generated code ([f913fca](https://github.com/The-BigMan-tech/fn-monitor/commit/f913fca))
+- Change the placement of a function ([79d981e](https://github.com/The-BigMan-tech/fn-monitor/commit/79d981e))
+- Took the refErrMsg value in the EventScope class from an instance prop to a constant to prevent it from showing to the user ([f6652c7](https://github.com/The-BigMan-tech/fn-monitor/commit/f6652c7))
+
+### 📖 Documentation
+
+- **changelog:** Update CHANGELOG.md for v1.3.0 ([1bed3cf](https://github.com/The-BigMan-tech/fn-monitor/commit/1bed3cf))
+- Update the maintainer's note ([18d0b80](https://github.com/The-BigMan-tech/fn-monitor/commit/18d0b80))
+- Add a comment ([d54735c](https://github.com/The-BigMan-tech/fn-monitor/commit/d54735c))
+- Improve maintainer's note ([b16ba47](https://github.com/The-BigMan-tech/fn-monitor/commit/b16ba47))
+- **readme:** Clarify how depth works ([3de0ce2](https://github.com/The-BigMan-tech/fn-monitor/commit/3de0ce2))
+- **readme:** Adjust a sentence ([2163989](https://github.com/The-BigMan-tech/fn-monitor/commit/2163989))
+- **readme:** Adjust a sentence ([f6ced19](https://github.com/The-BigMan-tech/fn-monitor/commit/f6ced19))
+- **readme:** Further clarify the depth and callDepth properties ([c6ecbaa](https://github.com/The-BigMan-tech/fn-monitor/commit/c6ecbaa))
+- Document on the parser in the maintainer's note ([44bef3b](https://github.com/The-BigMan-tech/fn-monitor/commit/44bef3b))
+- Mistakenly left out the new change to the maintainer's note from the last commit ([58115b8](https://github.com/The-BigMan-tech/fn-monitor/commit/58115b8))
+
+### 🎨 Styles
+
+- Adjust logo color ([9475fc3](https://github.com/The-BigMan-tech/fn-monitor/commit/9475fc3))
+- Tweak the logo color ([28c2563](https://github.com/The-BigMan-tech/fn-monitor/commit/28c2563))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.2.2...v1.3.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.2.2...v1.3.0)
