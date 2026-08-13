@@ -23,9 +23,9 @@
  *     a bytecode implementation for very practical reasons
  * 
  *  5. SVAL COMPATIBILITY:
- *      - The `SvalPlus` class must remain a strict drop-in replacement for `Sval`. Its constructor and 
- *      public API must be strictly identical or additive to ensure upstream `sval` test suites 
- *      run seamlessly. 
+ *      - The extended interpreter class, `SvalPlus` interpreter must remain a strict drop-in 
+ *      replacement for `Sval`. Its constructor and public API must be strictly identical or additive 
+ *      to ensure upstream `sval` test suites run seamlessly. 
  *  
  *      - Avoid breaking changes to core internals unless rigorously tested to 
  *      preserve compatibility (e.g., the evaluator modifications). 
@@ -33,7 +33,11 @@
  *      - As a result of this compatibility, you will see acorn and estree node types being used 
  *      interchangeably. But this wont affect runtime behaviour
  *  
- *  6. TEST COVERAGE:
+ *  6. PARSER:
+ *     The package uses meriyah to parse functions for speed. But it still keeps acorn to avoid 
+ *     breaking or heavily refactoring existing sval code
+ * 
+ *  7. TEST COVERAGE:
  *      - Quick note, 
  *          - There are two evaluator implementations--the nomalized version under the  
  *          evaluate_n folder and the generator version which is under the evaluate folder
