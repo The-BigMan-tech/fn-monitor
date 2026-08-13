@@ -4,7 +4,7 @@ import {
     type ExeResult
 } from "../src/index.ts"
 
-console.log('\nQUICK EXAMPLE 1');
+console.log('\nUsing the `inspector` hook to intercept and modify AST nodes during execution'.toUpperCase());
 
 const sumUp = (nums: number[]) => {
     let sum: number = 0;
@@ -28,7 +28,33 @@ const monitoredSumUp = monitor({
 
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 
-console.log('\nQUICK EXAMPLE 2: I');
+
+console.log('\nGetting the full execution history of a function call'.toUpperCase());
+
+const exeHistory:ExeResult[] = [];
+
+const fn = monitor({
+    main:{
+        ref:(a:number,b:number)=>{
+            const result = (a + b) * (a - b);
+            return result;
+        }
+    },
+    inspector:(visit)=>{
+        visit.is('Any',()=>undefined);
+
+        visit.perExecution = ()=>{
+            const stack = visit.localExeStack();
+            const head = stack.get(0)
+            exeHistory.push(head);
+        }
+    }
+})
+fn(2,3);
+console.log(exeHistory);
+
+
+console.log('\nCapturing values and Embedding Functions'.toUpperCase());
 
 const currentFn = {value:'' as any}
 const interceptedFns = new Set();
@@ -86,7 +112,7 @@ sayHello('person');
 console.log('Intercepted functions: ',interceptedFns);
 
 
-console.log('\nQUICK EXAMPLE 2: II');
+console.log('\nScoping: Capturing vs Embedding'.toUpperCase());
 
 const nested = ()=>{
     return 'Hello World'
@@ -111,32 +137,8 @@ const outer = monitor({
 });
 console.log(outer());
 
-console.log('\nQUICK EXAMPLE 3');
 
-const exeHistory:ExeResult[] = [];
-
-const fn = monitor({
-    main:{
-        ref:(a:number,b:number)=>{
-            const result = (a + b) * (a - b);
-            return result;
-        }
-    },
-    inspector:(visit)=>{
-        visit.is('Any',()=>undefined);
-
-        visit.perExecution = ()=>{
-            const stack = visit.localExeStack();
-            const head = stack.get(0)
-            exeHistory.push(head);
-        }
-    }
-})
-fn(2,3);
-console.log(exeHistory);
-
-
-console.log('\nQUICK EXAMPLE 4');
+console.log('\nSeeing the result of every awaited promise in a function call'.toUpperCase());
 
 const fetchPrice = monitor({
     main:{
@@ -157,7 +159,7 @@ const fetchPrice = monitor({
 await fetchPrice('flour')
 
 
-console.log('\nQUICK EXAMPLE 5');
+console.log('\nTracking all function calls during the execution of a function including methods'.toUpperCase());
 
 function getSqrt(num: number) {
     const squareRoot = Math.sqrt(num);
@@ -206,7 +208,7 @@ monitoredGetSqrt(2);
 console.log('Callees during execution: ', callees);
 
 
-console.log('\nQUICK EXAMPLE 6');
+console.log('\nUsing the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.'.toUpperCase());
 
 type milliseconds = number;
 type Fn = (...args:any[])=>void
