@@ -41,7 +41,8 @@ export default defineConfig({
     ],
     test: {
         include: ['tests/**/*.{test,spec}.ts'],
-        environment: 'happy-dom',
+        testTimeout:5000,
+        environment: 'node',
         coverage: {
             include: ['src/**/*.ts'],
         },
