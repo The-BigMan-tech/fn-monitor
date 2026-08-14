@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {monitor} from "../../src/index.ts"
+import {InspectorGenerator, monitor} from "../../src/index.ts"
 
 describe('Other Runtime Behaviours',()=>{
 
@@ -82,4 +82,22 @@ describe('Other Runtime Behaviours',()=>{
             expect(count).toBe(i);
         }
     })
+
+    it('[Async-only] should ensure that the interpreter properly bubbles up errors when handling an async function with a defined inspector',async()=>{
+        const fn = monitor({
+            main:{
+                ref:async ()=>{
+                    await new Promise<void>(() => {
+                        throw new Error('Hello world')
+                    })
+                }
+            },
+            //using a defined inspector forces it to use the modified parts of the evaluator
+            inspector:function* ():InspectorGenerator {
+                
+            }
+        })
+        await expect(fn()).rejects.toThrow('Hello world');
+    })
+
 })
