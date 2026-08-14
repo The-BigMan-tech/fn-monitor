@@ -42,7 +42,7 @@ export default defineConfig({
     test: {
         include: ['tests/**/*.{test,spec}.ts'],
         testTimeout:5000,
-        environment: 'node',
+        environment: 'happy-dom',//using happy-dom is required for the sval tests to work
         coverage: {
             include: ['src/**/*.ts'],
         },
