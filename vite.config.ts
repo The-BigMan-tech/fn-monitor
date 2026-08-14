@@ -45,6 +45,6 @@ export default defineConfig({
         environment: 'happy-dom',//using happy-dom is required for the sval tests to work
         coverage: {
             include: ['src/**/*.ts'],
-        },
+        }
     },
 })
