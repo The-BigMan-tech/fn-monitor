@@ -293,7 +293,7 @@ console.log(exeHistory);
 ```
 </details>
 
-> ⭐ **Enjoying** `fn-monitor`? Let us know by starring the repo on GitHub! It helps the project grow and keeps the updates coming.
+> ⭐ **Enjoying** `fn-monitor`? Show your support **by** [starring the repo](https://github.com/The-BigMan-tech/fn-monitor) on GitHub! It helps the project grow and keeps the updates coming.
 
 ### Capturing values and Embedding Functions
 
