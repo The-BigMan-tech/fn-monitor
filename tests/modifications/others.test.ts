@@ -99,5 +99,4 @@ describe('Other Runtime Behaviours',()=>{
         })
         await expect(fn()).rejects.toThrow('Hello world');
     })
-
 })
