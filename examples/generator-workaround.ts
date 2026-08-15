@@ -34,7 +34,7 @@ const monitoredFn = monitor({
             This example uses `visit.is('Any',...) to prevent typescript complaints when 
             pasting it with version 1.2.x of the package.
 
-            If you are using v1.3.0, please prefer to use `visit.is('YieldExpression',...)` 
+            If you are using v1.3.0 or above, please prefer to use `visit.is('YieldExpression',...)` 
             as it saves more memory
         */
         visit.is('Any',(event)=>{
