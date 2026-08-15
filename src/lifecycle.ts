@@ -58,7 +58,11 @@ export function inLazyMode(interpreter:SvalPlus):boolean {
 }
 export function useModifiedEvaluator(scope:Scope):boolean {
     const interpreter:SvalPlus = scope.interpreter;
-    const shouldUseIt = inUserCode(scope) && (interpreter.inspector !== null)
+    const shouldUseIt = (
+        (interpreter.target === "SvalPlus") && 
+        inUserCode(scope) && 
+        (interpreter.inspector !== null)
+    )
     return shouldUseIt;
 }
 

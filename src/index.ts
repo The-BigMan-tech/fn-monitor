@@ -34,9 +34,22 @@
  * 
  *  5. SVAL COMPATIBILITY:
  *     -------------------
- *      - The extended interpreter class, `SvalPlus`, must remain a strict drop-in 
+ *      - The extended interpreter class, `SvalPlus`, is a dual-mode wrapper around Sval.
+ *        It is NOT a pure superset (like TypeScript over JavaScript). Instead, it 
+ *        operates in one of two mutually exclusive modes determined by the presence or absence of
+ *        the `useExtensions` flag passed to the constructor.
+ * 
+ *          - Backward-compatible mode: Identical to Sval. Used 
+ *            solely to run the inherited sval test suite unmodified.
+ * 
+ *          - Monitoring mode: Extensions enabled. Used by `monitor()`
+ *            and all user-facing code.
+ * 
+ *        These modes cannot be mixed within a single execution context.
+ *  
+ *      - In backward-compatible mode, `SvalPlus` must act as a strict drop-in 
  *        replacement for `Sval`. Its constructor and public API must be strictly 
- *        identical or additive to ensure upstream `sval` test suites run seamlessly. 
+ *        identical or additive to ensure upstream `sval` test suites run seamlessly.
  *  
  *      - Avoid breaking changes to core internals unless rigorously tested to 
  *        preserve compatibility (e.g., the evaluator modifications). 
