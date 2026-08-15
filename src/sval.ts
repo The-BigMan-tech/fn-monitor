@@ -46,7 +46,7 @@ function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): 
     return err
 }
 
-export default class Sval {
+export class Sval {
     private options: Options = { ecmaVersion: 'latest' }
     private scope = new Scope(null, true,this)
 

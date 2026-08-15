@@ -1,4 +1,4 @@
-import Sval, { SvalOptions } from "./sval.ts"
+import { Sval,SvalOptions } from "./sval.ts"
 import { Node } from 'acorn'
 import Scope from './scope/index.ts'
 import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
