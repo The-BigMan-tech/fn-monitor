@@ -24,11 +24,13 @@
  * 
  *  4. INTERPRETER IMPLEMENTATION:
  *     ---------------------------
- *     The package will continue to use AST-walking to interprete code and will not 
- *     transition to a bytecode implementation. This is an intentional architectural 
- *     choice: AST-walking allows the `inspector` hook to intercept, mutate, and query 
- *     individual nodes mid-execution, which a compiled bytecode VM cannot easily 
- *     support without losing the white-box Developer Experience.
+ *     - The package will continue to use AST-walking to interpret code and will not 
+ *       transition to a bytecode implementation. 
+ * 
+ *     - This is an intentional architectural choice: AST-walking preserves the high-level 
+ *       node structure, allowing the `inspector` hook to intercept, mutate, and query 
+ *       individual nodes mid-execution — something a compiled bytecode VM cannot easily 
+ *       replicate.
  * 
  *  5. SVAL COMPATIBILITY:
  *     -------------------
