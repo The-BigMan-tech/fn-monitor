@@ -13,7 +13,8 @@ import {
     EvaluatorType, 
     EvaluateOps, 
     NodeResult, 
-    GeneratedKey
+    GeneratedKey,
+    ForbiddenDynamicImport
 } from "./custom-types.ts";
 
 
@@ -63,7 +64,11 @@ export function useModifiedEvaluator(scope:Scope):boolean {
 
 
 export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode):NodeHandler<T> | undefined {
-    return evaluateOps[(node as EsNode).type];
+    const nodeType = (node as EsNode).type;
+    if (nodeType === "ImportExpression") {
+        throw new ForbiddenDynamicImport(ansis.red(`Dynamic imports are not supported in monitored functions`))
+    }
+    return evaluateOps[nodeType];
 }
 export function getSHA256Key(str:string):GeneratedKey {
     return `generated_${sha256.create().update(str).hex()}`;

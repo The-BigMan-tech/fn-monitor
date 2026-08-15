@@ -721,8 +721,16 @@ Please keep the following architectural constraints in mind when using this pack
 
 5. **Performance Critical:** The `monitor()` function incurs overhead from AST parsing and interpreter instantiation. Always call `monitor()` once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.)
 
-6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
+6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
+    > 💡 **The exact error you get depends on your toolchain.**
+    >
+    > `fn-monitor` can only detect an import if it still exists as an `ImportExpression` node when it parses your function's source code. 
+    >
+    > Toolchains that preserve native `import()` (e.g., Node, Bun, tsx) will throw a clear     `ForbiddenDynamicImport` error. However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. 
+    > 
+    > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
+
 7. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed`. However, you *can* include an already-monitored function in any of their `captures` objects, as it will execute natively.
 
 8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. Debug functions in their unmonitored state first. (Note: The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws).
@@ -737,7 +745,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 - 👥 **Questions & Feature Requests:** You can read my [articles](https://dev.to/typescript-guy) or open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
   
-- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. If you encounter unexpected behaviour in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
+- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. Furthermore, build tools and transpilers often transform source code before execution (e.g., polyfilling syntax), which means the AST nodes your inspector sees may differ from the code you wrote in your editor. If you encounter unexpected behaviour in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 

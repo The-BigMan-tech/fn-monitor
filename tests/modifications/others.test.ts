@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {InspectorGenerator, monitor} from "../../src/index.ts"
+import { ForbiddenDynamicImport } from '../../src/custom-types.ts';
 
 describe('Other Runtime Behaviours',()=>{
 
@@ -13,6 +14,24 @@ describe('Other Runtime Behaviours',()=>{
             }
         });
         expect(()=>fn()).toThrow(ReferenceError);
+    });
+
+    it('[Async] should ensure that dynamic imports are not supported',async() => {
+        /**
+          * The import() lives inside a string so that no toolchain rewrites it.
+          * This will allow fn-monitor to parse fn.toString() and see a REAL ImportExpression.
+        */
+        const dynamicImportFn = new Function(`
+            return new Promise(resolve => {
+                resolve(import("ansis"))
+            })
+        `);
+        const fn = monitor({
+            main: { 
+                ref: dynamicImportFn as () => unknown 
+            }
+        });
+        await expect(fn()).rejects.toThrowError(ForbiddenDynamicImport)
     });
 
     it('[Sync] should ensure that the captures of the main function and the embedded ones are properly isolated to themselves',()=>{
@@ -93,9 +112,7 @@ describe('Other Runtime Behaviours',()=>{
                 }
             },
             //using a defined inspector forces it to use the modified parts of the evaluator
-            inspector:function* ():InspectorGenerator {
-                
-            }
+            inspector:function* ():InspectorGenerator {}
         })
         await expect(fn()).rejects.toThrow('Hello world');
     })

@@ -118,6 +118,7 @@ export type EsNode = EsTreeNode;//i couldnt directly export it from the module b
 
 export class WrapperError extends Error {};
 export class VisitExecutionError extends Error {};
+export class ForbiddenDynamicImport extends Error {};
 
 export const LAZY_NODE = Symbol('LAZY_NODE');
 export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
