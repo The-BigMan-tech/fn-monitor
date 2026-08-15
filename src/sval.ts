@@ -47,10 +47,10 @@ function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): 
 }
 
 export class Sval {
-    private options: Options = { ecmaVersion: 'latest' }
-    private scope = new Scope(null, true,this)
-
     public exports: Record<string, any> = {}
+
+    private options: Options = { ecmaVersion: 'latest' }
+    private rootScope = new Scope(null,true,this)
 
     constructor(options: SvalOptions = {}) {
         let { ecmaVer = 'latest', sandBox = true, sourceType = 'script' } = options
@@ -77,22 +77,22 @@ export class Sval {
         if (sandBox) {
             // Shallow clone to create a sandbox
             const win = createSandBox()
-            this.scope.let('globalThis', win)
-            this.scope.let('window', win)
-            this.scope.let('self', win)
+            this.rootScope.let('globalThis', win)
+            this.rootScope.let('window', win)
+            this.rootScope.let('self', win)
             // ES modules have undefined as the top-level this (strict mode)
-            this.scope.let('this', sourceType === 'module' ? undefined : win)
+            this.rootScope.let('this', sourceType === 'module' ? undefined : win)
         }else {
-            this.scope.let('globalThis', globalObj)
-            this.scope.let('window', globalObj)
-            this.scope.let('self', globalObj)
+            this.rootScope.let('globalThis', globalObj)
+            this.rootScope.let('window', globalObj)
+            this.rootScope.let('self', globalObj)
             // ES modules have undefined as the top-level this (strict mode)
-            this.scope.let('this', sourceType === 'module' ? undefined : globalObj)
+            this.rootScope.let('this', sourceType === 'module' ? undefined : globalObj)
         }
 
-        this.scope.const(sourceType === 'module' ? EXPORTS : 'exports', this.exports = {})
+        this.rootScope.const(sourceType === 'module' ? EXPORTS : 'exports', this.exports = {})
         if (sourceType === 'module') {
-            this.scope.const(STRICT, true)
+            this.rootScope.const(STRICT, true)
         }
     }
 
@@ -108,7 +108,7 @@ export class Sval {
         for (let i = 0; i < names.length; i++) {
             const name = names[i]
             const modName = this.options.sourceType === 'module' ? IMPORT + name : name
-            this.scope.var(modName, nameOrModules[name])
+            this.rootScope.var(modName, nameOrModules[name])
         }
     }
 
@@ -134,20 +134,20 @@ export class Sval {
 
     public run(code: string | AcornNode):void {
         const ast = typeof code === 'string' ? this.parse(code) : code
-        const scope = this.scope
 
-        // check if top-level await supports
+        const versionHandlesTopAwait = (
+            this.options.ecmaVersion === 'latest'|| 
+            this.options.ecmaVersion >= 13
+        )
         const useAsyncForTopLevel = (
-            (this.options.sourceType === 'module') && 
-            (this.options.ecmaVersion === 'latest'|| this.options.ecmaVersion >= 13)
+            versionHandlesTopAwait &&
+            (this.options.sourceType === 'module')
         );
 
-        if (useAsyncForTopLevel){
-            runAsync(//fire and forget the promise
-                this.useGenEvaluator(ast as Program,scope)
-            )
+        if (useAsyncForTopLevel){//this branch will fire and forget the promise. 
+            runAsync(this.useGenEvaluator(ast as Program,this.rootScope))
         }else {
-            this.useSyncEvaluator(ast as Program,scope)
+            this.useSyncEvaluator(ast as Program,this.rootScope)
         }
     }
 }
