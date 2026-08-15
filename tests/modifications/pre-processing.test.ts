@@ -28,6 +28,18 @@ describe('Pre-processing Behaviour', () => {
         }).toThrow(WrapperError);
     });
 
+    it('[Pre] should write the generated source code used by the interpreter for a monitored function to the value property in sourceOut', () => {
+        const generatedCode = {value:undefined} as {value:any}
+
+        monitor({
+            main: { 
+                ref:() => undefined
+            },
+            sourceOut:generatedCode
+        });
+        expect(typeof generatedCode.value === "string").toBe(true)
+    });
+
     it('[Pre] should throw an error if an already monitored function is being embedded in a new monitored function\'s context', () => {
         const monitoredFn = monitor({
             main: { 
