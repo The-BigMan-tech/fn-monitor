@@ -421,6 +421,11 @@ console.log(outer());
 Hello world
 ```
 
+> 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
+> You **do not** need to capture these — they're injected by the interpreter and available immediately.
+> 
+> This includes `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables, imported modules, helper functions.
+
 ### Seeing the result of every awaited promise in a function call
 
 This example is unique because it uses a generator as the inspector rather than a regular function.
