@@ -280,6 +280,7 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     onStep: OnStep | null,
     reusables: Reusables<T>,
     visit: Visit,
+    target:'Sval' | 'SvalPlus',
     userRoot:{
         callStackSize:number,
         labels:{

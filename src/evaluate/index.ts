@@ -83,11 +83,7 @@ export default function* evaluate(
         )
     };
 
-    const handler = getHandler(evaluateOps,node);
-    if (!handler) {
-        throw new Error(`${node.type} isn't implemented`);
-    }
-
+    const handler = getHandler(evaluateOps,node,scope);
     callOnStep(scope);
 
     if (!useModifiedEvaluator(scope)) {

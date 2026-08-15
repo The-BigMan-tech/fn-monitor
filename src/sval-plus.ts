@@ -182,6 +182,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         ecmaVer:2024, 
         sandBox:true, 
     };
+
+    public target:SvalPlusContract['target'];
     
     /**
         * A strictly-typed view of `this.exports` for accessing internal, 
@@ -233,24 +235,23 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
 
     /**
-     * Accepting either SvalOptions,SvalPlusArgs or nothing allows this class to be instantiated exactly like the parent class.
+     * Accepting either SvalOptions, SvalPlusArgs or nothing allows this class to be instantiated exactly like the parent class.
      * This backward-compatible behavior is utilized in the core tests.
      * Any code utilizing the SvalPlus extensions is required to always pass true to 'useExtensions'
     */
     constructor(args?:SvalPlusArgs | SvalOptions) {
-        const useExtensions:boolean = 
-            (args !== undefined) && (args as SvalPlusArgs).useExtensions
-            ?true
-            :false
+        const useExtensions:boolean = Boolean(args && (args as SvalPlusArgs).useExtensions);
 
         if (!useExtensions) {
             super(args as SvalOptions);
+            this.target = 'Sval';
             return;
         };
 
         args = args as SvalPlusArgs;
         super(args.options);
 
+        this.target = 'SvalPlus';
         this.fnBeforeEachCall = args.fnBeforeEachCall || null;
         this.fnAfterEachCall = args.fnAfterEachCall || null;
 

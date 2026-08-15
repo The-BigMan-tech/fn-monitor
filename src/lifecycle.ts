@@ -63,12 +63,20 @@ export function useModifiedEvaluator(scope:Scope):boolean {
 }
 
 
-export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode):NodeHandler<T> | undefined {
+export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode,scope:Scope<SvalPlus>):NodeHandler<T> {
     const nodeType = (node as EsNode).type;
-    if (nodeType === "ImportExpression") {
-        throw new ForbiddenDynamicImport(ansis.red(`Dynamic imports are not supported in monitored functions`))
+    if (scope.interpreter!.target === "SvalPlus") {
+        if (nodeType === "ImportExpression") {
+            throw new ForbiddenDynamicImport(ansis.red(`Dynamic imports are not supported in monitored functions`))
+        }
     }
-    return evaluateOps[nodeType];
+
+    const handler = evaluateOps[nodeType];
+    if (!handler) {
+        throw new Error(`${node.type} isn't implemented`);
+    }
+    
+    return handler;
 }
 export function getSHA256Key(str:string):GeneratedKey {
     return `generated_${sha256.create().update(str).hex()}`;
