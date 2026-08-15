@@ -87,7 +87,7 @@ describe('Other Runtime Behaviours',()=>{
                 calledInspector = false;
             },
 
-            //if the interpreter doesnt properly reset to the monitoring state on every call, 
+            //if the interpreter doesn't properly reset to the monitoring state on every call, 
             // this hook wont fire and it will reflect in the count and fail the test
             inspector:()=>{
                 if (!calledInspector) {//this ensures that it only mutates the count once per call
@@ -116,4 +116,70 @@ describe('Other Runtime Behaviours',()=>{
         })
         await expect(fn()).rejects.toThrow('Hello world');
     })
+
+    /**
+     * The function below defines a monitored function that uses a wide range of globals without declaring any `captures`.
+     * Successful execution without a ReferenceError proves that they are available by default.
+     * 
+     * In case the interpreter may mock globals, the test doesn't store the globals within the 
+     * interpreter's context to compare against the ones on the outside.
+     * 
+     * When testing for the console, it simply checks if it is defined. This is to:
+     *   - Avoid boilerplate from introducing spy apis 
+     * 
+     *   - Prevent the test from failing if the interpreter ever decides not to pipe the message to  
+     *    `process.stdout` or includes extra strings with the log
+    */
+    it('[Async] should expose standard language globals without requiring captures',async () => {
+        const fn = monitor({
+            main: {
+                ref:async (a: number, b: number) => {
+                    return {
+                        math:   Math.max(a, b) + Math.min(a, b),
+                        json:   JSON.stringify({ total: a + b }),
+                        array:  new Array(3).fill(a + b),
+                        object: Object.keys({ x: 1, y: 2 }),
+                        map:    new Map<string, number>([['key', a * b]]),
+                        set:    new Set<number>([a * b]),
+                        date:   new Date(0).getTime(),
+                        regex:  /abc/.test('xxabcxx'),
+                        number: Number('42'),
+                        str:    String(42),
+                        bool:   Boolean(1),
+                        err:    new Error('test').message,
+                        promisedValue: await Promise.resolve(42)
+                    };
+                },
+                // NOTE: `captures` intentionally omitted.
+            },
+        });
+
+        const result = await fn(5, 10);
+        
+        expect(result).toMatchObject({
+            math:15,
+            json:'{"total":15}',
+            array:[15, 15, 15],
+            object:['x', 'y'],
+            date:0,
+            regex:true,
+            number:42,
+            str:'42',
+            bool:true,
+            err:'test',
+            promisedValue:42
+        })
+
+        expect(result.map.get('key')).toBe(50);
+        expect(result.set.has(50)).toBe(true);
+
+        const testForConsole = monitor({
+            main:{
+                ref:()=>{
+                    return console !== undefined
+                }
+            }
+        })
+        expect(testForConsole()).toBe(true);
+    });
 })
