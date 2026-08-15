@@ -121,11 +121,12 @@ describe('Other Runtime Behaviours',()=>{
      * The function below defines a monitored function that uses a wide range of globals without declaring any `captures`.
      * Successful execution without a ReferenceError proves that they are available by default.
      * 
-     * In case the interpreter may mock globals, which will affect referential equality, the test doesn't 
-     * store the globals within the interpreter's context to compare against the ones on the outside.
+     * In case the interpreter mocks globals — creating sandboxed copies rather than sharing native 
+     * references, this test avoids checking for referential equality. Instead, it asserts behavior to 
+     * ensure the test remains robust regardless of implementation choice.
      * 
      * When testing for the console, it simply checks if it is defined. This is to:
-     *   - Avoid boilerplate from introducing spy apis 
+     *   - Avoid boilerplate from introducing spy APIs
      * 
      *   - Prevent the test from failing if the interpreter ever decides not to pipe the message to  
      *    `process.stdout` or includes extra strings with the log
