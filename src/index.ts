@@ -36,10 +36,10 @@
  *     -------------------
  *      - The extended interpreter class, `SvalPlus`, is a dual-mode wrapper around Sval.
  *        It is NOT a pure superset (like TypeScript over JavaScript). Instead, it 
- *        operates in one of two mutually exclusive modes determined by the presence or absence of
- *        the `useExtensions` flag passed to the constructor.
+ *        operates in one of two mutually exclusive modes determined by whether the 
+*        `useExtensions` flag is set to `true` in the constructor arguments.
  * 
- *          - Backward-compatible mode: Identical to Sval. Used 
+ *          - Backward-compatible mode: Extensions disabled. Identical to Sval and used 
  *            solely to run the inherited sval test suite unmodified.
  * 
  *          - Monitoring mode: Extensions enabled. Used by `monitor()`
