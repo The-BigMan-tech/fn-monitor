@@ -112,6 +112,7 @@ export type EventMap = (
 
 type Brand<T, K extends string> = T & { __brand: K };
 
+export type GeneratedKey = `generated_${string}` 
 export type Fn = (...args:any[])=>any;
 export type EsNode = EsTreeNode;//i couldnt directly export it from the module because its only a types file
 

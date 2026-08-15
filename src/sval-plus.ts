@@ -3,7 +3,6 @@ import { Node } from 'acorn'
 import Scope from './scope/index.ts'
 import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
 
-
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache'
 
@@ -21,10 +20,17 @@ import {
     NOT_ALLOCATED,
     PerExe,
     OnStep,
-    VisitExecutionError
+    VisitExecutionError,
+    GeneratedKey
 } from './custom-types.ts'
 
-import { executedManually, getSHA256Key, inLazyMode, pushResult } from './lifecycle.ts';
+import { 
+    executedManually,
+    getSHA256Key, 
+    inLazyMode, 
+    pushResult 
+} from './lifecycle.ts';
+
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
@@ -177,6 +183,17 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         sandBox:true, 
     };
     
+    /**
+        * A strictly-typed view of `this.exports` for accessing internal, 
+        * interpreter-generated state (like anchors, offsets, and captures).
+        * 
+        * Note: This is the exact same object reference in memory as `this.exports`. 
+        * It exists purely to enforce compile-time safety and prevent accidental 
+        * collisions with user-defined exported variables.
+        * 
+        * @internal This is meant to be used for SvalPlus internals and the preprocessor. 
+    */
+    public svalPlusExports = this.exports as Record<GeneratedKey,any>;
     public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE';
     
     public inspector:Inspector<'internal'> | null = null;
@@ -211,8 +228,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         },
     };
     private argImports = { 
-        [SvalPlus.commonLabels.args]:null as any as any[] //we firstly set it to null to prevent creating a wasted empty object
-    }
+        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty array
+    } as Record<GeneratedKey,unknown[]>
 
 
     /**
@@ -243,14 +260,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.reusables.execution.readonlyExeStack.swapSrc(this.reusables.execution.exeStack);
     };
 
-    public getFnSrc<T extends boolean>(fn:Fn,capturesLabel:string,isMainFn:T):FnSrc<T>  {
+    public getFnSrc<T extends boolean>(fn:Fn,capturesLabel:GeneratedKey,isMainFn:T):FnSrc<T>  {
         const fnString = fn.toString();
         const hash = getSHA256Key(fnString);
 
         const intermediateFnName:string = 'intermediateFn_' + hash;
         const intermediateFnCode:string = `\nconst ${intermediateFnName} = \n${fnString};`
 
-        const capturedKeys = Object.keys(this.exports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
+        const capturedKeys = Object.keys(this.svalPlusExports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
 
         const unpackCaptures = (capturedKeys.length > 0) 
             ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesLabel};`
@@ -297,7 +314,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 const fn = functions[name];
                 const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);//prepending embeddedFn ensures that it wont conflct with existing generated commonLabels
 
-                this.exports[capturesLabel] = fn.captures || Object.create(null);
+                this.svalPlusExports[capturesLabel] = fn.captures || Object.create(null);
                 const fnSrc = this.getFnSrc(fn.ref,capturesLabel,false);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
@@ -355,7 +372,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         try {
             this.run(this.fnCallAst!);
-            result = this.exports[SvalPlus.commonLabels.resultExport];
+            result = this.svalPlusExports[SvalPlus.commonLabels.resultExport];
         }catch(err) {
             result = this.normalizeErr(err);
         };

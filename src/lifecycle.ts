@@ -12,7 +12,8 @@ import {
     NodeHandler, 
     EvaluatorType, 
     EvaluateOps, 
-    NodeResult 
+    NodeResult, 
+    GeneratedKey
 } from "./custom-types.ts";
 
 
@@ -64,8 +65,8 @@ export function useModifiedEvaluator(scope:Scope):boolean {
 export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode):NodeHandler<T> | undefined {
     return evaluateOps[(node as EsNode).type];
 }
-export function getSHA256Key(str:string):string {
-    return 'generated_' + sha256.create().update(str).hex();
+export function getSHA256Key(str:string):GeneratedKey {
+    return `generated_${sha256.create().update(str).hex()}`;
 }
 
 

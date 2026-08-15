@@ -180,7 +180,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     interpreter.stage = "PRE-PROCESSING";
 
     const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
-    interpreter.exports[capturesLabel] = captures || Object.create(null);
+    interpreter.svalPlusExports[capturesLabel] = captures || Object.create(null);
     
     const fnSrc = interpreter.getFnSrc(mainFn,capturesLabel,true);
     fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
