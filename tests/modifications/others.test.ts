@@ -121,8 +121,8 @@ describe('Other Runtime Behaviours',()=>{
      * The function below defines a monitored function that uses a wide range of globals without declaring any `captures`.
      * Successful execution without a ReferenceError proves that they are available by default.
      * 
-     * In case the interpreter may mock globals, the test doesn't store the globals within the 
-     * interpreter's context to compare against the ones on the outside.
+     * In case the interpreter may mock globals, which will affect referential equality, the test doesn't 
+     * store the globals within the interpreter's context to compare against the ones on the outside.
      * 
      * When testing for the console, it simply checks if it is defined. This is to:
      *   - Avoid boilerplate from introducing spy apis 
@@ -134,6 +134,11 @@ describe('Other Runtime Behaviours',()=>{
         const fn = monitor({
             main: {
                 ref:async (a: number, b: number) => {
+                    const proxyHandler = {
+                        get: (obj: any, prop: string) => {
+                            return prop in obj ? obj[prop] : 42;
+                        }
+                    };
                     return {
                         math:   Math.max(a, b) + Math.min(a, b),
                         json:   JSON.stringify({ total: a + b }),
@@ -147,7 +152,9 @@ describe('Other Runtime Behaviours',()=>{
                         str:    String(42),
                         bool:   Boolean(1),
                         err:    new Error('test').message,
-                        promisedValue: await Promise.resolve(42)
+                        promisedValue: await Promise.resolve(42),
+                        hasConsole:console !== undefined,
+                        valueFromProxy:new Proxy({},proxyHandler)['nonExistentProp']
                     };
                 },
                 // NOTE: `captures` intentionally omitted.
@@ -167,19 +174,12 @@ describe('Other Runtime Behaviours',()=>{
             str:'42',
             bool:true,
             err:'test',
-            promisedValue:42
+            promisedValue:42,
+            hasConsole:true,
+            valueFromProxy:42
         })
 
         expect(result.map.get('key')).toBe(50);
         expect(result.set.has(50)).toBe(true);
-
-        const testForConsole = monitor({
-            main:{
-                ref:()=>{
-                    return console !== undefined
-                }
-            }
-        })
-        expect(testForConsole()).toBe(true);
     });
 })
