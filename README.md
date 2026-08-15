@@ -689,6 +689,8 @@ The rich object that gives inspectors their ability to participate in the interp
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
   
+- **Code Generation & Pre-processing:** Before the AST parser runs, raw function strings are passed through a deterministic pre-processor that constructs an IIFE wrapper. This safely injects `captures` as constants and stitches `embed` sources into the execution context, ensuring strict lexical boundaries before interpretation begins.
+  
 - **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects, preventing the allocation of intermediate objects mid-evaluation. The async evaluator safely copies and restores these objects across event loop pauses.
   
 - **Strict Mode Enforcement:** All generated wrapper code is executed in strict mode.
