@@ -5,91 +5,93 @@
  *  understand the following before making significant modifications to the codebase.
  *  
  *  1. PURPOSE LIMITATIONS:
+ *     --------------------
  *     Do not expand this into a script-level or module-level monitor. Doing so will 
  *     break the hidden function-context assumptions used throughout this codebase.
  *  
  *  2. TYPESCRIPT COMPLAINTS:
+ *     ----------------------
  *     Parts of the codebase that consist of pure, unmodified `sval` code may have 
  *     TypeScript complaints. Since they function correctly, they have been left as-is 
- *     to preserve the original behavior, marked with `@ts-nocheck`.
+ *     to preserve the original behavior and are marked with `@ts-nocheck`.
  *  
  *  3. ES-NODE EXPORT:
- *     The @types/estree pkg is intentionally installed as a dependency and not as a dev dependency 
- *     because the codebase directly exports one of its types for intellisense. It prevents users
- *     from having to install an extra package just to get full intellisense.
+ *     ---------------
+ *     The `@types/estree` package is intentionally installed as a production dependency 
+ *     (not a devDependency) because the codebase directly exports its types for public 
+ *     intellisense. This prevents users from having to install an extra package just 
+ *     to get full type support.
  * 
  *  4. INTERPRETER IMPLEMENTATION:
- *     The package will continue to use AST-walking to interprete code and will not transition to
- *     a bytecode implementation for very practical reasons
+ *     ---------------------------
+ *     The package will continue to use AST-walking to interprete code and will not 
+ *     transition to a bytecode implementation. This is an intentional architectural 
+ *     choice: AST-walking allows the `inspector` hook to intercept, mutate, and query 
+ *     individual nodes mid-execution, which a compiled bytecode VM cannot easily 
+ *     support without losing the white-box Developer Experience.
  * 
  *  5. SVAL COMPATIBILITY:
- *      - The extended interpreter class, `SvalPlus` interpreter must remain a strict drop-in 
- *      replacement for `Sval`. Its constructor and public API must be strictly identical or additive 
- *      to ensure upstream `sval` test suites run seamlessly. 
+ *     -------------------
+ *      - The extended interpreter class, `SvalPlus`, must remain a strict drop-in 
+ *        replacement for `Sval`. Its constructor and public API must be strictly 
+ *        identical or additive to ensure upstream `sval` test suites run seamlessly. 
  *  
  *      - Avoid breaking changes to core internals unless rigorously tested to 
- *      preserve compatibility (e.g., the evaluator modifications). 
+ *        preserve compatibility (e.g., the evaluator modifications). 
  *      
- *      - As a result of this compatibility, you will see acorn and estree node types being used 
- *      interchangeably. But this wont affect runtime behaviour
+ *      - As a result of this compatibility, you will see `acorn` and `estree` node 
+ *        types being used interchangeably. This introduces some type redundancy, but 
+ *        it won't affect runtime behavior and is required to maintain upstream compatibility.
  *  
- *  6. PARSER:
- *     The package uses meriyah to parse functions for speed. But it still keeps acorn to avoid 
- *     breaking or heavily refactoring existing sval code
+ *  6. PARSER REDUNDANCY (INTENTIONAL):
+ *     --------------------------------
+ *     The package uses `meriyah` to parse user functions for speed, but retains `acorn` 
+ *     to avoid breaking or heavily refactoring inherited `sval` code. While carrying 
+ *     two parsers might be viewed by some as "bloat", it is an intentional trade-off 
+ *     that guarantees stability and upstream compatibility without requiring a massive, 
+ *     risky rewrite of the core evaluator. Do not remove `acorn`.
  * 
- *  7. TEST COVERAGE:
- *      - Quick note, 
- *          - There are two evaluator implementations--the nomalized version under the  
- *          evaluate_n folder and the generator version which is under the evaluate folder
- * 
- *              - The normalized version is used by the interpreter to run a node synchronously 
- *                while the generator version is used to run async nodes
- *              
- *              - The parts of these evaluators that have the custom modifications to enable function
- *                monitoring are in their respective index.ts files while everything else were inherited 
- *                from sval and left as they were.
+ *  7. TEST COVERAGE & EVALUATOR ARCHITECTURE:
+ *     ---------------------------------------
+ *      - The interpreter has two evaluator implementations:
+ *          1. Normalized (`evaluate_n` folder): Processes synchronous nodes.
+ *          2. Generator (`evaluate` folder): Processes asynchronous nodes.
  *          
- *          - Other places that include the modifications are:
- *             - The scope class in its respective index.ts file
- *             - The Sval class in the sval.ts file. It was only given minor adjustments
- * 
- *      - There are two test folders, the interpreter tests and the modifications tests:
- *          - The interpreter tests consists of the 200+ tests inherited from `sval`
- *          - The modification tests consist of the 55+ tests made for the custom modifications
- *      
- *      - For the modification tests, 
- *          - Each of them are marked with one of the following prefixes ;
- * 
- *              - [Sync] to indicate that it targets the normalized evaluator.
- *                An [Async] counterpart should be made if not available.
- *  
- *              - [Async] to indicate that it targets the generator evaluator.
- *                A [Sync] counterpart should be made if not available.
- *  
- *              - [Sync-only] to indicate that it is only meant to target the normalized evaluator.
- *                An [Async] counterpart should not be made
- *  
- *              - [Async-only] to indicate that it is only meant to test the generator evaluator. 
- *                A [Sync] counterpart should not be made
- *              
- *              - [Pre] to indicate that it only tests the pre-processing step(wrapping and parsing)
- *                and not runtime execution
+ *          Note: Custom modifications live in their respective `index.ts` files; 
+ *          everything else is inherited from `sval` and left untouched. 
  *          
- *      - All the tests are heavily skewed towards the normalized evaluator.
- *        
- *      - This means that the coverage is not complete and you will have to manually test any changes 
- *        you make to the generator version
+ *      - Modifications also exist in the Scope class (`scope/index.ts`) and the 
+ *        Sval class (`sval.ts`).
+ *      
+ *      - Test Suite Structure:
+ *          - `interpreter` tests: 200+ tests inherited from `sval`.
+ *          - `modifications` tests: 55+ tests written for the custom modifications.
+ *      
+ *      - Modification Test Prefixes:
+ *          - `[Sync]`: Targets the normalized evaluator. (An `[Async]` counterpart should exist).
+ *          - `[Async]`: Targets the generator evaluator. (A `[Sync]` counterpart should exist).
+ *          - `[Sync-only]`: Strictly for the normalized evaluator. (No async counterpart needed).
+ *          - `[Async-only]`: Strictly for the generator evaluator. (No sync counterpart needed).
+ *          - `[Pre]`: Tests the pre-processing step (wrapping/parsing), not runtime execution.
+ *          
+ *      - Coverage Status: 
+ *          Because each evaluator has its own copy of the node handlers, the tests must be explicitly
+ *          written to cover both the generator and the normalized evaluator individually.
  * 
- *      - For the modification tests, the goal is to ensure that all [Sync] tests have [Async] equivalents 
- *        and vice versa. This will ensure that they have complete coverage.
- *      
- *      - For the interpreter tests, any plans to help it to fully cover the generator 
- *        version is postponed till the coverage of the modification tests is complete.
- *      
- *      - More tests may be pushed while the coverage is undergoing completion but it will
- *        be less frequent.
+ *          ALL tests are currently heavily skewed toward the normalized evaluator and coverage 
+ *          for the generator version is incomplete.
+ *          
+ *          This means that a change to the generator version can pass the entire test suite while 
+ *          silently breaking it. Passing the suite is NOT proof that the async path is unaffected.
+ * 
+ *          The goal is to ensure that for all modification tests, the `[Sync]` tests have `[Async]` 
+ *          equivalents and vice versa.
+ *          
+ *          As for the interpreter tests, plans to complete the coverage are postponed until
+ *          modification tests have received full coverage
+ * 
+ *          
 */
-
 
 
 import jsBeatutify from "js-beautify";
