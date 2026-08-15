@@ -118,9 +118,13 @@ describe('Hook Behaviour',()=>{
         expect(inspectorHookCalls).toBe(onStepHookCalls)
     })
 
-    //this test is marked as sync even though its checking the correctness of the 
-    // pre-processing phase because its relying on specific runtime hooks that are handled by the evaluators
-
+    /**
+      * We embed a function with a captured variable to create varying depths of where the user code lies
+      * If the interpreter gets confused about this, it will fire the hooks and fail the test
+      * 
+      * The test is marked as sync even though its checking the correctness of the pre-processing 
+      * phase because its relying on specific runtime hooks that are handled by the evaluators
+    */
     it('[Sync] should ensure that the inspector and onStep hooks are not fired during the wrapping phase',()=>{
         const generatedCode = {value:''}
         const Printed = 'Printed: ';
@@ -149,9 +153,6 @@ describe('Hook Behaviour',()=>{
             embed:{
                 print:{
                     ref:print,
-                    ///in the generated code,the definitions for embedded functions are 1 layer deeper in the scope than the main one.
-                    //By placing a captures there, we force the interpreter to parse the captures at a depth where the user code lives i.e depth 2 and deeper
-                    //if the interpreter stage flag is ignored or not used correctly ,this test will fail
                     captures:{
                         Printed
                     }
