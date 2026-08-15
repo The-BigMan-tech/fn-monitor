@@ -15,8 +15,6 @@ export interface SvalOptions {
     sandBox?: boolean
 }
 
-const latestVer = 15
-
 function improveSyntaxError(err: SyntaxError & { pos?: number }, code: string): SyntaxError {
     if (typeof err.pos !== 'number' || !err.message.startsWith('Unexpected token')) return err
     const pos = err.pos
@@ -51,6 +49,7 @@ export class Sval {
 
     private options: Options = { ecmaVersion: 'latest' }
     private rootScope = new Scope(null,true,this)
+    private static latestVersion = 15
 
     constructor(options: SvalOptions = {}) {
         let { ecmaVer = 'latest', sandBox = true, sourceType = 'script' } = options
@@ -62,7 +61,7 @@ export class Sval {
         const versionIsUnsupported =(
             (ecmaVer !== 'latest') && 
             (ecmaVer !== 3) && 
-            ((ecmaVer < 5) || (ecmaVer > latestVer))
+            ((ecmaVer < 5) || (ecmaVer > Sval.latestVersion))
         )
         if (versionIsUnsupported) {
             throw new Error(`unsupported ecmaVer`)
