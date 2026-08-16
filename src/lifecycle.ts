@@ -232,7 +232,7 @@ export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>):void 
     const event = interpreter.reusables.event;
     const node = interpreter.reusables.node!;
 
-    //we should aways insert a new object.Trying to optimize this by reusing objects may be logically incosistent with the rest of the codebase
+    //we should aways insert a new object.Trying to optimize this by reusing objects will be logically incosistent with the rest of the codebase
     interpreter.reusables.execution.exeStack.unshift({
         evaluation:final,
         type:node.type,
