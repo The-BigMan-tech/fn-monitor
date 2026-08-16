@@ -245,6 +245,7 @@ export {
     TemplateLiteralEvent,
     SequenceExprEvent,
     UnaryExprEvent,
+    YieldExprEvent,
 
     // Statements & Control Flow
     ReturnStmtEvent,
