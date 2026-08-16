@@ -1,10 +1,10 @@
 import { Sval,SvalOptions } from "./sval.ts"
 import { Node } from 'acorn'
-import Scope from './scope/index.ts'
-import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
-
+import jsBeautify from "js-beautify";
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache'
+import Scope from './scope/index.ts'
+import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
 
 import { 
     Inspector,
@@ -59,7 +59,6 @@ interface SvalPlusArgs {
     onStep?:OnStep,
     fnBeforeEachCall?:Fn,
     fnAfterEachCall?:Fn,
-    options?:SvalOptions,
 }
 
 class EventScope implements ScopeForEvent {
@@ -158,7 +157,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
      *   interpreter instances is safe, as the actual execution state remains 
      *   fully isolated within each instance.
     */
-    public static commonLabels = {
+    private static commonLabels = {
         resultExport:getSHA256Key('result'),
         args:getSHA256Key('args'),
         anchor:getSHA256Key('anchor'),
@@ -170,21 +169,19 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
-    public static meriyahParseOptions:MeriyahOptions = {
+    private static meriyahParseOptions:MeriyahOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
         next: true,      // Modern ES support
         loc: true,    
         ranges: true,    // Good for error reporting
         lexical: true    // Helps Sval understand 'let/const' vs 'var'
     }
-    public static svalOptions:SvalOptions = {
+    private static svalOptions:SvalOptions = {
         sourceType:"script",//This will prevent dynamic imports and top level await.Check README
         ecmaVer:2024, 
         sandBox:true, 
     };
 
-    public target:SvalPlusContract['target'];
-    
     /**
         * A strictly-typed view of `this.exports` for accessing internal, 
         * interpreter-generated state (like anchors, offsets, and captures).
@@ -195,16 +192,23 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         * 
         * @internal This is meant to be used for SvalPlus internals and the code generator. 
     */
-    public svalPlusExports = this.exports as Record<GeneratedKey,any>;
-    public stage:SvalPlusContract['stage'] = 'IDLE';
+    private svalPlusExports = this.exports as Record<GeneratedKey,any>;
+
+    private _stage:SvalPlusContract['stage'] = 'IDLE';
+    private _target:SvalPlusContract['target'];
+
+    private argImports = { 
+        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty array
+    } as Record<GeneratedKey,unknown[]>
+
     
     public inspector:Inspector<'internal'> | null = null;
     public onStep:OnStep | null = null;
 
-    public fnBeforeEachCall:Fn | null = null;
-    public fnAfterEachCall:Fn | null = null;
+    private fnBeforeEachCall:Fn | null = null;
+    private fnAfterEachCall:Fn | null = null;
     
-    public fnCallAst:Node | null = null;
+    private fnCallAst:Node | null = null;
     public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
 
     public userRoot = {
@@ -214,7 +218,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             anchor:SvalPlus.commonLabels.anchor
         }
     };
-
     public reusables:Reusables = {
         node:null,
         scope:null,
@@ -229,10 +232,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             perExe:null
         },
     };
-    private argImports = { 
-        [SvalPlus.commonLabels.args]:null as any //we firstly set it to null to prevent creating a wasted empty array
-    } as Record<GeneratedKey,unknown[]>
-
 
     /**
      * Accepting either SvalOptions, SvalPlusArgs or nothing allows this class to be instantiated either 
@@ -246,14 +245,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         if (!useExtensions) {
             super(args as SvalOptions);
-            this.target = 'Sval';
+            this._target = 'Sval';
             return;
         };
 
-        args = args as SvalPlusArgs;
-        super(args.options);
+        super(SvalPlus.svalOptions);
+        this._target = 'SvalPlus';
 
-        this.target = 'SvalPlus';
+        args = args as SvalPlusArgs;
         this.fnBeforeEachCall = args.fnBeforeEachCall || null;
         this.fnAfterEachCall = args.fnAfterEachCall || null;
 
@@ -263,7 +262,39 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.reusables.execution.readonlyExeStack.swapSrc(this.reusables.execution.exeStack);
     };
 
-    public getFnSrc<T extends boolean>(fn:Fn,capturesLabel:GeneratedKey,isMainFn:T):FnSrc<T>  {
+    public createEventScope = ()=>{
+        return new EventScope(this);
+    };
+    public get target() {
+        return this._target;
+    }
+    public get stage() {
+        return this._stage;
+    }
+
+    private refErrMsg(err:ReferenceError):string {
+        return (
+            ansis.white(
+                `\n${err.message}\n` +
+                `\nIf the first line of the stack trace points to the evaluator, please read: ` + 
+                `\n   -Monitored functions cannot access variables from the outside.` + 
+                `\n   -They must either be passed as an argument on each call or captured/embedded upon creation.\n`
+            )
+        )
+    };
+    private normalizeErr(err:unknown):Error {
+        if (err instanceof ReferenceError) {
+            err.message = this.refErrMsg(err);
+            return err;
+        }else {
+            const error = err instanceof Error 
+                ? err 
+                : new Error(String(err));
+            return error
+        }
+    }
+
+    private getFnSrc<T extends boolean>(fn:Fn,capturesLabel:GeneratedKey,isMainFn:T):FnSrc<T>  {
         const fnString = fn.toString();
         const hash = getSHA256Key(fnString);
 
@@ -304,7 +335,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             fnCall:finalFnCall as FnSrc<T>['fnCall'] 
         };
     }
-    public getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
+    private getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
         let fnCode:string = '';
 
         if (functions !== undefined) {
@@ -334,7 +365,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
         return fnCode;
     };
-    public useFn(fnSrc:FnSrc<true>):void {
+
+    private useFn(fnSrc:FnSrc<true>):void {
         if (this.fnCallAst !== null) {
             throw new Error(ansis.red(`The interpreter can only use one function`))
         };
@@ -358,13 +390,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.run(ast.fnCode);
         this.fnCallAst = ast.fnCall;
     }
-
-
-    public createEventScope = ()=>{
-        return new EventScope(this);
-    };
-    public runFn = (...args:any[])=>{
-        this.stage = 'MONITORING';
+    private callFn = (...args:any[])=>{
+        this._stage = 'MONITORING';
         let result;
 
         if (this.fnBeforeEachCall) {
@@ -392,7 +419,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                     throw error; // Re-throw so the caller still sees the error
                 })
                 .finally(()=>{
-                    this.stage = "IDLE";
+                    this._stage = "IDLE";
                 })
         }else {
             try {
@@ -400,31 +427,43 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 if (result instanceof Error) throw result;
                 return result;
             }finally {
-                this.stage = "IDLE";//this runs regardless of whether the hook throws an error or not
+                this._stage = "IDLE";//this runs regardless of whether the hook throws an error or not
             }
         };
     }
 
-
-    public refErrMsg(err:ReferenceError) {
-        return (
-            ansis.white(
-                `\n${err.message}\n` +
-                `\nIf the first line of the stack trace points to the evaluator, please read: ` + 
-                `\n   -Monitored functions cannot access variables from the outside.` + 
-                `\n   -They must either be passed as an argument on each call or captured/embedded upon creation.\n`
-            )
-        )
-    };
-    private normalizeErr(err:unknown):Error {
-        if (err instanceof ReferenceError) {
-            err.message = this.refErrMsg(err);
-            return err;
-        }else {
-            const error = err instanceof Error 
-                ? err 
-                : new Error(String(err));
-            return error
+    public assemble = <
+        T extends Fn,
+        R = T & { alreadyMonitored: true }
+    >(
+        main:Metadata<T>,
+        embed?:Record<string,Metadata<Fn>>,
+        sourceOut?:{value:string}
+    ):R => {
+        this._stage = "WRAPPING";
+        
+        try {
+            const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
+            this.svalPlusExports[capturesLabel] = main.captures || Object.create(null);
+            
+            const fnSrc = this.getFnSrc(main.ref,capturesLabel,true);
+            fnSrc.fnCode += this.getFnSources(embed);
+            
+            fnSrc.fnCode = `'use strict'\n${fnSrc.fnCode}`;//ensure that it runs in strict mode
+            this.useFn(fnSrc);
+            
+            if (sourceOut) {//only write the generated code if the interpreter could parse it
+                sourceOut.value = jsBeautify(
+                    fnSrc.fnCode + fnSrc.fnCall,
+                    {indent_size:4}
+                );
+            };
+            const wrappedFn = this.callFn as unknown as R;
+            (wrappedFn as { alreadyMonitored: boolean }).alreadyMonitored = true;
+            return wrappedFn;
+        }
+        finally {
+            this._stage = "IDLE";
         }
     }
 };

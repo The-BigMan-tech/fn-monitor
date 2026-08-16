@@ -108,9 +108,14 @@
  *          
 */
 
+import { 
+    Fn, 
+    Inspector, 
+    InspectorGenerator as InspectorGen, 
+    OnStep, 
+    WrapperError 
+} from "./custom-types.ts";
 
-import jsBeatutify from "js-beautify";
-import { Fn, Inspector, InspectorGenerator as InspectorGen, OnStep, WrapperError } from "./custom-types.ts";
 import { Metadata, SvalPlus } from "./sval-plus.ts";
 import ansis from "ansis";
 
@@ -166,12 +171,9 @@ function assertRefIsNotMonitored(metadata:Metadata<Fn>) {
  * The major advantage you get is that you can inject hooks at any part of the function's lifecyle and they are treated as first class citizens by the interpreter.Essentially making it a white-box.
 */
 export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
-    const {ref:mainFn,captures} = setup.main;
-
-    assertRefIsNotMonitored(setup.main);
-
     const {
-        embed:functionsToEmbed,
+        main,
+        embed,
         inspector,
         onStep,
         beforeEachCall,
@@ -179,8 +181,9 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
         sourceOut
     } = setup;
 
-    if (functionsToEmbed !== undefined) {
-        Object.values(functionsToEmbed).forEach(metadata=>{
+    assertRefIsNotMonitored(main);
+    if (embed !== undefined) {
+        Object.values(embed).forEach(metadata=>{
             assertRefIsNotMonitored(metadata);
         })
     };
@@ -191,31 +194,9 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
         onStep,
         fnBeforeEachCall:beforeEachCall,
         fnAfterEachCall:afterEachCall,
-        options:SvalPlus.svalOptions
     });
 
-    interpreter.stage = "WRAPPING";
-
-    const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
-    interpreter.svalPlusExports[capturesLabel] = captures || Object.create(null);
-    
-    const fnSrc = interpreter.getFnSrc(mainFn,capturesLabel,true);
-    fnSrc.fnCode += interpreter.getFnSources(functionsToEmbed);
-
-    fnSrc.fnCode = `'use strict'\n${fnSrc.fnCode}`;//ensure that it runs in strict mode
-    interpreter.useFn(fnSrc);
-
-    if (sourceOut) {//only write the generated code if the interpreter could parse it
-        sourceOut.value = jsBeatutify(
-            fnSrc.fnCode + fnSrc.fnCall,
-            {indent_size:4}
-        );
-    };
-
-    const newFn = interpreter.runFn as T & { alreadyMonitored: true };
-    newFn['alreadyMonitored'] = true;
-
-    return newFn;
+    return interpreter.assemble(main,embed,sourceOut);
 }
 
 export  type InspectorGenerator = InspectorGen<'user'>;//this will prevent callers from seeing the branded type
