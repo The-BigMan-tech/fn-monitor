@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
 import { WrapperError } from '../../src/custom-types';
+import { parse } from "meriyah"
 
 describe('Pre-processing Behaviour', () => {
 
@@ -28,16 +29,31 @@ describe('Pre-processing Behaviour', () => {
         }).toThrow(WrapperError);
     });
 
-    it('[Pre] should write the generated source code used by the interpreter for a monitored function to the value property in sourceOut', () => {
+    it('[Pre] should write the generated source code used by the interpreter to the value property in sourceOut', () => {
+        // Initialized to `undefined` so the test fails loudly if the interpreter forgets to write to `sourceOut`. 
         const generatedCode = {value:undefined} as {value:any}
 
         monitor({
             main: { 
-                ref:() => undefined
+                ref:() => 'hello'
             },
             sourceOut:generatedCode
         });
-        expect(typeof generatedCode.value === "string").toBe(true)
+        expect(typeof generatedCode.value).toBe('string');
+        expect(generatedCode.value.length).toBeGreaterThan(0);
+    });
+
+    it('[Pre] should write syntactically valid source code to sourceOut', () => {
+        // Initialized to `undefined` so the test fails loudly if the interpreter forgets to write to `sourceOut`. 
+        const generatedCode = { value: undefined } as {value:any};
+
+        monitor({
+            main: {
+                ref: () => 'hello',
+            },
+            sourceOut: generatedCode,
+        });
+        expect(() => parse(generatedCode.value)).not.toThrow();
     });
 
     it('[Pre] should throw an error if an already monitored function is being embedded in a new monitored function\'s context', () => {

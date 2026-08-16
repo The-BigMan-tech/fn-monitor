@@ -80,7 +80,7 @@
  *      
  *      - Test Suite Structure:
  *          - `interpreter` tests: 200+ tests inherited from `sval`.
- *          - `modifications` tests: 55+ tests written for the custom modifications.
+ *          - `modifications` tests: 60 tests written for the custom modifications.
  *      
  *      - Modification Test Prefixes:
  *          - `[Sync]`: Targets the normalized evaluator. (An `[Async]` counterpart should exist).
