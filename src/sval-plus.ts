@@ -209,7 +209,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     private fnAfterEachCall:Fn | null = null;
     
     private fnCallAst:Node | null = null;
-    public visit:Visit = new Visit(this);//Even if each inspector gets a shared visit object that reflects the latest values for performance,i wont freeze its properties to allow possible external wrappers to customize it
+    public visit:Visit = new Visit(this);
 
     public userRoot = {
         callStackSize:0,
