@@ -748,7 +748,7 @@ Please keep the following architectural constraints in mind when using this pack
     >   
     > Instead of capturing the library object itself, create a simple wrapper function in your outer scope and capture the wrapper.
     >
-    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-modules.ts) example for a quick demonstration.
+    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) example for a quick demonstration.
 ---
 
 <a id="questions--support"></a>
