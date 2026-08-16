@@ -54,7 +54,7 @@
 npm install @typescript-guy/fn-monitor
 ```
 
-> 📌 **If you are integrating this package for production:** Please review the [Important Notes and Limitations](#important-notes--limitations-️) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
+> 📌 **Before integrating this package into any project,** please read the [Important Notes and Limitations](#important-notes--limitations-️) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
 
 ---
 
@@ -767,7 +767,7 @@ Please keep the following architectural constraints in mind when using this pack
 
 ## Contributing 🤝
 
-Pull requests are welcome! Before opening one, please read the [maintainer's note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/src/index.ts) at the top of `src/index.ts`. It outlines critical architectural invariants that all contributions must preserve.
+Contributions are welcome! Before opening a pull request, please read the [Contributing Guidelines](https://github.com/The-BigMan-tech/fn-monitor/blob/master/CONTRIBUTING.md). It outlines critical architectural invariants that all contributions must preserve.
 
 ---
 
