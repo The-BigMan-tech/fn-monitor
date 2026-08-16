@@ -424,7 +424,7 @@ Hello world
 > 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
 > You **do not** need to capture these — they're injected by the interpreter and available immediately.
 > 
-> This includes `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables, imported modules, helper functions.
+> This includes `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables or helper functions.
 
 ### Seeing the result of every awaited promise in a function call
 
@@ -742,6 +742,13 @@ Please keep the following architectural constraints in mind when using this pack
 
 9.  **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting execution via the `inspector` and `onStep` hooks.
 
+10. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
+
+    > 💡 **Tip:** There is a workaround. 
+    >   
+    > Instead of capturing the library object itself, create a simple wrapper function in your outer scope and capture the wrapper.
+    >
+    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-modules.ts) example for a quick demonstration.
 ---
 
 <a id="questions--support"></a>

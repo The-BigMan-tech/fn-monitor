@@ -1,6 +1,5 @@
 import { monitor } from "../src/index.ts";
 
-
 // ❌ FAILING CASE: Capturing the entire library object
 
 const ansis = await import("ansis");
@@ -25,21 +24,21 @@ try {
     // Output: Error: func.apply is not a function
 }
 
+// ✅ WORKING CASE: Capture a simple wrapper object
 
-// ✅ WORKING CASE: Capture a simple wrapper over the function
+const stylize = {
+    green: (text: string) => ansis.green(text)
+};
 
-const ansisWrapper = {
-    green:(text: string) => ansis.green(text)
-}
 const fn2 = monitor({
     main: {
         ref: () => {
-            // This works because we're calling a function on a plain object that the
-            // interpreter captured directly
-            return ansis.green('Hello world');
+            // This works because we're calling a function on a plain object
+            // that the interpreter captured directly
+            return stylize.green('Hello world');
         },
         captures: {
-            ansis:ansisWrapper
+            stylize  // Capture the wrapper with a distinct name
         }
     }
 });
