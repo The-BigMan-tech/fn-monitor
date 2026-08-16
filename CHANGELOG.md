@@ -1,4 +1,57 @@
 
+## v1.4.1...v1.4.2
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.1...v1.4.2)
+
+### 🩹 Fixes
+
+- Throw clear error on dynamic imports and document toolchain AST drift ([19ac4cd](https://github.com/The-BigMan-tech/fn-monitor/commit/19ac4cd))
+- Scope dynamic import ban to monitoring mode ([846b285](https://github.com/The-BigMan-tech/fn-monitor/commit/846b285))
+- Export YieldExpr event class for instanceof checks ([45f9774](https://github.com/The-BigMan-tech/fn-monitor/commit/45f9774))
+- Bump to v1.4.2 ([30323e9](https://github.com/The-BigMan-tech/fn-monitor/commit/30323e9))
+
+### ♻️ Refactor
+
+- Rename scope to rootScope and clarify top-level await logic ([4045c25](https://github.com/The-BigMan-tech/fn-monitor/commit/4045c25))
+- Explicitly check for the target mode in `useModifiedEvaluator` ([14bfed4](https://github.com/The-BigMan-tech/fn-monitor/commit/14bfed4))
+- Update internal terminology ([d55780c](https://github.com/The-BigMan-tech/fn-monitor/commit/d55780c))
+- Lift the function assembly process from `monitor` to `SvalPlus` ([a46b042](https://github.com/The-BigMan-tech/fn-monitor/commit/a46b042))
+- Remove an old comment that encouraged a fragile pattern ([b7f932d](https://github.com/The-BigMan-tech/fn-monitor/commit/b7f932d))
+- Adjust a comment ([6e31315](https://github.com/The-BigMan-tech/fn-monitor/commit/6e31315))
+
+### 📖 Documentation
+
+- **readme:** Add a link to the CTA part ([4322fa7](https://github.com/The-BigMan-tech/fn-monitor/commit/4322fa7))
+- **example:** Tweak a comment ([f56135b](https://github.com/The-BigMan-tech/fn-monitor/commit/f56135b))
+- **types:** Add type safety to the exports prop of SvalPlus ([17945d5](https://github.com/The-BigMan-tech/fn-monitor/commit/17945d5))
+- **readme:** Explain the pre-processing mechanic ([bee8f82](https://github.com/The-BigMan-tech/fn-monitor/commit/bee8f82))
+- Improve the presentation of the maintainer's note ([d68fe3d](https://github.com/The-BigMan-tech/fn-monitor/commit/d68fe3d))
+- Re-format point 4 of the maintainer's note ([84df08e](https://github.com/The-BigMan-tech/fn-monitor/commit/84df08e))
+- **readme:** Document on standard builtins that dont need to be captured ([cd06066](https://github.com/The-BigMan-tech/fn-monitor/commit/cd06066))
+- Clarify on the dual nature of SvalPlus ([9a0c773](https://github.com/The-BigMan-tech/fn-monitor/commit/9a0c773))
+- **examples:** Showcase how to properly capture exports from packages into the interpreter's context ([d0a6430](https://github.com/The-BigMan-tech/fn-monitor/commit/d0a6430))
+- **example:** Update the handling-modules example ([5185024](https://github.com/The-BigMan-tech/fn-monitor/commit/5185024))
+- **readme:** Explain the limitation on capturing libraries ([896f27e](https://github.com/The-BigMan-tech/fn-monitor/commit/896f27e))
+- **example:** Rename a file ([6fef37b](https://github.com/The-BigMan-tech/fn-monitor/commit/6fef37b))
+
+### 🛠️ Build
+
+- Fix a typo in the changelog script ([8646c85](https://github.com/The-BigMan-tech/fn-monitor/commit/8646c85))
+- Update changelog for v1.4.1 ([d33e574](https://github.com/The-BigMan-tech/fn-monitor/commit/d33e574))
+- Change the environment config in vitest ([6357363](https://github.com/The-BigMan-tech/fn-monitor/commit/6357363))
+- Change back the env config in vitest ([c5df04f](https://github.com/The-BigMan-tech/fn-monitor/commit/c5df04f))
+
+### 🎨 Styles
+
+- Remove an extra empty line ([2960472](https://github.com/The-BigMan-tech/fn-monitor/commit/2960472))
+- Export Sval as a named export ([c4943d2](https://github.com/The-BigMan-tech/fn-monitor/commit/c4943d2))
+- Moved the module-level `latestVer` constant into the class as a private static property, making the class fully  self-contained and hiding the implementation detail. ([5b6ec82](https://github.com/The-BigMan-tech/fn-monitor/commit/5b6ec82))
+- Remove some trailing commas ([a862b56](https://github.com/The-BigMan-tech/fn-monitor/commit/a862b56))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.4.0...v1.4.1
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.0...v1.4.1)
