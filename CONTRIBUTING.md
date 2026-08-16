@@ -97,7 +97,7 @@ risky rewrite of the core evaluator. Do not remove `acorn`.
   explicitly written to cover both the generator and the normalized evaluator 
   individually.
 
-  Most tests in both the `interpreter` and `modifications` tests are currently heavily 
+  Most tests in both the `interpreter` and `modifications` suites are currently heavily 
   skewed toward the normalized evaluator and coverage for the generator version is 
   incomplete. This means that a change to the generator version can pass the entire 
   test suite while silently breaking it. 
@@ -145,7 +145,7 @@ When a new ECMAScript version is finalized:
 
 - Do not simply bump the `ecmaVer` or assume support solely because the parser 
   succeeds.
-  
+
 - Contributors must verify that `sval`'s evaluator supports the new node types.
   
 - If a new feature is parsed but cannot be evaluated by the interpreter, it must be patched  
