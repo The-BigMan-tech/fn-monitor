@@ -26,19 +26,20 @@ try {
 }
 
 
-// ✅ WORKING CASE: Capture a simple wrapper function
+// ✅ WORKING CASE: Capture a simple wrapper over the function
 
-const green = (text: string) => ansis.green(text);
-
+const ansisWrapper = {
+    green:(text: string) => ansis.green(text)
+}
 const fn2 = monitor({
     main: {
         ref: () => {
-            // This works because we're calling a plain function that the
+            // This works because we're calling a function on a plain object that the
             // interpreter captured directly
-            return green('Hello world');
+            return ansis.green('Hello world');
         },
         captures: {
-            green
+            ansis:ansisWrapper
         }
     }
 });
