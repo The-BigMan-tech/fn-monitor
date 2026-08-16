@@ -87,7 +87,7 @@
  *          - `[Async]`: Targets the generator evaluator. (A `[Sync]` counterpart should exist).
  *          - `[Sync-only]`: Strictly for the normalized evaluator. (No async counterpart needed).
  *          - `[Async-only]`: Strictly for the generator evaluator. (No sync counterpart needed).
- *          - `[Pre]`: Tests the pre-processing step (wrapping/parsing), not runtime execution.
+ *          - `[Wrap]`: Tests the wrapping/parsing step, not runtime execution.
  *          
  *      - Coverage Status: 
  *          Because each evaluator has its own copy of the node handlers, the tests must be explicitly
@@ -194,7 +194,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
         options:SvalPlus.svalOptions
     });
 
-    interpreter.stage = "PRE-PROCESSING";
+    interpreter.stage = "WRAPPING";
 
     const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
     interpreter.svalPlusExports[capturesLabel] = captures || Object.create(null);

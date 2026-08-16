@@ -193,10 +193,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         * It exists purely to enforce compile-time safety and prevent accidental 
         * collisions with user-defined exported variables.
         * 
-        * @internal This is meant to be used for SvalPlus internals and the preprocessor. 
+        * @internal This is meant to be used for SvalPlus internals and the code generator. 
     */
     public svalPlusExports = this.exports as Record<GeneratedKey,any>;
-    public stage:'IDLE' | 'PRE-PROCESSING' | 'MONITORING' = 'IDLE';
+    public stage:SvalPlusContract['stage'] = 'IDLE';
     
     public inspector:Inspector<'internal'> | null = null;
     public onStep:OnStep | null = null;

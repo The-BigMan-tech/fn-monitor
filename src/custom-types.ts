@@ -274,7 +274,7 @@ export interface Reusables<T extends unknown | Generator = unknown | Generator> 
 
 export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     /** Prevents the interpreter from firing inspector hooks during the AST parsing stage, or when the monitored function is not actively executing. */
-    stage: 'IDLE' | 'PRE-PROCESSING' | 'MONITORING';
+    stage: 'IDLE' | 'WRAPPING' | 'MONITORING';
     /** Using the internal Inspector type forces the evaluator to maintain strict type safety with NodeResult */
     inspector: Inspector<'internal'> | null, 
     onStep: OnStep | null,

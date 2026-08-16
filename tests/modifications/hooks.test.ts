@@ -122,7 +122,7 @@ describe('Hook Behaviour',()=>{
       * We embed a function with a captured variable to create varying depths of where the user code lies
       * If the interpreter gets confused about this, it will fire the hooks and fail the test
       * 
-      * The test is marked as sync even though its checking the correctness of the pre-processing 
+      * The test is marked as sync even though its checking the correctness of the wrapping
       * phase because its relying on specific runtime hooks that are handled by the evaluators
     */
     it('[Sync] should ensure that the inspector and onStep hooks are not fired during the wrapping phase',()=>{

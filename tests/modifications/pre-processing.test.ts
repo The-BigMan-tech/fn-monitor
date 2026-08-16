@@ -3,9 +3,9 @@ import { monitor } from '../../src/index';
 import { WrapperError } from '../../src/custom-types';
 import { parse } from "meriyah"
 
-describe('Pre-processing Behaviour', () => {
+describe('Wrapping Behaviour', () => {
 
-    it('[Pre] should augment the returned monitored function with the alreadyMonitored flag', () => {
+    it('[Wrap] should augment the returned monitored function with the alreadyMonitored flag', () => {
         const monitoredFn = monitor({
             main: { 
                 ref:() => undefined
@@ -14,7 +14,7 @@ describe('Pre-processing Behaviour', () => {
         expect(monitoredFn.alreadyMonitored).toBe(true);
     });
 
-    it('[Pre] should throw an error if an already monitored function is directly being wrapped to create a new monitored function', () => {
+    it('[Wrap] should throw an error if an already monitored function is directly being wrapped to create a new monitored function', () => {
         const monitoredFn = monitor({
             main: { 
                 ref:() => undefined
@@ -29,7 +29,7 @@ describe('Pre-processing Behaviour', () => {
         }).toThrow(WrapperError);
     });
 
-    it('[Pre] should write the generated source code used by the interpreter to the value property in sourceOut', () => {
+    it('[Wrap] should write the generated source code used by the interpreter to the value property in sourceOut', () => {
         // Initialized to `undefined` so the test fails loudly if the interpreter forgets to write to `sourceOut`. 
         const generatedCode = {value:undefined} as {value:any}
 
@@ -43,7 +43,7 @@ describe('Pre-processing Behaviour', () => {
         expect(generatedCode.value.length).toBeGreaterThan(0);
     });
 
-    it('[Pre] should write syntactically valid source code to sourceOut', () => {
+    it('[Wrap] should write syntactically valid source code to sourceOut', () => {
         // Initialized to `undefined` so the test fails loudly if the interpreter forgets to write to `sourceOut`. 
         const generatedCode = { value: undefined } as {value:any};
 
@@ -56,7 +56,7 @@ describe('Pre-processing Behaviour', () => {
         expect(() => parse(generatedCode.value)).not.toThrow();
     });
 
-    it('[Pre] should throw an error if an already monitored function is being embedded in a new monitored function\'s context', () => {
+    it('[Wrap] should throw an error if an already monitored function is being embedded in a new monitored function\'s context', () => {
         const monitoredFn = monitor({
             main: { 
                 ref:() => undefined
@@ -76,7 +76,7 @@ describe('Pre-processing Behaviour', () => {
         }).toThrow(WrapperError);
     });
 
-    it('[Pre] should allow an already monitored function to be captured in a new monitored function\'s context', () => {
+    it('[Wrap] should allow an already monitored function to be captured in a new monitored function\'s context', () => {
         const monitoredInnerFn = monitor({ 
             main: { 
                 ref: (x: number) => x * 2
@@ -102,7 +102,7 @@ describe('Pre-processing Behaviour', () => {
         expect(monitoredOuterFn(5)).toBe(110);// Execute and verify
     });
 
-    it('[Pre] should ensure that the monitored function doesn\'t execute during the wrapping phase',()=>{
+    it('[Wrap] should ensure that the monitored function doesn\'t execute during the wrapping phase',()=>{
         let calledFn = false;
 
         monitor({

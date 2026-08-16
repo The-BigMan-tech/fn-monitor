@@ -173,7 +173,7 @@ describe('Fundamental Runtime Behaviour',()=>{
             return a + b
         };
 
-        //even if the package cant monitor generators, including it ensures that the pre-processor is robust
+        //even if the package cant monitor generators, including it ensures that the wrapper is robust
         const add4 = function* (a:number,b:number) {
             return a + b
         };
