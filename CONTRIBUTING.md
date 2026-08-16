@@ -97,9 +97,11 @@ risky rewrite of the core evaluator. Do not remove `acorn`.
   explicitly written to cover both the generator and the normalized evaluator 
   individually.
 
-  ALL tests are currently heavily skewed toward the normalized evaluator and 
-  coverage for the generator version is incomplete. This means that a change to 
-  the generator version can pass the entire test suite while silently breaking it. 
+  Most tests in both the `interpreter` and `modifications` tests are currently heavily 
+  skewed toward the normalized evaluator and coverage for the generator version is 
+  incomplete. This means that a change to the generator version can pass the entire 
+  test suite while silently breaking it. 
+
   **Passing the suite is NOT proof that the async path is unaffected.**
 
   The goal is to ensure that for all modification tests, `[Sync]` tests have 
@@ -128,7 +130,7 @@ monitoring tool.
 This package is NOT a security sandbox (like SES or LavaMoat). It will not chase 
 hard sandboxing guarantees. However, contributions that enhance isolation (like 
 the hashed capture keys) are welcome, provided they do not violate the design 
-philosophy outlined below.
+philosophy as later outlined.
 
 ## ECMAScript (ES) Version Support & Upgrades
 
@@ -139,11 +141,11 @@ an AST without issues.
 However, *parsing* is only half the battle; the underlying evaluator (`sval`) 
 must also know how to execute the resulting AST nodes.
 
-When a new ECMAScript version is finalized or a new stage-4 feature is introduced:
+When a new ECMAScript version is finalized:
 
-- Do not blindly bump the `ecmaVer` or assume support just because the parser 
+- Do not simply bump the `ecmaVer` or assume support solely because the parser 
   succeeds.
-
+  
 - Contributors must verify that `sval`'s evaluator supports the new node types.
   
 - If a new feature is parsed but cannot be evaluated by the interpreter, it must be patched  
