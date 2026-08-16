@@ -15,7 +15,7 @@ const fn = monitor({
         captures: {
             ansis: ansis.default
         }
-    },
+    }
 });
 
 try {
@@ -40,7 +40,7 @@ const fn2 = monitor({
         captures: {
             green
         }
-    },
+    }
 });
 
 console.log(fn2());
