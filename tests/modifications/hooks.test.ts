@@ -65,7 +65,7 @@ describe('Hook Behaviour',()=>{
         //im only adding this count for consistency
         let beforeHookCount = 0;
 
-        const fn2 = monitor({
+        const fn = monitor({
             main:{
                 ref:async ()=>undefined
             },
@@ -76,7 +76,7 @@ describe('Hook Behaviour',()=>{
                 afterHookCount += 1;
             }
         })
-        await fn2();
+        await fn();
         expect(beforeHookCount).toBe(1);
         expect(afterHookCount).toBe(1)
     })
