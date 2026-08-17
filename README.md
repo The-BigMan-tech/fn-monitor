@@ -499,16 +499,16 @@ const monitoredGetSqrt = monitor({
 
                 case "MemberExpression":
                     const calleeObj = callee.object;     
+                    if (calleeObj.type !== "Identifier") return;
 
-                    if (calleeObj.type === "Identifier") {
-                        const obj = search(calleeObj.name) as any;
-                        const property = callee.property;
+                    const obj = search(calleeObj.name) as any;
+                    const property = callee.property;
 
-                        if (property.type === "Identifier") {
-                            const func = obj[property.name];
-                            callees.add(func)
-                        }
-                    }
+                    if (property.type !== "Identifier") return
+                        
+                    const method = obj[property.name];
+                    callees.add(method)
+
                     break  
             }
         });
