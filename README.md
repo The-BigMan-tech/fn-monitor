@@ -7,17 +7,11 @@
 </p>
 
 <p align="center">
-    <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor">
-        <img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=0e2e68" alt="npm version" />
-    </a>
+    <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor"><img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=0e2e68" alt="npm version" /></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md">
-        <img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor" alt="license" />
-    </a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md"><img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor" alt="license" /></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a href="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml">
-        <img src="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml/badge.svg" alt="CI" />
-    </a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml"><img src="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml/badge.svg" alt="CI" /></a>
 </p>
 
 <p align="center">
