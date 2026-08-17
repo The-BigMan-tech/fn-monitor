@@ -726,7 +726,7 @@ Please keep the following architectural constraints in mind when using this pack
     > 
     > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
 
-7. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed`. However, you *can* include an already-monitored function in any of their `captures` objects, as it will execute natively.
+7. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
 
 8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. Debug functions in their unmonitored state first. (Note: The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws).
 
