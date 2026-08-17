@@ -1,4 +1,26 @@
 
+## v1.4.2...v1.4.3
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.2...v1.4.3)
+
+### ⚡ Performance
+
+- Replace js-beautify with astring for sourceOut generation ([027953d](https://github.com/The-BigMan-tech/fn-monitor/commit/027953d))
+- Bump to v1.4.3 ([f555afd](https://github.com/The-BigMan-tech/fn-monitor/commit/f555afd))
+
+### 📖 Documentation
+
+- **changelog:** Update changelog for v1.4.2 ([cb690bc](https://github.com/The-BigMan-tech/fn-monitor/commit/cb690bc))
+- **contributing:** Lift the contributing guidelines from a source file to CONTRIBUTING.md ([ba16318](https://github.com/The-BigMan-tech/fn-monitor/commit/ba16318))
+- **contributing:** Adjust the wording ([08e3982](https://github.com/The-BigMan-tech/fn-monitor/commit/08e3982))
+- **contributing:** Change a word ([ee9f8e1](https://github.com/The-BigMan-tech/fn-monitor/commit/ee9f8e1))
+- **readme:** Remove a duplicate word ([7896a4a](https://github.com/The-BigMan-tech/fn-monitor/commit/7896a4a))
+- **contributing:** Document on the unminified bundle distribution and safety contributions ([8d15e6e](https://github.com/The-BigMan-tech/fn-monitor/commit/8d15e6e))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.4.1...v1.4.2
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.1...v1.4.2)
