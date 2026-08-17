@@ -1,6 +1,6 @@
 import { Sval,SvalOptions } from "./sval.ts"
 import { Node } from 'acorn'
-import jsBeautify from "js-beautify";
+import { generate } from 'astring';
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache'
 import Scope from './scope/index.ts'
@@ -320,7 +320,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             }
             const ${this.userRoot.labels.anchor} = true;
 
-            ${unpackCaptures};
+            ${unpackCaptures}
             ${intermediateFnCode}
             return ${intermediateFnName};
         })();`
@@ -366,7 +366,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         return fnCode;
     };
 
-    private useFn(fnSrc:FnSrc<true>):void {
+    private useFn(fnSrc:FnSrc<true>):FnAst {
         if (this.fnCallAst !== null) {
             throw new Error(ansis.red(`The interpreter can only use one function`))
         };
@@ -389,6 +389,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         //run the generated ast instead of the string to prevent re-parsing
         this.run(ast.fnCode);
         this.fnCallAst = ast.fnCall;
+
+        return ast;
     }
     private callFn = (...args:any[])=>{
         this._stage = 'MONITORING';
@@ -447,19 +449,24 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             this.svalPlusExports[capturesLabel] = main.captures || Object.create(null);
             
             const fnSrc = this.getFnSrc(main.ref,capturesLabel,true);
-            fnSrc.fnCode += this.getFnSources(embed);
+            fnSrc.fnCode = `
+                'use strict'
+                ${fnSrc.fnCode}
+                ${this.getFnSources(embed)}
+            `;
             
-            fnSrc.fnCode = `'use strict'\n${fnSrc.fnCode}`;//ensure that it runs in strict mode
-            this.useFn(fnSrc);
-            
+            const ast = this.useFn(fnSrc);
             if (sourceOut) {//only write the generated code if the interpreter could parse it
-                sourceOut.value = jsBeautify(
-                    fnSrc.fnCode + fnSrc.fnCall,
-                    {indent_size:4}
-                );
+                const indent = ''.padStart(4);
+                sourceOut.value = (
+                    generate(ast.fnCode,{ indent }) + '\n' +
+                    generate(ast.fnCall, { indent })
+                )
             };
+
             const wrappedFn = this.callFn as unknown as R;
             (wrappedFn as { alreadyMonitored: boolean }).alreadyMonitored = true;
+
             return wrappedFn;
         }
         finally {
