@@ -26,7 +26,7 @@
     </a>
      &nbsp;&nbsp;&nbsp;&nbsp;
     <a href="https://bundlephobia.com/package/@typescript-guy/fn-monitor">
-        <img src="https://img.shields.io/badge/minzipped-55%7kB-3178C6" alt="bundle size" />
+        <img src="https://img.shields.io/badge/minzipped-55.7%20kB-3178C6" alt="bundle size" />
     </a>
 </p>
 
