@@ -188,12 +188,12 @@ const monitoredGetSqrt = monitor({
 
                 case "MemberExpression":
                     const calleeObj = callee.object;     
-                    if (calleeObj.type !== "Identifier") return;
+                    if (calleeObj.type !== "Identifier") break;
 
                     const obj = search(calleeObj.name) as any;
                     const property = callee.property;
 
-                    if (property.type !== "Identifier") return
+                    if (property.type !== "Identifier") break;
                         
                     const method = obj[property.name];
                     callees.add(method)
