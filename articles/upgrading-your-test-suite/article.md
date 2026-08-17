@@ -222,6 +222,6 @@ This article covered the most common use case: observing internal behavior. `fn-
 
 The code for this article is available in the [vitest-with-monitor](https://github.com/The-BigMan-tech/vitest-with-monitor) repository. Clone it, run `npm install` and `npm test`, and see the difference between the blackbox and upgraded tests yourself.
 
-If you're interested in using fn-monitor in your own projects, check out the [main repository](https://github.com/The-BigMan-tech/fn-monitor) for installation instructions and full documentation.
+If you're interested in using `fn-monitor` in your own projects, check out the [main repository](https://github.com/The-BigMan-tech/fn-monitor) for installation instructions and full documentation.
 
 Happy testing.
