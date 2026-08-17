@@ -34,7 +34,7 @@ npm add -D vitest
 npm add @typescript-guy/fn-monitor
 ```
 
-Add node_modules to your .gitignore and write a minimal config:
+Add `node_modules` to your `.gitignore` and write a minimal config:
 
 ```typescript
 // vitest.config.ts
@@ -117,7 +117,7 @@ Next, we write the test using fn-monitor. We don't just check the return value; 
 
 Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it loses access to its lexical scope upon wrapping. The `captures` property gives the interpreter access to `triggerHighIncomeAudit` so it can resolve the call. Without it, the interpreter would throw a `ReferenceError` when `calculateTax` tries to call it.
 
-Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or use vi.fn() to track the call. fn-monitor observes the execution non-invasively.
+Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or use `vi.fn()` to track the call. fn-monitor observes the execution non-invasively.
 
 ```typescript
 import { monitor } from '@typescript-guy/fn-monitor';
@@ -127,7 +127,7 @@ test('triggers compliance audit for high income', () => {
 
     const monitoredCalculateTax = monitor({
         main: { 
-            ref: calculateTax,//the function that we want to monitor
+            ref: calculateTax, //the function that we want to monitor
             captures:{
                 triggerHighIncomeAudit
             }
