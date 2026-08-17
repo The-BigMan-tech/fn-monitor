@@ -8,7 +8,7 @@
 
 <p align="center">
     <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor">
-        <img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor" alt="npm version" />
+        <img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=0e2e68" alt="npm version" />
     </a>
      &nbsp;&nbsp;&nbsp;&nbsp;
     <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md">
@@ -25,8 +25,8 @@
         <img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=white" alt="100% typescript">
     </a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a href="https://bundlephobia.com/package/@typescript-guy/fn-monitor">
-        <img src="https://img.shields.io/badge/minzipped-55.7%20kB-3178C6" alt="bundle size" />
+    <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor">
+        <img src="https://img.shields.io/badge/npm unpacked size-285%20kB-2082c9" alt="npm unpacked size" />
     </a>
 </p>
 
