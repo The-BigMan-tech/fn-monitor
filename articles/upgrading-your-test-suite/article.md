@@ -87,7 +87,7 @@ export function calculateTax(income: number): number {
     return tax;
 }
 
-//We export this to use in our test
+// We export this to use in our test
 export function triggerHighIncomeAudit(): void {
     console.log('High income audit triggered');
 }
@@ -95,7 +95,7 @@ export function triggerHighIncomeAudit(): void {
 
 ### The Blackbox Test (The Blind Spot)
 
-First, we write the standard output-only test. It looks perfectly fine and passes with the correct code but it is only asserting that the calculation is correct
+First, we write the standard blackbox test. It looks perfectly fine and passes with the correct code, but it only asserts that the calculation is correct.
 
 ```typescript
 // tests/index.test.ts
@@ -115,15 +115,15 @@ test('calculates correct tax for high income', () => {
 
 Next, we write the test using fn-monitor. We don't just check the return value; we check the AST to assert that `triggerHighIncomeAudit` was actually called during execution. 
 
-Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it looses access to its lexical scope upon wrapping. So we capture `triggerHighIncomeAudit` into the interpreter's context through the `captures` property.
+Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it loses access to its lexical scope upon wrapping. The `captures` property gives the interpreter access to `triggerHighIncomeAudit` so it can resolve the call. Without it, the interpreter would throw a `ReferenceError` when `calculateTax` tries to call it.
 
-Notice that we dont have to touch `triggerHighIncomeAudit` source code to update a flag to assert that it is called. 
+"Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or use vi.fn() to track the call. fn-monitor observes the execution non-invasively."
 
 ```typescript
 import { monitor } from '@typescript-guy/fn-monitor';
 
 test('triggers compliance audit for high income', () => {
-    const calls = new Set()
+    const calls = new Set();
 
     const monitoredCalculateTax = monitor({
         main: { 
@@ -144,9 +144,6 @@ test('triggers compliance audit for high income', () => {
             });
         }
     });
-
-    monitoredCalculateTax(10_000);
-
     // Output assertion
     expect(monitoredCalculateTax(10_000)).toBe(10_500);
     
