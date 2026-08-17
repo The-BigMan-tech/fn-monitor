@@ -153,6 +153,33 @@ When a new ECMAScript version is finalized:
   in the "Test Coverage and Evaluator Architecture" section above) before the 
   target ES version can be officially bumped.
 
+## Unminified, Unbundled Distribution
+
+The `dist` folder is a direct mirror of the `src` folder. TypeScript files 
+are compiled to `.js` and `.d.ts` files with no bundling, no minification, 
+and no source maps.
+
+This is an intentional decision, not a missing build step.
+
+**Why:**
+
+- **Transparency:** This package is an interpreter that executes arbitrary 
+  JavaScript code. Users must be able to open `dist/` and read every line 
+  of code that runs on their system. Minified output would undermine that 
+  trust.
+
+- **Debuggability:** Without minification, stack traces point directly to 
+  readable code. Users can set breakpoints in `node_modules` and step 
+  through the interpreter without needing source maps.
+
+- **Tree-shaking:** Unbundled output allows downstream bundlers (webpack, 
+  rollup, esbuild) to tree-shake unused modules. A single bundled file 
+  would defeat this.
+
+**Do not submit PRs that bundle, minify, or add source maps to the build 
+output.** The transparency and debuggability of the unminified mirror is 
+a deliberate safety decision that outweighs the marginal bundle size savings.
+
 ## Design Philosophy — The Decision Framework
 
 `fn-monitor` prioritizes four values in strict order:
@@ -173,3 +200,16 @@ When facing a new design decision, ask:
    are unaffected.
 4. Does this sacrifice **convenience**? If yes, only accept it if safety, control, 
    and performance are all preserved.
+
+### A Note on Safety Contributions
+
+Safety is the highest priority, but this does not mean every change labeled 
+"safety" is automatically welcome. A safety contribution must:
+
+- Make incorrect behavior impossible or correct behavior easier, **without** 
+  regressing Control or Performance.
+
+- If regressing Control or Performance is truly unavoidable, it must address 
+  a **concrete, demonstrable harm** — not a hypothetical one.
+
+Contributions that violate either of these criteria will be rejected.
