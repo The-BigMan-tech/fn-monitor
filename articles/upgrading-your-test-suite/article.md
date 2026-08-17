@@ -77,9 +77,9 @@ export function calculateTax(income: number): number {
 
     if (income <= lowThreshold) {
         tax = income * lowRate;
-    }else if (income <= highThreshold) {
+    } else if (income <= highThreshold) {
         tax = baseTax + (income - lowThreshold) * averageRate;
-    }else {
+    } else {
         tax = baseTax + midBracketTax + (income - highThreshold) * highRate;
         triggerHighIncomeAudit();
     }
@@ -100,7 +100,7 @@ First, we write the standard blackbox test. It looks perfectly fine and passes w
 ```typescript
 // tests/index.test.ts
 import { test, expect } from 'vitest';
-import { calculateTax,triggerHighIncomeAudit } from '../src/index.ts';
+import { calculateTax, triggerHighIncomeAudit } from '../src/index';
 
 test('calculates correct tax for high income', () => {
     const income = 10_000;
@@ -117,7 +117,7 @@ Next, we write the test using fn-monitor. We don't just check the return value; 
 
 Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it loses access to its lexical scope upon wrapping. The `captures` property gives the interpreter access to `triggerHighIncomeAudit` so it can resolve the call. Without it, the interpreter would throw a `ReferenceError` when `calculateTax` tries to call it.
 
-"Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or use vi.fn() to track the call. fn-monitor observes the execution non-invasively."
+Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or use vi.fn() to track the call. fn-monitor observes the execution non-invasively.
 
 ```typescript
 import { monitor } from '@typescript-guy/fn-monitor';
@@ -133,13 +133,13 @@ test('triggers compliance audit for high income', () => {
             }
         },
         inspector: (visit) => {
-            visit.is('CallExpression',event => {
+            visit.is('CallExpression', event => {
                 const callee = event.node.callee;
                 const scope = event.scope;
 
                 if (callee.type !== "Identifier") return;
 
-                const func = scope.variables.search(callee.name)
+                const func = scope.variables.search(callee.name);
                 calls.add(func);
             });
         }
@@ -167,12 +167,12 @@ If we run the tests now, both will pass.
 
 ### The "Gotcha" Moment (Breaking the Code)
 
-Six months later, a well-meaning developer refactors calculateTax to clean up the math. They accidentally delete the audit call
+Six months later, a well-meaning developer refactors `calculateTax` to clean up the math. They accidentally delete the audit call.
 
 ```typescript
 export function calculateTax(income: number): number {
      // ... math ...
-    }else {
+    } else {
         tax = baseTax + midBracketTax + (income - highThreshold) * highRate;
         // triggerHighIncomeAudit();
     }
