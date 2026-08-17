@@ -714,7 +714,9 @@ Please keep the following architectural constraints in mind when using this pack
 
 4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-5. **Performance Critical:** The `monitor()` function incurs overhead from AST parsing and interpreter instantiation. Always call `monitor()` once outside of hot loops, and execute the returned function inside your loops or handlers. (Optimization: The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.)
+5. **Performance Critical:** The `monitor()` function incurs overhead from AST parsing and interpreter instantiation. Always call `monitor()` once outside of hot loops, and execute the returned function inside your loops or handlers. 
+   
+   > 💡 **Optimization:** The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.
 
 6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
@@ -728,9 +730,13 @@ Please keep the following architectural constraints in mind when using this pack
 
 7. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
 
-8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. Debug functions in their unmonitored state first. (Note: The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws).
+8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. You may need to temporarily switch to your original function to
+fix any of its issues. The switching cost is minimal because you can simply change the name 
+at the call site or where you refer to it in your code.
+   
+   > 💡 **Note:** The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws anything.
 
-9.  **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting execution via the `inspector` and `onStep` hooks.
+9. **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting execution via the `inspector` and `onStep` hooks.
 
 10. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
 
@@ -739,6 +745,7 @@ Please keep the following architectural constraints in mind when using this pack
     > Instead of capturing the library object itself, create a simple wrapper function in your outer scope and capture the wrapper.
     >
     > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) for a quick demonstration.
+    
 ---
 
 <a id="questions--support"></a>
