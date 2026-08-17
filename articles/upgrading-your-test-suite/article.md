@@ -25,7 +25,7 @@ vitest-with-monitor/
 └── package.json
 ```
 
-## Setup
+### Setup
 
 Install the two dependencies:
 
@@ -47,4 +47,184 @@ export default defineConfig({
 });
 ```
 
-Setup is done. In the next section, we'll write the code under test. If you want to compare against the finished code, the full project is in the [repository](https://github.com/The-BigMan-tech/vitest-with-monitor)
+Add this script to your `package.json`:
+
+```json
+"scripts": {
+    "test": "vitest run"
+}
+```
+
+Setup is done. In the next section, we'll write the code under test.
+
+### The Code Under Test
+
+We're going to test a progressive tax calculator. It applies different rates across income brackets, but there's a compliance requirement: high-income earners must trigger an audit. If that audit call gets accidentally removed during a refactor, the tax calculation still returns the correct number — but now you have a compliance violation.
+
+```typescript
+// src/index.ts
+
+export function calculateTax(income: number): number {
+    const lowThreshold = 1_000;
+    const highThreshold = 5_000;
+    const lowRate = 0.1;
+    const averageRate = 0.2;
+    const highRate = 0.3;
+    const baseTax = 1_000;
+    const midBracketTax = 8_000;
+
+    let tax = 0;
+
+    if (income <= lowThreshold) {
+        tax = income * lowRate;
+    }else if (income <= highThreshold) {
+        tax = baseTax + (income - lowThreshold) * averageRate;
+    }else {
+        tax = baseTax + midBracketTax + (income - highThreshold) * highRate;
+        triggerHighIncomeAudit();
+    }
+
+    return tax;
+}
+
+//We export this to use in our test
+export function triggerHighIncomeAudit(): void {
+    console.log('High income audit triggered');
+}
+```
+
+### The Blackbox Test (The Blind Spot)
+
+First, we write the standard output-only test. It looks perfectly fine and passes with the correct code but it is only asserting that the calculation is correct
+
+```typescript
+// tests/index.test.ts
+import { test, expect } from 'vitest';
+import { calculateTax,triggerHighIncomeAudit } from '../src/index.ts';
+
+test('calculates correct tax for high income', () => {
+    const income = 10_000;
+    // baseTax (1000) + midBracketTax (8000) + (5000 * 0.3) = 10500
+    const expectedTax = 10_500; 
+    
+    expect(calculateTax(income)).toBe(expectedTax);
+});
+```
+
+### The Upgraded Test
+
+Next, we write the test using fn-monitor. We don't just check the return value; we check the AST to assert that `triggerHighIncomeAudit` was actually called during execution. 
+
+Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it looses access to its lexical scope upon wrapping. So we capture `triggerHighIncomeAudit` into the interpreter's context through the `captures` property.
+
+Notice that we dont have to touch `triggerHighIncomeAudit` source code to update a flag to assert that it is called. 
+
+```typescript
+import { monitor } from '@typescript-guy/fn-monitor';
+
+test('triggers compliance audit for high income', () => {
+    const calls = new Set()
+
+    const monitoredCalculateTax = monitor({
+        main: { 
+            ref: calculateTax,//the function that we want to monitor
+            captures:{
+                triggerHighIncomeAudit
+            }
+        },
+        inspector: (visit) => {
+            visit.is('CallExpression',event => {
+                const callee = event.node.callee;
+                const scope = event.scope;
+
+                if (callee.type !== "Identifier") return;
+
+                const func = scope.variables.search(callee.name)
+                calls.add(func);
+            });
+        }
+    });
+
+    monitoredCalculateTax(10_000);
+
+    // Output assertion
+    expect(monitoredCalculateTax(10_000)).toBe(10_500);
+    
+    // Internal behavior assertion (The upgrade!)
+    expect(calls).toContain(triggerHighIncomeAudit);
+});
+```
+
+If we run the tests now, both will pass.
+
+#### Output
+
+```text
+ ✓ tests/index.test.ts (2 tests) 63ms
+   ✓ calculates correct tax for high income 12ms
+   ✓ triggers compliance audit for high income 45ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+```
+
+### The "Gotcha" Moment (Breaking the Code)
+
+Six months later, a well-meaning developer refactors calculateTax to clean up the math. They accidentally delete the audit call
+
+```typescript
+export function calculateTax(income: number): number {
+     // ... math ...
+    }else {
+        tax = baseTax + midBracketTax + (income - highThreshold) * highRate;
+        // triggerHighIncomeAudit();
+    }
+    return tax;
+}
+```
+
+When we run the tests, we will see that it is only the second test that catches the regression and fails:
+
+#### Output
+
+```text
+ ❯ tests/index.test.ts (2 tests | 1 failed) 51ms
+   ✓ calculates correct tax for high income 6ms
+   × triggers compliance audit for high income 40ms
+
+FAIL  tests/index.test.ts > triggers compliance audit for high income
+AssertionError: expected [] to include [Function triggerHighIncomeAudit]
+ ❯ tests/index.test.ts:42:19
+     40|
+     41|     // Internal behavior assertion (The upgrade!)
+     42|     expect(calls).toContain(triggerHighIncomeAudit);
+       |                   ^
+
+```
+
+## When to Use This
+
+The upgraded test caught a compliance violation that the first one missed — but we paid for it with extra code and execution overhead. That's the tradeoff: **internal behavior assertions are more expensive but catch a different class of bugs.**
+
+Use them when:
+- **Silent failures are unacceptable** — compliance rules, financial calculations, security checks
+- **Side effects matter** — logging, analytics, cache invalidation, audit trails
+- **Output alone doesn't tell the whole story** — the same return value could come from correct or incorrect internal work
+
+For most tests, output assertions are enough. They're fast, they survive refactors, and they catch the majority of regressions. But for the 5% of your code where a green test on the wrong behavior is a real problem, `fn-monitor` gives you the observability to assert on the work, not just the output.
+
+## Further Reading
+
+This article covered the most common use case: observing internal behavior. `fn-monitor` has two other powerful patterns worth exploring:
+
+- **Execution Timeouts** — govern how long a function can run before it's forcibly stopped. Useful for preventing infinite loops and enforcing performance budgets.
+
+- **AST Mutation** — rewrite function behavior at the AST level. Useful for advanced mocking and testing scenarios where you need to intercept and modify code before it runs.
+
+## Next Steps
+
+The code for this article is available in the [vitest-with-monitor](https://github.com/The-BigMan-tech/vitest-with-monitor) repository. Clone it, run `npm install` and `npm test`, and see the difference between the blackbox and upgraded tests yourself.
+
+If you're interested in using fn-monitor in your own projects, check out the [main repository](https://github.com/The-BigMan-tech/fn-monitor) for installation instructions and full documentation.
+
+Happy testing.
