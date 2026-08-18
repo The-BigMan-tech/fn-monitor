@@ -67,11 +67,14 @@ We're going to test a progressive tax calculator. It applies different rates acr
 export function calculateTax(income: number): number {
     const lowThreshold = 1_000;
     const highThreshold = 5_000;
+    
     const lowRate = 0.1;
     const averageRate = 0.2;
     const highRate = 0.3;
-    const baseTax = 1_000;
-    const midBracketTax = 8_000;
+    
+
+    const baseTax = 100; 
+    const midBracketTax = 800; 
 
     let tax = 0;
 
@@ -81,9 +84,8 @@ export function calculateTax(income: number): number {
         tax = baseTax + (income - lowThreshold) * averageRate;
     } else {
         tax = baseTax + midBracketTax + (income - highThreshold) * highRate;
-        triggerHighIncomeAudit();
+        triggerHighIncomeAudit(); 
     }
-
     return tax;
 }
 
@@ -99,13 +101,13 @@ First, we write the standard blackbox test. It looks perfectly fine and passes w
 
 ```typescript
 // tests/index.test.ts
+
 import { test, expect } from 'vitest';
-import { calculateTax, triggerHighIncomeAudit } from '../src/index';
+import { calculateTax } from '../src/index';
 
 test('calculates correct tax for high income', () => {
     const income = 10_000;
-    // baseTax (1000) + midBracketTax (8000) + (5000 * 0.3) = 10500
-    const expectedTax = 10_500; 
+    const expectedTax = 2_400
     
     expect(calculateTax(income)).toBe(expectedTax);
 });
@@ -121,6 +123,7 @@ Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or
 
 ```typescript
 import { monitor } from '@typescript-guy/fn-monitor';
+import { triggerHighIncomeAudit } from '../src/index';
 
 test('triggers compliance audit for high income', () => {
     const calls = new Set();
@@ -145,7 +148,7 @@ test('triggers compliance audit for high income', () => {
         }
     });
     // Output assertion
-    expect(monitoredCalculateTax(10_000)).toBe(10_500);
+    expect(monitoredCalculateTax(10_000)).toBe(2_400);
     
     // Internal behavior assertion (The upgrade!)
     expect(calls).toContain(triggerHighIncomeAudit);
