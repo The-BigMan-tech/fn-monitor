@@ -573,7 +573,6 @@ The package is not a one-size-fits-all solution and thus, it has its own constra
 - `monitor()` has overhead, so call it once outside hot loops
 - you cannot use dynamic imports inside monitored functions 
 - There is a specific nuance when it comes to monitoring generators, which is detailed in the [Important Notes & Limitations](https://github.com/The-BigMan-tech/fn-monitor#important-notes--limitations-%EF%B8%8F) section of the README
-- you cannot wrap a monitored function in another
 - errors inside monitored functions will not map directly to original source locations in your editor
   
 ---
