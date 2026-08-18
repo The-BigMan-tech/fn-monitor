@@ -214,9 +214,9 @@ For most tests, output assertions are enough. They're fast, they survive refacto
 
 This article covered the most common use case: observing internal behavior. `fn-monitor` has two other powerful patterns worth exploring:
 
-- **Execution Timeouts** — govern how long a function can run before it's forcibly stopped. Useful for preventing infinite loops and enforcing performance budgets.
+- [**Execution Timeouts**](https://dev.to/typescript-guy/stop-a-function-call-from-hanging-the-main-thread-without-using-web-workers-15me) — govern how long a function can run before it's forcibly stopped. Useful for preventing infinite loops and enforcing performance budgets.
 
-- **AST Mutation** — rewrite function behavior at the AST level. Useful for advanced mocking and testing scenarios where you need to intercept and modify code before it runs.
+- [**AST Mutation**](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6) — rewrite function behavior at the AST level. Useful for advanced mocking and testing scenarios where you need to intercept and modify code before it runs.
 
 ## Next Steps
 
