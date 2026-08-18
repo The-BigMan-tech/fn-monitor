@@ -422,8 +422,7 @@ getPrice = (() => {
                         console.log('Lag');
                     }
                 }
-                //some other implementation
-                return 10;
+                return 10;// we just return a constant number to keep it simple
             };
         return intermediateFn_generated_8ce88bfc0fe7f0c48f18013aa0d9b67fdf80fbd257ce4526aaa8d0c33afbeb5c;
     })();
