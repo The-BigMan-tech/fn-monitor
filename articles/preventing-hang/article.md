@@ -39,7 +39,7 @@ To begin, let us first write out our imports and custom types:
 import { monitor, type Metadata } from "@typescript-guy/fn-monitor";
 
 type milliseconds = number;
-type Fn = (...args:any[])=>void
+type Fn = (...args:any[])=>any
 ```
 
 Then we can create our timeout function. You can write your own implementation, but to follow along with the article, you can use this bare minimum example. We will extend it as we go:
@@ -128,10 +128,8 @@ function getPrice(item?:string):number {
             console.log('Lag');
         }
     }
-    //some other implementation
-    return 10
+    return 10; // we just return a constant number to keep it simple
 }
-const timedGetPrice = timeFn(getPrice,50);
 ```
 
 Calling the bare `getPrice` function will hang our thread as expected:
@@ -150,9 +148,10 @@ Lag
 ....
 ```
 
-But if we call the timed version, it should throw an error.
+But if we call a timed version, it should throw an error.
 
 ```typescript
+const timedGetPrice = timeFn(getPrice,50);
 timedGetPrice()
 ```
 
@@ -180,9 +179,9 @@ We'll address this in a scenario where our timed function needs to call another 
 Assuming that we want to time a function that calls an external function:
 
 ```typescript
-function getDetails(item?:string):{name?:string,price:number} {
+function getDetails(item?:string):{id?:string,price:number} {
     return {
-        name:item,
+        id:'id_' + item,
         price:getPrice(item)
     }
 }
@@ -372,9 +371,14 @@ const timedGetDetails = timeFn(getDetails,50,{
 });
 ```
 
-The package overwrites the `value` property with the generated code. But the variable names in it aren't pretty because they must be unique. 
+The package overwrites the `value` property with the code executed by the interpreter.
 
-The package ensures that the `inspector` and `onStep` hooks are only fired when executing the actual logic of your functions and not the generated boilerplate.
+The resulting code is crafted by a code generator that stitches together the injected
+captures and the source code of the embedded functions into a single string. The result
+isn't that pretty because it uses hashes to guarantee that it's collision-free.
+
+The package ensures that the `inspector` and `onStep` hooks are only fired when executing
+the actual logic of your functions and not the generated boilerplate.
 
 When we run this, we will be able to see it:
 
@@ -395,7 +399,7 @@ const getDetails = (() => {
     const intermediateFn_generated_1de912009fe409ac0c51bb82c6c939ecad3227fe8d36ede3aae906089a513ade =
         function getDetails(item) {
             return {
-                name: item,
+                id:'id_' + item,
                 price: getPrice(item)
             };
         };
@@ -424,7 +428,7 @@ getPrice = (() => {
         return intermediateFn_generated_8ce88bfc0fe7f0c48f18013aa0d9b67fdf80fbd257ce4526aaa8d0c33afbeb5c;
     })();
     return getPrice;
-})();;
+})();
 
 //This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
 
@@ -432,6 +436,8 @@ exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a
 ```
 
 {% enddetails %}
+
+> 💡 The exact format of the generated code may change between versions but the package ensures that it will not affect the behavior of your functions.
 
 ---
 ## Conclusion
