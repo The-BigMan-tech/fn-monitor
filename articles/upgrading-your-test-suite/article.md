@@ -31,7 +31,7 @@ Install the two dependencies:
 
 ```shell
 npm add -D vitest
-npm add @typescript-guy/fn-monitor
+npm add -D @typescript-guy/fn-monitor
 ```
 
 Add `node_modules` to your `.gitignore` and write a minimal config:
