@@ -384,7 +384,7 @@ When we run this, we will be able to see it:
 
 ```typescript
 console.log(generatedCode.value);
-//We dont call `timedGetDetails` so that it doesn't cut off the generated code from the logs
+//We don't call `timedGetDetails` so that it doesn't cut off the generated code from the logs
 ```
 
 <strong>Output</strong>
@@ -394,7 +394,6 @@ console.log(generatedCode.value);
 'use strict'
 
 const getDetails = (() => {
-
 
     const intermediateFn_generated_1de912009fe409ac0c51bb82c6c939ecad3227fe8d36ede3aae906089a513ade =
         function getDetails(item) {
@@ -410,7 +409,6 @@ var getPrice;
 getPrice = (() => {
 
     const getPrice = (() => {
-
 
         const intermediateFn_generated_8ce88bfc0fe7f0c48f18013aa0d9b67fdf80fbd257ce4526aaa8d0c33afbeb5c =
             function getPrice(item) {
