@@ -115,7 +115,7 @@ test('calculates correct tax for high income', () => {
 
 Next, we write the test using `fn-monitor`. We don't just check the return value; we check the AST to assert that `triggerHighIncomeAudit` was actually called during execution. 
 
-Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it loses access to its lexical scope upon wrapping. The `captures` property gives the interpreter a function reference to bind to the `triggerHighIncomeAudit` identifier so it can execute without throwing a `ReferenceError`.
+Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, they lose access to their lexical scope upon wrapping. The `captures` property gives the interpreter a function reference to bind to the `triggerHighIncomeAudit` identifier so it can execute without throwing a `ReferenceError`.
 
 This might sound like a limitation, but it's actually the real power: **the function doesn't even need to be exported.** When `triggerHighIncomeAudit` is private, traditional spies can't reach it without restructuring the code. With `fn-monitor`, you just pass a dummy function into `captures` — the interpreter only needs *some* binding for that name.
 
