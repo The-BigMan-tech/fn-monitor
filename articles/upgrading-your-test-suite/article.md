@@ -88,9 +88,7 @@ export function calculateTax(income: number): number {
     }
     return tax;
 }
-
-// We export this to use in our test
-export function triggerHighIncomeAudit(): void {
+function triggerHighIncomeAudit(): void {
     console.log('High income audit triggered');
 }
 ```
@@ -107,7 +105,7 @@ import { calculateTax } from '../src/index';
 
 test('calculates correct tax for high income', () => {
     const income = 10_000;
-    const expectedTax = 2_400
+    const expectedTax = 2_400;
     
     expect(calculateTax(income)).toBe(expectedTax);
 });
@@ -115,24 +113,24 @@ test('calculates correct tax for high income', () => {
 
 ### The Upgraded Test
 
-Next, we write the test using fn-monitor. We don't just check the return value; we check the AST to assert that `triggerHighIncomeAudit` was actually called during execution. 
+Next, we write the test using `fn-monitor`. We don't just check the return value; we check the AST to assert that `triggerHighIncomeAudit` was actually called during execution. 
 
-Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it loses access to its lexical scope upon wrapping. The `captures` property gives the interpreter access to `triggerHighIncomeAudit` so it can resolve the call. Without it, the interpreter would throw a `ReferenceError` when `calculateTax` tries to call it.
+Because `fn-monitor` works by running your functions through a JS-in-JS interpreter, it loses access to its lexical scope upon wrapping. The `captures` property gives the interpreter a function reference to bind to the `triggerHighIncomeAudit` identifier so it can execute without throwing a `ReferenceError`.
 
-Notice that we didn't have to modify `triggerHighIncomeAudit`, inject a mock, or use `vi.fn()` to track the call. fn-monitor observes the execution non-invasively.
+This might sound like a limitation, but it's actually the real power: **the function doesn't even need to be exported.** When `triggerHighIncomeAudit` is private, traditional spies can't reach it without restructuring the code. With `fn-monitor`, you just pass a dummy function into `captures` — the interpreter only needs *some* binding for that name.
 
 ```typescript
 import { monitor } from '@typescript-guy/fn-monitor';
-import { triggerHighIncomeAudit } from '../src/index';
 
 test('triggers compliance audit for high income', () => {
     const calls = new Set();
+    const mockAudit = () => {};
 
     const monitoredCalculateTax = monitor({
         main: { 
-            ref: calculateTax, //the function that we want to monitor
-            captures:{
-                triggerHighIncomeAudit
+            ref: calculateTax, // the function that we want to monitor
+            captures: {
+                triggerHighIncomeAudit: mockAudit
             }
         },
         inspector: (visit) => {
@@ -151,7 +149,7 @@ test('triggers compliance audit for high income', () => {
     expect(monitoredCalculateTax(10_000)).toBe(2_400);
     
     // Internal behavior assertion (The upgrade!)
-    expect(calls).toContain(triggerHighIncomeAudit);
+    expect(calls).toContain(mockAudit);
 });
 ```
 
@@ -193,13 +191,13 @@ When we run the tests, we will see that it is only the second test that catches 
    × triggers compliance audit for high income 40ms
 
 FAIL  tests/index.test.ts > triggers compliance audit for high income
-AssertionError: expected [] to include [Function triggerHighIncomeAudit]
- ❯ tests/index.test.ts:42:19
-     40|
-     41|     // Internal behavior assertion (The upgrade!)
-     42|     expect(calls).toContain(triggerHighIncomeAudit);
+AssertionError: expected [] to include [Function mockAudit]
+ ❯ tests/index.test.ts:46:19
+     44|
+     45|     // Internal behavior assertion (The upgrade!)
+     46|     expect(calls).toContain(mockAudit);
        |                   ^
-
+     47| });
 ```
 
 ## When to Use This
@@ -211,7 +209,7 @@ Use them when:
 - **Side effects matter** — logging, analytics, cache invalidation, audit trails
 - **Output alone doesn't tell the whole story** — the same return value could come from correct or incorrect internal work
 
-For most tests, output assertions are enough. They're fast, they survive refactors, and they catch the majority of regressions. But for the 5% of your code where a green test on the wrong behavior is a real problem, `fn-monitor` gives you the observability to assert on the work, not just the output.
+For most tests, output assertions are enough. They're fast, they survive refactors, and they catch the majority of regressions. But for the 5% of your code where a green test on the wrong behavior is a real problem, fn-monitor gives you the observability to assert on the work, not just the output.
 
 ## Further Reading
 
