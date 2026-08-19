@@ -112,8 +112,6 @@ So what this basically does is that for every executed node, it will query the e
 ```typescript
 import { monitor,type ExeResult } from "@typescript-guy/fn-monitor";
 
-const exeHistory:ExeResult[] = [];
-
 const fn = monitor({
     main:{
         ref:(a:number,b:number)=>{
@@ -122,17 +120,17 @@ const fn = monitor({
         }
     },
     inspector:(visit)=>{
-        visit.is('Any',()=>undefined);
+        visit.is('Any',()=>undefined)// Force the interpreter to allocate every scope
+        visit.execute();// Important!! Execute the node so that its result is pushed. Else, querying the stack will get an index error
 
-        visit.perExecution = ()=>{
-            const stack = visit.localExeStack();
-            const head = stack.get(0)
-            exeHistory.push(head);
-        }
+        const stack = visit.localExeStack();
+        const head = stack.get(0)
+        exeHistory.push(head);
     }
 })
 fn(2,3);
 console.log(exeHistory);
+
 ```
 
 #### Output
@@ -141,19 +139,19 @@ console.log(exeHistory);
 <summary><strong>Click to expand</strong></summary>
 
 ```typescript
- [
+[
   {
     evaluation: 2,
     type: 'Identifier',
     node: {
       type: 'Identifier',
       name: 'a',
-      start: 192,
-      end: 193,
+      start: 515,
+      end: 516,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: 3,
@@ -161,12 +159,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'b',
-      start: 196,
-      end: 197,
+      start: 519,
+      end: 520,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: 5,
@@ -176,12 +174,12 @@ console.log(exeHistory);
       left: [Object],
       right: [Object],
       operator: '+',
-      start: 192,
-      end: 197,
+      start: 515,
+      end: 520,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: 2,
@@ -189,12 +187,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'a',
-      start: 202,
-      end: 203,
+      start: 525,
+      end: 526,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: 3,
@@ -202,12 +200,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'b',
-      start: 206,
-      end: 207,
+      start: 529,
+      end: 530,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: -1,
@@ -217,12 +215,12 @@ console.log(exeHistory);
       left: [Object],
       right: [Object],
       operator: '-',
-      start: 202,
-      end: 207,
+      start: 525,
+      end: 530,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: -5,
@@ -232,12 +230,12 @@ console.log(exeHistory);
       left: [Object],
       right: [Object],
       operator: '*',
-      start: 191,
-      end: 208,
+      start: 514,
+      end: 531,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: undefined,
@@ -246,12 +244,12 @@ console.log(exeHistory);
       type: 'VariableDeclaration',
       kind: 'const',
       declarations: [Array],
-      start: 176,
-      end: 209,
+      start: 499,
+      end: 532,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: -5,
@@ -259,12 +257,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'result',
-      start: 223,
-      end: 229,
+      start: 546,
+      end: 552,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
     evaluation: { RES: -5 },
@@ -272,12 +270,12 @@ console.log(exeHistory);
     node: {
       type: 'ReturnStatement',
       argument: [Object],
-      start: 216,
-      end: 230,
+      start: 539,
+      end: 553,
       range: [Array],
       loc: [Object]
     },
-    scope: EventScope { depth: 0, variables: [Object] }
+    scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   }
 ]
 ```
