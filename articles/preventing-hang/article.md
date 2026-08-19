@@ -445,4 +445,6 @@ This package, although providing a single-threaded solution, is not free in term
 
 But if you're comfortable being explicit about how external data is passed, or if you're working in an environment that can't spawn workers, or if guaranteeing a function halts outweighs any performance overhead — then this package is worth considering.
 
-If you have questions or ideas, drop a comment — I read all of them. The project is open source on [GitHub](https://github.com/The-BigMan-tech/fn-monitor) for more details and published on npm as `@typescript-guy/fn-monitor`, with runnable examples in the repo.
+If you had any trouble following along, spotted a typo, or just want to show off a unique use case you built with `fn-monitor`, feel free to open a [discussion on GitHub](https://github.com/The-BigMan-tech/fn-monitor/discussions).
+
+And if you're interested in using `fn-monitor` in your own projects, check out the [main repository](https://github.com/The-BigMan-tech/fn-monitor) for the full documentation.
