@@ -8,8 +8,8 @@ const config:Partial<ChangelogConfig> = {
         perf: { title: "⚡ Performance" },
         refactor:{ title: "♻️ Refactor"},
         build:{ title: "🛠️ Build"},
-        test:false,
-        chore:false,
+        chore:{ title: "🧹 Chore"},
+        test:false
     },
     hideAuthorEmail:true,
 };
