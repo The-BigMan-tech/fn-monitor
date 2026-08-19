@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-    <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor"><img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=0e2e68&labelColor=414952" alt="npm version" /></a>
+    <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor"><img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=1d499b&labelColor=414952" alt="npm version" /></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
     <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md"><img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor?labelColor=414952" alt="license" /></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=7ab3f0&labelColor=414952" alt="100% typescript"></a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=c0dfff&labelColor=414952" alt="100% typescript"></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
     <a href="https://www.npmjs.com/package/@typescript-guy/fn-monitor"><img src="https://img.shields.io/badge/npm_unpacked_size-285%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
 </p>
