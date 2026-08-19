@@ -139,10 +139,13 @@ export function callPerExe(interpreter:SvalPlus):void {
     const perExe = interpreter.reusables.execution.perExe;
     const node = interpreter.reusables.node!;
 
-    if (perExe) {
-        perExe.fn();//call this after the executed result has been pushed.We dont nullify it immediately or lock it to execute strictly for the owner node,because the evaluator can pause a node to evaluate all its other children.Not clearing it immediately allows the perExe hook to fire for all the child nodes of the current node.
-        if (perExe.owner === node) {//consume the hook if we are currently at the owner node.This wont always be true on the first try because the owner node can be paused to evaluate its children.
-            interpreter.reusables.execution.perExe = null;
+    if (perExe.fn) {
+        perExe.fn(); // call this after the executed result has been pushed
+        
+        // consume the hook if we are currently at the owner node
+        if (perExe.owner === node) {
+            perExe.fn = null;
+            perExe.owner = null; 
         }
     }
 };
@@ -206,7 +209,11 @@ function clearReusables(interpreter:SvalPlus):void {
     interpreter.reusables.mode = null;
     interpreter.reusables.execution.evalStack.value = 0;
     interpreter.reusables.execution.exeStack.clear();
-    //we dont clear perExe here because its lifecycle's end is handled in another function
+
+    //this acts as a fail-safe to prevent "ghost hooks" when an execution crashes or times out.
+    interpreter.reusables.execution.perExe.owner = null
+    interpreter.reusables.execution.perExe.fn = null
+
     //we dont clear the readonlyExeStack because its just a live reference to the exe stack
 }
 

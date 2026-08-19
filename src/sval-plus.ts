@@ -18,7 +18,7 @@ import {
     Visit as VisitContract, 
     EventMap, 
     NOT_ALLOCATED,
-    PerExe,
+    PerExeFn,
     OnStep,
     VisitExecutionError,
     GeneratedKey
@@ -139,11 +139,12 @@ export class Visit implements VisitContract {
             return this.#interpreter.reusables.result;
         }
     };
-    set perExecution(perExe:PerExe) {
-        this.#interpreter.reusables.execution.perExe = {
-            fn:perExe,
-            owner:this.#interpreter.reusables.node!
-        }
+    set perExecution(fn:PerExeFn) {
+        const reusables = this.#interpreter.reusables
+        const perExe = reusables.execution.perExe;
+
+        perExe.fn = fn;
+        perExe.owner = reusables.node!;
     }
 } 
 export class SvalPlus extends Sval implements SvalPlusContract {
@@ -229,7 +230,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             evalStack:{value:0},
             exeStack:new QList(),
             readonlyExeStack:new ReadonlyQList(),
-            perExe:null
+            perExe:{
+                owner:null,
+                fn:null
+            }
         },
     };
 

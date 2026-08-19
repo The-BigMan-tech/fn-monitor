@@ -41,13 +41,12 @@ const fn = monitor({
         }
     },
     inspector:(visit)=>{
-        visit.is('Any',()=>undefined);
+        visit.is('Any',()=>undefined)// Force the interpreter to allocate every scope
+        visit.execute();// Important!! Execute the node so that its result is pushed. Else, querying the stack will get an index error
 
-        visit.perExecution = ()=>{
-            const stack = visit.localExeStack();
-            const head = stack.get(0)
-            exeHistory.push(head);
-        }
+        const stack = visit.localExeStack();
+        const head = stack.get(0)
+        exeHistory.push(head);
     }
 })
 fn(2,3);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { monitor } from '../../src/index'; 
+import { EsNode, monitor } from '../../src/index'; 
 
 describe('Visit Object Behaviour',()=>{
     
@@ -131,64 +131,75 @@ describe('Visit Object Behaviour',()=>{
         expect(queryHits).toBe(executedNodes)
     })
 
-    it('[Sync] should ensure that the perExecution hook is fired exactly once for every executed node',()=>{
-        let executedNodes = 0;
-        let perExeCalls = 0;
+    it('[Sync] should ensure that the perExecution hook does not leak if an error is thrown mid-execution', () => {
+        let callCount = 0;
+        let perExeFiredCount = 0;
 
         const fn = monitor({
-            main:{
-                ref:(x: number)=>{
-                    return 10 + x
-                }
+            main: {
+                ref: (x: number) => 10 + x
             },
-            inspector:(visit)=> {  
-                executedNodes += 1;  
-                visit.perExecution = ()=>{
-                    perExeCalls += 1;
+            beforeEachCall: () => {
+                callCount += 1;
+            },
+            inspector: (visit) => {
+                // Check the callCount to ensure that it doesnt set the hook on the second call
+                if ((callCount === 1) && (perExeFiredCount === 0)) {
+                    visit.perExecution = () => {
+                        perExeFiredCount += 1;
+                        throw new Error("Mid-execution error");
+                    };
                 }
             }
-        })
-        fn(10);
-        expect(perExeCalls).toBe(executedNodes)
-    })
+        });
 
-    it('[Sync] should ensure that the perExecution hook only lives as long as its owner node and its children',()=>{
-        let hitDeclNode = false;
+        // First call: registers hook, fires, throws error, aborts execution.
+        expect(() => fn(10)).toThrow("Mid-execution error");
+        expect(perExeFiredCount).toBe(1);
+
+        // Second call: The hook should NOT leak from the aborted first call.
+        // Since the inspector no longer registers it, it should run cleanly.
+        expect(() => fn(10)).not.toThrow();
+        expect(perExeFiredCount).toBe(1); // Still 1, proving no ghost hook fired
+    });
+
+    it('[Sync] should ensure that the perExecution hook is only fired for the owner and its children', () => {
         let setPerExeHook = false;
+        const firedNodeTypes: string[] = [];
 
         const fn = monitor({
-            main:{
-                ref:(x: number)=>{
-                    const y = 10 + x;
-                    return y
+            main: {
+                ref: (x: number) => {
+                    const y = (10 + x) + (x ** 2);
+                    return y;
                 }
             },
-            beforeEachCall:()=>{
-                hitDeclNode = false;
-                setPerExeHook = false;
-            },
-            inspector:(visit)=> {   
-                visit.is('Any',()=>undefined)//force the interpreter to alllocate all scopes
+            inspector: (visit) => {
+                visit.is('Any', () => undefined); // force scope allocation
 
-                //this will hit y = 10 + x
-                visit.is('VariableDeclaration',()=>{
-                    if (!setPerExeHook) {//this locks this hook to the node,(y = 10 + x)
-                        visit.perExecution = ()=>{
-                            setPerExeHook = true;
-
-                            const head = visit.localExeStack().get(0)
-                            const nodeType = head.type;
-
-                            //if the lifecycle of the perExe hook is handled properly,this particular one shouldnt live long enough to see the return statement
-                            expect(nodeType).not.toBe<typeof nodeType>('ReturnStatement')
-                        }
+                // Lock the hook to the first BinaryExpression we see
+                visit.is('BinaryExpression', () => {
+                    if (!setPerExeHook) {
+                        setPerExeHook = true;
+                        visit.perExecution = () => {
+                            const head = visit.localExeStack().get(0);
+                            firedNodeTypes.push(head.type);
+                        };
                     }
-                    hitDeclNode = true;
-                })
+                });
             }
-        })
+        });
+
         fn(10);
-        expect(hitDeclNode).toBe(true);
-        expect(setPerExeHook).toBe(true);
-    })
+
+        // 1. The hook should have fired at least once (for the owner and its children)
+        expect(firedNodeTypes.length).toBeGreaterThan(0);
+        
+        // 2. It should actually have fired for the owner
+        expect(firedNodeTypes).toContain('BinaryExpression');
+
+        // 3. CRITICAL: It should NEVER fire for nodes outside the owner's subtree
+        expect(firedNodeTypes).not.toContain('VariableDeclaration');
+        expect(firedNodeTypes).not.toContain('ReturnStatement');
+    });
 })

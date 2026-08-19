@@ -144,7 +144,7 @@ export type Inspector<
 > = (visit:Visit)=> undefined | InspectorGenerator<T>;
 
 export type OnStep = ()=>void;
-export type PerExe = ()=>void;
+export type PerExeFn = ()=>void;
 
 export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
 
@@ -190,7 +190,7 @@ export interface Visit {
      * The hook itself does not get passed anything.But it is a good place to check the local exe stack.
      * By querying for the head element,you get to see the exe result in real time which includes the nodes,the evaluated result and each scope
      */
-    set perExecution(perExe:PerExe),
+    set perExecution(fn:PerExeFn),
 
     /**
      * The function that tells the interpreter to execute the current node and return the result.
@@ -265,9 +265,9 @@ export interface Reusables<T extends unknown | Generator = unknown | Generator> 
         evalStack:{value:number},
         exeStack:QList<ExeResult>,
         readonlyExeStack:ReadonlyQList<ExeResult>,
-        perExe:null | {
-            owner:EsNode
-            fn:PerExe
+        perExe:{
+            owner:EsNode | null
+            fn:PerExeFn | null
         }
     }
 }
