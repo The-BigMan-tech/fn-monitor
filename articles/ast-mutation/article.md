@@ -602,4 +602,6 @@ This package changes that by running functions through an interpreter on the sam
 
 It is not a secure sandbox, and it is not free in terms of performance. But as a tool for runtime introspection and programmatic control, it opens up a genuinely interesting space.
 
-If you have questions or ideas, drop a comment — I read all of them. The project is open source on [GitHub](https://github.com/The-BigMan-tech/fn-monitor) and published on npm as `@typescript-guy/fn-monitor`, with runnable examples in the repo.
+If you had any trouble following along, spotted a typo, or just want to show off a unique use case you built with `fn-monitor`, feel free to open a [discussion on GitHub](https://github.com/The-BigMan-tech/fn-monitor/discussions).
+
+And if you're interested in using `fn-monitor` in your own projects, check out the [main repository](https://github.com/The-BigMan-tech/fn-monitor) for the full documentation.
