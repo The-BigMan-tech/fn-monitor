@@ -107,10 +107,12 @@ Result:  -15
 
 We first call `visit.is('Any',...)` to force the interpreter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
 
-So what this basically does is that for every executed node, it will query the execution stack for the head element. This is because the latest evaluation is always inserted at the head/left end of the stack. It will then push that result to our custom array.
+Calling `visit.execute()` will then eagerly evaluate the node and its children. We then retrieve the head element of the execution stack — because the latest evaluation is always inserted at the head (left end) of the stack — and push it to our custom array.
 
 ```typescript
 import { monitor,type ExeResult } from "@typescript-guy/fn-monitor";
+
+const exeHistory: ExeResult[] = []; 
 
 const fn = monitor({
     main:{
