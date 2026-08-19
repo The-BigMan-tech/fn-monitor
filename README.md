@@ -7,17 +7,17 @@
 </p>
 
 <p align="center">
-    <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/@typescript-guy/fn-monitor"><img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=1d499b&labelColor=414952" alt="npm version" /></a>
+    <a  href="https://www.npmjs.com/package/@typescript-guy/fn-monitor"><img src="https://img.shields.io/npm/v/@typescript-guy%2Ffn-monitor?color=1d499b&labelColor=414952" alt="npm version" /></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a target="_blank" rel="noopener" href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md"><img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor?labelColor=414952" alt="license" /></a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/LICENSE.md"><img src="https://img.shields.io/npm/l/@typescript-guy%2Ffn-monitor?labelColor=414952" alt="license" /></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a target="_blank" rel="noopener" href="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml"><img src="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml/badge.svg" alt="CI" /></a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml"><img src="https://github.com/The-BigMan-tech/fn-monitor/actions/workflows/test.yaml/badge.svg" alt="CI" /></a>
 </p>
 
 <p align="center">
-    <a target="_blank" rel="noopener" href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=c0dfff&labelColor=414952" alt="100% typescript"></a>
+    <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=c0dfff&labelColor=414952" alt="100% typescript"></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a target="_blank" rel="noopener" href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-285%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
+    <a href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-285%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
 </p>
 
 `fn-monitor` is a deep instrumentation layer built over the `sval` JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behaviour of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
