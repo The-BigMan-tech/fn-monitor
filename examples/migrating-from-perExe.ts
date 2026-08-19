@@ -18,6 +18,9 @@ import { monitor } from "../src/index.ts";
  * 
  * `perExecution` became redundant. Combined with its single-slot fragility, 
  * it was ultimately a leaky abstraction.
+ * 
+ * The single-slot semantics were deliberately chosen to prevent massive memory 
+ * usage from keeping distinct closures per node in memory during execution.
 */
 
 
