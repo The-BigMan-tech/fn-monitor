@@ -210,7 +210,7 @@ console.log('Callees during execution: ', callees);
 console.log('\nUsing the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.'.toUpperCase());
 
 type milliseconds = number;
-type Fn = (...args:any[])=>void
+type Fn = (...args:any[])=>any
 
 function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
     const graceTime = 0.5 as milliseconds;

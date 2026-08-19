@@ -538,7 +538,7 @@ A deep dive into this is available in this [article](https://dev.to/typescript-g
 import { monitor } from "@typescript-guy/fn-monitor";
 
 type milliseconds = number;
-type Fn = (...args:any[])=>void
+type Fn = (...args:any[])=>any
 
 function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
     const graceTime = 0.5 as milliseconds;
