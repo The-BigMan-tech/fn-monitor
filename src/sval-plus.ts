@@ -259,7 +259,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.inspector = (args.inspector as Inspector<'internal'>) || null;
         this.onStep = args.onStep || null;
 
-        this.reusables.execution.readonlyExeStack.swapSrc(this.reusables.execution.exeStack);
+        const exeState = this.reusables.execution;
+        exeState.readonlyExeStack.swapSrc(exeState.exeStack);
     };
 
     public createEventScope = ()=>{

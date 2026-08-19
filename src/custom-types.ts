@@ -250,7 +250,7 @@ export interface ExeResult {
  * This type describes an internal object 
  * 
  * The eval-stack is a number that represents how many recursions deep the interpreter is, during a specific evaluation
- * It is a wrapper around a value to prevent the cognitive overhead of tracking copy-by-value and copy-by-ref when trying to store it in a variable to minimize property chaining
+ * It is a wrapper around a value to prevent any edge case concerning the copy-by-value and copy-by-ref nuance
  * 
  * The exe-stack contains the results of each evaluated node
 */

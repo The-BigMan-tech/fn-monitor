@@ -123,12 +123,6 @@ export const evalStackHandler = {
 }
 
 
-export function callOnStep(scope:Scope):void {
-    const interpreter:SvalPlus = scope.interpreter;
-    if (inUserCode(scope) && (interpreter.onStep !== null)) {
-        interpreter.onStep();
-    }
-}
 
 /**
  * This function uses positional args because its called in the hot path of the whole interpreter
@@ -152,7 +146,12 @@ export function callPerExe(interpreter:SvalPlus):void {
         }
     }
 };
-
+export function callOnStep(scope:Scope):void {
+    const interpreter:SvalPlus = scope.interpreter;
+    if (inUserCode(scope) && (interpreter.onStep !== null)) {
+        interpreter.onStep();
+    }
+}
 
 
 export function copyReusables<
@@ -161,9 +160,12 @@ export function copyReusables<
 >
 (interpreter:SvalPlus,flag:T):R {
     const reusables = interpreter.reusables;
-    const canSkipOp = (flag === "optional") && (reusables.execution.evalStack.value <= 0);
 
-    //if the evalstack is 0,it means that the reusables are cleared and if they are cleared,it means that the evaluator can safely overwrite it without having to pay copy overhead
+    const canSkipOp = (
+        (flag === "optional") && 
+        (reusables.execution.evalStack.value <= 0)
+    )
+    //if the evalstack is 0,it means that the reusables are cleared and if they are cleared,it means that the evaluator can safely overwrite it without having to pay any copy overhead
     if (canSkipOp) {
         return null as R;
     }
@@ -174,13 +176,16 @@ export function copyReusables<
         result:reusables.result,
         event:reusables.event,
         mode:reusables.mode,
-        execution:{
-            evalStack:reusables.execution.evalStack,//the eval stack variable is a global tracker.so it cant be cleared or reset in local functions.
-            exeStack:reusables.execution.exeStack,
-            readonlyExeStack:reusables.execution.readonlyExeStack,
-            perExe:reusables.execution.perExe
-        }
+        execution:reusables.execution//this doesnt get deeply copied because it doesnt get rewritten when executing a node
     } as R;
+}
+export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables):void {
+    interpreter.reusables.node = srcReusables.node;
+    interpreter.reusables.scope = srcReusables.scope;
+    interpreter.reusables.handler = srcReusables.handler;
+    interpreter.reusables.result = srcReusables.result;
+    interpreter.reusables.event = srcReusables.event;
+    interpreter.reusables.mode = srcReusables.mode;
 }
 function updateReusables(mode:EvaluatorType,node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']):void {
     const interpreter = scope.interpreter!;
@@ -190,8 +195,7 @@ function updateReusables(mode:EvaluatorType,node:AcornNode,scope:Scope<SvalPlus>
     interpreter.reusables.result = UNASSIGNED;
     interpreter.reusables.event = NOT_ALLOCATED;
     interpreter.reusables.mode = mode;
-    //we dont touch the exe stack here because its usage and end of lifecycle are handled elsewhere
-    //we dont touch the evalstack pointer here because its handled in stackHandler
+    //we dont touch any of the execution state here because they are global trackers for the current execution context and their lifecycle are handled elsewhere
 }
 function clearReusables(interpreter:SvalPlus):void {
     interpreter.reusables.node = null;
@@ -202,21 +206,10 @@ function clearReusables(interpreter:SvalPlus):void {
     interpreter.reusables.mode = null;
     interpreter.reusables.execution.evalStack.value = 0;
     interpreter.reusables.execution.exeStack.clear();
-    //we dont touch perExe here because its lifecycle's end is handled in another function
-    //we dont touch the readonlyExeStack because its just a live reference to the exe stack
+    //we dont clear perExe here because its lifecycle's end is handled in another function
+    //we dont clear the readonlyExeStack because its just a live reference to the exe stack
 }
-export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables):void {
-    interpreter.reusables.node = srcReusables.node;
-    interpreter.reusables.scope = srcReusables.scope;
-    interpreter.reusables.handler = srcReusables.handler;
-    interpreter.reusables.result = srcReusables.result;
-    interpreter.reusables.event = srcReusables.event;
-    interpreter.reusables.mode = srcReusables.mode;
-    interpreter.reusables.execution.evalStack = srcReusables.execution.evalStack;
-    interpreter.reusables.execution.exeStack = srcReusables.execution.exeStack;
-    interpreter.reusables.execution.readonlyExeStack = srcReusables.execution.readonlyExeStack;
-    interpreter.reusables.execution.perExe = srcReusables.execution.perExe
-}
+
 
 
 export function executedManually<T extends NodeResult<unknown>>(result:T | typeof UNASSIGNED):result is T {
@@ -224,15 +217,15 @@ export function executedManually<T extends NodeResult<unknown>>(result:T | typeo
 }
 export function pushedManually(interpreter:SvalPlus):boolean {
     return (
-        !(inLazyMode(interpreter)) &&//the visit.execute method couldn't have pushed any result if it is lazy
-        executedManually(interpreter.reusables.result) 
+        executedManually(interpreter.reusables.result) &&
+        (!inLazyMode(interpreter))//the visit.execute method couldn't have pushed the result while the interpreter was lazy
     )
 }
 export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>):void {
     const event = interpreter.reusables.event;
     const node = interpreter.reusables.node!;
 
-    //we should aways insert a new object.Trying to optimize this by reusing objects will be logically incosistent with the rest of the codebase
+    //we should aways insert a new object.Trying to optimize this by reusing objects will be logically incorrect
     interpreter.reusables.execution.exeStack.unshift({
         evaluation:final,
         type:node.type,
