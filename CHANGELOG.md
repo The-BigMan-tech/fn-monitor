@@ -1,4 +1,89 @@
 
+## v1.4.3...v1.5.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.3...v1.5.0)
+
+### 🚀 Features
+
+- **api:** Deprecate visit.perExecution in favor of an explicit pattern with visit.execute ([9e00207](https://github.com/The-BigMan-tech/fn-monitor/commit/9e00207))
+- Bump to v1.5.0 ([cd34d4c](https://github.com/The-BigMan-tech/fn-monitor/commit/cd34d4c))
+
+### 🩹 Fixes
+
+- **lifecycle:** Resolve perExe state corruption and reduce GC overhead ([2fcaea5](https://github.com/The-BigMan-tech/fn-monitor/commit/2fcaea5))
+
+### ♻️ Refactor
+
+- Share execution state by reference in reusables ([5a43a82](https://github.com/The-BigMan-tech/fn-monitor/commit/5a43a82))
+- Update the test suite and the README to use visit.execute rather than the perExe hook ([bbb5371](https://github.com/The-BigMan-tech/fn-monitor/commit/bbb5371))
+- **article:** Rename a folder ([f497b09](https://github.com/The-BigMan-tech/fn-monitor/commit/f497b09))
+
+### 🛠️ Build
+
+- Remove swc because the legacy build script inherited from sval that relied on it has been dropped since the alpha version ([2e33444](https://github.com/The-BigMan-tech/fn-monitor/commit/2e33444))
+
+### 🧹 Chore
+
+- Update the changelog config ([477de63](https://github.com/The-BigMan-tech/fn-monitor/commit/477de63))
+- Upgrade dependencies for stability ([15fca8d](https://github.com/The-BigMan-tech/fn-monitor/commit/15fca8d))
+
+### 🎨 Styles
+
+- **readme:** Change the color of a badge ([2a104e4](https://github.com/The-BigMan-tech/fn-monitor/commit/2a104e4))
+- Adjust the color of the badges by making their left parts darker ([ef6c6a1](https://github.com/The-BigMan-tech/fn-monitor/commit/ef6c6a1))
+- Adjust the color of the badges ([e7c92f7](https://github.com/The-BigMan-tech/fn-monitor/commit/e7c92f7))
+
+### 📖 Documentation
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+- **readme:** Update the bundle size badge to reflect the size of the newest version to be released. ([b1a5e73](https://github.com/The-BigMan-tech/fn-monitor/commit/b1a5e73))
+- **readme:** Fix a mistake in the bundle size badge url ([9be8213](https://github.com/The-BigMan-tech/fn-monitor/commit/9be8213))
+- **readme:** Adjust two badges ([1f575f4](https://github.com/The-BigMan-tech/fn-monitor/commit/1f575f4))
+- **readme:** Remove the space between the anchor and image tags in an attempt to remove the extra underscore showing in github's md renderer ([3488b88](https://github.com/The-BigMan-tech/fn-monitor/commit/3488b88))
+- **readme:** Remove the extra space between the anchor and image tags in the other badges ([47f99d8](https://github.com/The-BigMan-tech/fn-monitor/commit/47f99d8))
+- **changelog:** Update changelog for v1.4.3 ([a745a2c](https://github.com/The-BigMan-tech/fn-monitor/commit/a745a2c))
+- **readme:** Clear every ambiguity in the wrapper constraints ([83dc869](https://github.com/The-BigMan-tech/fn-monitor/commit/83dc869))
+- **readme:** Clarify certain limitations ([6803170](https://github.com/The-BigMan-tech/fn-monitor/commit/6803170))
+- Remove extra nestig in an example ([633d985](https://github.com/The-BigMan-tech/fn-monitor/commit/633d985))
+- **examples:** Change a return statement to a break ([8b510c1](https://github.com/The-BigMan-tech/fn-monitor/commit/8b510c1))
+- **articles:** Rename a file ([2937cc0](https://github.com/The-BigMan-tech/fn-monitor/commit/2937cc0))
+- **articles:** Add an article showing how to upgrade a codebase's test suite with fn-monitor ([91736a9](https://github.com/The-BigMan-tech/fn-monitor/commit/91736a9))
+- **article:** Finish the draft of upgrading test suite.md ([6b47763](https://github.com/The-BigMan-tech/fn-monitor/commit/6b47763))
+- Slightly improve the article ([e6fb0c2](https://github.com/The-BigMan-tech/fn-monitor/commit/e6fb0c2))
+- **article:** Add minor refinements ([30f9f4a](https://github.com/The-BigMan-tech/fn-monitor/commit/30f9f4a))
+- **article:** Wrap a word in backticks ([f126e3c](https://github.com/The-BigMan-tech/fn-monitor/commit/f126e3c))
+- **articles:** Wrap more words in backticks ([c499981](https://github.com/The-BigMan-tech/fn-monitor/commit/c499981))
+- **article:** Add the cover-image ([ed0dd6d](https://github.com/The-BigMan-tech/fn-monitor/commit/ed0dd6d))
+- **article:** Backlink to the last two articles ([e11cb86](https://github.com/The-BigMan-tech/fn-monitor/commit/e11cb86))
+- **article:** Tweak a sentence ([1695b24](https://github.com/The-BigMan-tech/fn-monitor/commit/1695b24))
+- **article:** Fix the flaw in the calculateTax function ([19e3c9a](https://github.com/The-BigMan-tech/fn-monitor/commit/19e3c9a))
+- **article:** Instruct the reader to install fn-monitor as a devDependency ([2fb0607](https://github.com/The-BigMan-tech/fn-monitor/commit/2fb0607))
+- **article:** Improve the code to imitate a real world scenario ([87bcd47](https://github.com/The-BigMan-tech/fn-monitor/commit/87bcd47))
+- **article:** Make a sentence tighter ([c16144b](https://github.com/The-BigMan-tech/fn-monitor/commit/c16144b))
+- **article:** Fix a grammatical inaccuracy ([786a0bc](https://github.com/The-BigMan-tech/fn-monitor/commit/786a0bc))
+- **article:** Add an extra clause ([db21033](https://github.com/The-BigMan-tech/fn-monitor/commit/db21033))
+- **preventing-hang.md:** Polish the article ([9c729d7](https://github.com/The-BigMan-tech/fn-monitor/commit/9c729d7))
+- **article:** Update a stale comment ([85ef4ac](https://github.com/The-BigMan-tech/fn-monitor/commit/85ef4ac))
+- **article:** Omit a limitation because it can't really be explained properly in one sentence without ambiguity. The reader will discover a better explanation in the README ([068553a](https://github.com/The-BigMan-tech/fn-monitor/commit/068553a))
+- **article:** Add an apostrophe ([32a4b75](https://github.com/The-BigMan-tech/fn-monitor/commit/32a4b75))
+- **article:** Update a framing in the test suite article ([2408454](https://github.com/The-BigMan-tech/fn-monitor/commit/2408454))
+- **readme:** Update the link in the unpacked size badge to point to package stats and use a blank target in the anchor tags for good UX ([6148155](https://github.com/The-BigMan-tech/fn-monitor/commit/6148155))
+- **readme:** Remove the attributes in the anchor tags because sanitizers strip them away ([acca206](https://github.com/The-BigMan-tech/fn-monitor/commit/acca206))
+- **readme:** Update the explanation of a quick example to reflect the new code ([ec841ae](https://github.com/The-BigMan-tech/fn-monitor/commit/ec841ae))
+- **article:** Encourage users to open a discussion in the test suite article ([8fd4e2c](https://github.com/The-BigMan-tech/fn-monitor/commit/8fd4e2c))
+- **article:** Update the conclusion of the lag article ([fd97af5](https://github.com/The-BigMan-tech/fn-monitor/commit/fd97af5))
+- **article:** Update the conclusion of the ast mutation article ([209a797](https://github.com/The-BigMan-tech/fn-monitor/commit/209a797))
+- **example:** Add a footer to a note ([9434f7b](https://github.com/The-BigMan-tech/fn-monitor/commit/9434f7b))
+- **readme:** Update a type ([b658e84](https://github.com/The-BigMan-tech/fn-monitor/commit/b658e84))
+
+</details>
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.4.2...v1.4.3
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.2...v1.4.3)
