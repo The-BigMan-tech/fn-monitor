@@ -27,8 +27,9 @@ export interface MonitorFnSetup<T extends Fn> {
     /**
      *Like the inspector hook,this is called before each interpreted step.but it does not get the rich visit object to inspect or modify nodes
      *Using this hook alone without the inspector will make the interpreter significantly faster because it removes all the allocations it will need to create the tools for the visit object
+     *
      *Even without node information,it is useful for setting timers on the interpreted code by checking against a time after a number of steps.
-     *If the use case above is enough,use this hook and leave the inspector as undefined.Else,including the inspector,even as a no-op function,will cause several unnecessary allocations
+     *If the use case above is enough,use this hook and leave the inspector as undefined. Else,including the inspector,even as a no-op function,will cause several unnecessary allocations
     */
     onStep?:OnStep,
 

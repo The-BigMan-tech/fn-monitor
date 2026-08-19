@@ -641,10 +641,17 @@ The rich object that gives inspectors their ability to participate in the interp
 
 | Method/Property | Description |
 | --- | --- |
-| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.<br><br>⚠️ **Important:** This does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient. |
-| `set perExecution(fn)` | A setter for a callback fired on each executed child node. It is short-lived and discarded after evaluating the current node and its children. |
+| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. |
+| `set perExecution(fn)` | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. |
 | `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
+
+> ⚠️ **Important:**
+> 
+> `visit.is()` does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
+>
+> `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behaviour can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in v2.0.0.
+> 
 
 #### ExeResult
 | Property | Type | Description |

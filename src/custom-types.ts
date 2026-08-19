@@ -170,7 +170,6 @@ export type EvaluateOps<T extends unknown> = Partial<
  *  -The perExecution hook is short lived.It only exists for the current node and all its children
  *  -The execute method must strictly be called within the lifetime of the inspector hook if you ever wish to call it.
  * 
- * You dont have to worry too much about all of this if you use the visit object in the inspector hook where you know using it is safe.
  */
 export interface Visit {
     /**
@@ -179,30 +178,44 @@ export interface Visit {
      * You can mutate the node or query the scope.
      * 
      * If you dont set a query for a particular node,the interpreter will not allocate a scope nor an event object.This is to save memory.
-     * So in the exe result,you will see a symbol called NOT_ALLOCATED.but you can use visit.is('Any',...) to force the interpreter to allocate a scope and event object for every node it visits
+     * 
+     * So for the result matching the node in the execution stack, you will see a symbol called NOT_ALLOCATED. but you can use visit.is('Any',...) to force the interpreter to allocate a scope and event object for every node it visits
      */
     is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
 
     /** 
-     * This is fired for each executed node starting from the current node.The current node at the time when it was set becomes its owner.
-     * After firing for all other related nodes,it will terminate when the interpreter reaches back to the owner. 
+     * This is fired for each executed node starting from the current node. The current node at the time when it was set becomes its owner.
+     * 
+     * After firing for all other related nodes, it will terminate when the interpreter reaches back to the owner. 
      *
-     * The hook itself does not get passed anything.But it is a good place to check the local exe stack.
-     * By querying for the head element,you get to see the exe result in real time which includes the nodes,the evaluated result and each scope
-     */
+     * The hook itself does not get passed anything. But it is a good place to check the local exe stack.
+     * By querying for the head element, you get to see the exe result in real time which includes the nodes, the evaluated result and each scope
+     * 
+     * @deprecated This is a single-slot API. Each assignment overwrites the previous 
+     * owner and closure. If a child node sets the hook, it silently replaces the 
+     * parent's registration. Similar but safer semantics can be achieved explicitly with 
+     * `visit.execute()`. See the migration guide:
+     * {@link https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts}
+     * 
+     * Will be removed in v2.0.0.
+    */
     set perExecution(fn:PerExeFn),
 
     /**
      * The function that tells the interpreter to execute the current node and return the result.
-     * If its an async node like an await call,you get LAZY_NODE instead of the awaited result.You must explicitly type yield visit.execute() to get it.but it requires the inspector to be a generator instead of a regular function
+     * 
+     * If its a lazy node like an await call,you get LAZY_NODE instead of the awaited result.You must explicitly type yield visit.execute() to get it.but it requires the inspector to be a generator instead of a regular function
+     * 
      * Once you get the result,you can read it or even modify it before it is returned to the caller
-     * The interpreter will execute the node manually if you never call this.
-     * There is no way to directly stop the interpreter from executing a node.This is to prevent a half broken state.If required,the inspector hook must throw an error
+     * The interpreter will execute the node manually if you never call it.
+     * 
+     * There is no way to directly stop the interpreter from executing a node.This is to prevent a half broken state. If required,the inspector hook must throw an error
      */
     execute:()=>unknown | typeof LAZY_NODE,
 
     /**
-     * This is a stack data structure that contains the results of a node and each of its evaluated child node.
+     * A live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries
+     * 
      * The latest results stay at the head and the oldest remain at the tail.
      * 
      * It is a live reference to the current interpreter's state and it is cleared regularly
