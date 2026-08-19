@@ -57,9 +57,9 @@
         "acorn": "^8.14.0",
         "ansis": "^4.3.1",
         "astring": "^1.9.0",
-        "js-sha256": "^0.11.1",
+        "js-sha256": "^1.0.0",
         "lru-cache": "^11.3.5",
-        "meriyah": "^7.1.0"
+        "meriyah": "^7.3.2"
     },
     "devDependencies": {
         "@swc/core": "^1.11.24",
