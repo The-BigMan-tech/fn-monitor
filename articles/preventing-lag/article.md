@@ -20,7 +20,7 @@ Before we start this article, let us get a quick overview of the package:
    - A captures object — to include any external variables the function will use
    - Various hooks for different lifecycle events
 
-- It works for both synchronous and asynchronous functions. There is a specific nuance to how it handles generators, which is detailed in the [Important Notes & Limitations](https://github.com/The-BigMan-tech/fn-monitor#important-notes--limitations-%EF%B8%8F) section of the README
+- It works for both synchronous and asynchronous functions. 
 
 If you ever want to dive deeper into its fundamentals later, you can read the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
