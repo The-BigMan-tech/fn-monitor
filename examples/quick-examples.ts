@@ -238,7 +238,6 @@ function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
             usedTime = 0;
             step = 0;
         },
-
         onStep:() => {
             step += 1;
             const shouldCheckBudget = (step & 1023) === 0;
