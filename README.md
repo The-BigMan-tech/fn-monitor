@@ -20,7 +20,7 @@
     <a href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-285%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
 </p>
 
-`fn-monitor` is a deep instrumentation layer built over the `sval` JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behaviour of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
+`fn-monitor` is a deep instrumentation layer built over the `sval` JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behavior of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
 
 ## Table of Contents 📑
 
@@ -28,8 +28,10 @@
 - [API Introduction](#api-introduction)
 - [Quick Examples](#quick-examples)
 - [Full API Reference](#full-api-reference)
+- [Capabilities](#capabilities)
+- [Important Limitations](#important-limitations)
+- [Advanced Behavior](#advanced-behavior)
 - [Mechanics](#mechanics)
-- [Important Notes & Limitations](#important-notes--limitations)
 - [Questions & Support](#questions--support)
 - [Contributing](#contributing)
 - [Brand & Forking Guidelines](#brand--forking-guidelines)
@@ -44,7 +46,7 @@
 npm install @typescript-guy/fn-monitor
 ```
 
-> 📌 **Before integrating this package into any project,** please read the [Important Notes and Limitations](#important-notes--limitations-️) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
+> 📌 **Before integrating this package into any project,** please read the [Important Limitations](#important-limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
 
 ---
 
@@ -650,7 +652,7 @@ The rich object that gives inspectors their ability to participate in the interp
 > 
 > `visit.is()` does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
 >
-> `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behaviour can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in v2.0.0.
+> `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in v2.0.0.
 > 
 
 #### ExeResult
@@ -683,6 +685,83 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ---
 
+<a id="capabilities"></a>
+
+## Capabilities 💪
+
+1. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+
+2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
+   
+3. **Ergonomic API:** Ships a clean, intuitive interface that can be used to enforce timeouts, mutate execution, and trace state without having to understand the underlying mechanics.
+   
+---
+
+<a id="important-limitations"></a>
+
+## Important Limitations ⚠️
+
+These are the critical constraints to understand before using `fn-monitor`:
+
+1. **Setup Cost:** The `monitor()` function incurs overhead from AST parsing and interpreter instantiation. If you need to monitor a function across multiple calls, call `monitor()` **once** outside the loop and invoke the returned function inside it.
+   
+   > 💡 **Optimization:** The package automatically caches the parsed AST based 
+   > on the generated source code, reusing it for identical functions to minimize 
+   > redundant parsing.
+
+2. **Execution Cost:** Because `fn-monitor` interprets your function step-by-step through a JS-in-JS engine, each monitored call incurs overhead compared to native execution. This is the fundamental cost of AST-level observability.
+   
+   > ⚠️ **Do not use `fn-monitor` inside high-throughput loops, real-time request 
+   > handlers, or any code path where microsecond-level latency matters.** It is designed for functions that are already slow (100ms+), run infrequently, and would be catastrophic if they hung forever.
+
+3.  **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. You may need to temporarily switch to your original function to fix any of its issues. The switching cost is minimal because you can simply change the name 
+at the call site or where you refer to it in your code.
+   
+   > 💡 **Note:** The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws anything.
+
+4.  **Not a Secure Sandbox:** This package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting nodes via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
+
+---
+
+<a id="advanced-behavior"></a>
+
+## Advanced Behavior 🧐
+
+These notes describe how the interpreter behaves in specific edge cases. Read them 
+as you encounter these patterns in your codebase:
+
+1. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
+
+2.  **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
+
+3. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
+   
+    >💡 **Tip:** There is a workaround. 
+    >
+    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
+    > 
+    > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
+
+4. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
+   
+    > 💡 **The exact error you get depends on your toolchain.**
+    >
+    > `fn-monitor` can only detect an import if it still exists as an `ImportExpression` node when it parses your function's source code. 
+    >
+    > Toolchains that preserve native `import()` (e.g., Node, Bun, tsx) will throw a clear     `ForbiddenDynamicImport` error. However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. 
+    > 
+    > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
+
+5.   **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
+
+    > 💡 **Tip:** There is a workaround. 
+    >   
+    > Instead of capturing the library object itself, create a simple wrapper function in your outer scope and capture the wrapper.
+    >
+    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) for a quick demonstration.
+    
+---
+
 <a id="mechanics"></a>
 
 ## Mechanics ⚙️
@@ -701,67 +780,13 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ---
 
-<a id="important-notes--limitations"></a>
-
-## Important Notes & Limitations ⚠️
-
-Please keep the following architectural constraints in mind when using this package:
-
-1. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
-
-2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
-   
-3. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
-   
-    >💡 **Tip:** There is a workaround. 
-    >
-    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
-    > 
-    > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
-
-4. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
-
-5. **Performance Critical:** The `monitor()` function incurs overhead from AST parsing and interpreter instantiation. Always call `monitor()` once outside of hot loops, and execute the returned function inside your loops or handlers. 
-   
-   > 💡 **Optimization:** The package automatically caches the parsed AST based on the generated source code, reusing it for identical functions to minimize redundant parsing.
-
-6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
-   
-    > 💡 **The exact error you get depends on your toolchain.**
-    >
-    > `fn-monitor` can only detect an import if it still exists as an `ImportExpression` node when it parses your function's source code. 
-    >
-    > Toolchains that preserve native `import()` (e.g., Node, Bun, tsx) will throw a clear     `ForbiddenDynamicImport` error. However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. 
-    > 
-    > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
-
-7. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
-
-8. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. You may need to temporarily switch to your original function to
-fix any of its issues. The switching cost is minimal because you can simply change the name 
-at the call site or where you refer to it in your code.
-   
-   > 💡 **Note:** The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws anything.
-
-9. **Execution Control & Isolation:** This package is not designed to act as a strict, secure sandbox out-of-the-box. However, you can simulate strict execution boundaries by actively monitoring and intercepting execution via the `inspector` and `onStep` hooks.
-
-10. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
-
-    > 💡 **Tip:** There is a workaround. 
-    >   
-    > Instead of capturing the library object itself, create a simple wrapper function in your outer scope and capture the wrapper.
-    >
-    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) for a quick demonstration.
-    
----
-
 <a id="questions--support"></a>
 
 ## Questions & Support 💬
 
 - 👥 **Questions & Feature Requests:** You can read my [articles](https://dev.to/typescript-guy) or open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
   
-- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. Furthermore, build tools and transpilers often transform source code before execution (e.g., polyfilling syntax), which means the AST nodes your inspector sees may differ from the code you wrote in your editor. If you encounter unexpected behaviour in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
+- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases, and build tools often transform source code before execution (e.g., polyfilling syntax). This means the AST nodes your inspector sees may differ from the code you wrote in your editor. If you encounter unexpected behavior in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 
@@ -795,7 +820,7 @@ This project actively encourages community forks, variations, and modifications!
 
 I built this package because I needed a reliable way to throw an error if an arbitrary function uses loops at runtime. My goal wasn't just to prevent a function from hanging the main thread—I needed to literally ban the presence of loops in the code itself. 
 
-Existing solutions could only enforce this at build time. I later grew `fn-monitor` into a general-purpose tool for runtime AST control, far beyond that original use case.
+Existing solutions could only enforce this at build time. I later grew `fn-monitor` into a general-purpose tool for runtime AST control, far beyond that original use case. If you've ever needed to implement similar constraints, this package is for you.
 
 ---
 
