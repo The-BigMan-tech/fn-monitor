@@ -598,7 +598,6 @@ timedGetPrice()
 
 ```text
 Error: The monitored function used 50.745ms when only given a budget of 50.000ms.
-....
 ```
 
 ---
@@ -623,7 +622,7 @@ The main export. Accepts a configuration object and returns a new function with 
 | `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
 | `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below).* |
 | `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
-| `sourceOut` | `{ value: string }` | Overwrites the `value` property with the generated code used in the interpreter. |
+| `sourceOut` | `{ value: string }` | If provided, the interpreter writes the generated source code into this object's `value` property |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
@@ -675,14 +674,16 @@ The rich object that gives inspectors their ability to participate in the interp
     - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the current function call.
     - `callDepth` is a 0-indexed value representing the current size of the call stack starting from a monitored function.
   
+- **Event Classes**: Over 30 specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
+
 - **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
   
 - **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes.
   
+- **`InspectorGenerator`**: The return type for generator-based inspectors. Used for type-safe `yield` expressions with `visit.execute()`.
+  
 - **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
   
-- **Event Classes**: Over 30 specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
-
 ---
 
 <a id="capabilities"></a>
