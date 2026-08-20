@@ -689,12 +689,14 @@ The rich object that gives inspectors their ability to participate in the interp
 
 ## Capabilities 💪
 
-1. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to enforce timeouts, mutate execution, and trace state without having to understand the underlying mechanics.
+   
+2. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
-2. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
+3. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
    
-3. **Ergonomic API:** Ships a clean, intuitive interface that can be used to enforce timeouts, mutate execution, and trace state without having to understand the underlying mechanics.
-   
+4. **Sync & Async Support:** Seamlessly interprets both synchronous and asynchronous functions.
+
 ---
 
 <a id="important-limitations"></a>
