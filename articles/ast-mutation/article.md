@@ -565,20 +565,20 @@ Even though monitored functions have basic isolation, this package is not a secu
 You can build stricter execution boundaries using hooks, but isolation is not the default guarantee.
 
 ---
-## Other limitations worth knowing
+## Key limitations to keep in mind
 
-The package is not a one-size-fits-all solution and thus, it has its own constraints as documented in the README:
+`fn-monitor` is a powerful tool, but it is not a one-size-fits-all solution. Here are the most critical constraints to be aware of:
 
-- the interpreter supports JavaScript syntax up to **ES2024**
-- `monitor()` has overhead, so call it once outside hot loops
-- you cannot use dynamic imports inside monitored functions 
-- There is a specific nuance when it comes to monitoring generators, which is detailed in the [Important Notes & Limitations](https://github.com/The-BigMan-tech/fn-monitor#important-notes--limitations-%EF%B8%8F) section of the README
-- errors inside monitored functions will not map directly to original source locations in your editor
+- **ES2024 Support:** The interpreter supports modern JavaScript syntax up to **ES2024**.
+- **Setup Cost:** `monitor()` incurs overhead. Always call it **once** outside of hot loops and reuse the returned function.
+- **No Dynamic Imports:** You cannot use `import()` inside monitored functions. Use `captures` instead.
+- **Stack Traces:** Errors thrown inside monitored functions won't map directly to your original source lines in your editor.
+- **Advanced Nuances:** For edge cases like native generators and complex library proxies, please refer to the [**Advanced Behavior**](https://github.com/The-BigMan-tech/fn-monitor#advanced-behavior) section of the README.
   
 ---
 ## A good way to think about this package
 
-It is less like a metric tool and more like a **runtime execution layer**.
+Despite the package's name, it is less like a metric tool and actually more like a **runtime execution layer**.
 
 Instead of asking:
 
