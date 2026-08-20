@@ -714,12 +714,12 @@ These are the critical constraints to understand before using `fn-monitor`:
    > ⚠️ **Do not use `fn-monitor` inside high-throughput loops, real-time request 
    > handlers, or any code path where microsecond-level latency matters.** It is designed for functions that are already slow (100ms+), run infrequently, and would be catastrophic if they hung forever.
 
-3.  **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. You may need to temporarily switch to your original function to fix any of its issues. The switching cost is minimal because you can simply change the name 
+3. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. You may need to temporarily switch to your original function to fix any of its issues. The switching cost is minimal because you can simply change the name 
 at the call site or where you refer to it in your code.
    
    > 💡 **Note:** The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws anything.
 
-4.  **Not a Secure Sandbox:** This package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting nodes via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
+4. **Not a Secure Sandbox:** This package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting nodes via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
 
 ---
 
@@ -732,7 +732,7 @@ as you encounter these patterns in your codebase:
 
 1. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
 
-2.  **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
+2. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
 
 3. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
    
