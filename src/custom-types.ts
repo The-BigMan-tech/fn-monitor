@@ -197,7 +197,7 @@ export interface Visit {
      * `visit.execute()`. See the migration guide:
      * {@link https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts}
      * 
-     * Will be removed in v2.0.0.
+     * Will be removed in a future major release
     */
     set perExecution(fn:PerExeFn),
 
