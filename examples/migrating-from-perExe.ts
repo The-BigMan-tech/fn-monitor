@@ -12,7 +12,7 @@ import { monitor } from "../src/index.ts";
  * The hook let me inject arbitrary logic as the node and its children evaluated, 
  * which felt like the only way to do it.
  * 
- * Once I realized my assumption was wrong — the `inspector` actually fires top-down 
+ * Once I realized that my assumption was wrong — the `inspector` actually fires top-down 
  * as it walks **every** node — I saw that I could achieve the exact same logic 
  * explicitly using `visit.execute()`.
  * 
