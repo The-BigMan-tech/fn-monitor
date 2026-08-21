@@ -59,7 +59,9 @@ Setup is done. In the next section, we'll write the code under test.
 
 ## The Code Under Test
 
-We're going to test a progressive tax calculator. It applies different rates across income brackets, but there's a compliance requirement: high-income earners must trigger an audit:
+We're going to test a progressive tax calculator. It applies different rates across income brackets, but there's a compliance requirement: high-income earners must trigger an audit. 
+
+You don't have to stress about the details. For this article, all you need to know is that it must calculate the tax and satisfy the compliance requirement:
 
 ```typescript
 // src/index.ts
@@ -118,11 +120,11 @@ test('calculates correct tax for high income', () => {
 
 Next, we write another test using the same assertion as the black-box one but we will also inspect its AST using `fn-monitor`. It will assert that `triggerHighIncomeAudit` was actually called during execution.
 
-For an overview, `fn-monitor` works by running functions through a JS-in-JS interpreter where it has full control of its execution. We import `monitor`, pass it our target function through an object and get a new function with the same call signature that runs through the interpreter.
+For an overview, `fn-monitor` works by running functions through a JS-in-JS interpreter where it has full control of its execution. We import `monitor`, pass it our target function through an object, and get a new function that runs through the interpreter and retains the call signature of the original function.
 
 Because the new function runs in a simulated environment, it will lose access to its lexical scope upon wrapping. The `captures` property gives the interpreter a function reference to bind to the `triggerHighIncomeAudit` identifier so it can execute without throwing a `ReferenceError`.
 
-Together with our target function, we can also pass an `inspector` which is a first-class hook that can observe and control the AST mid-execution. For this test, we are interested in `CallExpression` nodes.
+Together with our target function, we can also pass an `inspector` which is a first-class hook that can observe and control the AST mid-execution. For this test, we will use it to observe `CallExpression` nodes:
 
 ```typescript
 // tests/index.test.ts
