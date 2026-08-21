@@ -54,7 +54,7 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction ✨
 
-The core of the package is the `monitor` function. It accepts a function through an object and returns a new function with the same call signature that runs through the custom interpretation layer when called.
+The core of the package is the `monitor` function. It accepts a function through an object and returns a new function that runs through a custom interpretation layer while retaining the call signature of the original function.
 
 ```typescript
 const originalFn = ()=>{
@@ -648,7 +648,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 ### Core Configuration
 
 #### monitor`<T>`(setup: MonitorFnSetup`<T>`)
-The main export. Accepts a configuration object and returns a new function with an identical call signature to the original, but executed by the custom interpreter.
+The main export. Accepts a configuration object containing the target function and returns a new function that is executed by the interpreter while retaining the call signature of the target.
 
 #### MonitorFnSetup`<T>`
 | Property | Type | Description |
