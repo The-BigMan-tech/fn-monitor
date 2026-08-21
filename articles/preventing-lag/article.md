@@ -376,11 +376,11 @@ isn't that pretty because it uses hashes to guarantee that it's collision-free.
 The package ensures that the `inspector` and `onStep` hooks are only fired when executing
 the actual logic of your functions and not the generated boilerplate.
 
-When we run this, we will be able to see it:
+When we run this, we will be able to see it. We don't call `timedGetDetails` so that its output doesn't cut off the generated code from the logs:
 
 ```typescript
 console.log(generatedCode.value);
-//We don't call `timedGetDetails` so that it doesn't cut off the generated code from the logs
+// timedGetDetails() 
 ```
 
 <strong>Output</strong>
