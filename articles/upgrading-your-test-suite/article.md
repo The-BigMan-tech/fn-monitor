@@ -25,7 +25,7 @@ vitest-with-monitor/
 └── package.json
 ```
 
-### Setup
+## Setup
 
 Install the two dependencies:
 
@@ -57,7 +57,7 @@ Add this script to your `package.json`:
 
 Setup is done. In the next section, we'll write the code under test.
 
-### The Code Under Test
+## The Code Under Test
 
 We're going to test a progressive tax calculator. It applies different rates across income brackets, but there's a compliance requirement: high-income earners must trigger an audit:
 
@@ -94,9 +94,9 @@ function triggerHighIncomeAudit(): void {
 ```
 
 
-### The Tests
+## The Tests
 
-#### The Black-box Test (The Blind Spot)
+### The Black-box Test (The Blind Spot)
 
 Let's write the test that we usually write when we want to assert that a function behaves correctly — a standard black-box test. Although it looks perfectly fine and passes with the correct code, it only asserts that the calculation is correct:
 
@@ -114,7 +114,7 @@ test('calculates correct tax for high income', () => {
 });
 ```
 
-#### The Upgraded Test
+### The Upgraded Test
 
 Next, we write another test using the same assertion as the black-box one but we will also inspect its AST using `fn-monitor`. It will assert that `triggerHighIncomeAudit` was actually called during execution.
 
@@ -165,7 +165,7 @@ test('triggers compliance audit for high income', () => {
 
 If we run the tests now, both will pass.
 
-##### Output
+#### Output
 
 ```text
  ✓ tests/index.test.ts (2 tests) 63ms
@@ -197,7 +197,7 @@ export function calculateTax(income: number): number {
 
 When we run the tests, we will see that it is only the second test that catches the regression and fails:
 
-##### Output
+#### Output
 
 ```text
  ❯ tests/index.test.ts (2 tests | 1 failed) 51ms
