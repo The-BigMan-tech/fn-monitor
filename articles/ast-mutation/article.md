@@ -6,7 +6,7 @@ tags: javascript, typescript, ast, webdev
 
 I've spent the last few months building an open-source package called `@typescript-guy/fn-monitor`. 
 
-This post walks through the package and its most surprising part: rewriting a function's behavior at runtime, from the same thread — no build step, no workers, no message serialization.
+This post walks through the package and how to rewrite a function's behavior at runtime, from the same thread — no build step, no workers, no message serialization.
 
 In JavaScript, functions are fixed units. You define one, call it, and the code inside runs exactly as written. You can wrap it, monkey-patch dependencies, or use proxies around objects, but actually changing what happens inside the function usually requires one of these:
 
@@ -45,7 +45,7 @@ import { monitor } from "@typescript-guy/fn-monitor";
 
 The core export is `monitor`.
 
-You give it a function, and it returns a new function with the **same call signature** but it runs through the custom interpretation layer when called
+You give it a function through an object, and it returns a new function with the **same call signature** that runs through the custom interpretation layer when called.
 
 Wrapping a function is straightforward. You create and pass an object with the key, `main`, which is the config of the function that we want to wrap. We then pass the reference through the `ref` property under `main`
 
@@ -73,7 +73,7 @@ console.log(monitoredFn());
 Hello World
 ```
 
-So to the caller, the raw function and the monitored version are structurally the same
+To the caller, the raw function and the monitored version are structurally the same.
 
 But under the hood, the wrapper:
 - reads the function's source code through the .toString() method
@@ -81,28 +81,24 @@ But under the hood, the wrapper:
 - spins up an interpreter just for it
 - and tells the interpreter to run the parsed code
   
-Then whenever you call it, it just requests the interpreter to run a virtual function call with the provided arguments as imports, and then return the result.
+Whenever you call it, it asks the interpreter to import your arguments, use them in a virtual function call, and return the result.
 
-But just running a function in an interpreter's context is not the benefit of using this package.
-Instead, we will see what we can do by attaching hooks such as:
+Simply running a function in an interpreter isn't the main benefit. Instead, we will see what we can do by attaching hooks such as:
 
 - `beforeEachCall`
 - `afterEachCall`
 - `inspector`
 
-There is a fourth hook called `onStep` but it is reserved for another article.
-The most interesting one for AST mutation is the `inspector`.
-
 ---
 ## Mutating an Assignment Operator at Runtime
 
-We will code an example to demonstrate three important ideas and gradually extend it as we go:
+Let's build an example to demonstrate three important ideas and gradually extend it as we go:
 
 1. intercepting AST nodes during execution
 2. mutating execution behavior without changing the original source
 3. capturing external variables into the interpreter context
    
-We first start by defining the function that we want to wrap. We will use a function called `sumUp`, that will take an array of numbers, sum all the elements and return the result.
+First, let's define the function we want to wrap. It will take an array of numbers, sum all the elements and return the result:
 
 ```ts
 const sumUp = (nums: number[]) => {
@@ -126,11 +122,11 @@ console.log('Result: ',sumUp([1,2,3,4,5]));
 Result:  15
 ```
 
-Let us now define our modified version of this function by wrapping it in `monitor` while utilizing the inspector hook
+Now let's wrap it with `monitor` and use the inspector hook:
 
 The inspector hook is fired as the interpreter walks the AST. The interpreter passes it a `visit` object that contains four methods but we will only use two for this example — `visit.execute` and `visit.is` .
 
-Let us start with `visit.is`
+Let's start with `visit.is`:
 
 ```typescript
 const monitoredSumUp = monitor({
@@ -157,7 +153,7 @@ console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 Result:  -15
 ```
 
-When we run it, we get -15 because our inspector used `visit.is` to query for an `AssignmentExpression` and when it matched, the interpreter fired the callback passed alongside the query with an event object. The event object contains a `node` property which is the AST node that matched the query.
+When we run it, we get -15 because our inspector used `visit.is` to query for an `AssignmentExpression`. When it matched, the interpreter fired the callback passed alongside the query with an event object. The object contains the matching AST node under its `node` property.
 
 Originally in the source code, the assignment expression was this:
 
@@ -229,7 +225,7 @@ console.log('Result: ',sumWithNoLoops([1,2,3,4,5]));
 Error: For of statements are not allowed.
 ```
 
-For telemetry reasons, we can also use the `beforeEachCall` and `afterEachCall` hooks. 
+For logging purposes, we can also use the `beforeEachCall` and `afterEachCall` hooks. 
 `beforeEachCall` receives the arguments before the function is called while `afterEachCall` receives the result or an error after the function is called:
 
 ```ts
@@ -312,9 +308,9 @@ Logging result:  I CHANGED THE VALUE
 Result:  I CHANGED THE VALUE
 ```
 
-### A closer look at querying the scope
+### Understanding how to search the scope
 
-Let us look at this line: 
+Let's look at this line: 
 
 ```ts
 const finalSum = event.scope.variables.search('sum');
@@ -359,7 +355,7 @@ result.RES = 'I CHANGED THE VALUE';
 ---
 ## Captures: bringing outside values into the interpreter context
 
-If our `sumUp` function wasn't self contained and used an outside variable, we will need a way to pass it into the interpreter's context, else we will get a reference error if we tried to call the `monitoredSumUp` function:
+If our `sumUp` function wasn't self-contained and used an outside variable, we will need a way to pass it into the interpreter's context, else we will get a reference error if we tried to call the `monitoredSumUp` function:
 
 In this example above, `sumUp` uses `zero`, which lives outside the function.
 
@@ -376,6 +372,8 @@ const sumUp = (nums: number[]) => {
 //...Our monitored function  setup
 console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ```
+
+You'll see the error logged twice — once by `afterEachCall` and once by JavaScript's native error handling:
 
 ### Output
 
@@ -396,9 +394,7 @@ zero is not defined
 ...
 ```
 
-The error is logged twice because the `afterEachCall` hook receives and logs it in addition to js throwing the error natively.
-
-We can adjust that by adding an if-check, but this is totally optional:
+To fix this, we can add a check:
 
 ```typescript
 const monitoredSumUp = monitor({
@@ -452,7 +448,7 @@ Result:  I CHANGED THE VALUE
 ---
 ## The Full Example
 
-Here is the full example provided as a snippet that you can paste:
+Here's the complete example:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor"
@@ -504,45 +500,25 @@ console.log('Result: ',monitoredSumUp([1,2,3,4,5]));
 ---
 ## Important caveats: 
 
+### ES Support
+
+You can use any function with the interpreter as long as it uses **ES2024** syntax or earlier.
+
 ### `visit.is` is eager
 
-One thing worth understanding early is that `visit.is(...)` is not a global persistent hook.
+One thing worth understanding early is that `visit.is(...)` does not keep your callback as a persistent hook.
 
-From the README:
+From the README, it eagerly evaluates the query against the current node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. If it doesn't, it discards the callback.
 
-> `visit.is(query, callback)` evaluates the query against the current node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback.
->
-> This does not register a persistent hook for future nodes. It is an eager, single-use check against the node currently being evaluated.
-
-That design choice is intentional.
-
-It keeps the interpreter faster and more memory-efficient.
-
-So as the interpreter walks the function, the inspector gets opportunities to inspect the current node. `visit.is` checks whether that current node matches what you care about.
+That design choice is intentional. It keeps the interpreter fast and memory efficient by avoiding the bloat of book-keeping closures in memory.
 
 ### AST mutations persist
 
-This is one of the most important notes in the README:
+From the README, the function is parsed into an AST only once. This means that any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function. 
 
-> Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
+That can be powerful if you want a persistent runtime transformation but it can also surprise you if you expected the mutation to apply only to one call. 
 
-That means if you mutate an operator like this:
-
-```ts
-event.node.operator = "-=";
-```
-
-you are mutating a reused AST node.
-
-That can be powerful if you want a persistent runtime transformation.
-
-But it can also surprise you if you expected the mutation to apply only to one call.
-
-So if you build something with AST mutation, be intentional about whether the mutation should be:
-
-- one-time
-- per-call
-- permanent for that monitored function instance
+If the interpreter were to parse it on every call, it would be too slow for practical use.
 
 ---
 ### What this package is good for
@@ -569,16 +545,18 @@ You can build stricter execution boundaries using hooks, but isolation is not th
 
 `fn-monitor` is a powerful tool, but it is not a one-size-fits-all solution. Here are the most critical constraints to be aware of:
 
-- **ES2024 Support:** The interpreter supports modern JavaScript syntax up to **ES2024**.
 - **Setup Cost:** `monitor()` incurs overhead. Always call it **once** outside of hot loops and reuse the returned function.
+  
 - **No Dynamic Imports:** You cannot use `import()` inside monitored functions. Use `captures` instead.
+  
 - **Stack Traces:** Errors thrown inside monitored functions won't map directly to your original source lines in your editor.
+  
 - **Advanced Nuances:** For edge cases like native generators and complex library proxies, please refer to the [**Advanced Behavior**](https://github.com/The-BigMan-tech/fn-monitor#advanced-behavior) section of the README.
   
 ---
-## A good way to think about this package
+## The right mental model for this package
 
-Despite the package's name, it is less like a metric tool and actually more like a **runtime execution layer**.
+Despite its name, the package is a **runtime execution layer** rather than a metric tool.
 
 Instead of asking:
 
