@@ -178,7 +178,7 @@ If we run the tests now, both will pass.
       Tests  2 passed (2)
 ```
 
-> 💡 The loss of lexical access uncovers one of `fn-monitor`'s greatest strengths: **the function doesn't even need to be exported.** 
+> 💡 The loss of lexical access uncovers one of `fn-monitor`'s greatest strengths: `triggerHighIncomeAudit` **does not need to be exported**.
 > 
 > When `triggerHighIncomeAudit` is private, traditional spies can't reach it without restructuring the code. With `fn-monitor`, you just pass a dummy function into `captures` — the interpreter only needs *some* binding for that name, as long as it respects the signature the code under test expects.
 
