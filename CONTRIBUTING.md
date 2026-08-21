@@ -128,8 +128,8 @@ monitoring tool.
 ## Isolation vs. Hard Sandboxing
 
 This package is NOT a security sandbox (like SES or LavaMoat). It will not chase 
-hard sandboxing guarantees. However, contributions that enhance isolation (like 
-the hashed capture keys) are welcome, provided they do not violate the design 
+hard sandboxing guarantees. However, contributions that enhance lexical isolation 
+(like the hashed capture keys) are welcome, provided they do not violate the design 
 philosophy as later outlined.
 
 ## ECMAScript (ES) Version Support & Upgrades
