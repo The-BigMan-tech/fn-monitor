@@ -435,9 +435,7 @@ exports.generated_f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a
 
 Because JavaScript is single-threaded, any code running on the main thread must finish completely before your browser can update the UI or before your server can respond to user requests, meaning that there is no seamless, single-thread solution to stop a function call from hanging the application.
 
-This package, although providing a single-threaded solution, is not free in terms of performance and you have to capture any external variables that your functions will use.
-
-But if you're comfortable being explicit about how external data is passed, or if you're working in an environment that can't spawn workers, or if guaranteeing a function halts outweighs any performance overhead — then this package is worth considering.
+This package, although providing a single-threaded solution, is not free in terms of performance. But if guaranteeing a function halts outweighs any performance overhead or if you're working in an environment that can't spawn workers — then this package is worth considering.
 
 If you had any trouble following along, spotted a typo, or just want to show off a unique use case you built with `fn-monitor`, feel free to open a [discussion on GitHub](https://github.com/The-BigMan-tech/fn-monitor/discussions).
 
