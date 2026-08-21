@@ -482,14 +482,13 @@ Awaited promise:  100
 This example is quite advanced, but all it does is to:
 
 - query for all `CallExpression` nodes
-- crawl through the event object to retrieve its scope 
-- store the `search` method of the scope
+- retrieve the scope from the event object
+- store the `search` method of the scope to prevent long property chains
 - store the callee
-- perform a switch statement on the callee
-    - If the callee is an `Identifier`, it will search for its name in the scope and add it to the `callees` set.
+- perform a switch statement on the callee's node type:
+    - If it is an `Identifier`, it will use the scope to search for the called function through its name and add it to the `callees` set.
   
-    - Else if it is a `MemberExpression`, which is the node type for method calls, it retrieves the object, searches it up in the scope only if it's an `Identifier`, then accesses the method through the callee's property.
-  
+    - If it is a `MemberExpression`, which indicates a method call, it will use the scope to search for the instance through the identifier stored in the callee's object, then use the callee's property to retrieve the method from the instance.
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
