@@ -1,7 +1,7 @@
 {
     "name": "@typescript-guy/fn-monitor",
     "version": "1.5.0",
-    "description": "A deep instrumentation layer built over the sval JS-in-JS interpreter to monitor functions as they execute.",
+    "description": "An instrumentation layer over the sval JS-in-JS interpreter to monitor, intercept, and mutate a function's execution at the AST level.",
     "type": "module",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -9,8 +9,11 @@
         "dist/**/*.js",
         "dist/**/*.d.ts",
         "logo.svg",
+        "LICENSE.md",
+        "README.md",
         "ACKNOWLEDGEMENTS.md",
-        "CHANGELOG.md"
+        "CHANGELOG.md",
+        "BRANDING.md"
     ],
     "author": {
         "name": "typescript-guy",
