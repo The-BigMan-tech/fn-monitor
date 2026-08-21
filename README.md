@@ -794,13 +794,13 @@ as you encounter these patterns in your codebase:
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
   
+- **Scope Allocation & Safety:** Unlike AST nodes (which are parsed once and reused), the scope objects exposed to the inspector are always freshly allocated for each event. This prevents accidental mutations of the interpreter's internal state.
+  
 - **Dynamic Code Generation:** Before the AST parser runs, raw function strings are passed through a deterministic code generator that constructs an IIFE wrapper. This safely injects `captures` as constants and stitches `embed` sources into the execution context, ensuring strict lexical boundaries before interpretation begins.
   
+- **Strict Mode Enforcement:** All generated source code is run in strict mode.
+  
 - **Reusables Architecture:** To share interpretation context with the inspector hook performantly, the implementation leverages internal reusable objects, preventing the allocation of intermediate objects mid-evaluation. The async evaluator safely copies and restores these objects across event loop pauses.
-  
-- **Strict Mode Enforcement:** All generated wrapper code is executed in strict mode.
-  
-- **Scope Allocation & Safety:** Unlike AST nodes (which are parsed once and reused), the scope objects exposed to the inspector are always freshly allocated for each event. This prevents accidental mutations of the interpreter's internal state.
 
 ---
 
@@ -828,7 +828,7 @@ Contributions are welcome! Before opening a pull request, please read the [Contr
 
 ## Brand & Forking Guidelines 🛡️
 
-This project encourages community forks and variations. Please see [BRANDING.md](https://github.com/The-BigMan-tech/fn-monitor/blob/master/BRANDING.md) for naming, logo, and licensing guidelines.
+This project encourages community forks and variations. Before you fork, please see [BRANDING.md](https://github.com/The-BigMan-tech/fn-monitor/blob/master/BRANDING.md) for the branding guidelines.
 
 ---
 
