@@ -10,7 +10,7 @@ While these solutions work, they usually require you to change how you call or i
 
 Before we start this article, let us get a quick overview of the package:
 
-- It is a layer over a JS-in-JS interpreter that lets you monitor a function's execution at the AST level
+- It is an instrumentation layer over a JS-in-JS interpreter that lets you monitor a function's execution at the AST level
 
 - It allows you to plug in hooks to observe and mutate a function's behavior at runtime while remaining on the same thread
 
