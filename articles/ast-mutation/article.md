@@ -536,9 +536,9 @@ This kind of tool is especially interesting if you are building something like:
 
 ### What this package is not
 
-Even though monitored functions have basic isolation, this package is not a secure sandbox by default, as explicitly stated in the README.
+Even though the package lexically isolates monitored functions, it is not a secure sandbox by default, as explicitly stated in the README.
 
-You can build stricter execution boundaries using hooks, but isolation is not the default guarantee.
+You can build stricter execution boundaries using hooks, but it does not secure the host from malicious code.
 
 ---
 ## Key limitations to keep in mind
