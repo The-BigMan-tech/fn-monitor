@@ -20,15 +20,15 @@
     <a href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-285%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
 </p>
 
-`fn-monitor` is a deep instrumentation layer built over the `sval` JS-in-JS interpreter to monitor functions as they execute. It allows developers to inspect, debug, and alter the behavior of JavaScript functions at runtime by injecting hooks at any part of their lifecycle, effectively turning them into white-boxes.
+`fn-monitor` is an instrumentation layer over the `sval` JS-in-JS interpreter to monitor, intercept, and mutate a function's execution at the AST level. It allows developers to view their functions as white boxes at runtime by injecting first-class hooks into its custom execution layer.
 
 ## Table of Contents 📑
 
 - [Installation](#installation)
 - [API Introduction](#api-introduction)
 - [Quick Examples](#quick-examples)
-- [Full API Reference](#full-api-reference)
 - [Capabilities](#capabilities)
+- [Full API Reference](#full-api-reference)
 - [Important Limitations](#important-limitations)
 - [Advanced Behavior](#advanced-behavior)
 - [Mechanics](#mechanics)
@@ -54,7 +54,27 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction ✨
 
-The core of the package is the `monitor` function. It accepts a configuration object of the type `MonitorFnSetup` and returns a new function with an identical call signature to the original, but it is executed by a custom interpreter rather than your JS engine. 
+The core of the package is the `monitor` function. It accepts a function through an object and returns a new function with the same call signature that runs through the custom interpretation layer when called.
+
+```typescript
+const originalFn = ()=>{
+    return 'Hello World'
+}
+
+const monitoredFn = monitor({
+    main: {
+        ref: originalFn
+    }
+})
+
+console.log(monitoredFn());
+```
+
+### Output
+
+```text
+Hello World
+```
 
 <a id="quick-examples"></a>
 
@@ -410,7 +430,7 @@ console.log(outer());
 #### Output
 
 ```text
-Hello world
+Hello World
 ```
 
 > 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
@@ -606,6 +626,20 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ---
 
+<a id="capabilities"></a>
+
+## Capabilities 💪
+
+1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to enforce timeouts, mutate execution, and trace state without having to understand the underlying mechanics.
+   
+2. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+
+3. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
+   
+4. **Sync & Async Support:** Seamlessly interprets both synchronous and asynchronous functions.
+
+---
+
 <a id="full-api-reference"></a>
 
 ## Full API Reference 📚 
@@ -622,7 +656,7 @@ The main export. Accepts a configuration object and returns a new function with 
 | `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
 | `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below).* |
 | `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
-| `sourceOut` | `{ value: string }` | If provided, the interpreter writes the generated source code into this object's `value` property |
+| `sourceOut` | `{ value: string }` | If provided, the interpreter writes the generated source code into this object's `value` property. |
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
@@ -651,7 +685,7 @@ The rich object that gives inspectors their ability to participate in the interp
 > 
 > `visit.is()` does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
 >
-> `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release
+> `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release.
 > 
 
 #### ExeResult
@@ -686,20 +720,6 @@ The rich object that gives inspectors their ability to participate in the interp
   
 ---
 
-<a id="capabilities"></a>
-
-## Capabilities 💪
-
-1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to enforce timeouts, mutate execution, and trace state without having to understand the underlying mechanics.
-   
-2. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
-
-3. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
-   
-4. **Sync & Async Support:** Seamlessly interprets both synchronous and asynchronous functions.
-
----
-
 <a id="important-limitations"></a>
 
 ## Important Limitations ⚠️
@@ -722,7 +742,7 @@ at the call site or where you refer to it in your code.
    
    > 💡 **Note:** The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws anything.
 
-4. **Not a Secure Sandbox:** This package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting nodes via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
+4. **Not a Secure Sandbox:** Although monitored functions are lexically isolated from the host, the package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting nodes via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
 
 ---
 
@@ -807,13 +827,7 @@ Contributions are welcome! Before opening a pull request, please read the [Contr
 
 ## Brand & Forking Guidelines 🛡️
 
-This project actively encourages community forks, variations, and modifications! To prevent user confusion and maintain project clarity, you are requested to follow these simple guidelines if you publish a variation:
-
-* **Naming:** Please publish your version under your own npm scope or use a distinct name (e.g., `@your-scope/fn-monitor-extended`).
-  
-* **Branding:** Please remove or replace the official project logo in your documentation so users know they are interacting with a custom variation.
-  
-* **License:** Although the source code remains open under the MIT license, the project name and logo are reserved for the official release.
+This project encourages community forks and variations. Please see [BRANDING.md](https://github.com/The-BigMan-tech/fn-monitor/blob/master/BRANDING.md) for naming, logo, and licensing guidelines.
 
 ---
 
@@ -821,7 +835,7 @@ This project actively encourages community forks, variations, and modifications!
 
 ## Inspiration 🎯
 
-I built this package because I needed a reliable way to throw an error if an arbitrary function uses loops at runtime. My goal wasn't just to prevent a function from hanging the main thread—I needed to literally ban the presence of loops in the code itself. 
+I built this package because I needed a reliable way to throw an error if an arbitrary function uses loops at runtime. My goal wasn't just to prevent a function from hanging the main thread — I needed to literally ban the presence of loops in the code itself. 
 
 Existing solutions could only enforce this at build time. I later grew `fn-monitor` into a general-purpose tool for runtime AST control, far beyond that original use case. If you've ever needed to implement similar constraints, this package is for you.
 
