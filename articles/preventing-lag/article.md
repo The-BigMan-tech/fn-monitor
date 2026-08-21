@@ -367,16 +367,14 @@ const timedGetDetails = timeFn(getDetails,50,{
 });
 ```
 
-The package overwrites the `value` property with the code executed by the interpreter.
+The package overwrites the `value` property with the code executed by the interpreter. 
 
-The resulting code is crafted by a code generator that stitches together the injected
-captures and the source code of the embedded functions into a single string. The result
-isn't that pretty because it uses hashes to guarantee that it's collision-free.
+The resulting code is crafted by a code generator that stitches together the injected captures and the source code of the embedded functions into a single string. The result isn't that pretty because it uses hashes to guarantee that the generated variables are collision-free.
 
 The package ensures that the `inspector` and `onStep` hooks are only fired when executing
 the actual logic of your functions and not the generated boilerplate.
 
-When we run this, we will be able to see it. We don't call `timedGetDetails` so that its output doesn't cut off the generated code from the logs:
+When we run this, we will be able to see the generated code. We don't call `timedGetDetails` so that its output doesn't cut off the generated code from the logs:
 
 ```typescript
 console.log(generatedCode.value);
