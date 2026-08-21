@@ -95,7 +95,6 @@ function triggerHighIncomeAudit(): void {
 }
 ```
 
-
 ## The Tests
 
 ### The Black-box Test (The Blind Spot)
@@ -120,7 +119,7 @@ test('calculates correct tax for high income', () => {
 
 Next, we write another test using the same assertion as the black-box one but we will also inspect its AST using `fn-monitor`. It will assert that `triggerHighIncomeAudit` was actually called during execution.
 
-For an overview, `fn-monitor` works by running functions through a JS-in-JS interpreter where it has full control of its execution. We import `monitor`, pass it our target function through an object, and get a new function that runs through the interpreter and retains the call signature of the original function.
+For an overview, `fn-monitor` works by running functions through a JS-in-JS interpreter where it has full control of its execution. We import `monitor`, pass it our target function through an object, and get a new function that runs through the interpreter. The new function retains the call signature of the original one.
 
 Because the new function runs in a simulated environment, it will lose access to its lexical scope upon wrapping. The `captures` property gives the interpreter a function reference to bind to the `triggerHighIncomeAudit` identifier so it can execute without throwing a `ReferenceError`.
 
@@ -178,9 +177,10 @@ If we run the tests now, both will pass.
       Tests  2 passed (2)
 ```
 
-> 💡 The loss of lexical access uncovers one of `fn-monitor`'s greatest strengths: `triggerHighIncomeAudit` **does not need to be exported**.
+> 💡 The loss of lexical access uncovers a hidden advantage of using `fn-monitor` for this test: `triggerHighIncomeAudit` **does not need to be exported**. 
 > 
-> When `triggerHighIncomeAudit` is private, traditional spies can't reach it without restructuring the code. With `fn-monitor`, you just pass a dummy function into `captures` — the interpreter only needs *some* binding for that name, as long as it respects the signature the code under test expects.
+> Traditional spies can't reach a private function without restructuring the code. With `fn-monitor`, you just pass a dummy function into `captures` — the interpreter only needs *some* binding for that name, as long as it respects the signature the code under test expects.
+
 
 ### The "Gotcha" Moment (Breaking the Code)
 
