@@ -4,25 +4,19 @@ description: Using hooks into a JS-in-JS interpreter to enforce a time budget on
 tags: javascript, typescript, interpreter, webworkers
 ---
 
-In JavaScript, the de facto standard to stop a function call from hanging the main thread is asynchronous non-blocking execution, typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using setTimeout or queueMicrotask to yield control back to the event loop. 
+In JavaScript, non-blocking execution is the de facto standard to stop a function call from hanging the main thread. It is typically achieved by offloading heavy work to a Web Worker or breaking the task into smaller chunks using `setTimeout`, `queueMicrotask` or a generator.
 
-While this works, these setups usually require you to change how you call or implement your functions. Today, we are going to take a different approach that will address these limitations by using the package, `@typescript-guy/fn-monitor`.
+While these solutions work, they usually require you to change how you call or implement your functions. Today, we will address these limitations by approaching the problem differently using `@typescript-guy/fn-monitor`.
 
 Before we start this article, let us get a quick overview of the package:
 
-- It is a wrapper over a JS-in-JS interpreter that lets you deeply monitor functions as they execute through an API that abstracts the underlying interpreter's mechanics
+- It is a layer over a JS-in-JS interpreter that lets you monitor a function's execution at the AST level
 
-- It allows you to plug in hooks at any part of the function's lifecycle to observe data and mutate nodes at runtime while remaining on the same thread
-
-- Its main export is a function called `monitor` which takes in a configuration object. It returns a brand new function that has an identical call signature to the original. The config object includes:
-  
-   - A function reference — the function you want to monitor
-   - A captures object — to include any external variables the function will use
-   - Various hooks for different lifecycle events
+- It allows you to plug in hooks to observe and mutate a function's behavior at runtime while remaining on the same thread
 
 - It works for both synchronous and asynchronous functions. 
 
-If you ever want to dive deeper into its fundamentals later, you can read the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
+If you ever want to dive deeper into its fundamentals, you can read the [first article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
 To try this out locally, you can install the package from npm:
 
@@ -42,7 +36,9 @@ type milliseconds = number;
 type Fn = (...args:any[])=>any
 ```
 
-Then we can create our timeout function. You can write your own implementation, but to follow along with the article, you can use this bare minimum example. We will extend it as we go:
+As a quick introduction to its API, its main export is a function called `monitor`, which takes a function through an object.
+
+Then we can create our timeout function. It is quite long, but all you need to know is that it takes in a function along with its budget and creates a new function through `monitor` that uses hooks to check against the budget as the function executes:
 
 ```typescript
 function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
