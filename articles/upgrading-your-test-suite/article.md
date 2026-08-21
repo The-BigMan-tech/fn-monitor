@@ -119,7 +119,7 @@ test('calculates correct tax for high income', () => {
 
 Next, we write another test using the same assertion as the black-box one but we will also inspect its AST using `fn-monitor`. It will assert that `triggerHighIncomeAudit` was actually called during execution.
 
-For an overview, `fn-monitor` works by running functions through a JS-in-JS interpreter where it has full control of its execution. We import `monitor`, pass it our target function through an object, and get a new function that runs through the interpreter. The new function retains the call signature of the original one.
+For an overview, `fn-monitor` works by running functions through a JS-in-JS interpreter where it has full control of its execution. We import `monitor`, pass it our target function through an object, and get a new function that runs through the interpreter. The new function retains the call signature of the target.
 
 Because the new function runs in a simulated environment, it will lose access to its lexical scope upon wrapping. The `captures` property gives the interpreter a function reference to bind to the `triggerHighIncomeAudit` identifier so it can execute without throwing a `ReferenceError`.
 
