@@ -129,7 +129,9 @@ Result:  -15
 
 We first call `visit.is('Any',...)` to force the interpreter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
 
-Calling `visit.execute()` will then eagerly evaluate the node and its children. We then retrieve the head element of the execution stack — because the latest evaluation is always inserted at the head (left end) of the stack — and push it to our custom array.
+Calling `visit.execute()` will then eagerly evaluate the node and its children. If we skip this step, indexing into the stack will throw an error because it is initially empty.
+
+We then retrieve the head element of the execution stack — because the latest evaluation is always inserted at the head (left end) of the stack — and push it to our custom array.
 
 ```typescript
 import { monitor,type ExeResult } from "@typescript-guy/fn-monitor";
@@ -145,7 +147,7 @@ const fn = monitor({
     },
     inspector:(visit)=>{
         visit.is('Any',()=>undefined)// Force the interpreter to allocate every scope
-        visit.execute();// Important!! Execute the node so that its result is pushed. Else, querying the stack will get an index error
+        visit.execute();
 
         const stack = visit.localExeStack();
         const head = stack.get(0)
