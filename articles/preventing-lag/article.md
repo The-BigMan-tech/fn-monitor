@@ -36,7 +36,7 @@ type milliseconds = number;
 type Fn = (...args:any[])=>any
 ```
 
-As a quick introduction to its API, its main export is a function called `monitor`, which takes a function through an object.
+As a quick introduction to the package's API, its main export is a function called `monitor`, which takes a function through an object and returns a new function that runs in the custom interpreter while preserving the original function's call signature.
 
 Let's define our timeout function and name it `timeFn`. It is quite long, but all you need to know is that it takes in a function along with its budget, and uses `monitor()` to create a new function injected with hooks to check against the budget as it executes:
 
