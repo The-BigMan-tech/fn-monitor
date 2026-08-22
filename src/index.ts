@@ -90,7 +90,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
     return interpreter.assemble(main,embed,sourceOut);
 }
 
-export  type InspectorGenerator = InspectorGen<'user'>;//this will prevent callers from seeing the branded type
+export type InspectorGenerator = InspectorGen<'user'>;//this will prevent callers from seeing the branded type
 
 export type { 
     Metadata 

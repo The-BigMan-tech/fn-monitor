@@ -46,7 +46,7 @@
 npm install @typescript-guy/fn-monitor
 ```
 
-> 📌 **Before integrating this package into any project,** please read the [Important Limitations](#important-limitations) section to understand key behavioral nuances such as AST mutation persistence and dynamic imports.
+> 📌 **Before integrating this package into any project,** please read the [Important Limitations](#important-limitations) section to understand key behavioral nuances such as execution cost and debugging.
 
 ---
 
@@ -127,11 +127,13 @@ Result:  -15
 
 ### Getting the full execution history of a function call
 
-We first call `visit.is('Any',...)` to force the interpreter to allocate every scope object. This is because the interpreter, by default, doesn't allocate a scope for a node unless you query for it.
+Our main interest here is the execution stack, which is accessible with `visit.localExeStack()`. Every time a node is evaluated, a rich object containing the result is inserted at the head (left end) of the stack. So we simply use the `inspector` to retrieve the head element as each node gets executed.
 
-Calling `visit.execute()` will then eagerly evaluate the node and its children. If we skip this step, indexing into the stack will throw an error because it is initially empty.
+It is important that we first call `visit.execute()` to eagerly evaluate the node and its children. If we skip this step, indexing into the stack will throw an error because it is initially empty.
 
-We then retrieve the head element of the execution stack — because the latest evaluation is always inserted at the head (left end) of the stack — and push it to our custom array.
+One of the properties in those objects is the scope for that node. For each visited node that matches a `visit.is()` query, the interpreter will allocate a scope object, which is a safe view of the node's scope.
+
+So if you need to include every scope as well, make sure to call `visit.is('Any',...)` as the very first step. It works because it matches every node type.
 
 ```typescript
 import { monitor,type ExeResult } from "@typescript-guy/fn-monitor";
@@ -307,19 +309,19 @@ console.log(exeHistory);
 ```
 </details>
 
-> ⭐ **Enjoying** `fn-monitor`? Show your support **by** [starring the repo](https://github.com/The-BigMan-tech/fn-monitor) on GitHub! It helps the project grow and keeps the updates coming.
+> ⭐ **Enjoying** `fn-monitor`? Show your support **by** starring the [repository](https://github.com/The-BigMan-tech/fn-monitor) on GitHub! It helps the project grow and keeps the updates coming.
 
 ### Capturing values and Embedding Functions
 
 Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding:
 
-- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants. So you can't reassign them.
+- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants.
   
-- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the monitored function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
+- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the `main` function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
 
-In this example, `printName` is captured (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
+In this example, `main` captures `printName` (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
-The value of `currentFn` is wrapped in an object because of how captured variables are injected. We also capture it into `sayHello` and `print`.
+The value of `currentFn` is wrapped in an object because we won't be able to reassign `currentFn` within the interpreted context. We also capture it into `sayHello` and `print`.
 
 The output shows that only `sayHello` and `print` appear in the intercepted set.
 
@@ -392,13 +394,18 @@ Printed:  Hello world
 Intercepted functions:  Set(2) { 'sayHello', 'print' }
 ```
 
+> 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
+> You **do not** need to capture these — they're injected by the interpreter and available immediately.
+> 
+> This includes `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables or helper functions.
+
 ### Scoping: Capturing vs Embedding
 
 Within the interpreted context of a monitored function, it is important to understand how scoping works for each approach:
 
 - Captures are function-scoped. They are bound directly to the specific function they are passed to. A captured variable in one function is not automatically available to another. 
 
-- Embedded functions are context-scoped. This means not only can the main function call it, but any other embedded function can call it too.
+- Embedded functions are context-scoped. This means not only can the `main` function call it, but any other embedded function can call it too.
 
 This example emphasizes the scoping mechanics of embedding
 
@@ -434,11 +441,6 @@ console.log(outer());
 ```text
 Hello World
 ```
-
-> 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
-> You **do not** need to capture these — they're injected by the interpreter and available immediately.
-> 
-> This includes `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables or helper functions.
 
 ### Seeing the result of every awaited promise in a function call
 
@@ -678,9 +680,9 @@ The rich object that gives inspectors their ability to participate in the interp
 | Method/Property | Description |
 | --- | --- |
 | `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. |
-| `set perExecution(fn)` | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. |
 | `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
+| `set perExecution(fn)` | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. |
 
 > ⚠️ **Important:**
 > 
