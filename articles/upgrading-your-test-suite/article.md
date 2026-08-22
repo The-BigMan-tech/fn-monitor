@@ -1,5 +1,5 @@
 ---
-title: Upgrade your Test Suite with fn-monitor
+title: Catch the Silent Failures Your Vitest Suite is Missing
 description: Combining Vitest with fn-monitor to assert not just what your functions return, but the work they actually do.
 tags: javascript, typescript, testing, vitest
 ---
