@@ -25,8 +25,6 @@ That means you can do things like:
 - inspect evaluated values
 - mutate operators
 - change returned results
-- observe execution flow
-- build runtime control layers
 
 To try this out locally, you can install the package from npm:
 
@@ -47,7 +45,7 @@ The core export is `monitor`.
 
 You give it a function through an object, and it returns a new function with the **same call signature** that runs through the custom interpretation layer when called.
 
-Wrapping a function is straightforward. You create and pass an object with the key, `main`, which is the config of the function that we want to wrap. We then pass the reference through the `ref` property under `main`
+Wrapping a function is straightforward. You create and pass an object with the key, `main`, which is the config of the function that we want to wrap. We then pass the reference through the `ref` property under `main`:
 
 ```typescript
 const originalFn = ()=>{
@@ -78,7 +76,7 @@ To the caller, the raw function and the monitored version are structurally the s
 But under the hood, the wrapper:
 - reads the function's source code through the .toString() method
 - parses it
-- spins up an interpreter just for it
+- spins up an interpreter for it
 - and tells the interpreter to run the parsed code
   
 Whenever you call it, it asks the interpreter to import your arguments, use them in a virtual function call, and return the result.
@@ -532,8 +530,8 @@ This kind of tool is especially interesting if you are building something like:
 - instrumentation layers
 - advanced testing utilities
 - controlled evaluation pipelines
-- custom function wrappers with deeper introspection
-
+- custom function wrappers 
+  
 ### What this package is not
 
 Even though the package lexically isolates monitored functions, it is not a secure sandbox by default, as explicitly stated in the README.
