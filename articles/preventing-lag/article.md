@@ -38,7 +38,7 @@ type Fn = (...args:any[])=>any
 
 As a quick introduction to its API, its main export is a function called `monitor`, which takes a function through an object.
 
-Then we can create our timeout function. It is quite long, but all you need to know is that it takes in a function along with its budget and creates a new function through `monitor` that uses hooks to check against the budget as the function executes:
+Let's define our timeout function and name it `timeFn`. It is quite long, but all you need to know is that it takes in a function along with its budget, and uses `monitor()` to create a new function injected with hooks to check against the budget as it executes:
 
 ```typescript
 function timeFn<T extends Fn>(fn:T,budget:milliseconds):T {
@@ -110,16 +110,13 @@ Although they are similar, they have their differences:
 
 - Unlike the `inspector` hook, it does not get the rich `visit` object which is used to observe and mutate AST nodes as the function executes.
 
-- The advantage of using `onStep` for this use case is that our monitored function will run much faster because it skips any extra allocations.
+The `onStep` hook is exactly what our timeout needs, and the monitored function will run much faster because it prevents the interpreter from making the extra allocations that the `inspector` hook would have required.
 
-With that clarified, we can use our custom timeout on a function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
+With that clarified, we can use `timeFn` on a function that gets the price of an item. But when the item is undefined, it will lag forever trying to fetch the price:
 
 ```typescript
 function getPrice(item?:string):number {
     if (!item) {
-        //Calling this natively in JS will hang the main thread.
-        //but our monitored function setup should halt it and throw an error.
-
         while (true) {
             console.log('Lag');
         }
@@ -162,17 +159,17 @@ Error: The monitored function used 53.961ms when only given a budget of 50.000ms
 ...
 ```
 
-Because we only check the budget every now and then, and because the interpreter steps off while the native JS engine executes the logs, our timeout function isn't 100% accurate. And the exact millisecond it will halt is not deterministic. 
+Because we only check the budget every now and then, and because the interpreter steps off while the native JS engine executes the logs, the timeout isn't 100% accurate. And the exact millisecond it will halt is not deterministic. 
 
 But if we are being pragmatic, it is far better to lose a few milliseconds than to hang our main thread. 
 
-Our timeout function works great for simple cases, but real-world functions rarely exist in isolation. If that function uses external variables, you have to ensure that you capture them as stated in the README.
+Our custom timeout works great for simple cases, but real-world functions rarely exist in isolation. If that function uses external variables, you have to ensure that you capture them as stated in the README.
 
-We'll address this in a scenario where our timed function needs to call another function.
+We'll address this in a scenario where a timed function needs to call another function.
 
 ---
 ## Capturing vs Embedding Functions
-Assuming that we want to time a function that calls an external function:
+Assuming that we have a function that calls another function: 
 
 ```typescript
 function getDetails(item?:string):{id?:string,price:number} {
@@ -181,12 +178,12 @@ function getDetails(item?:string):{id?:string,price:number} {
         price:getPrice(item)
     }
 }
-const timedGetDetails = timeFn(getDetails,50);
 ```
 
-If we attempt to call it, it will crash and we will get a ReferenceError: 
+If we proceed to create a timed version and attempt to call it, it will crash and we will get a ReferenceError: 
 
 ```typescript
+const timedGetDetails = timeFn(getDetails,50);
 timedGetDetails()
 ```
 
@@ -201,7 +198,7 @@ getPrice is not defined
 
 ```
 
-To solve this, we will have to extend our custom timeout function to accept a captures object and include it in the interpreter's context:
+To solve this, we will have to extend `timeFn` to accept a captures object and include it in the interpreter's context:
 
 ```typescript
 function timeFn<T extends Fn>(fn:T,budget:milliseconds,captures?:Record<string,any>):T {
@@ -248,7 +245,7 @@ const timedGetDetails = timeFn(getDetails,50,{
 timedGetDetails()
 ```
 
-When we run it, we expect our timeout to work as usual and halt it. 
+When we run it, we expect `timeFn` to work as usual and halt it. 
 
 ### Output
 
@@ -269,9 +266,9 @@ The problem with this approach, though, is that it forces us to time every singl
 
 In contrast to capturing, which works for all data types and simply gives the interpreter direct references/values, embedding is exclusive to function references and it tells the interpreter to copy its source code into the same context as our monitored function and parse it together. 
 
-This allows the onStep hook for the `timedGetDetails` function alone to contain the entire execution under a strict budget. 
+This allows the `onStep` hook for the `timedGetDetails` function alone to contain the entire execution under a strict budget. 
 
-This will require us to extend our timeout function. We will pack both the captures and embed configurations into a single object to make it neat.
+This will require us to extend `timeFn`. We will pack both the captures and embed configurations into a single object to make it neat.
 
 
 ```typescript
@@ -334,7 +331,7 @@ So far, how the values are captured or embedded has been treated as a black box.
 But if a captured or embedded function ever behaves unexpectedly, you don't have to guess — you can
 read the exact code the interpreter runs by passing an object to the `sourceOut` property when calling `monitor`. 
 
-Let us quickly add that to our timeout function and extend our interface:
+Let us quickly add that to `timeFn` and extend our interface:
 
 ```typescript
 interface ExternalData {
@@ -407,9 +404,6 @@ getPrice = (() => {
         const intermediateFn_generated_8ce88bfc0fe7f0c48f18013aa0d9b67fdf80fbd257ce4526aaa8d0c33afbeb5c =
             function getPrice(item) {
                 if (!item) {
-                    //Calling this natively in JS will hang the main thread.
-                    //but our monitored function setup should halt it and throw an error.
-
                     while (true) {
                         console.log('Lag');
                     }
