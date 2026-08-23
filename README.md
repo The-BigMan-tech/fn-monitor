@@ -148,7 +148,7 @@ const fn = monitor({
         }
     },
     inspector:(visit)=>{
-        visit.is('Any',()=>undefined)// Force the interpreter to allocate every scope
+        visit.is('Any',()=>undefined)
         visit.execute();
 
         const stack = visit.localExeStack();
@@ -317,11 +317,11 @@ Because monitored functions run in an interpreted context, they need a way to ac
 
 - Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants.
   
-- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with your monitored function.<br>The advantage to embedding is that when the `main` function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
+- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with the `main` function.<br>The advantage of embedding a function is that when the `main` function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
 
 In this example, `main` captures `printName` (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
-The value of `currentFn` is wrapped in an object because we won't be able to reassign `currentFn` within the interpreted context. We also capture it into `sayHello` and `print`.
+The value of `currentFn` is wrapped in an object because we won't be able to reassign `currentFn` within the interpreted context. We then capture it into `sayHello` and `print`.
 
 The output shows that only `sayHello` and `print` appear in the intercepted set.
 
@@ -637,7 +637,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
    
 2. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
 
-3. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking engine. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
+3. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
    
 4. **Sync & Async Support:** Seamlessly interprets both synchronous and asynchronous functions.
 
@@ -710,7 +710,7 @@ The rich object that gives inspectors their ability to participate in the interp
     - `variables.search(name)` searches up the scope chain for a variable through its identifier. 
     - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the current function call.
     - `callDepth` is a 0-indexed value representing the current size of the call stack starting from a monitored function.
-  
+
 - **Event Classes**: Over 30 specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
 
 - **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
@@ -735,7 +735,7 @@ These are the critical constraints to understand before using `fn-monitor`:
    > on the generated source code, reusing it for identical functions to minimize 
    > redundant parsing.
 
-2. **Execution Cost:** Because `fn-monitor` interprets your function step-by-step through a JS-in-JS engine, each monitored call incurs overhead compared to native execution. This is the fundamental cost of AST-level observability.
+2. **Execution Cost:** Because `fn-monitor` interprets your function step-by-step through an interpreter, each monitored call incurs overhead compared to native execution. This is the fundamental cost of AST-level observability.
    
    > ⚠️ **Do not use `fn-monitor` inside high-throughput loops, real-time request 
    > handlers, or any code path where microsecond-level latency matters.** It is designed for functions that are already slow (100ms+), run infrequently, and would be catastrophic if they hung forever.
