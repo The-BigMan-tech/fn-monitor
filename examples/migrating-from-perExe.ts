@@ -1,41 +1,45 @@
-import { monitor } from "../src/index.ts";
-
-
-/**
- * Historical Context: `visit.execute()` has been a core primitive of `fn-monitor` 
- * since the alpha stages.
+/** 
+ *  Historical Context
+ *  __________________
  * 
- * During that time, I introduced the `perExecution` hook because I assumed 
- * that `visit.execute()` was strictly blocking — that you had to wait for the node 
- * to finish before you could take any action.
- * 
- * The hook let me inject arbitrary logic as the node and its children evaluated, 
- * which felt like the only way to do it.
- * 
- * Once I realized that my assumption was wrong — the `inspector` actually fires top-down 
- * as it walks **every** node — I saw that I could achieve the exact same logic 
- * explicitly using `visit.execute()`.
- * 
- * `perExecution` became redundant. Combined with its single-slot fragility, 
- * it was ultimately a leaky abstraction.
- * 
- * The single-slot semantics were deliberately chosen to prevent the massive memory 
- * usage that comes from keeping distinct closures per node in memory.
+ *  `visit.execute()` has been a core primitive of `fn-monitor` since the alpha stages.
+ *  
+ *  During that time, I introduced the `perExecution` hook because I assumed 
+ *  that `visit.execute()` was strictly blocking — that you had to wait for the node 
+ *  to finish executing before you could take any action.
+ *  
+ *  `perExecution` let me inject arbitrary logic as the node and its children were evaluated, 
+ *  which felt like the only way to do it.
+ *  
+ *  Once I realized that my assumption was wrong, I saw that I could achieve the exact same 
+ *  logic explicitly using `visit.execute()`. This is because the `inspector` actually fires 
+ *  top-down as it walks **every** node even during a `visit.execute()` call .
+ *  
+ *  `perExecution` became redundant and its name is not accurate. Combined with its single-slot fragility, 
+ *  it was ultimately a leaky abstraction.
+ *  
+ *  The single-slot semantics were deliberately chosen to prevent the massive memory 
+ *  usage that comes from keeping distinct closures per node in memory.
 */
 
 
-//💡 Both `fn1` and `fn2` will give identical results but `fn2` is the better pattern
+import { monitor } from "../src/index.ts";
+
+/**
+ * 💡 Both `firstPattern` and `secondPattern` will give identical results 
+ * but the second one is preferable.
+*/
 
 /**
  * ❌ Using the deprecated `perExecution` hook.
  * 
- * Because it is a single-slot API, users must manually guard it with booleans 
- * and capture the `event` in a closure to know when the owner node finally completes.
- * This leaks the abstraction and forces unnecessary boilerplate.
+ * Because it is a single-slot API, users must manually guard it with a boolean.
+ * Since the actual execution is deferred, it has to capture the `event` to know when the owner node finally completes.
 */
+
 let hasRegisteredHook = false;
 
-const fn1 = monitor({
+const firstPattern = monitor({
     main:{
         ref:(a:number,b:number)=>{
             const topBinaryExpr = (a + b) * (a - b);
@@ -47,18 +51,16 @@ const fn1 = monitor({
     },
     inspector:(visit)=>{
         visit.is('BinaryExpression', event => {
-            if (!hasRegisteredHook) {
-                const ownerNode = event.node;
+            if (hasRegisteredHook) return;
+
+            const ownerNode = event.node;
+            visit.perExecution = () => {
+                const latestResult = visit.localExeStack().get(0);
                 
-                visit.perExecution = () => {
-                    const stack = visit.localExeStack();
-                    const head = stack.get(0);
-                    
-                    if (head.node === ownerNode) {
-                        console.log('Top Binary Expr Result: ', head.evaluation);
-                    }else {
-                        console.log('Node type: ', head.type, ', Result: ', head.evaluation);
-                    }
+                if (latestResult.node === ownerNode) {
+                    console.log('Top Binary Expr Result: ', latestResult.evaluation);
+                }else {
+                    console.log('Node type: ', latestResult.type, ', Result: ', latestResult.evaluation);
                 }
             }
             hasRegisteredHook = true;
@@ -67,28 +69,36 @@ const fn1 = monitor({
 })
 
 console.log('\nFIRST PATTERN');
-fn1(2,3);
+firstPattern(2,3);
 
 /**
  *  Output
  *  ------
- * Node type:  Identifier , Result:  2
- * Node type:  Identifier , Result:  3
- * Node type:  BinaryExpression , Result:  5
- * Node type:  Identifier , Result:  2
- * Node type:  Identifier , Result:  3
- * Node type:  BinaryExpression , Result:  -1
- * Top Binary Expr Result:  -5
+ *  Node type:  Identifier , Result:  2
+ *  Node type:  Identifier , Result:  3
+ *  Node type:  BinaryExpression , Result:  5
+ *  Node type:  Identifier , Result:  2
+ *  Node type:  Identifier , Result:  3
+ *  Node type:  BinaryExpression , Result:  -1
+ *  Top Binary Expr Result:  -5
 */
 
 
-// ✅ Refined version with clearer intent. 
-// The interpreter executes the inspector exactly as written, for every visited node, with no hidden behaviour.
+/** 
+ * ✅ Explicit version with clearer intent and no magic behavior.
+ * 
+ * When we hit the first BinaryExpression, we mark it as the owner and execute it.
+ * 
+ * As we visit every node, we check if we're inside the owner's subtree before
+ * executing and logging the node. Otherwise, it would log unrelated nodes.
+ * 
+ * We will then log the result of the owner.
+*/
 
 let insideOwnerSubtree = false;
 let ownerNode: any = null;
 
-const fn2 = monitor({
+const secondPattern = monitor({
     main:{
         ref:(a:number,b:number)=>{
             const topBinaryExpr = (a + b) * (a - b);
@@ -99,45 +109,39 @@ const fn2 = monitor({
         insideOwnerSubtree = false;
         ownerNode = null;
     },
-    inspector:(visit)=>{
-        // If we're inside the owner's subtree, execute and log every node
-        if (insideOwnerSubtree) {
-            visit.execute();
-            const stack = visit.localExeStack();
-            const head = stack.get(0);
-            console.log('Node type: ',head.type,', Result: ',head.evaluation);
-        }
-        
-        // When we hit the first BinaryExpression, mark it as the owner
-        visit.is('BinaryExpression', (event) =>{
-            if (!ownerNode) {
-                ownerNode = event.node;
-                insideOwnerSubtree = true;
-                
-                visit.execute();// Execute the owner and all its children
-                const stack = visit.localExeStack();
-                const head = stack.get(0);
+    inspector:(visit)=>{ 
+        visit.is('BinaryExpression', event => {
+            if (ownerNode) return;
 
-                console.log('Top Binary Expr Result: ',head.evaluation);
+            ownerNode = event.node;
+            insideOwnerSubtree = true;
+            try {
+                visit.execute();
+                const latestResult = visit.localExeStack().get(0);
+                console.log('Top Binary Expr Result: ', latestResult.evaluation);
+            }finally {
                 insideOwnerSubtree = false;
             }
         });
+        if (insideOwnerSubtree) {
+            visit.execute();
+            const latestResult = visit.localExeStack().get(0);
+            console.log('Node type: ', latestResult.type, ', Result: ', latestResult.evaluation);
+        }
     }
 })
 
 console.log('\nSECOND PATTERN');
-fn2(2,3);
+secondPattern(2,3);
 
 /**
  *  Output
  *  ------
- * Node type:  Identifier , Result:  2
- * Node type:  Identifier , Result:  3
- * Node type:  BinaryExpression , Result:  5
- * Node type:  Identifier , Result:  2
- * Node type:  Identifier , Result:  3
- * Node type:  BinaryExpression , Result:  -1
- * Top Binary Expr Result:  -5
+ *  Node type:  Identifier , Result:  2
+ *  Node type:  Identifier , Result:  3
+ *  Node type:  BinaryExpression , Result:  5
+ *  Node type:  Identifier , Result:  2
+ *  Node type:  Identifier , Result:  3
+ *  Node type:  BinaryExpression , Result:  -1
+ *  Top Binary Expr Result:  -5
 */
-
-
