@@ -44,7 +44,7 @@ export interface FnAst {
     fnCall:Node,
 }
 export interface Metadata<T extends Fn> {
-    /**the reference to the function to be included in the interpreter context**/
+    /**the reference to the function to be included in the interpreter context*/
     ref:T,
 
     /** 

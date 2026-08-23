@@ -41,7 +41,7 @@ const fn = monitor({
         }
     },
     inspector:(visit)=>{
-        visit.is('Any',()=>undefined)// Force the interpreter to allocate every scope
+        visit.is('Any',()=>undefined)
         visit.execute();
         
         const stack = visit.localExeStack();
