@@ -686,7 +686,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 > ⚠️ **Important:**
 > 
-> `visit.is()` does **not** register a persistent hook for future nodes. It is an **eager, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
+> `visit.is()` does **not** register a persistent hook for future nodes. It is an **immediate, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
 >
 > `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release.
 >
@@ -698,7 +698,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | `evaluation` | `unknown` | The result of the node's evaluation. |
 | `type` | `EsNode['type']` | The type of the AST node. |
 | `node` | `EsNode` | The AST node itself. |
-| `scope` | `ScopeForEvent \| NOT_ALLOCATED` | The safe, read-only scope snapshot created for the caller. |
+| `scope` | `ScopeForEvent \| NOT_ALLOCATED` | A safe snapshot of the scope created for the result. |
 
 ---
 
@@ -722,6 +722,8 @@ The rich object that gives inspectors their ability to participate in the interp
   
 - **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
   
+> ⚠️ **Snapshot Safety:** Modifying variables directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, data is not deep-copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
+
 ---
 
 <a id="important-limitations"></a>
