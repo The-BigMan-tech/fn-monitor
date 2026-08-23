@@ -52,5 +52,21 @@ const monitoredFn = monitor({
 
 console.log([...monitoredFn()]);
 
-//Run it and see the output. 
-//You should see the array printed as well as the extra logs for each yield statement
+/**
+ *  Output
+ *  ------
+ *  yielded:  0
+ *  yielded:  1
+ *  yielded:  2
+ *  yielded:  3
+ *  yielded:  4
+ *  yielded:  5
+ *  yielded:  6
+ *  yielded:  7
+ *  yielded:  8
+ *  yielded:  9
+ *  [
+ *   0, 1, 2, 3, 4,
+ *   5, 6, 7, 8, 9
+ *  ]
+*/
