@@ -19,8 +19,8 @@ import { monitor } from "../src/index.ts";
  * `perExecution` became redundant. Combined with its single-slot fragility, 
  * it was ultimately a leaky abstraction.
  * 
- * The single-slot semantics were deliberately chosen to prevent massive memory 
- * usage from keeping distinct closures per node in memory during execution.
+ * The single-slot semantics were deliberately chosen to prevent the massive memory 
+ * usage that comes from keeping distinct closures per node in memory.
 */
 
 
@@ -47,12 +47,7 @@ const fn1 = monitor({
     },
     inspector:(visit)=>{
         visit.is('BinaryExpression', event => {
-            // 1. THE GUARD: We must prevent child BinaryExpressions from overriding 
-            // this hook. If we forget this boolean, the hook dies before the owner finishes.
             if (!hasRegisteredHook) {
-                
-                // 2. THE CLOSURE: We must manually capture `event.node` so we can 
-                // compare it against the stack head later to know if the owner finished.
                 const ownerNode = event.node;
                 
                 visit.perExecution = () => {
@@ -61,7 +56,7 @@ const fn1 = monitor({
                     
                     if (head.node === ownerNode) {
                         console.log('Top Binary Expr Result: ', head.evaluation);
-                    } else {
+                    }else {
                         console.log('Node type: ', head.type, ', Result: ', head.evaluation);
                     }
                 }
@@ -119,15 +114,11 @@ const fn2 = monitor({
                 ownerNode = event.node;
                 insideOwnerSubtree = true;
                 
-                // Execute the owner and all its children
-                visit.execute();
-                
-                // Log the owner's result
+                visit.execute();// Execute the owner and all its children
                 const stack = visit.localExeStack();
                 const head = stack.get(0);
+
                 console.log('Top Binary Expr Result: ',head.evaluation);
-                
-                // Reset so we don't treat subsequent nodes as part of the subtree
                 insideOwnerSubtree = false;
             }
         });
