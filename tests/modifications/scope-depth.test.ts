@@ -204,4 +204,47 @@ describe('Depth Tracking', () => {
             2, // x -= 1 in recursiveFn (after embeddedFn returns)
         ]);
     });
+
+    it('[Sync] should ensure that the callDepth is only incremented when actually entering the function\'s scope and not just when the interpreter encounters a CallExpression node',()=>{
+        const interceptedFns = new Set();
+        let currentFn:string | undefined;
+
+        const capturedFn = ()=>undefined
+        const embeddedFn = ()=>undefined
+
+        const fn = monitor({
+            main:{
+                ref:()=>{
+                    capturedFn();
+                    embeddedFn();
+                },
+                captures:{
+                    capturedFn
+                }
+            },
+            embed:{
+                embeddedFn:{
+                    ref:embeddedFn
+                }
+            },
+            inspector:(visit)=>{
+                visit.is('CallExpression', event => {
+                    const callee = event.node.callee;
+                    if (callee.type === "Identifier") {
+                        currentFn = callee.name;
+                        visit.execute();
+                        currentFn = undefined;
+                    }
+                })
+                if (currentFn) {
+                    interceptedFns.add(currentFn);
+                }
+            }
+        });
+        fn();
+        
+        // If the interpreter increased the callDepth just because it saw a CallExpression, it will include `capturedFn` and fail the test
+        expect(interceptedFns).toContain('embeddedFn')
+        expect(interceptedFns).not.toContain('capturedFn')
+    })
 })

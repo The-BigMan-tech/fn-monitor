@@ -30,7 +30,7 @@ import {
     pushedManually, 
     getHandler,
     callOnStep,
-    adjustCallStackSize
+    adjustCallStackDepth
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<unknown>;
@@ -74,7 +74,7 @@ export default function evaluate(
 
     try {
         evalStackHandler.start(interpreter);
-        adjustCallStackSize('start',node,scope);
+        adjustCallStackDepth('start',node,scope);
         
         const response = callInspector('eager',node, scope, handler);//call this before the node is executed
         const genResult = isGenerator(response) ? response.next() : null;  
@@ -120,6 +120,6 @@ export default function evaluate(
         }
     }finally {
         evalStackHandler.finish(interpreter,parentReusables);
-        adjustCallStackSize('finish',node,scope);
+        adjustCallStackDepth('finish',node,scope);
     }
 }

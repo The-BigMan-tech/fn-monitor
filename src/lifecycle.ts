@@ -87,15 +87,15 @@ export function getSHA256Key(str:string):GeneratedKey {
 }
 
 
-export function adjustCallStackSize(phase:'start' | 'finish',node:AcornNode,scope:Scope):void  {
+export function adjustCallStackDepth(phase:'start' | 'finish',node:AcornNode,scope:Scope):void  {
     const interpreter:SvalPlus = scope.interpreter;
     const nodeType = node.type as EsNode['type'];
 
     if ((nodeType === "CallExpression") || (nodeType === "NewExpression")) {
         if (phase === "start") {
-            interpreter.userRoot.callStackSize += 1
+            interpreter.userRoot.callStackDepth += 1
         }else {
-            interpreter.userRoot.callStackSize -= 1
+            interpreter.userRoot.callStackDepth -= 1
         }
     }
 }

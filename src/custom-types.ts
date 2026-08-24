@@ -295,7 +295,7 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     visit: Visit,
     target:'Sval' | 'SvalPlus',
     userRoot:{
-        callStackSize:number,
+        callStackDepth:number,
         labels:{
             anchor:string,
             offset:string

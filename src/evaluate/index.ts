@@ -30,7 +30,7 @@ import {
     useModifiedEvaluator,
     getHandler,
     callOnStep,
-    adjustCallStackSize, // Use the Generator version
+    adjustCallStackDepth, // Use the Generator version
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<Generator>;
@@ -96,7 +96,7 @@ export default function* evaluate(
 
     try {
         evalStackHandler.start(interpreter);
-        adjustCallStackSize('start',node,scope);
+        adjustCallStackDepth('start',node,scope);
 
         const response = callInspector('lazy', node, scope, handler);
         const genResult = isGenerator(response) ? response.next() : null;  
@@ -150,6 +150,6 @@ export default function* evaluate(
     } 
     finally {
         evalStackHandler.finish(interpreter,parentReusables);
-        adjustCallStackSize('finish',node,scope)
+        adjustCallStackDepth('finish',node,scope)
     }
 }

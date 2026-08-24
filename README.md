@@ -740,7 +740,7 @@ at the call site or where you refer to it in your code.
    
    > 💡 **Note:** The `inspector` hook itself runs in the native JS runtime and will display a standard stack trace if it throws anything.
 
-4. **Not a Secure Sandbox:** Although monitored functions are lexically isolated from the host, the package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting nodes via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
+4. **Not a Secure Sandbox:** Although monitored functions are lexically isolated from the host, the package is not designed to act as a strict, secure sandbox out-of-the-box. You can simulate execution boundaries by intercepting execution via the `inspector` and `onStep` hooks, but do not rely on it to sandbox untrusted code against malicious actors.
 
 ---
 
