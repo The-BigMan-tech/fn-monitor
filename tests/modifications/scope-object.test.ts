@@ -73,7 +73,6 @@ describe('Scope Object Behaviour', () => {
     })
 
     it('[Sync] should ensure that the interpreter always allocates a fresh scope object for a visit even when it hits the same node.', () => {
-        let hitSumUpdate = false;
         const scopes = new Set<ScopeForEvent>()
 
         const fn = monitor({
@@ -88,25 +87,22 @@ describe('Scope Object Behaviour', () => {
                 }
             },
             beforeEachCall:()=>{
-                hitSumUpdate = false;
                 scopes.clear()
             },
             inspector: (visit) => {
                 visit.is('AssignmentExpression', (event) => {
                     const scope = event.scope;
 
-                    if (scope.depth === 2){// Intercept the 'sum += i' node, which is visited 3 times in the loop
-                        expect(scopes.has(scope)).toBe(false)
+                    if (scope.depth === 2){ // Intercept the 'sum += i' node, which is visited 3 times in the loop
+                        expect(scopes.has(scope)).toBe(false) // Proves it's a new object reference, not a reused one
                         scopes.add(scope);
-                        hitSumUpdate = true;
                     }
                 });
             }
         });
 
         fn();
-        expect(hitSumUpdate).toBe(true);
-        expect(scopes.size).toBe(3);// The loop runs 3 times, so we should have captured 3 scope objects
+        expect(scopes.size).toBe(3); // The loop runs 3 times, so we should have captured 3 distinct scope objects
     });
 
     it ('[Sync] should ensure that the scope object is a read-only view and isolated from other scopes',()=>{
