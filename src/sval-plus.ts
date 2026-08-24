@@ -253,7 +253,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return;
         };
 
-        super(SvalPlus.svalOptions);
+        super(SvalPlus.svalOptions,'SvalPlus');
         this._target = 'SvalPlus';
 
         args = args as SvalPlusArgs;

@@ -236,11 +236,13 @@ describe('Depth Tracking', () => {
                         currentFn = undefined;
                     }
                 })
-                visit.is('Any', event => {
-                    if (event.scope.callDepth > 0) {
-                        interceptedFns.add(currentFn!);
-                    }
-                })
+                if (currentFn) {
+                    visit.is('Any', event => {
+                        if (event.scope.callDepth > 0) {
+                            interceptedFns.add(currentFn!);
+                        }
+                    })
+                }
             }
         });
         fn();

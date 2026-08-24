@@ -49,10 +49,14 @@ export class Sval {
     public exports: Record<string, any> = {}
 
     private options: Options = { ecmaVersion: 'latest' }
-    private rootScope = new Scope(null,true,this)
+    private rootScope:Scope<this>;
     private static latestVersion = 15
 
-    constructor(options: SvalOptions = {}) {
+    constructor(options: SvalOptions = {},origin?:'SvalPlus') {
+        this.rootScope = (origin === 'SvalPlus')
+            ? new Scope(null,true,this) 
+            : new Scope(null,true);
+
         let { ecmaVer = 'latest', sandBox = true, sourceType = 'script' } = options
         
         if (typeof ecmaVer === 'number') {
