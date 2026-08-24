@@ -2,6 +2,7 @@ import { getOwnNames, createSandBox, globalObj  } from './share/util.ts'
 import { parse, Options, Node as AcornNode, Program } from 'acorn'
 import { EXPORTS, IMPORT, STRICT } from './share/const.ts'
 import Scope from './scope/index.ts'
+import {Node as EsNode} from "estree";
 
 import { runAsync } from './share/runner.ts'
 import { hoist as hoistAsync } from './evaluate/helper.ts'
@@ -131,7 +132,7 @@ export class Sval {
         evaluate(ast, scope)
     }
 
-    public run(code: string | AcornNode):void {
+    public run(code: string | AcornNode | EsNode):void {
         const ast = typeof code === 'string' ? this.parse(code) : code
 
         const versionHandlesTopAwait = (

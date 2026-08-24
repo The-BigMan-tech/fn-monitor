@@ -1,5 +1,4 @@
 import { Sval,SvalOptions } from "./sval.ts"
-import { Node } from 'acorn'
 import { generate } from 'astring';
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache'
@@ -10,6 +9,7 @@ import {
     Inspector,
     Reusables, 
     ScopeForEvent,
+    EsNode,
     Fn, 
     createEvent, 
     SvalPlus as SvalPlusContract, 
@@ -40,8 +40,8 @@ export interface FnSrc<T extends boolean> {
     fnCall:T extends true?string:null,
 }
 export interface FnAst {
-    fnCode:Node,
-    fnCall:Node,
+    fnCode:EsNode,
+    fnCall:EsNode,
 }
 export interface Metadata<T extends Fn> {
     /**the reference to the function to be included in the interpreter context*/
@@ -209,7 +209,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     private fnBeforeEachCall:Fn | null = null;
     private fnAfterEachCall:Fn | null = null;
     
-    private fnCallAst:Node | null = null;
+    private fnCallAst:EsNode | null = null;
     public visit:Visit = new Visit(this);
 
     public userRoot = {
@@ -385,8 +385,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }else {
             const options = SvalPlus.meriyahParseOptions;
             ast = { 
-                fnCode: meriyahParse(fnSrc.fnCode,options) as Node, 
-                fnCall: meriyahParse(fnSrc.fnCall,options) as Node ,
+                fnCode: meriyahParse(fnSrc.fnCode,options) as EsNode, 
+                fnCall: meriyahParse(fnSrc.fnCall,options) as EsNode ,
             };
             SvalPlus.fnAstCache.set(fnCodeHash, ast);
         }
