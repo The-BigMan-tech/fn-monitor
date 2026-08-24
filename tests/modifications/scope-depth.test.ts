@@ -206,7 +206,7 @@ describe('Depth Tracking', () => {
     });
 
     it('[Sync] should ensure that the callDepth is only incremented when actually entering the function\'s scope and not just when the interpreter encounters a CallExpression node',()=>{
-        const interceptedFns = new Set();
+        const interceptedFns = new Set<string>();
         let currentFn:string | undefined;
 
         const capturedFn = ()=>undefined
