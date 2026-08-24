@@ -110,41 +110,36 @@ describe('Scope Object Behaviour', () => {
     });
 
     it ('[Sync] should ensure that the scope object is a read-only view and isolated from other scopes',()=>{
-        let hitReturnNode = false;
+        let hitExprNode = false;
         let modifiedLocal = false;
 
         const fn = monitor({
             main:{
                 ref:()=>{
                     const name = "person";
+                    let x = 0;
+                    x++;x++;x++;
                     return name;
                 }
             },
             beforeEachCall:()=>{
-                hitReturnNode = false;
+                hitExprNode = false;
             },
             inspector:(visit)=>{
-                visit.is('ReturnStatement',event=>{
+                visit.is('UpdateExpression',event=>{
                     const vars = event.scope.variables;
-
-                    if (!modifiedLocal) {
+                    if (modifiedLocal) {
+                        expect(vars.local['name']).toBe('person');
+                    }else {
                         vars.local['name'] = "john";
                         modifiedLocal = true;
-                    }else{
-                        expect(vars.local['name']).toBe('person')
-                    };
-                    hitReturnNode = true;
+                    }
+                    hitExprNode = true;
                 })
             }
         })
-                    
-        // First call: Triggers the mutation attempt
         fn();
-        expect(hitReturnNode).toBe(true);
+        expect(hitExprNode).toBe(true);
         expect(modifiedLocal).toBe(true);
-
-        // Second call: Proves the mutation did not persist or affect internal state
-        fn();
-        expect(hitReturnNode).toBe(true);
     })
 });
