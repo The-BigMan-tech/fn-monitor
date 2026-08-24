@@ -684,14 +684,6 @@ The rich object that gives inspectors their ability to participate in the interp
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
 | `set perExecution(fn)` | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. |
 
-> ⚠️ **Important:**
-> 
-> `visit.is()` does **not** register a persistent hook for future nodes. It is an **immediate, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
->
-> `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release.
->
-> `visit.localExeStack()` is ephemeral; it is mutated and cleared as the interpreter moves between node subtrees. Copy or harvest elements immediately if you need persistent history. See this [example](#getting-the-full-execution-history-of-a-function-call).
-
 #### ExeResult
 | Property | Type | Description |
 | --- | --- | --- |
@@ -721,8 +713,6 @@ The rich object that gives inspectors their ability to participate in the interp
 - **`InspectorGenerator`**: The return type for generator-based inspectors. Used for type-safe `yield` expressions with `visit.execute()`.
   
 - **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
-  
-> ⚠️ **Snapshot Safety:** Modifying variables directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, data is not deep-copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
 
 ---
 
@@ -756,32 +746,47 @@ at the call site or where you refer to it in your code.
 
 ## Advanced Behavior 🧐
 
-These notes describe how the interpreter behaves in specific edge cases. Read them 
-as you encounter these patterns in your codebase:
+These notes describe how the interpreter behaves in specific edge cases. If you encounter unexpected behavior, it is likely documented here:
 
-1. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function.
-
-2. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
-
-3. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
+1. **`Visit` Object Nuances:**
    
-    >💡 **Tip:** There is a workaround. 
+    - `visit.is()` does **not** register a persistent hook for future nodes. It is an **immediate, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
+
+    - `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release.
+
+    - `visit.localExeStack()` is ephemeral; it is mutated and cleared as the interpreter moves between node subtrees. Copy or harvest elements immediately if you need persistent history. See this [example](#getting-the-full-execution-history-of-a-function-call).
+
+2. **`ScopeForEvent` Nuances:**
+   
+    - **Type vs Runtime Class:** `ScopeForEvent` defines the compile-time contract for the scope. At runtime, the actual class implementing it may have a different name (e.g., `EventScope`), which is what you will see when logging the object.
+  
+    - **Snapshot Safety:** Modifying variables directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, the values are not deeply copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
+  
+    - **Depth Counter:** Helper functions defined *inside* your monitored function do not reset this counter. It is strictly relative to the `main` or an `embedded` function. If you need the nesting depth relative to a specific nested helper, see this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/lexical-anchoring.ts) to utilize the package's API to build your own solutions.
+  
+3. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the `inspector` hook will persist and affect all subsequent calls to that function.
+
+4. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
+
+5. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
+   
+    > 💡 **Tip:** There is a workaround. 
     >
-    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the inspector. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
+    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the `inspector`. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
     > 
     > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
 
-4. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
+6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
    
     > 💡 **The exact error you get depends on your toolchain.**
     >
     > `fn-monitor` can only detect an import if it still exists as an `ImportExpression` node when it parses your function's source code. 
     >
-    > Toolchains that preserve native `import()` (e.g., Node, Bun, tsx) will throw a clear     `ForbiddenDynamicImport` error. However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. 
+    > Toolchains that preserve native `import()` (e.g., Node, Bun, tsx) will throw a clear `ForbiddenDynamicImport` error. However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. 
     > 
     > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
 
-5. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
+7. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
 
     > 💡 **Tip:** There is a workaround. 
     >   
