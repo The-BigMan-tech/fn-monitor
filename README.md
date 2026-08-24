@@ -313,15 +313,17 @@ console.log(exeHistory);
 
 ### Capturing values and Embedding Functions
 
-Because monitored functions run in an interpreted context, they need a way to access external values. That is where we introduce capturing and embedding:
+Because a monitored function runs in an interpreted context, it needs a way to access external values. This is where we introduce the `captures` and `embed` properties when creating the function:
 
-- Capturing simply gives the interpreter direct references or values and it works for all data types. They are injected into the context as constants.
-  
-- Embedding is exclusive to functions and it tells the interpreter to copy its source code into the context and parse it together with the `main` function.<br>The advantage of embedding a function is that when the `main` function calls it, it will run in the interpreted context rather than natively in your JS engine. This allows hooks like `onStep` and `inspector` to see through the function.
+| Capturing | Embedding |
+| --- | --- |
+| Works for all data types; gives the interpreter direct references or values. | Exclusive to functions; copies the function's source code into the context to be parsed alongside the `main` function. |
+| Injects values into the context as constants. | Injects functions into the context as top-level variables. |
+| Captured functions run natively in your JS engine when called. | Embedded functions run in the interpreted context, allowing hooks like `onStep` and `inspector` to see through them. |
 
 In this example, `main` captures `printName` (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
-The value of `currentFn` is wrapped in an object because we won't be able to reassign `currentFn` within the interpreted context. We then capture it into `sayHello` and `print`.
+The value of `currentFn` is wrapped in an object because we won't be able to reassign `currentFn` within the interpreted context. We then capture it in `sayHello` and `print`.
 
 The output shows that only `sayHello` and `print` appear in the intercepted set.
 
@@ -403,11 +405,11 @@ Intercepted functions:  Set(2) { 'sayHello', 'print' }
 
 Within the interpreted context of a monitored function, it is important to understand how scoping works for each approach:
 
-- Captures are function-scoped. They are bound directly to the specific function they are passed to. A captured variable in one function is not automatically available to another. 
+- Captures are function-scoped. As shown in the last example, they are bound directly to the specific function they are passed to. A captured variable in one function is not automatically available to another. 
 
-- Embedded functions are context-scoped. This means not only can the `main` function call it, but any other embedded function can call it too.
+- Embedded functions are context-scoped. This means not only can the `main` function call them, but any other embedded function can call them too.
 
-This example emphasizes the scoping mechanics of embedding
+This example emphasizes the scoping mechanics of embedding:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor"
