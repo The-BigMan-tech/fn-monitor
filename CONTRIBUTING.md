@@ -68,62 +68,83 @@ two parsers might be viewed by some as "bloat", it is an intentional trade-off
 that guarantees stability and upstream compatibility without requiring a massive, 
 risky rewrite of the core evaluator. Do not remove `acorn`.
 
-## Test Coverage and Evaluator Architecture
+## Evaluator Architecture and Test Coverage
 
-- The interpreter has two evaluator implementations:
-  1. **Normalized** (`evaluate_n` folder): Processes synchronous nodes.
-  2. **Generator** (`evaluate` folder): Processes asynchronous nodes.
+### Evaluator Architecture
 
-  Custom modifications live in their respective `index.ts` files; 
-  everything else is inherited from `sval` and left untouched.
+The interpreter extends `sval` with two evaluator implementations:
 
-- Modifications also exist in the Scope class (`scope/index.ts`) and the 
-  Sval class (`sval.ts`).
+1. **Normalized** (`evaluate_n` folder): Evaluates nodes synchronously.
+2. **Generator** (`evaluate` folder): Evaluates nodes via generator delegation, 
+   enabling support for lazy nodes like `AwaitExpression` and `YieldExpression`.
 
-- **Test Suite Structure:**
-  - `interpreter` tests: 200+ tests inherited from `sval`.
-  - `modifications` tests: 60+ tests written for the custom modifications.
+Custom modifications are confined to the following files:
 
-- **Modification Test Prefixes:**
-  - `[Sync]`: Targets the normalized evaluator. (An `[Async]` counterpart should exist).
-  - `[Async]`: Targets the generator evaluator. (A `[Sync]` counterpart should exist).
-  - `[Sync-only]`: Strictly for the normalized evaluator. (No async counterpart needed).
-  - `[Async-only]`: Strictly for the generator evaluator. (No sync counterpart needed).
-  - `[Wrap]`: Tests the wrapping/parsing step, not runtime execution.
+- **`evaluate_n/index.ts`** and **`evaluate/index.ts`**: Entry points and evaluation 
+  orchestration.
+- **`evaluate_n/expression.ts`** and **`evaluate/expression.ts`**: The 
+  `CallExpression` and `NewExpression` handlers (call stack tracking via 
+  `addToCallStack`).
+- **`scope/index.ts`**: Scope class modifications.
+- **`sval.ts`**: Sval class modifications.
 
-- **Coverage Status:**
+All other evaluator files are derived from `sval` and kept as close to the 
+upstream source as possible, with only minor refactors where necessary.
 
-  Because each evaluator has its own copy of the node handlers, tests must be 
-  explicitly written to cover both the generator and the normalized evaluator 
-  individually.
+### Test Suite Structure
 
-  Most tests in both the `interpreter` and `modifications` suites are currently heavily 
-  skewed toward the normalized evaluator and coverage for the generator version is 
-  incomplete. This means that a change to the generator version can pass the entire 
-  test suite while silently breaking it. 
+- **`interpreter` tests**: 200+ tests derived from `sval`. These validate core 
+  language semantics.
+- **`modifications` tests**: 60+ tests written specifically for the custom 
+  modifications.
 
-  **Passing the suite is NOT proof that the async path is unaffected.**
+### Test Prefixes
 
-  The goal is to ensure that for all modification tests, `[Sync]` tests have 
-  `[Async]` equivalents and vice versa. Contributions that help close this 
-  coverage gap are especially welcome.
+Each modification test is prefixed to indicate which evaluator it targets:
 
-  As for the interpreter tests, plans to complete coverage are postponed until 
-  modification tests have received full coverage.
+| Prefix | Target | Counterpart Required |
+|---|---|---|
+| `[Sync]` | Normalized evaluator | Yes (`[Async]` counterpart) |
+| `[Async]` | Generator evaluator | Yes (`[Sync]` counterpart) |
+| `[Sync-only]` | Normalized evaluator only | No |
+| `[Async-only]` | Generator evaluator only | No |
+| `[Wrap]` | Wrapping/parsing step (not runtime) | N/A |
+
+### Coverage Status
+
+> ⚠️ **Passing the suite is NOT proof that the async path is unaffected.**
+
+Because each evaluator has its own copy of the node handlers, tests must be 
+explicitly written to cover both evaluators independently. Coverage is currently 
+**heavily skewed toward the normalized evaluator**. The generator evaluator has 
+incomplete coverage, meaning a change to the generator path can pass the entire 
+test suite while silently breaking it.
+
+**Priority order for closing the gap:**
+
+1. Ensure every `[Sync]` modification test has an `[Async]` equivalent, and 
+   vice versa.
+2. Interpreter test coverage for the generator evaluator is postponed until 
+   modification tests reach full parity.
+
+Contributions that help close the `[Async]` coverage gap are especially welcome.
 
 ## Environment-Agnostic Runtime
 
 This package must not use any runtime dependency specific to a particular 
-environment (Node.js, Deno, Bun, browser, etc.). It should run in any JavaScript 
-runtime that supports ES2024. This ensures portability and prevents environment 
-lock-in.
+environment (Node.js, Deno, Bun, browser, etc.). It should run in any 
+JavaScript runtime that supports ES2024. This ensures portability and 
+prevents environment lock-in.
+
+In practice, this means **no `fs`, `path`, `process`, `Deno.*`, or 
+`Bun.*` imports** anywhere in the source tree.
 
 ## No Dynamic Import Support
 
-This package will NOT support dynamic imports (`import()`). This is an intentional 
-limitation documented in the README. Supporting dynamic imports would require 
-implementing a module loader, which is out of scope for a function-level 
-monitoring tool.
+This package does not support dynamic imports (`import()`). Supporting them 
+would require implementing a module loader, which is out of scope for a 
+function-level monitoring tool. If you need dynamic imports, lift them to 
+the native scope and pass the resolved modules via the `captures` property.
 
 ## Isolation vs. Hard Sandboxing
 
