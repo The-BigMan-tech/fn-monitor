@@ -30,7 +30,6 @@ import {
     pushedManually, 
     getHandler,
     callOnStep,
-    adjustCallStackDepth
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<unknown>;
@@ -69,13 +68,12 @@ export default function evaluate(
     };
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
-    const interpreter:SvalPlus<unknown> = scope.interpreter;
+    const interpreter = scope.interpreter!;// the interpreter is guaranteed to exist if useModifiedEvaluator is true
     const parentReusables = copyReusables(interpreter,'optional');
 
     try {
         evalStackHandler.start(interpreter);
-        adjustCallStackDepth('start',node,scope);
-        
+
         const response = callInspector('eager',node, scope, handler);//call this before the node is executed
         const genResult = isGenerator(response) ? response.next() : null;  
         
@@ -120,6 +118,5 @@ export default function evaluate(
         }
     }finally {
         evalStackHandler.finish(interpreter,parentReusables);
-        adjustCallStackDepth('finish',node,scope);
     }
 }

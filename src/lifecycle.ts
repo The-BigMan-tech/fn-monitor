@@ -18,8 +18,11 @@ import {
 } from "./custom-types.ts";
 
 
-function inUserCode(scope:Scope):boolean {
-    const interpreter:SvalPlus = scope.interpreter;
+export function inUserCode(scope:Scope):boolean {
+    const interpreter = scope.interpreter;
+    if (!interpreter) {
+        return false;
+    }
     
     const currentDepth = scope.depth;
     let calculatedUserDepth = (scope.userRoot.depth !== null)
@@ -57,19 +60,22 @@ export function inLazyMode(interpreter:SvalPlus):boolean {
     return interpreter.reusables.mode === "lazy";
 }
 export function useModifiedEvaluator(scope:Scope):boolean {
-    const interpreter:SvalPlus = scope.interpreter;
+    const interpreter = scope.interpreter;
     const shouldUseIt = (
-        (interpreter.target === "SvalPlus") && 
+        interpreter !== undefined &&
+        interpreter.target === "SvalPlus" && 
         inUserCode(scope) && 
-        (interpreter.inspector !== null)
+        interpreter.inspector !== null
     )
     return shouldUseIt;
 }
 
 
-export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode,scope:Scope<SvalPlus>):NodeHandler<T> {
+export function getHandler<T extends unknown>(evaluateOps:EvaluateOps<T>,node:AcornNode,scope:Scope):NodeHandler<T> {
     const nodeType = (node as EsNode).type;
-    if (scope.interpreter!.target === "SvalPlus") {
+    const interpreter = scope.interpreter;
+
+    if (interpreter && interpreter.target === "SvalPlus") {
         if (nodeType === "ImportExpression") {
             throw new ForbiddenDynamicImport(ansis.red(`Dynamic imports are not supported in monitored functions`))
         }
@@ -87,18 +93,6 @@ export function getSHA256Key(str:string):GeneratedKey {
 }
 
 
-export function adjustCallStackDepth(phase:'start' | 'finish',node:AcornNode,scope:Scope):void  {
-    const interpreter:SvalPlus = scope.interpreter;
-    const nodeType = node.type as EsNode['type'];
-
-    if ((nodeType === "CallExpression") || (nodeType === "NewExpression")) {
-        if (phase === "start") {
-            interpreter.userRoot.callStackDepth += 1
-        }else {
-            interpreter.userRoot.callStackDepth -= 1
-        }
-    }
-}
 export const evalStackHandler = {
     start:(interpreter:SvalPlus):void => {
         interpreter.reusables.execution.evalStack.value += 1;
@@ -128,7 +122,7 @@ export const evalStackHandler = {
  * This function uses positional args because its called in the hot path of the whole interpreter
  * In this function, we want to reset the variables each time before we call the monitor so that each child evaluation doesnt get leaked refs or values from their parents.
 */
-export function callInspector(mode:EvaluatorType, node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']) {
+export function callInspector(mode:EvaluatorType, node:AcornNode,scope:Scope,handler:Reusables['handler']) {
     const interpreter = scope.interpreter!;
     updateReusables(mode,node,scope,handler);
     return interpreter.inspector!(interpreter.visit);//by the time the callInspector function is called,this is guaranteed to not be null because useModifiedEvaluator checks for the inspector's type
@@ -150,8 +144,8 @@ export function callPerExe(interpreter:SvalPlus):void {
     }
 };
 export function callOnStep(scope:Scope):void {
-    const interpreter:SvalPlus = scope.interpreter;
-    if (inUserCode(scope) && (interpreter.onStep !== null)) {
+    const interpreter = scope.interpreter;
+    if (inUserCode(scope) && interpreter && (interpreter.onStep !== null)) {
         interpreter.onStep();
     }
 }
@@ -190,7 +184,7 @@ export function overwriteReusables(interpreter:SvalPlus,srcReusables:Reusables):
     interpreter.reusables.event = srcReusables.event;
     interpreter.reusables.mode = srcReusables.mode;
 }
-function updateReusables(mode:EvaluatorType,node:AcornNode,scope:Scope<SvalPlus>,handler:Reusables['handler']):void {
+function updateReusables(mode:EvaluatorType,node:AcornNode,scope:Scope,handler:Reusables['handler']):void {
     const interpreter = scope.interpreter!;
     interpreter.reusables.node = node as EsNode;
     interpreter.reusables.scope = scope;

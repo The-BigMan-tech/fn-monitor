@@ -1,11 +1,12 @@
 import { NOINIT, DEADZONE } from '../share/const.ts'
 import { Variable, Var, Prop } from './variable.ts'
 import { create, define } from '../share/util.ts'
+import { type SvalPlus } from '../custom-types.ts'
 
 /**
  * Scope simulation class
  */
-export default class Scope<T = any> {
+export default class Scope {
     /**
      * The parent scope along the scope chain
      * @private
@@ -33,7 +34,7 @@ export default class Scope<T = any> {
      */
     private withContext: object = create(null)
 
-    public interpreter:T | undefined;
+    public interpreter:SvalPlus | undefined;
 
     /**The lexical depth of the scope */
     public depth:number;
@@ -52,7 +53,7 @@ export default class Scope<T = any> {
     constructor(
         parent: Scope | null,
         isolated: boolean = false,
-        interpreter?:T
+        interpreter?:SvalPlus
     ) { 
         this.parent = parent
         this.isolated = isolated;

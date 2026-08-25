@@ -149,7 +149,7 @@ export type PerExeFn = ()=>void;
 export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
 
 export type NodeResult<T extends unknown> = Brand<T,'NodeResult'>
-export type NodeHandler<T extends unknown> = (node:AcornNode | EsNode,scope:Scope<SvalPlus>)=>NodeResult<T>
+export type NodeHandler<T extends unknown> = (node:AcornNode | EsNode,scope:Scope)=>NodeResult<T>
 
 export type EvaluatorType = 'eager' | 'lazy';
 export type EvaluateOps<T extends unknown> = Partial<

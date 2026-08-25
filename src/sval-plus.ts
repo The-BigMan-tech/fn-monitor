@@ -248,7 +248,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const useExtensions:boolean = Boolean(args && (args as SvalPlusArgs).useExtensions);
 
         if (!useExtensions) {
-            super(args as SvalOptions);
+            super(args as SvalOptions,'Sval');
             this._target = 'Sval';
             return;
         };

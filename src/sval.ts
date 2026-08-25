@@ -9,6 +9,7 @@ import { hoist as hoistAsync } from './evaluate/helper.ts'
 import { hoist } from './evaluate_n/helper.ts'
 import evaluateAsync from './evaluate/index.ts'
 import evaluate from './evaluate_n/index.ts'
+import { type SvalPlus } from './custom-types.ts';
 
 export interface SvalOptions {
     ecmaVer?: Options['ecmaVersion']
@@ -49,12 +50,12 @@ export class Sval {
     public exports: Record<string, any> = {}
 
     private options: Options = { ecmaVersion: 'latest' }
-    private rootScope:Scope<this>;
+    private rootScope:Scope;
     private static latestVersion = 15
 
-    constructor(options: SvalOptions = {},origin?:'SvalPlus') {
+    constructor(options: SvalOptions = {},origin?:'SvalPlus' | 'Sval') {
         this.rootScope = (origin === 'SvalPlus')
-            ? new Scope(null,true,this) 
+            ? new Scope(null,true,this as unknown as SvalPlus) 
             : new Scope(null,true);
 
         let { ecmaVer = 'latest', sandBox = true, sourceType = 'script' } = options

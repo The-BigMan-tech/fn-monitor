@@ -1,4 +1,4 @@
-// @ts-nocheck
+//@ts-nocheck
 
 import { define, freeze, getGetter, getSetter, createSymbol, assign, getDptor, callSuper, WINDOW } from '../share/util.ts'
 import { SUPER, NOCTOR, AWAIT, CLSCTOR, NEWTARGET, SUPERCALL, PRIVATE, IMPORT, OPTCHAIN, STRICT, STRICT_FN } from '../share/const.ts'
@@ -9,6 +9,8 @@ import { Literal } from './literal.ts'
 import Scope from '../scope/index.ts'
 import evaluate from './index.ts'
 import * as acorn from 'acorn'
+import { type SvalPlus } from '../custom-types.ts'
+import { inUserCode } from '../lifecycle.ts'
 
 export function ThisExpression(node: acorn.ThisExpression, scope: Scope) {
   const superCall = scope.find(SUPERCALL)
@@ -467,7 +469,15 @@ export function CallExpression(node: acorn.CallExpression, scope: Scope) {
   }
 
   try {
-    return func.apply(object, args)
+    const interpreter = scope.interpreter;
+    if (inUserCode(scope)) {
+        interpreter!.userRoot.callStackDepth += 1
+    }
+    const result =  func.apply(object, args)
+    if (inUserCode(scope)) {
+        interpreter!.userRoot.callStackDepth -= 1
+    }
+    return result;
   } catch (err) {
     if (
       err instanceof TypeError && err.message === 'Illegal invocation'
@@ -476,7 +486,15 @@ export function CallExpression(node: acorn.CallExpression, scope: Scope) {
       // you will get "TypeError: Illegal invocation" if not binding native function with window
       const win = scope.global().find('window').get()
       if (win && win[WINDOW]) {
-        return func.apply(win[WINDOW], args)
+        const interpreter = scope.interpreter;
+        if (inUserCode(scope)) {
+            interpreter!.userRoot.callStackDepth += 1
+        }
+        const result = func.apply(win[WINDOW], args)
+        if (inUserCode(scope)) {
+            interpreter!.userRoot.callStackDepth -= 1
+        }
+        return result;
       }
     }
     throw err
@@ -512,7 +530,16 @@ export function NewExpression(node: acorn.NewExpression, scope: Scope) {
     }
   }
 
-  return new constructor(...args)
+    const interpreter = scope.interpreter;
+    if (inUserCode(scope)) {
+        interpreter!.userRoot.callStackDepth += 1
+    }
+    const result = new constructor(...args)
+
+    if (inUserCode(scope)) {
+        interpreter!.userRoot.callStackDepth -= 1
+    }
+    return result
 }
 
 export function MetaProperty(node: acorn.MetaProperty, scope: Scope) {

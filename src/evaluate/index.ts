@@ -30,7 +30,6 @@ import {
     useModifiedEvaluator,
     getHandler,
     callOnStep,
-    adjustCallStackDepth, // Use the Generator version
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<Generator>;
@@ -91,12 +90,11 @@ export default function* evaluate(
     }
 
     //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
-    const interpreter:SvalPlus<Generator> = scope.interpreter;
+    const interpreter = scope.interpreter! as SvalPlus<Generator> ;
     const parentReusables = copyReusables(interpreter,'compulsory');//unlike the normalized evaluator,this one must be compulsory because making it optional failed a test concerning the handling of multiple async contexts
 
     try {
         evalStackHandler.start(interpreter);
-        adjustCallStackDepth('start',node,scope);
 
         const response = callInspector('lazy', node, scope, handler);
         const genResult = isGenerator(response) ? response.next() : null;  
@@ -150,6 +148,5 @@ export default function* evaluate(
     } 
     finally {
         evalStackHandler.finish(interpreter,parentReusables);
-        adjustCallStackDepth('finish',node,scope)
     }
 }
