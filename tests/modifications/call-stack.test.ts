@@ -75,4 +75,38 @@ describe('CallStack Behavior', () => {
         fn();
         expect(hitDeclNode).toBe(true)
     });
+
+    it('[Sync] should push locally defined helper functions to the call stack when they are not in the embedded map', () => {
+        let localHelperRef: { value: Function | undefined } = {value:undefined};
+        let stackAtHelper: Function[] = [];
+
+        const fn = monitor({
+            main: {
+                ref: () => {
+                    // This function is defined inside main and NOT in the `embed` property
+                    function localHelper() {
+                        let x = 1; // Hook fires here
+                    }
+                    localHelperRef.value = localHelper;
+                    localHelper();
+                },
+                captures:{
+                    localHelperRef
+                }
+            },
+            inspector: (visit) => {
+                visit.is('VariableDeclaration', () => {
+                    stackAtHelper = [...visit.callStack()]// snapshot the stack
+                });
+            }
+        });
+
+        fn();
+
+        // The stack should contain the main function and the localHelper
+        expect(stackAtHelper.length).toBe(2);
+        
+        // The most recent call (index 0) must be the exact localHelper reference
+        expect(stackAtHelper[0]).toBe(localHelperRef.value);
+    });
 })
