@@ -160,104 +160,81 @@ export type EvaluateOps<T extends unknown> = Partial<
 >
 
 /**
- * The rich object that gives inspectors their ability to participate in the interpretation of the function
- * Every monitored function has exactly one interpreter and also,exactly one visit object to themselves
- * This means that the visit object is only alloacted once per monitored function and not per call to save memory
- * You will shoot yourself in the foot if you attempt to take the visit object oustide of the inspector hook to use elsewhere.It can cause unexpected side effects.It is to be used strictly within that hook
+ * The rich object that gives inspectors their ability to participate in the interpretation of the function.
  * 
- * Because there is only one unique visit object,it uses live references to the current interpreter's state.This means that:
- *  -The local exe stack is volatile.
- *  -The 'is' method does not register your callback as a hook.Although that is what it will look like on the outside,its actually eagerly evaluating your callback the moment you call it and check your query against the current node.It will then discard your callback right after.
- *  -The perExecution hook is short lived.It only exists for the current node and all its children
- *  -The execute method must strictly be called within the lifetime of the inspector hook if you ever wish to call it.
- * 
+ * Each monitored function has exactly one visit object (allocated once, not per call). It uses live references 
+ * to the current interpreter's state, so it must be used strictly within the inspector hook — using it elsewhere 
+ * causes unexpected side effects.
  */
 export interface Visit {
     /**
-     * You pass in which node you are interested in as the first argument and you pass in your callback as the second.
-     * For each node that matches your query,it will fire your callback and allocate a scope object to wrap together with the node under a single event object
-     * You can mutate the node or query the scope.
+     * Evaluates your query against the current node. If matched, allocates a scope, wraps it with the node 
+     * in an event object, and fires your callback.
      * 
-     * If you dont set a query for a particular node,the interpreter will not allocate a scope nor an event object.This is to save memory.
-     * 
-     * So for the result matching the node in the execution stack, you will see a symbol called NOT_ALLOCATED. but you can use visit.is('Any',...) to force the interpreter to allocate a scope and event object for every node it visits
+     * For nodes that don't match any query, the interpreter doesn't allocate a scope to save memory. 
+     * Use `visit.is('Any', ...)` to force allocation for all nodes.
      */
-    is:<T extends Query>(query:T,ifMatched:(event:EventMap[T])=>void)=>void,
+    is:<T extends Query>(query:T, ifMatched:(event:EventMap[T])=>void)=>void,
 
     /** 
-     * This is fired for each executed node starting from the current node. The current node at the time when it was set becomes its owner.
+     * Fires for each executed node starting from the current node (which becomes the owner). 
+     * Terminates when the interpreter reaches back to the owner.
      * 
-     * After firing for all other related nodes, it will terminate when the interpreter reaches back to the owner. 
-     *
-     * The hook itself does not get passed anything. But it is a good place to check the local exe stack.
-     * By querying for the head element, you get to see the exe result in real time which includes the nodes, the evaluated result and each scope
+     * Good for checking the local exe stack to see evaluation results in real time.
      * 
-     * @deprecated This is a single-slot API. Each assignment overwrites the previous 
-     * owner and closure. If a child node sets the hook, it silently replaces the 
-     * parent's registration. Similar but safer semantics can be achieved explicitly with 
-     * `visit.execute()`. See the migration guide:
+     * @deprecated Single-slot API. Each assignment silently overwrites the previous. 
+     * Use `visit.execute()` instead for safer semantics.
      * {@link https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts}
      * 
-     * Will be removed in a future major release
+     * Will be removed in a future major release.
     */
     set perExecution(fn:PerExeFn),
 
     /**
-     * The function that tells the interpreter to execute the current node and return the result.
+     * Manually executes the current node and returns the result. Calling this is optional; 
+     * if omitted, the interpreter executes the node normally after the inspector finishes.
      * 
-     * If its a lazy node like an await call,you get LAZY_NODE instead of the awaited result.You must explicitly type yield visit.execute() to get it.but it requires the inspector to be a generator instead of a regular function
-     * 
-     * Once you get the result,you can read it or even modify it before it is returned to the caller
-     * The interpreter will execute the node manually if you never call it.
-     * 
-     * There is no way to directly stop the interpreter from executing a node.This is to prevent a half broken state. If required,the inspector hook must throw an error
+     * For lazy nodes, it returns the `LAZY_NODE` symbol. To handle these, use `yield visit.execute()` 
+     * in a generator-based inspector.
      */
     execute:()=>unknown | typeof LAZY_NODE,
 
     /**
-     * A live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries
-     * 
-     * The latest results stay at the head and the oldest remain at the tail.
-     * 
-     * It is a live reference to the current interpreter's state and it is cleared regularly
-     * So it should be used on demand and not stored somewhere for use later
+     * Live, read-only reference to the stack of latest evaluated child node results with indexed access.
+     * Latest at head, oldest at tail. Volatile — use on demand, don't store for later.
      */
     localExeStack:()=>LocalExeStack,
+    
+    /**
+     * Live, read-only reference to the stack of active interpreted function calls. 
+     * Latest call at head, previous calls are indexed behind it. Supports iteration.
+     */
     callStack:()=>CallStack
 }
 
-
 export interface ScopeForEvent {
-    /**The variables in the scope.You can check for all the local variables or use the search method to get a variable from its identifier.*/
+    /**
+     * The variables in the scope. Use `search()` to find a variable by identifier, 
+     * or access `local` for direct property lookup.
+     */
     variables:{
-        /**If a variable cannot be identified from the given name,it returns undefined. */
         search:(name: string)=>unknown | undefined,
         local:Record<string,unknown>
     },
-    /**The lexical depth of the scope relative to the current running function*/
+    /**0-indexed lexical depth relative to either the `main` or an `embedded` function*/
     depth:number,
-    /**a 0-indexed runtime metric representing the current depth of the call stack*/
+    /**0-indexed runtime metric representing the current call stack depth starting from the `main` function*/
     callDepth:number
 };
 
-
 export interface ExeResult {
-    /**The result of the node's evaluation */
+    /**The result of the node's evaluation*/
     evaluation:unknown,
-
     /**The type of the node*/
-
     type:EsNode['type'],
-    /**
-     * The node itself.Unlike the scope object,the nodes are always allocated.
-     * The reality is that the interpreter always allocates a node and a scope object to process each step.
-     * But it doesnt openly pass the original scope object because mutating the scope directly isnt as safe as a specific node
-     * So it only directly passes the internal node object and allocates a safe scope object that cant be used to mutate the original scope in any way.But it is only selectively allocated
-    */
+    /**The node itself (always allocated)*/
     node:EsNode,
-    /**
-     *the safe scope created for the caller
-     */
+    /**The safe scope created for the caller, or NOT_ALLOCATED if no query matched*/
     scope:ScopeForEvent | typeof NOT_ALLOCATED;
 }
 
