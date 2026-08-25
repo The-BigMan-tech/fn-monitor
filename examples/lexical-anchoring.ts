@@ -67,3 +67,10 @@ const fn = monitor({
     }
 });
 fn()
+
+/**
+ *  Output
+ *  ------
+ *  Lexical depth of helper's update expression:  1
+ *  Lexical depth of helper's return statement:  0
+*/
