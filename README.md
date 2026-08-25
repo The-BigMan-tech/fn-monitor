@@ -127,7 +127,7 @@ Result:  -15
 
 ### Getting the full execution history of a function call
 
-Our main interest here is the execution stack, which is accessible with `visit.localExeStack()`. Every time a node is evaluated, a rich object containing the result is inserted at the head (left end) of the stack. So we simply use the `inspector` to retrieve the head element as each node gets executed.
+Our main interest here is the execution stack, which is accessible with `visit.localExeStack()`. Every time a node is evaluated, a rich object containing the result is inserted at the head (index 0) of the stack. So we simply use the `inspector` to retrieve the head element as each node gets executed.
 
 It is important that we first call `visit.execute()` to eagerly evaluate the node and its children. If we skip this step, indexing into the stack will throw an error because it is initially empty.
 
@@ -323,67 +323,50 @@ Because a monitored function runs in an interpreted context, it needs a way to a
 
 In this example, `main` captures `printName` (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
-The value of `currentFn` is wrapped in an object because we won't be able to reassign `currentFn` within the interpreted context. We then capture it in `sayHello` and `print`.
+In the `inspector`, we add the function currently at the head of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the head (index 0).
 
 The output shows that only `sayHello` and `print` appear in the intercepted set.
-
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-const currentFn = {value:'' as any}
+
 const interceptedFns = new Set();
 
+function sayHello(name:string) {
+    printName(name)
+    print('Hello world');
+}
+function printName(name:string) {
+    console.log('Hello ',name);
+}
 const label = 'Printed: ';
 
 function print(str:string) {
-    currentFn.value = "print";
-
     console.log(label,str);
-
-    currentFn.value = undefined
 }
 
-function printName(name:string) {
-    currentFn.value = "printName"
-
-    console.log('Hello ',name);
-
-    currentFn.value = undefined
-}
-
-const sayHello = monitor({
+const mainFn = monitor({
     main:{
-        ref:(name:string)=>{
-            currentFn.value = "sayHello";
-
-            printName(name)
-            print('Hello world');
-
-            currentFn.value = undefined
-        },
+        ref:sayHello,
         captures:{
-            printName,
-            currentFn
+            printName
         }
     },
     embed:{
         print:{
             ref:print,
             captures:{
-                label,
-                currentFn
+                label
             }
         }
     },
-    onStep:()=>{
-        if (currentFn.value) {
-            interceptedFns.add(currentFn.value)
-        }
+    inspector:(visit)=>{
+        interceptedFns.add(visit.callStack().get(0));
     }
 });
 
-sayHello('person');
+mainFn('person');
 console.log('Intercepted functions: ',interceptedFns);
 
 ```
@@ -393,7 +376,10 @@ console.log('Intercepted functions: ',interceptedFns);
 ```text
 Hello  person
 Printed:  Hello world
-Intercepted functions:  Set(2) { 'sayHello', 'print' }
+Intercepted functions:  Set(2) { 
+    [Function: sayHello], 
+    [Function: print] 
+}
 ```
 
 > 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
@@ -658,7 +644,7 @@ The main export. Accepts a configuration object containing the target function a
 | Property | Type | Description |
 | --- | --- | --- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
-| `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
+| `embed` | `Record<string, Metadata<T>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
 | `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below).* |
 | `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
 | `sourceOut` | `{ value: string }` | If provided, the interpreter writes the generated source code into this object's `value` property. |
@@ -684,7 +670,8 @@ The rich object that gives inspectors their ability to participate in the interp
 | `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. |
 | `execute()` | Manually executes the current node and returns the result. <br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results, with indexed access to older entries. |
-| `set perExecution(fn)` | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. |
+| `callStack()` | Returns a read-only reference to the stack of active interpreted function calls, with the latest call at the head. Supports indexed access to callers and iteration. |
+| ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](#deprecated-perexecution-hook) for more detail. |
 
 #### ExeResult
 | Property | Type | Description |
@@ -701,21 +688,23 @@ The rich object that gives inspectors their ability to participate in the interp
 - **`EsNode`**: Union of all AST nodes (alias to `Node` from `estree`).
   
 - **`ScopeForEvent`**: A freshly allocated snapshot of the scope. 
-    - `variables.local` is an object that maps variable identifiers to their values
+    - `variables.local` is an object that maps variable identifiers to their values.
     - `variables.search(name)` searches up the scope chain for a variable through its identifier. 
     - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the `main` function or any `embedded` function.
     - `callDepth` is a 0-indexed value representing the current depth of the call stack starting from the monitored `main` function.
 
 - **Event Classes**: Over 30 specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
 
-- **`LocalExeStack`**: A custom, optimized deque with random array access, exposed as a read-only view.
+- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports random array access and iteration (e.g., `[...stack]`).
+  
+- **Fn**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
   
 - **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes.
   
 - **`InspectorGenerator`**: The return type for generator-based inspectors. Used for type-safe `yield` expressions with `visit.execute()`.
   
 - **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
-
+  
 ---
 
 <a id="important-limitations"></a>
@@ -753,6 +742,8 @@ These notes describe how the interpreter behaves in specific edge cases. If you 
 1. **`Visit` Object Nuances:**
    
     - `visit.is()` does **not** register a persistent hook for future nodes. It is an **immediate, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
+
+    <a id="deprecated-perExecution-hook"></a>
 
     - `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release.
 

@@ -55,59 +55,42 @@ console.log(exeHistory);
 
 console.log('\nCapturing values and Embedding Functions'.toUpperCase());
 
-const currentFn = {value:'' as any}
 const interceptedFns = new Set();
 
+function sayHello(name:string) {
+    printName(name)
+    print('Hello world');
+}
+function printName(name:string) {
+    console.log('Hello ',name);
+}
 const label = 'Printed: ';
 
 function print(str:string) {
-    currentFn.value = "print";
-
     console.log(label,str);
-
-    currentFn.value = undefined
 }
 
-function printName(name:string) {
-    currentFn.value = "printName"
-
-    console.log('Hello ',name);
-
-    currentFn.value = undefined
-}
-
-const sayHello = monitor({
+const mainFn = monitor({
     main:{
-        ref:(name:string)=>{
-            currentFn.value = "sayHello";
-
-            printName(name)
-            print('Hello world');
-
-            currentFn.value = undefined
-        },
+        ref:sayHello,
         captures:{
-            printName,
-            currentFn
+            printName
         }
     },
     embed:{
         print:{
             ref:print,
             captures:{
-                label,
-                currentFn
+                label
             }
         }
     },
-    onStep:()=>{
-        if (currentFn.value) {
-            interceptedFns.add(currentFn.value)
-        }
+    inspector:(visit)=>{
+        interceptedFns.add(visit.callStack().get(0));
     }
 });
 
-sayHello('person');
+mainFn('person');
 console.log('Intercepted functions: ',interceptedFns);
 
 
