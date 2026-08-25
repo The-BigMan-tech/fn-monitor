@@ -80,13 +80,9 @@ Hello World
 
 ## Quick Examples ⚡
 
-These are snippets that you can quickly copy and paste to see what the package can do.
+Ready-to-run snippets with inline context. Copy, paste, and see runtime instrumentation in action.
 
 ### Using the `inspector` hook to intercept and modify AST nodes during execution.
-
-This example injects the `inspector` hook, which receives a live stream of AST nodes as they are evaluated.
-
-We use it to mutate the assignment operator at runtime.
 
 A deep dive into this is available in this [article](https://dev.to/typescript-guy/rewrite-javascript-behavior-at-runtime-with-ast-mutation-from-the-same-thread-5gh6)
 
@@ -546,8 +542,6 @@ Callees during execution:  Set(3) {
 ```
 
 ### Using the `onStep` hook to implement a live timeout on a function, halting it if it attempts to hang the main thread.
-
-This example uses the `onStep` hook, which fires before each node is evaluated, to constrain execution under a time budget.
 
 A deep dive into this is available in this [article](https://dev.to/typescript-guy/stop-a-function-call-from-hanging-the-main-thread-without-using-web-workers-15me)
 
