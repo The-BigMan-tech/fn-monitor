@@ -1,4 +1,102 @@
 
+## v1.5.0...v1.6.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.5.0...v1.6.0)
+
+### 🚀 Features
+
+- Expose a read-only call stack to the inspector through the visit object ([a01d2c7](https://github.com/The-BigMan-tech/fn-monitor/commit/a01d2c7))
+- **api:** Map the elements in the callStack back to their original function references ([b394ec8](https://github.com/The-BigMan-tech/fn-monitor/commit/b394ec8))
+- Bump to v1.6.0 ([08501d6](https://github.com/The-BigMan-tech/fn-monitor/commit/08501d6))
+
+### 🩹 Fixes
+
+- Change how the call depth is tracked fundamentally ([da48e21](https://github.com/The-BigMan-tech/fn-monitor/commit/da48e21))
+- **callStack:** Map the `main`` function wrapper to its original reference ([6ead74c](https://github.com/The-BigMan-tech/fn-monitor/commit/6ead74c))
+
+### ♻️ Refactor
+
+- Change the Node type used in SvalPlus to EsNode ([0bf472a](https://github.com/The-BigMan-tech/fn-monitor/commit/0bf472a))
+- Guarantee at runtime that when a scope has an interpreter, it is from the SvalPlus class ([d15f298](https://github.com/The-BigMan-tech/fn-monitor/commit/d15f298))
+- Use a QList to track the call stack. ([7f01f1b](https://github.com/The-BigMan-tech/fn-monitor/commit/7f01f1b))
+- Insert the main function first in the callstack ([804e7e8](https://github.com/The-BigMan-tech/fn-monitor/commit/804e7e8))
+- Add ts-nocheck to the expression handlers ([0ce6921](https://github.com/The-BigMan-tech/fn-monitor/commit/0ce6921))
+- Lift the call stack handling from the expression handlers to a centralized function ([ff618d6](https://github.com/The-BigMan-tech/fn-monitor/commit/ff618d6))
+
+### 🧹 Chore
+
+- Update the package's description and include all the files that will be in the final package even if it's redundant. ([5477b58](https://github.com/The-BigMan-tech/fn-monitor/commit/5477b58))
+- Include the vscode's debugging configuration ([83f41cd](https://github.com/The-BigMan-tech/fn-monitor/commit/83f41cd))
+  
+### 📖 Documentation
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+- **changelog:** Update changelog for v1.5.0 ([065955e](https://github.com/The-BigMan-tech/fn-monitor/commit/065955e))
+- **readme:** Improve the flow of technical details ([dfbf4e8](https://github.com/The-BigMan-tech/fn-monitor/commit/dfbf4e8))
+- **ast-mutation.md:** Update the last part ([aa59c4e](https://github.com/The-BigMan-tech/fn-monitor/commit/aa59c4e))
+- **readme:** Fix the layout of the last documented advanced behavior ([c9b88bd](https://github.com/The-BigMan-tech/fn-monitor/commit/c9b88bd))
+- **readme:** Fix the flow of other points ([434a775](https://github.com/The-BigMan-tech/fn-monitor/commit/434a775))
+- **readme:** Update the capabilities ([fbb79ec](https://github.com/The-BigMan-tech/fn-monitor/commit/fbb79ec))
+- **preventing-lag.md:** Improve the pacing in the intro ([aeeb035](https://github.com/The-BigMan-tech/fn-monitor/commit/aeeb035))
+- **readme:** Update the utility types section ([7b0b977](https://github.com/The-BigMan-tech/fn-monitor/commit/7b0b977))
+- **example:** Tweak a comment ([0a58c81](https://github.com/The-BigMan-tech/fn-monitor/commit/0a58c81))
+- **examples:** Remove a blank line ([fbdea27](https://github.com/The-BigMan-tech/fn-monitor/commit/fbdea27))
+- Tweak the deprecation warning ([25928fb](https://github.com/The-BigMan-tech/fn-monitor/commit/25928fb))
+- **ast-mutation.md:** Polish the article ([dd1371a](https://github.com/The-BigMan-tech/fn-monitor/commit/dd1371a))
+- **ast-mutation.md:** Clear any ambiguity in the 'what this package is not' section ([c803b24](https://github.com/The-BigMan-tech/fn-monitor/commit/c803b24))
+- **contributing.md:** Clarify a sentence ([e630286](https://github.com/The-BigMan-tech/fn-monitor/commit/e630286))
+- **preventing-lag.md:** Polish the article ([ce27b7b](https://github.com/The-BigMan-tech/fn-monitor/commit/ce27b7b))
+- **article:** Tweak a phrase ([c262ede](https://github.com/The-BigMan-tech/fn-monitor/commit/c262ede))
+- **readme:** Lift the branding guidelines to a separate file and polish the README ([cbcbffe](https://github.com/The-BigMan-tech/fn-monitor/commit/cbcbffe))
+- **preventing-lag.md:** Polish a prose ([a37dca9](https://github.com/The-BigMan-tech/fn-monitor/commit/a37dca9))
+- **preventing-lag.md:** Update the peek section ([2df73c9](https://github.com/The-BigMan-tech/fn-monitor/commit/2df73c9))
+- **preventing-lag.md:** Polish the conclusion ([0aa887c](https://github.com/The-BigMan-tech/fn-monitor/commit/0aa887c))
+- **readme:** Clarify the explanation of an example ([d7266b8](https://github.com/The-BigMan-tech/fn-monitor/commit/d7266b8))
+- **readme:** Tweak a sentence in an example ([de2693f](https://github.com/The-BigMan-tech/fn-monitor/commit/de2693f))
+- **readme:** Polish an example's explanation ([1d3bc34](https://github.com/The-BigMan-tech/fn-monitor/commit/1d3bc34))
+- **readme:** Add minor touches ([a753494](https://github.com/The-BigMan-tech/fn-monitor/commit/a753494))
+- **test-article.md:** Polish the article ([9817784](https://github.com/The-BigMan-tech/fn-monitor/commit/9817784))
+- **test-article:** Improve the size of the headings ([6dcac5a](https://github.com/The-BigMan-tech/fn-monitor/commit/6dcac5a))
+- **test-article:** Improve pacing and grammatical precision ([c7c73d5](https://github.com/The-BigMan-tech/fn-monitor/commit/c7c73d5))
+- **test-article:** Improve a tip ([5672198](https://github.com/The-BigMan-tech/fn-monitor/commit/5672198))
+- **readme:** Update the wording in the api intro ([08bf4e7](https://github.com/The-BigMan-tech/fn-monitor/commit/08bf4e7))
+- **readme:** Tighten the api intro ([795bbab](https://github.com/The-BigMan-tech/fn-monitor/commit/795bbab))
+- **test-article:** Improve the tip ([5bdd009](https://github.com/The-BigMan-tech/fn-monitor/commit/5bdd009))
+- **test-article:** Tweak a sentence ([7431cfd](https://github.com/The-BigMan-tech/fn-monitor/commit/7431cfd))
+- **readme:** Tighten the explanations ([414de22](https://github.com/The-BigMan-tech/fn-monitor/commit/414de22))
+- **ast-mutation.md:** Tighten the article ([90f370d](https://github.com/The-BigMan-tech/fn-monitor/commit/90f370d))
+- **timeout-article:** Tighten the article ([8300a57](https://github.com/The-BigMan-tech/fn-monitor/commit/8300a57))
+- **article:** Clarify an intro ([a909edf](https://github.com/The-BigMan-tech/fn-monitor/commit/a909edf))
+- **article:** Improve a title ([ef9b95c](https://github.com/The-BigMan-tech/fn-monitor/commit/ef9b95c))
+- **example:** Remove unnecessary comments ([c3db6af](https://github.com/The-BigMan-tech/fn-monitor/commit/c3db6af))
+- **example:** Remove an unnecessary comment ([d958268](https://github.com/The-BigMan-tech/fn-monitor/commit/d958268))
+- **readme:** Add some tweaks ([1c6e583](https://github.com/The-BigMan-tech/fn-monitor/commit/1c6e583))
+- **perExe-migration:** Heavily improve the code for readability ([43590ad](https://github.com/The-BigMan-tech/fn-monitor/commit/43590ad))
+- **readme:** Add an important note about the exe stack ([18dc838](https://github.com/The-BigMan-tech/fn-monitor/commit/18dc838))
+- **readme:** Add a warning about ScopeForEvent ([8ec765a](https://github.com/The-BigMan-tech/fn-monitor/commit/8ec765a))
+- **generator-workaround.ts:** Inline the output ([a13d12d](https://github.com/The-BigMan-tech/fn-monitor/commit/a13d12d))
+- **readme:** Clarify the ScopeForEvent doc ([d5cd53d](https://github.com/The-BigMan-tech/fn-monitor/commit/d5cd53d))
+- **readme:** Improve the advanced behavior section ([dd67585](https://github.com/The-BigMan-tech/fn-monitor/commit/dd67585))
+- **readme:** Update the `capturing` section ([8d8c38c](https://github.com/The-BigMan-tech/fn-monitor/commit/8d8c38c))
+- **lexical-anchoring.ts:** Insert the output ([755dbc2](https://github.com/The-BigMan-tech/fn-monitor/commit/755dbc2))
+- **contributing:** Tighten it and improve clarity ([70d7136](https://github.com/The-BigMan-tech/fn-monitor/commit/70d7136))
+- **readme:** Add the call stack to the docs and examples ([6409409](https://github.com/The-BigMan-tech/fn-monitor/commit/6409409))
+- **readme:** Improve the intros ([15f4887](https://github.com/The-BigMan-tech/fn-monitor/commit/15f4887))
+- **readme:** Improve the quick examples intro ([7b82f78](https://github.com/The-BigMan-tech/fn-monitor/commit/7b82f78))
+- **readme:** Add clarity to visit.execute ([024727c](https://github.com/The-BigMan-tech/fn-monitor/commit/024727c))
+- **article:** Improve a block ([f8be81a](https://github.com/The-BigMan-tech/fn-monitor/commit/f8be81a))
+- **example:** Use the yield expr query in the generator workaround ([2467822](https://github.com/The-BigMan-tech/fn-monitor/commit/2467822))
+- **docstring:** Tighten the js-doc of the visit object ([99143da](https://github.com/The-BigMan-tech/fn-monitor/commit/99143da))
+- **docstring:** Tighten the js-doc of the main interface ([b8856e2](https://github.com/The-BigMan-tech/fn-monitor/commit/b8856e2))
+
+</details>
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.4.3...v1.5.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.4.3...v1.5.0)
