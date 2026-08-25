@@ -34,15 +34,6 @@ import {
 import { QList, ReadonlyQList } from './q-list.ts'
 
 
-export interface FnSrc<T extends boolean> {
-    fnName:string
-    fnCode:string,
-    fnCall:T extends true?string:null,
-}
-export interface FnAst {
-    fnCode:EsNode,
-    fnCall:EsNode,
-}
 export interface Metadata<T extends Fn> {
     /**the reference to the function to be included in the interpreter context*/
     ref:T,
@@ -52,6 +43,15 @@ export interface Metadata<T extends Fn> {
      *It is important to keep in mind that the captures object itself follows the semantic of copy primitives by value and copy obects by reference.
     */
     captures?:Record<string,any>
+}
+export interface FnSrc<T extends boolean> {
+    fnName:string
+    fnCode:string,
+    fnCall:T extends true?string:null,
+}
+export interface FnAst {
+    fnCode:EsNode,
+    fnCall:EsNode,
 }
 interface SvalPlusArgs {
     useExtensions:boolean,

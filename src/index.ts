@@ -10,42 +10,43 @@ import { Metadata, SvalPlus } from "./sval-plus.ts";
 import ansis from "ansis";
 
 export interface MonitorFnSetup<T extends Fn> {
-    /**The configuration for the main function to monitor */
+    /**The configuration for the main function to monitor*/
     main:Metadata<T>,
     
     /**
-     * If the main function calls another function outside of its scope,this is an alternative to capturing it by reference.
-     * Unlike reference capturing,this directly include a function's source code in the same interpreter context as the main function being monitored.It can also state its own captures as well or use other embedded functions.
-    */
+     * Alternative to capturing a function by reference. Embeds the function's source code into the 
+     * interpreter context so it becomes observable (inspected, modified, timed). Embedded functions 
+     * can have their own captures and call other embedded functions.
+     */
     embed?:Record<string,Metadata<Fn>>,
     
     /**
-     * The main hook that gets fed the interpreter's context as the function executes.The visit object is rich enough to inspect nodes and their scope,modify them before execution and execute nodes manually to see and change their results.
-    */
+     * The main hook for inspecting and modifying AST nodes during execution. Receives the `visit` object 
+     * with tools to query nodes, inspect scopes, mutate AST, and execute nodes manually.
+     * 
+     * Note: Using this hook (even as a no-op) has performance overhead due to scope and event allocations.
+     */
     inspector?:Inspector<'user'>,
 
     /**
-     *Like the inspector hook,this is called before each interpreted step.but it does not get the rich visit object to inspect or modify nodes
-     *Using this hook alone without the inspector will make the interpreter significantly faster because it removes all the allocations it will need to create the tools for the visit object
-     *
-     *Even without node information,it is useful for setting timers on the interpreted code by checking against a time after a number of steps.
-     *If the use case above is enough,use this hook and leave the inspector as undefined. Else,including the inspector,even as a no-op function,will cause several unnecessary allocations
-    */
+     * Called before each interpreted step, but without the `visit` object. Significantly faster than 
+     * `inspector` alone since it skips all scope/event allocations.
+     * 
+     * Ideal for lightweight monitoring like execution timers. If you only need `onStep`, leave `inspector` 
+     * undefined for maximum efficiency
+     */
     onStep?:OnStep,
 
-    /**It takes an object with a value property and overwrites it with the generated code used in the interpreter for a specific monitored function.It includes the code for all embedded functions as well */
+    /**Receives the generated interpreter code for the monitored function and all embedded functions*/
     sourceOut?:{value:string}
 
     /**
-     * The hook that is called before each call to the monitored function
-     * It gets the arguments passed to the function from the caller.It is useful for logging or inspecting the args before execution
-    */
+     * Called before each invocation of the monitored function with the caller's arguments.
+     */
     beforeEachCall?:(...args:Parameters<T>)=>void,
 
-
     /**
-     *The hook that is called after each call to the monitored function
-     *It gets the result returned from the function or an error if an error was thrown in the function.
+     * Called after each invocation with the function's return value or the thrown error.
      */
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
