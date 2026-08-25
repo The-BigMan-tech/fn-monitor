@@ -58,7 +58,11 @@ export class Sval {
             ? new Scope(null,true,this as unknown as SvalPlus) 
             : new Scope(null,true);
 
-        let { ecmaVer = 'latest', sandBox = true, sourceType = 'script' } = options
+        let { 
+            ecmaVer = 'latest', 
+            sandBox = true, 
+            sourceType = 'script' 
+        } = options;
         
         if (typeof ecmaVer === 'number') {
           ecmaVer -= ecmaVer < 2015 ? 0 : 2009 // format ecma edition

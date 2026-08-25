@@ -9,7 +9,7 @@ import { Literal } from './literal.ts'
 import Scope from '../scope/index.ts'
 import evaluate from './index.ts'
 import * as acorn from 'acorn'
-import { useModifiedEvaluator } from '../lifecycle.ts'
+import { addToCallStack } from '../lifecycle.ts'
 
 export function* ThisExpression(node: acorn.ThisExpression, scope: Scope) {
   const superCall = scope.find(SUPERCALL)
@@ -468,10 +468,7 @@ export function* CallExpression(node: acorn.CallExpression, scope: Scope) {
   }
 
   try {
-    const interpreter = scope.interpreter;
-    if (useModifiedEvaluator(scope)) {
-        interpreter!.userRoot.callStack.unshift(func)
-    }
+    addToCallStack(scope,func);
     const result =  func.apply(object, args)
     return result;
   } catch (err) {
@@ -482,10 +479,7 @@ export function* CallExpression(node: acorn.CallExpression, scope: Scope) {
       // you will get "TypeError: Illegal invocation" if not binding native function with window
       const win = scope.global().find('window').get()
       if (win && win[WINDOW]) {
-        const interpreter = scope.interpreter;
-        if (useModifiedEvaluator(scope)) {
-            interpreter!.userRoot.callStack.unshift(func)
-        }
+        addToCallStack(scope,func);
         const result = func.apply(win[WINDOW], args)
         return result;
       }
@@ -523,10 +517,7 @@ export function* NewExpression(node: acorn.NewExpression, scope: Scope) {
     }
   }
 
-    const interpreter = scope.interpreter;
-    if (useModifiedEvaluator(scope)) {
-        interpreter!.userRoot.callStack.unshift(constructor)
-    }
+    addToCallStack(scope,constructor)
     const result = new constructor(...args)
     return result
 }

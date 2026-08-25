@@ -14,7 +14,8 @@ import {
     EvaluateOps, 
     NodeResult, 
     GeneratedKey,
-    ForbiddenDynamicImport
+    ForbiddenDynamicImport,
+    Fn
 } from "./custom-types.ts";
 
 
@@ -52,12 +53,20 @@ export function inUserCode(scope:Scope):boolean {
     return inUserCode;
 };
 
+
+export function addToCallStack(scope:Scope,func:Fn) {
+    const interpreter = scope.interpreter;
+    if (useModifiedEvaluator(scope)) {
+        interpreter!.userRoot.callStack.unshift(func)
+    }
+}
 export function checkCallStack(node:AcornNode,scope:Scope) {
     const nodeType = (node as EsNode).type;
     if ((nodeType === "CallExpression") || (nodeType === "NewExpression")) {
         scope.interpreter!.userRoot.callStack.shift()
     }
 }
+
 
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]'
