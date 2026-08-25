@@ -56,10 +56,13 @@ export function inUserCode(scope:Scope):boolean {
 
 export function addToCallStack(scope:Scope,func:Fn) {
     const interpreter = scope.interpreter;
+    
     if (useModifiedEvaluator(scope)) {
         const callStack = interpreter!.userRoot.callStack;
-        const originalFnRef = interpreter!.userRoot.simulatedFnsToOriginal.get(func);
-        callStack.unshift(originalFnRef || func);//if the func is not in the map, then it was captured rather than directly embedded in the interpreter.
+        const fnMap = interpreter!.userRoot.simulatedFnsToOriginal
+
+        const originalFnRef = fnMap.get(func) || func;
+        callStack.unshift(originalFnRef);
     }
 }
 export function checkCallStack(node:AcornNode,scope:Scope) {

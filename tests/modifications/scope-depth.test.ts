@@ -205,7 +205,7 @@ describe('Depth Tracking', () => {
         ]);
     });
 
-    it('[Sync] should ensure that the callDepth is only incremented when actually entering the function\'s scope and not just when the interpreter encounters a CallExpression node',()=>{
+    it('[Sync] should ensure that the callDepth is incremented only when the interpreter enters the function\'s scope and not just when it encounters a CallExpression node',()=>{
         const interceptedFns = new Set<Fn>();
 
         const code = {value:''}
@@ -234,7 +234,11 @@ describe('Depth Tracking', () => {
             },
             sourceOut:code,
             inspector:(visit)=>{
-                interceptedFns.add(visit.callStack().get(0));
+                visit.is('Any',event=>{
+                    if (event.scope.callDepth > 0) {
+                        interceptedFns.add(visit.callStack().get(0));
+                    }
+                })
             }
         });
         fn();

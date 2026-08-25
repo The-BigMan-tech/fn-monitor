@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { monitor,LocalExeStack,InspectorGenerator,EsNode } from '../../src/index'; 
 import { UNASSIGNED } from '../../src/custom-types';
 
-describe('ExeStack Behaviour',()=>{
+describe('ExeStack Behavior',()=>{
 
     it('[Sync] should ensure that the local exe stack is cleared after evaluating the function',()=>{
         let stack:LocalExeStack | undefined;

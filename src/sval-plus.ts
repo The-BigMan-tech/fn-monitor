@@ -336,6 +336,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.svalPlusExports[SvalPlus.commonLabels.fnMap] = this.userRoot.simulatedFnsToOriginal;
         this.svalPlusExports[fnRefKey] = fn
             
+        const addToMap = (isMainFn)?''
+            :`exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`
+
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
             let ${this.userRoot.labels.offset} = 1;
             ${this.userRoot.labels.offset} += ${
@@ -346,7 +349,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             ${unpackCaptures}
             ${intermediateFnCode}
 
-            exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})
+            ${addToMap}
             return ${intermediateFnName};
         })();`
 
@@ -355,8 +358,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         if (isMainFn) {
             this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
             finalFnCall = `
-                \n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
-                exports.${SvalPlus.commonLabels.callStack}.unshift(${finalFnName});
+                \n\n//This is the code that is ran each time the monitored function is called...
+                exports.${SvalPlus.commonLabels.fnMap}.set(${finalFnName},exports.${fnRefKey});
+                exports.${SvalPlus.commonLabels.callStack}.unshift(
+                    exports.${SvalPlus.commonLabels.fnMap}.get(${finalFnName}) || ${finalFnName}
+                );
                 exports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});
             `
         }
