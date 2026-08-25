@@ -1,4 +1,3 @@
-//@ts-nocheck
 
 import { define, freeze, getGetter, getSetter, createSymbol, assign, getDptor, callSuper, WINDOW } from '../share/util.ts'
 import { SUPER, NOCTOR, AWAIT, CLSCTOR, NEWTARGET, SUPERCALL, PRIVATE, IMPORT, OPTCHAIN, STRICT, STRICT_FN } from '../share/const.ts'
@@ -471,11 +470,11 @@ export function CallExpression(node: acorn.CallExpression, scope: Scope) {
   try {
     const interpreter = scope.interpreter;
     if (inUserCode(scope)) {
-        interpreter!.userRoot.callStackDepth += 1
+        interpreter!.userRoot.callStack.unshift(func)
     }
     const result =  func.apply(object, args)
     if (inUserCode(scope)) {
-        interpreter!.userRoot.callStackDepth -= 1
+        interpreter!.userRoot.callStack.shift()
     }
     return result;
   } catch (err) {
@@ -488,11 +487,11 @@ export function CallExpression(node: acorn.CallExpression, scope: Scope) {
       if (win && win[WINDOW]) {
         const interpreter = scope.interpreter;
         if (inUserCode(scope)) {
-            interpreter!.userRoot.callStackDepth += 1
+            interpreter!.userRoot.callStack.unshift(func)
         }
         const result = func.apply(win[WINDOW], args)
         if (inUserCode(scope)) {
-            interpreter!.userRoot.callStackDepth -= 1
+            interpreter!.userRoot.callStack.shift();
         }
         return result;
       }
@@ -532,12 +531,13 @@ export function NewExpression(node: acorn.NewExpression, scope: Scope) {
 
     const interpreter = scope.interpreter;
     if (inUserCode(scope)) {
-        interpreter!.userRoot.callStackDepth += 1
+        interpreter!.userRoot.callStack.unshift(constructor)
     }
+    //@ts-expect-error
     const result = new constructor(...args)
 
     if (inUserCode(scope)) {
-        interpreter!.userRoot.callStackDepth -= 1
+        interpreter!.userRoot.callStack.shift()
     }
     return result
 }

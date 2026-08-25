@@ -146,7 +146,7 @@ export type Inspector<
 export type OnStep = ()=>void;
 export type PerExeFn = ()=>void;
 
-export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'swapSrc'>
+export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'setSrc'>
 
 export type NodeResult<T extends unknown> = Brand<T,'NodeResult'>
 export type NodeHandler<T extends unknown> = (node:AcornNode | EsNode,scope:Scope)=>NodeResult<T>
@@ -295,7 +295,7 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     visit: Visit,
     target:'Sval' | 'SvalPlus',
     userRoot:{
-        callStackDepth:number,
+        callStack:QList<Fn>,
         labels:{
             anchor:string,
             offset:string

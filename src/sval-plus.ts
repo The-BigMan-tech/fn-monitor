@@ -80,7 +80,7 @@ class EventScope implements ScopeForEvent {
         };
 
         this.depth = this.#scope.depth - userRootDepth;
-        this.callDepth = interpreter.userRoot.callStackDepth;
+        this.callDepth = interpreter.userRoot.callStack.length;
 
         const local:ScopeForEvent['variables']['local'] = Object.create(null)
         for (const k in this.#scope.local) {
@@ -213,8 +213,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public visit:Visit = new Visit(this);
 
     public userRoot = {
-        callStackDepth:0,
-        labels: {
+        callStack:new QList<Fn>(),
+        labels:{
             offset:SvalPlus.commonLabels.offset,
             anchor:SvalPlus.commonLabels.anchor
         }
@@ -264,7 +264,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.onStep = args.onStep || null;
 
         const exeState = this.reusables.execution;
-        exeState.readonlyExeStack.swapSrc(exeState.exeStack);
+        exeState.readonlyExeStack.setSrc(exeState.exeStack);
     };
 
     public createEventScope = ()=>{
