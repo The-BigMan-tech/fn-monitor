@@ -80,7 +80,7 @@ class EventScope implements ScopeForEvent {
         };
 
         this.depth = this.#scope.depth - userRootDepth;
-        this.callDepth = interpreter.userRoot.callStack.length;
+        this.callDepth = interpreter.userRoot.callStack.length - 1;
 
         const local:ScopeForEvent['variables']['local'] = Object.create(null)
         for (const k in this.#scope.local) {
@@ -163,6 +163,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         args:getSHA256Key('args'),
         anchor:getSHA256Key('anchor'),
         offset:getSHA256Key('offset'),
+        callStack:getSHA256Key('callStack'),
         captures:(fnName:string)=>{
             return getSHA256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
         }
@@ -330,10 +331,17 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return ${intermediateFnName};
         })();`
 
-        const finalFnCall = !isMainFn?null
-            :`\n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.` +
-            `\n\nexports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});`
+        let finalFnCall = null;
 
+        if (isMainFn) {
+            this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
+            finalFnCall = `
+                \n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
+                exports.${SvalPlus.commonLabels.callStack}.unshift(${finalFnName});
+                exports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});
+                exports.${SvalPlus.commonLabels.callStack}.shift();
+            `
+        }
         return { 
             fnName:finalFnName ,
             fnCode:finalFnCode,
