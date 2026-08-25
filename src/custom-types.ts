@@ -299,6 +299,7 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     userRoot:{
         callStack:QList<Fn>,
         readonlyCallStack:ReadonlyQList<Fn>,
+        simulatedFnsToOriginal:Map<Fn,Fn>,
         labels:{
             anchor:string,
             offset:string

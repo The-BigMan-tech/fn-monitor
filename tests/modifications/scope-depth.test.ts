@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { monitor } from '../../src/index'; 
+import { Fn, monitor } from '../../src/index'; 
 
 /** 
 * These tests use distinct ast node to distinguish different functions
@@ -206,7 +206,7 @@ describe('Depth Tracking', () => {
     });
 
     it('[Sync] should ensure that the callDepth is only incremented when actually entering the function\'s scope and not just when the interpreter encounters a CallExpression node',()=>{
-        const interceptedFns = new Set<string>();
+        const interceptedFns = new Set<Fn>();
 
         const code = {value:''}
 
@@ -234,13 +234,13 @@ describe('Depth Tracking', () => {
             },
             sourceOut:code,
             inspector:(visit)=>{
-                interceptedFns.add(visit.callStack().get(0).name);
+                interceptedFns.add(visit.callStack().get(0));
             }
         });
         fn();
         
         // If the interpreter increased the callDepth just because it saw a CallExpression, it will include `capturedFn` and fail the test
-        expect(interceptedFns).toContain('embeddedFn')
-        expect(interceptedFns).not.toContain('capturedFn')
+        expect(interceptedFns).toContain(embeddedFn)
+        expect(interceptedFns).not.toContain(capturedFn)
     })
 })

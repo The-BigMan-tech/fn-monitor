@@ -167,6 +167,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         anchor:getSHA256Key('anchor'),
         offset:getSHA256Key('offset'),
         callStack:getSHA256Key('callStack'),
+        fnMap:getSHA256Key('simulated-functions-to-original-functions'),
+        fnRef:(fnName:string)=>{
+            return getSHA256Key(`fn-ref-to-${fnName}`)
+        },
         captures:(fnName:string)=>{
             return getSHA256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
         }
@@ -219,6 +223,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     public userRoot = {
         callStack:new QList<Fn>(),
         readonlyCallStack:new ReadonlyQList<Fn>(),
+        simulatedFnsToOriginal:new Map<Fn,Fn>(),
         labels:{
             offset:SvalPlus.commonLabels.offset,
             anchor:SvalPlus.commonLabels.anchor
@@ -326,6 +331,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         //The depth offset must start at 1 to ensure that it always points to the inner part of the function's body
         //It is important that the anchor is set after assigning the offset
 
+        const fnRefKey = SvalPlus.commonLabels.fnRef(intermediateFnName);
+
+        this.svalPlusExports[SvalPlus.commonLabels.fnMap] = this.userRoot.simulatedFnsToOriginal;
+        this.svalPlusExports[fnRefKey] = fn
+            
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
             let ${this.userRoot.labels.offset} = 1;
             ${this.userRoot.labels.offset} += ${
@@ -335,6 +345,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
             ${unpackCaptures}
             ${intermediateFnCode}
+
+            exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})
             return ${intermediateFnName};
         })();`
 
