@@ -695,7 +695,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 - **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports random array access and iteration (e.g., `[...stack]`).
   
-- **Fn**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
+- **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
   
 - **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes.
   
