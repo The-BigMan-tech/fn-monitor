@@ -8,8 +8,7 @@ import { Literal } from './literal.ts'
 import Scope from '../scope/index.ts'
 import evaluate from './index.ts'
 import * as acorn from 'acorn'
-import { type SvalPlus } from '../custom-types.ts'
-import { inUserCode } from '../lifecycle.ts'
+import { useModifiedEvaluator } from '../lifecycle.ts'
 
 export function ThisExpression(node: acorn.ThisExpression, scope: Scope) {
   const superCall = scope.find(SUPERCALL)
@@ -469,13 +468,10 @@ export function CallExpression(node: acorn.CallExpression, scope: Scope) {
 
   try {
     const interpreter = scope.interpreter;
-    if (inUserCode(scope)) {
-        interpreter!.userRoot.callStack.unshift(func)
+    if (useModifiedEvaluator(scope)) {
+        interpreter!.userRoot.callStack.unshift(func);
     }
     const result =  func.apply(object, args)
-    if (inUserCode(scope)) {
-        interpreter!.userRoot.callStack.shift()
-    }
     return result;
   } catch (err) {
     if (
@@ -486,13 +482,10 @@ export function CallExpression(node: acorn.CallExpression, scope: Scope) {
       const win = scope.global().find('window').get()
       if (win && win[WINDOW]) {
         const interpreter = scope.interpreter;
-        if (inUserCode(scope)) {
+        if (useModifiedEvaluator(scope)) {
             interpreter!.userRoot.callStack.unshift(func)
         }
         const result = func.apply(win[WINDOW], args)
-        if (inUserCode(scope)) {
-            interpreter!.userRoot.callStack.shift();
-        }
         return result;
       }
     }
@@ -530,15 +523,11 @@ export function NewExpression(node: acorn.NewExpression, scope: Scope) {
   }
 
     const interpreter = scope.interpreter;
-    if (inUserCode(scope)) {
+    if (useModifiedEvaluator(scope)) {
         interpreter!.userRoot.callStack.unshift(constructor)
     }
     //@ts-expect-error
     const result = new constructor(...args)
-
-    if (inUserCode(scope)) {
-        interpreter!.userRoot.callStack.shift()
-    }
     return result
 }
 

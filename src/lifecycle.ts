@@ -52,6 +52,12 @@ export function inUserCode(scope:Scope):boolean {
     return inUserCode;
 };
 
+export function checkCallStack(node:AcornNode,scope:Scope) {
+    const nodeType = (node as EsNode).type;
+    if ((nodeType === "CallExpression") || (nodeType === "NewExpression")) {
+        scope.interpreter!.userRoot.callStack.shift()
+    }
+}
 
 export function isGenerator(obj:unknown):obj is Generator {
     return Object.prototype.toString.call(obj) === '[object Generator]'

@@ -30,6 +30,7 @@ import {
     useModifiedEvaluator,
     getHandler,
     callOnStep,
+    checkCallStack,
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<Generator>;
@@ -147,6 +148,7 @@ export default function* evaluate(
         }
     } 
     finally {
+        checkCallStack(node,scope)
         evalStackHandler.finish(interpreter,parentReusables);
     }
 }

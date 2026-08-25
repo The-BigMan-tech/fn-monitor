@@ -97,8 +97,10 @@ export type {
 } from "./sval-plus.ts";
 
 export type {
+    Fn,
     Inspector,
     LocalExeStack,
+    CallStack,
     OnStep,
     ScopeForEvent,
     Query,

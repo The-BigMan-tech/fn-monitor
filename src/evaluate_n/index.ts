@@ -30,6 +30,7 @@ import {
     pushedManually, 
     getHandler,
     callOnStep,
+    checkCallStack,
 } from '../lifecycle.ts'
 
 let evaluateOps:EvaluateOps<unknown>;
@@ -117,6 +118,7 @@ export default function evaluate(
             return final
         }
     }finally {
+        checkCallStack(node,scope);
         evalStackHandler.finish(interpreter,parentReusables);
     }
 }

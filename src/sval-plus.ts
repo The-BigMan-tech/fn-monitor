@@ -105,6 +105,9 @@ export class Visit implements VisitContract {
     public localExeStack = ()=>{
         return this.#interpreter.reusables.execution.readonlyExeStack;
     }
+    public callStack = ()=>{
+        return this.#interpreter.userRoot.readonlyCallStack;
+    }
     //the monitor will only create the event object for a node if it matches the query
     public is:VisitContract['is'] = (query,cb)=>{
         const node = this.#interpreter.reusables.node!;
@@ -215,6 +218,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
     public userRoot = {
         callStack:new QList<Fn>(),
+        readonlyCallStack:new ReadonlyQList<Fn>(),
         labels:{
             offset:SvalPlus.commonLabels.offset,
             anchor:SvalPlus.commonLabels.anchor
@@ -266,6 +270,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         const exeState = this.reusables.execution;
         exeState.readonlyExeStack.setSrc(exeState.exeStack);
+        
+        const userRoot = this.userRoot;
+        userRoot.readonlyCallStack.setSrc(userRoot.callStack);
     };
 
     public createEventScope = ()=>{
@@ -339,7 +346,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 \n\n//This is the code that is ran each time the monitored function is called and the result is returned through the exports variable.
                 exports.${SvalPlus.commonLabels.callStack}.unshift(${finalFnName});
                 exports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});
-                exports.${SvalPlus.commonLabels.callStack}.shift();
             `
         }
         return { 
@@ -434,6 +440,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                     throw error; // Re-throw so the caller still sees the error
                 })
                 .finally(()=>{
+                    this.userRoot.callStack.clear();
                     this._stage = "IDLE";
                 })
         }else {
@@ -442,6 +449,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 if (result instanceof Error) throw result;
                 return result;
             }finally {
+                this.userRoot.callStack.clear();
                 this._stage = "IDLE";//this runs regardless of whether the hook throws an error or not
             }
         };

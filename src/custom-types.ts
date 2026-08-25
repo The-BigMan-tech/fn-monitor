@@ -147,6 +147,7 @@ export type OnStep = ()=>void;
 export type PerExeFn = ()=>void;
 
 export type LocalExeStack = Omit<ReadonlyQList<ExeResult>,'setSrc'>
+export type CallStack = Omit<ReadonlyQList<Fn>,'setSrc'>
 
 export type NodeResult<T extends unknown> = Brand<T,'NodeResult'>
 export type NodeHandler<T extends unknown> = (node:AcornNode | EsNode,scope:Scope)=>NodeResult<T>
@@ -222,6 +223,7 @@ export interface Visit {
      * So it should be used on demand and not stored somewhere for use later
      */
     localExeStack:()=>LocalExeStack,
+    callStack:()=>CallStack
 }
 
 
@@ -234,7 +236,7 @@ export interface ScopeForEvent {
     },
     /**The lexical depth of the scope relative to the current running function*/
     depth:number,
-    /**a runtime metric representing the current size of the call stack*/
+    /**a 0-indexed runtime metric representing the current depth of the call stack*/
     callDepth:number
 };
 
@@ -296,6 +298,7 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     target:'Sval' | 'SvalPlus',
     userRoot:{
         callStack:QList<Fn>,
+        readonlyCallStack:ReadonlyQList<Fn>,
         labels:{
             anchor:string,
             offset:string
