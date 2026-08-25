@@ -198,7 +198,7 @@ intermediate result:  -15
 Result:  -15
 ```
 
-The interpreter will automatically execute nodes if `visit.execute` is not called and for safety reasons, you cannot stop it from executing a node unless you throw an error.
+Calling visit.execute within the inspector is optional. If omitted, the interpreter will execute the node after the hook finishes. And for safety reasons — to prevent silent, partial execution — you cannot stop a node from running unless you throw an error.
 
 So if you detect wrong behaviour according to your custom rules, you can do this:
 
