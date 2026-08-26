@@ -213,15 +213,16 @@ describe('Depth Tracking', () => {
 
         const code = {value:''}
 
-        const capturedFn = ()=>{
-            const x = 1
+        // passing an argument forces the interpreter to call the evaluator to process it. 
+        const capturedFn = (x:number)=>{
+            return x + 1;
         }
-        function embeddedFn() {
-            const x = 1//must contain at least one line to fire the inspector
+        function embeddedFn(x:number) {
+            return x + 1;//must contain at least one line to fire the inspector
         }
         function main() {
-            capturedFn();
-            embeddedFn();
+            capturedFn(10);
+            embeddedFn(10);
         }
         const fn = monitor({
             main:{
