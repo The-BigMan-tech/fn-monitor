@@ -205,7 +205,10 @@ describe('Depth Tracking', () => {
         ]);
     });
 
-    it('[Sync] should ensure that the callDepth is incremented only when the interpreter enters the function\'s scope and not just when it encounters a CallExpression node',()=>{
+    // This test is important because a CallExpression node can be followed by different nodes before the actual call. 
+    // The nodes encountered during argument passing are good examples.
+    
+    it('[Sync] should ensure that the callDepth is incremented at the exact moment of executing a function and not upon encountering a CallExpression node',()=>{
         const interceptedFns = new Set<Fn>();
 
         const code = {value:''}
