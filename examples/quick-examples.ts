@@ -243,4 +243,11 @@ function getPrice(item?:string):number {
     return 10
 }
 const timedGetPrice = timeFn(getPrice,50);
-timedGetPrice()
+
+try {
+    timedGetPrice()
+}catch(err) {
+    if (err instanceof Error) {
+        console.log('Error: ',err.message);
+    }
+}
