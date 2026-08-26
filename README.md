@@ -323,7 +323,7 @@ In this example, `main` captures `printName` (runs natively, not intercepted), w
 
 In the `inspector`, we add the function currently at the head of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the head (index 0).
 
-The output shows that only `sayHello` and `print` appear in the intercepted set.
+The output shows that only `sayHello` and `print` appear in the intercepted set because the `inspector` won't be able to see the captured function:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
