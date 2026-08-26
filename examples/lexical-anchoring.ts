@@ -1,17 +1,17 @@
 import { monitor, LangEvent, Fn } from "../src/index.ts";
 
-const roots: Partial<Record<string, number>> = {};
+const roots = new WeakMap<Fn, number>();
 
 const anchor = {
     set: (fn: Fn, event: LangEvent) => {
-        roots[fn.name] = event.scope.depth;
+        roots.set(fn, event.scope.depth);
     },
-    has: (fn:Fn) => {
-        return roots[fn.name] !== undefined
+    has: (fn: Fn) => {
+        return roots.has(fn);
     },
     getDepth: (fn: Fn, event: LangEvent): number | undefined => {
-        const root = roots[fn.name];
-        return root && (event.scope.depth - root)
+        const root = roots.get(fn);
+        return root !== undefined ? (event.scope.depth - root) : undefined;
     },
 };
 
@@ -29,14 +29,13 @@ const fn = monitor({
     },
     inspector: (visit): undefined => {
         const currentFn = visit.callStack().get(0);
-        const fnName = currentFn.name;
 
         if (!anchor.has(currentFn)) {
             visit.is('Any', event => anchor.set(currentFn, event));
         }
         visit.is('ReturnStatement', event => {
             const depth = anchor.getDepth(currentFn, event);
-            console.log(`Lexical depth of ${fnName}'s return statement: `, depth);
+            console.log(`Relative depth of ${currentFn.name}'s return statement to its function definition: `, depth);
         });
     }
 });
@@ -46,7 +45,7 @@ fn();
 /**
  * Output
  * ------
- * Lexical depth of ref's return statement:  0
- * Lexical depth of helper's return statement:  0
- * Lexical depth of inner's return statement:  0
+ * Relative depth of ref's return statement to its function definition:  0
+ * Relative depth of helper's return statement to its function definition:  0
+ * Relative depth of inner's return statement to its function definition:  0
 */
