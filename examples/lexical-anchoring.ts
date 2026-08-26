@@ -21,7 +21,7 @@ const fn = monitor({
     inspector: (visit):undefined => {
         const currentFn = visit.callStack().get(0)
 
-        if (currentFn.name === "helper") { // enter the helper
+        if (currentFn.name === "helper") { 
             if (!lexicalAnchor) {
                 visit.is('Any', event => {
                     lexicalAnchor = event.scope.depth;
