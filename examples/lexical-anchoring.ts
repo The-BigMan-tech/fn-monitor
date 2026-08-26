@@ -1,49 +1,52 @@
-import { monitor, LangEvent } from "../src/index.ts";
+import { monitor, LangEvent, Fn } from "../src/index.ts";
 
-let lexicalAnchor:number | null = null;
+const roots: Partial<Record<string, number>> = {};
 
-function relativeDepth(anchor:number,event:LangEvent):number {
-    return event.scope.depth - anchor
-}
+const anchor = {
+    set: (fn: Fn, event: LangEvent) => {
+        roots[fn.name] = event.scope.depth;
+    },
+    has: (fn:Fn) => {
+        return roots[fn.name] !== undefined
+    },
+    getDepth: (fn: Fn, event: LangEvent): number | undefined => {
+        const root = roots[fn.name];
+        return root && (event.scope.depth - root)
+    },
+};
+
 const fn = monitor({
     main: {
         ref: () => {
-            const helper = ()=>{
-                if (true) {
-                    let x = 10;
-                    x++;
-                }
-                return 10
-            }
-            helper()
+            const helper = () => {
+                const inner = () => {
+                    return 10;
+                };
+                return inner();
+            };
+            return helper();
         }
     },
-    inspector: (visit):undefined => {
-        const currentFn = visit.callStack().get(0)
+    inspector: (visit): undefined => {
+        const currentFn = visit.callStack().get(0);
+        const fnName = currentFn.name;
 
-        if (currentFn.name === "helper") { 
-            if (!lexicalAnchor) {
-                visit.is('Any', event => {
-                    lexicalAnchor = event.scope.depth;
-                });
-                return;
-            }
-            visit.is('UpdateExpression', event=>{
-                const depth = relativeDepth(lexicalAnchor!,event)
-                console.log('Lexical depth of helper\'s update expression: ',depth);
-            })
-            visit.is('ReturnStatement', event=>{
-                const depth = relativeDepth(lexicalAnchor!,event)
-                console.log('Lexical depth of helper\'s return statement: ',depth);
-            })
+        if (!anchor.has(currentFn)) {
+            visit.is('Any', event => anchor.set(currentFn, event));
         }
+        visit.is('ReturnStatement', event => {
+            const depth = anchor.getDepth(currentFn, event);
+            console.log(`Lexical depth of ${fnName}'s return statement: `, depth);
+        });
     }
 });
-fn()
+
+fn();
 
 /**
- *  Output
- *  ------
- *  Lexical depth of helper's update expression:  1
- *  Lexical depth of helper's return statement:  0
+ * Output
+ * ------
+ * Lexical depth of ref's return statement:  0
+ * Lexical depth of helper's return statement:  0
+ * Lexical depth of inner's return statement:  0
 */
