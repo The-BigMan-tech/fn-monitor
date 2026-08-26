@@ -17,7 +17,7 @@
 <p align="center">
     <a href="https://github.com/The-BigMan-tech/fn-monitor/blob/master/tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?logo=typescript&logoColor=c0dfff&labelColor=414952" alt="100% typescript"></a>
      &nbsp;&nbsp;&nbsp;&nbsp;
-    <a href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-285%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
+    <a href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-300%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
 </p>
 
 `fn-monitor` is an instrumentation layer over the `sval` JS-in-JS interpreter to monitor, intercept, and mutate a function's execution at the AST level. It allows developers to view their functions as white boxes at runtime by injecting first-class hooks into its custom execution layer.
