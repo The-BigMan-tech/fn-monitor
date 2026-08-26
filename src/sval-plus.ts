@@ -176,18 +176,21 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
     }
 
-    private static meriyahParseOptions:MeriyahOptions = {
-        module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
-        next: true,      // Modern ES support
-        loc: true,    
-        ranges: true,    // Good for error reporting
-        lexical: true    // Helps Sval understand 'let/const' vs 'var'
+    private static options = {
+        meriyah:{
+            module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
+            next: true,      // Modern ES support
+            loc: true,    
+            ranges: true,    // Good for error reporting
+            lexical: true    // Helps Sval understand 'let/const' vs 'var'
+        } satisfies MeriyahOptions,
+
+        sval:{
+            sourceType:"script",//This will prevent dynamic imports and top level await.Check README
+            ecmaVer:2024, 
+            sandBox:true, 
+        } satisfies SvalOptions
     }
-    private static svalOptions:SvalOptions = {
-        sourceType:"script",//This will prevent dynamic imports and top level await.Check README
-        ecmaVer:2024, 
-        sandBox:true, 
-    };
 
     private static standardFnRegex = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/;
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
@@ -264,7 +267,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return;
         };
 
-        super(SvalPlus.svalOptions,'SvalPlus');
+        super(SvalPlus.options.sval,'SvalPlus');
         this._target = 'SvalPlus';
 
         args = args as SvalPlusArgs;
@@ -403,18 +406,18 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         if (this.fnCallAst !== null) {
             throw new Error(ansis.red(`The interpreter can only use one function`))
         };
-        let ast:FnAst;
-
+        
         const fnCodeHash = getSHA256Key(fnSrc.fnCode);
         const cachedAst = SvalPlus.fnAstCache.get(fnCodeHash);
+
+        let ast:FnAst;
 
         if (cachedAst) {
             ast = cachedAst;
         }else {
-            const options = SvalPlus.meriyahParseOptions;
             ast = { 
-                fnCode: meriyahParse(fnSrc.fnCode,options) as EsNode, 
-                fnCall: meriyahParse(fnSrc.fnCall,options) as EsNode ,
+                fnCode: meriyahParse(fnSrc.fnCode,SvalPlus.options.meriyah) as EsNode, 
+                fnCall: meriyahParse(fnSrc.fnCall,SvalPlus.options.meriyah) as EsNode ,
             };
             SvalPlus.fnAstCache.set(fnCodeHash, ast);
         }
