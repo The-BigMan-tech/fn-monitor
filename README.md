@@ -753,7 +753,7 @@ These notes describe how the interpreter behaves in specific edge cases. If you 
   
     - **Snapshot Safety:** Modifying variables directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, the values are not deeply copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
   
-    - **Depth Counter:** Helper functions defined *inside* your monitored function do not reset this counter. It is strictly relative to the `main` or an `embedded` function. If you need the nesting depth relative to a specific nested helper, see this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/lexical-anchoring.ts) to utilize the package's API to build your own solutions.
+    - **Depth Counter:** It is strictly relative to the `main` or an `embedded` function. Entering the scope of any function defined **inside** them will not reset it to 0. This static mapping provides maximum stability for the interpreter and avoids a whole class of runtime edge cases. <br>If you need the nesting depth relative to a specific nested helper, see this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/lexical-anchoring.ts) to utilize the package's API to build your own solutions.
   
 3. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the `inspector` hook will persist and affect all subsequent calls to that function.
 
