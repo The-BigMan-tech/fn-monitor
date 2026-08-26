@@ -176,8 +176,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
     }
 
-    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
-
     private static meriyahParseOptions:MeriyahOptions = {
         module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
         next: true,      // Modern ES support
@@ -190,6 +188,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         ecmaVer:2024, 
         sandBox:true, 
     };
+
+    private static standardFnRegex = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/;
+    private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
     /**
         * A strictly-typed view of `this.exports` for accessing internal, 
@@ -312,6 +313,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         }
     }
 
+
     private getFnSrc<T extends boolean>(fn:Fn,capturesLabel:GeneratedKey,isMainFn:T):FnSrc<T>  {
         const fnString = fn.toString();
         const hash = getSHA256Key(fnString);
@@ -326,7 +328,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             :'';
 
         const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
-        const isStandardFunction = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/.test(fnString);
+        const isStandardFunction = SvalPlus.standardFnRegex.test(fnString);
         
         //The depth offset must start at 1 to ensure that it always points to the inner part of the function's body
         //It is important that the anchor is set after assigning the offset
@@ -373,12 +375,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         };
     }
     private getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
-        let fnCode:string = '';
+        let sources:string = '';
 
         if (functions !== undefined) {
-            let declarations = '';
-            let assignments = '';
-
             const fnNames = Object.keys(functions).sort();//used sort here to increase the cache hit rate
 
             for (const name of fnNames) {
@@ -394,13 +393,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                     return ${fnSrc.fnName};
                 })();`
 
-                declarations += `\n\nvar ${name};`;
-                assignments += `\n${name} = ${scopedFn};`;
+                sources += `\n\nvar ${name} = ${scopedFn};`;
             }
-            // Prepend embedded logic so it's available to the main function
-            fnCode = declarations + assignments;
         }
-        return fnCode;
+        return sources;
     };
 
     private useFn(fnSrc:FnSrc<true>):FnAst {
