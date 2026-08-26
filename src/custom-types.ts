@@ -160,12 +160,13 @@ export type EvaluateOps<T extends unknown> = Partial<
 >
 
 /**
- * The rich object that gives inspectors their ability to participate in the interpretation of the function.
- * 
- * Each monitored function has exactly one visit object (allocated once, not per call). It uses live references 
- * to the current interpreter's state, so it must be used strictly within the inspector hook — using it elsewhere 
- * causes unexpected side effects.
- */
+    * The rich object that gives inspectors their ability to participate in the interpretation 
+    * of the function.
+    * 
+    * Each monitored function has exactly one visit object (allocated once, not per call). 
+    * It uses live references to the current interpreter's state, so it must be used strictly 
+    * within the inspector hook — using it elsewhere may cause unexpected side effects.
+*/
 export interface Visit {
     /**
      * Evaluates your query against the current node. If matched, allocates a scope, wraps it with the node 

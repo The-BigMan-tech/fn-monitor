@@ -24,20 +24,20 @@ export interface MonitorFnSetup<T extends Fn> {
      * The main hook for inspecting and modifying AST nodes during execution. Receives the `visit` object 
      * with tools to query nodes, inspect scopes, mutate AST, and execute nodes manually.
      * 
-     * Note: Using this hook (even as a no-op) has performance overhead due to scope and event allocations.
+     * Note: Using this hook (even as a no-op) has performance overhead due to extra allocations required to give it context.
      */
     inspector?:Inspector<'user'>,
 
     /**
-     * Called before each interpreted step, but without the `visit` object. Significantly faster than 
-     * `inspector` alone since it skips all scope/event allocations.
+     * Called before each interpreted step, but without the `visit` object. When used alone, 
+     * it is significantly faster than the `inspector` because it skips extra allocations.
      * 
      * Ideal for lightweight monitoring like execution timers. If you only need `onStep`, leave `inspector` 
      * undefined for maximum efficiency
      */
     onStep?:OnStep,
 
-    /**Receives the generated interpreter code for the monitored function and all embedded functions*/
+    /**Receives the generated interpreter code for the monitored function including all of its embedded functions*/
     sourceOut?:{value:string}
 
     /**
