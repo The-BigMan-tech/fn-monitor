@@ -4,15 +4,15 @@ description: Combining Vitest with fn-monitor to assert not just what your funct
 tags: javascript, typescript, testing, vitest
 ---
 
-Modern JavaScript testing focuses heavily on testing public outputs and user behavior rather than chasing line-by-line or branch-by-branch coverage. This is because tests that check final outputs survive when you rewrite internal logic or change how a loop works, and they already catch the majority of regressions.
+Imagine a tax calculator that returns the correct final number, but silently skips the mandatory high-income audit step. Your standard black-box test passes with flying colors, but you now have a compliance violation.
 
-Despite this, if you write complex financial calculations, security rules, or state machines where an unhandled condition cannot be tolerated, then a green test on the final value is not the whole story. The same return value can be produced by two different executions — one correct, and one that silently skipped a critical step — and an assertion on the output alone cannot tell them apart. In those domains, you need to verify not just what the function returned, but the work it performed to get there.
+Modern JavaScript testing rightly focuses on public outputs over line-by-line coverage. But for critical logic, verifying the final value isn't always enough. You need to verify the work performed to get there.
 
-That is the gap this article closes. We will combine Vitest with fn-monitor — a package that inspects runtime behavior at the AST level — and upgrade a suite from asserting outputs to asserting internal behavior: which calls ran and which were skipped.
+That’s the gap this article closes. We'll combine Vitest with fn-monitor to upgrade our tests from simple output assertions to deep internal behavior checks, ensuring the right code actually ran.
 
 ## The project
 
-The setup is deliberately minimal: two dependencies, one source file, one test file, and a handful of config lines. Create a folder (we'll call it `vitest-with-monitor`) with this structure:
+Let's see this in action. The setup is deliberately minimal: two dependencies, one source file, one test file, and a handful of config lines. Create a folder (we'll call it `vitest-with-monitor`) with this structure:
 
 ```text
 vitest-with-monitor/
