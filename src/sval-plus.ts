@@ -88,7 +88,7 @@ class EventScope implements ScopeForEvent {
         };
         
         this.variables = {
-            search:(name:string):unknown | undefined =>{
+            search:(name:string):unknown | undefined => {
                 const variable = this.#scope.find(name);
                 return (variable === null)?undefined:variable.get();
             },

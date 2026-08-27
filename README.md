@@ -687,7 +687,7 @@ The rich object that gives inspectors their ability to participate in the interp
   
 - **`ScopeForEvent`**: A freshly allocated snapshot of the scope. 
     - `variables.local` is an object that maps variable identifiers to their values.
-    - `variables.search(name)` searches up the scope chain for a variable through its identifier. 
+    - `variables.search(name)` searches up the live scope chain for a variable through its identifier. 
     - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the `main` function or any `embedded` function.
     - `callDepth` is a 0-indexed value representing the current depth of the call stack starting from the monitored `main` function.
 
@@ -751,7 +751,7 @@ These notes describe how the interpreter behaves in specific edge cases. If you 
    
     - **Type vs Runtime Class:** `ScopeForEvent` defines the compile-time contract for the scope. At runtime, the actual class implementing it may have a different name (e.g., `EventScope`), which is what you will see when logging the object.
   
-    - **Snapshot Safety:** Modifying variables directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, the values are not deeply copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
+    - **Snapshot Safety:** Modifying `variables.local` directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, the values are not deeply copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
   
     - **Depth Counter:** It is strictly relative to the `main` or an `embedded` function. Entering the scope of any function defined **inside** them will not reset it to 0. This static mapping provides maximum stability for the interpreter and avoids a whole class of runtime edge cases. <br>If you need the nesting depth relative to a specific nested helper, see this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/lexical-anchoring.ts) to utilize the package's API to build your own solutions.
   
