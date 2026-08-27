@@ -1,8 +1,10 @@
+// change the import path to '@typescript-guy/fn-monitor' 
+
 import { monitor } from "../src/index.ts";
 
 // ❌ FAILING CASE: Capturing the entire library object
 
-const ansis = await import("ansis");
+const ansis = await import("ansis");// you can quickly install ansis to test this example
 
 const fn = monitor({
     main: {

@@ -1,3 +1,5 @@
+// change the import path to '@typescript-guy/fn-monitor' 
+
 import { 
     monitor,
     type InspectorGenerator,

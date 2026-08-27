@@ -1,3 +1,5 @@
+// change the import path to '@typescript-guy/fn-monitor' 
+
 import { monitor, LangEvent, Fn } from "../src/index.ts";
 
 const roots = new WeakMap<Fn, number>();

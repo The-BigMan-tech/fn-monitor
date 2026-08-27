@@ -22,6 +22,7 @@
  *  usage that comes from keeping distinct closures per node in memory.
 */
 
+// change the import path to '@typescript-guy/fn-monitor' 
 
 import { monitor } from "../src/index.ts";
 
