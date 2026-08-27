@@ -210,8 +210,8 @@ describe('Depth Tracking', () => {
     
     it('[Sync] should ensure that the callDepth is incremented at the exact moment of executing a function and not upon encountering a CallExpression node',()=>{
         const interceptedFns = new Set<Fn>();
-
         const code = {value:''}
+        const constructorUsed = {value:undefined as any}
 
         // passing an argument forces the interpreter to call the evaluator to process it. 
         const capturedFn = (x:number)=>{
@@ -220,7 +220,16 @@ describe('Depth Tracking', () => {
         function embeddedFn(x:number) {
             return x + 1;//must contain at least one line to fire the inspector
         }
+
         function main() {
+            class TestClass {
+                constructor() {
+                    let temp = 1;//must contain at least one line to fire the inspector
+                }
+            }
+            const obj = new TestClass(); 
+            constructorUsed.value = obj.constructor
+            
             capturedFn(10);
             embeddedFn(10);
         }
@@ -228,7 +237,8 @@ describe('Depth Tracking', () => {
             main:{
                 ref:main,
                 captures:{
-                    capturedFn
+                    capturedFn,
+                    constructorUsed
                 }
             },
             embed:{
@@ -240,7 +250,7 @@ describe('Depth Tracking', () => {
             inspector:(visit)=>{
                 visit.is('Any',event=>{
                     if (event.scope.callDepth > 0) {
-                        interceptedFns.add(visit.callStack().get(0));
+                        interceptedFns.add(visit.callStack().get(0))
                     }
                 })
             }
@@ -248,7 +258,8 @@ describe('Depth Tracking', () => {
         fn();
         
         // If the interpreter increased the callDepth just because it saw a CallExpression, it will include `capturedFn` and fail the test
-        expect(interceptedFns).toContain(embeddedFn)
-        expect(interceptedFns).not.toContain(capturedFn)
+        expect(interceptedFns).toContain(embeddedFn);
+        expect(interceptedFns).toContain(constructorUsed.value);
+        expect(interceptedFns).not.toContain(capturedFn);
     })
 })
