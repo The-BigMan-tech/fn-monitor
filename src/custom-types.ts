@@ -3,6 +3,7 @@
 import Scope from "./scope/index.ts";
 import type { Node as EsTreeNode} from "estree";
 import {type Node as AcornNode} from "acorn";
+import ansis from "ansis"
 
 import type { 
     Literal,VariableDeclaration, FunctionDeclaration,
@@ -64,7 +65,7 @@ export type Query =
     | SequenceExpression['type']
     | UnaryExpression['type']
     | YieldExpression['type']
-    | 'Any'; // The fallback / default
+    | 'Any'; // The catch all fallback
 
 /**
  * The type definiton that maps each node query to the event object you will get from that query
@@ -584,9 +585,14 @@ export function createEvent<T extends Query>(query:Query,interpreter:SvalPlus):E
             event = new UnaryExprEvent(interpreter);
             break;
         }
-        case 'Any': default: {
+        case 'Any': {
             event = new LangEvent(interpreter);
             break;
+        }
+        // Because `visit.is` ignores invalid queries, the default case will only be reached if the codebase forgot to implement a mapping for it 
+        // or if a user queries for a legitimate node that the library clearly does not support. 
+        default: {
+            throw new Error(ansis.red(`The query, '${query}' matched a node but it does not map to any event class.`))
         }
     }
     return event as EventMap[T];
