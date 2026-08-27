@@ -1,4 +1,44 @@
 
+## v1.6.0...v1.7.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.6.0...v1.7.0)
+
+### 🚀 Features
+
+- Add 10 new AST event classes for enhanced query support ([0de20df](https://github.com/The-BigMan-tech/fn-monitor/commit/0de20df))
+- Bump to v1.7.0 ([56375b2](https://github.com/The-BigMan-tech/fn-monitor/commit/56375b2))
+
+### ♻️ Refactor
+
+- Change the origin used in the SvalPlus constructor ([123410d](https://github.com/The-BigMan-tech/fn-monitor/commit/123410d))
+- Make the code generator easier to read ([6f96a31](https://github.com/The-BigMan-tech/fn-monitor/commit/6f96a31))
+- Pack both sval and meriyah options under one object ([d3bd5f7](https://github.com/The-BigMan-tech/fn-monitor/commit/d3bd5f7))
+- Make a default case to throw a clear error if a query matches a node but lacks a corresponding event class mapping. ([50b1a4e](https://github.com/The-BigMan-tech/fn-monitor/commit/50b1a4e))
+
+### 📖 Documentation
+
+- **changelog:** Update changelog for v1.6.0 ([f598a53](https://github.com/The-BigMan-tech/fn-monitor/commit/f598a53))
+- **readme:** Add bacticks to a type ([5ad1d66](https://github.com/The-BigMan-tech/fn-monitor/commit/5ad1d66))
+- **test-suite-article:** Tighten the intro ([0bb9216](https://github.com/The-BigMan-tech/fn-monitor/commit/0bb9216))
+- **readme:** Improve the clarity of the callstack ([2611557](https://github.com/The-BigMan-tech/fn-monitor/commit/2611557))
+- **readme:** Clarify the behavior of the depth counter ([7dda046](https://github.com/The-BigMan-tech/fn-monitor/commit/7dda046))
+- **lexical-anchoring:** Heavily simplify the example while retaining correctness ([6e9c638](https://github.com/The-BigMan-tech/fn-monitor/commit/6e9c638))
+- **lexical-anchoring:** Remove a comment ([46a938b](https://github.com/The-BigMan-tech/fn-monitor/commit/46a938b))
+- **lexical-anchroing:** Make the example tighter ([fd2220e](https://github.com/The-BigMan-tech/fn-monitor/commit/fd2220e))
+- **lexical-anchoring:** Use a weakmap instead of an object to be robust against anonymous funcs ([c0dd451](https://github.com/The-BigMan-tech/fn-monitor/commit/c0dd451))
+- **docstring:** Tweak the js-docs ([687f57c](https://github.com/The-BigMan-tech/fn-monitor/commit/687f57c))
+- **readme:** Update the unpacked size badge ([f209853](https://github.com/The-BigMan-tech/fn-monitor/commit/f209853))
+- **readme:** Add a short helpful note ([0215037](https://github.com/The-BigMan-tech/fn-monitor/commit/0215037))
+- **readme:** Add extra clarity to the scope for event type ([9a22d35](https://github.com/The-BigMan-tech/fn-monitor/commit/9a22d35))
+
+### 🎨 Styles
+
+- **quick-examples:** Wrap the final fn call in a try catch block to make the terminal clean ([c01f453](https://github.com/The-BigMan-tech/fn-monitor/commit/c01f453))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.5.0...v1.6.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.5.0...v1.6.0)
