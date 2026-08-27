@@ -1,9 +1,14 @@
-import { Sval,SvalOptions } from "./sval.ts"
+import { Sval,SvalOptions } from "./sval.ts";
 import { generate } from 'astring';
 import ansis from "ansis";
-import { LRUCache } from 'lru-cache'
-import Scope from './scope/index.ts'
-import { parse as meriyahParse,Options as MeriyahOptions } from 'meriyah';
+import { LRUCache } from 'lru-cache';
+import Scope from './scope/index.ts';
+import { QList, ReadonlyQList } from './q-list.ts'
+
+import { 
+    parse as meriyahParse,
+    Options as MeriyahOptions 
+} from 'meriyah';
 
 import { 
     Inspector,
@@ -30,8 +35,6 @@ import {
     inLazyMode, 
     pushResult 
 } from './lifecycle.ts';
-
-import { QList, ReadonlyQList } from './q-list.ts'
 
 
 export interface Metadata<T extends Fn> {

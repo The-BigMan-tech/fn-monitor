@@ -685,24 +685,24 @@ The rich object that gives inspectors their ability to participate in the interp
 
 - **`EsNode`**: Union of all AST nodes (alias to `Node` from `estree`).
   
+- **Event Classes**: Over **40** specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
+
+- **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes including those that don't have an event class.
+  
+- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports random array access and iteration.
+  
+- **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
+  
+- **`InspectorGenerator`**: The return type for generator-based inspectors. Used for type-safe `yield` expressions with `visit.execute()`.
+  
+- **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
+  
 - **`ScopeForEvent`**: A freshly allocated snapshot of the scope. 
     - `variables.local` is an object that maps variable identifiers to their values.
     - `variables.search(name)` searches up the live scope chain for a variable through its identifier. 
     - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the `main` function or any `embedded` function.
     - `callDepth` is a 0-indexed value representing the current depth of the call stack starting from the monitored `main` function.
 
-- **Event Classes**: Over 30 specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
-
-- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports random array access and iteration.
-  
-- **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
-  
-- **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes.
-  
-- **`InspectorGenerator`**: The return type for generator-based inspectors. Used for type-safe `yield` expressions with `visit.execute()`.
-  
-- **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
-  
 ---
 
 <a id="important-limitations"></a>

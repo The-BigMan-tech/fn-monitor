@@ -1,115 +1,73 @@
-//My library leaves it to the caller's hands to figure out how to get the details of an event but it helps enough by narrowing down the nodes through the event classes
-
+import { type Node as EsTreeNode} from "estree";
+import { type Node as AcornNode} from "acorn";
+import { QList,ReadonlyQList } from "./q-list.ts";
 import Scope from "./scope/index.ts";
-import type { Node as EsTreeNode} from "estree";
-import {type Node as AcornNode} from "acorn";
 import ansis from "ansis"
 
 import type { 
-    Literal,VariableDeclaration, FunctionDeclaration,
+    // --- Identifiers & Literals ---
+    Literal,
+    TemplateLiteral,
+    Identifier,
+    TaggedTemplateExpression,
 
-    IfStatement,SwitchStatement,TryStatement,CatchClause,
-    
-    ReturnStatement,ThrowStatement,
+    // --- Declarations ---
+    VariableDeclaration,
+    FunctionDeclaration,
+    ClassDeclaration,
+    ClassExpression,
 
-    ForStatement, WhileStatement,DoWhileStatement, ForOfStatement, ForInStatement,
+    // --- Statements & Blocks ---
+    BlockStatement,
+    ExpressionStatement,
 
-    BreakStatement,ContinueStatement,LabeledStatement,
-    
-    BinaryExpression, CallExpression, AssignmentExpression, 
-    UpdateExpression, LogicalExpression, MemberExpression,AwaitExpression,FunctionExpression,
-    ArrowFunctionExpression,ConditionalExpression,NewExpression,
-    ExpressionStatement,ArrayExpression,ObjectExpression,TemplateLiteral,SequenceExpression,UnaryExpression,YieldExpression
+    // --- Control Flow (Branching) ---
+    IfStatement,
+    SwitchStatement,
+    TryStatement,
+    CatchClause,
+
+    // --- Control Flow (Loops) ---
+    ForStatement,
+    WhileStatement,
+    DoWhileStatement,
+    ForOfStatement,
+    ForInStatement,
+
+    // --- Control Flow (Jumps) ---
+    BreakStatement,
+    ContinueStatement,
+    LabeledStatement,
+    ReturnStatement,
+    ThrowStatement,
+
+    // --- Core Expressions ---
+    ArrayExpression,
+    ObjectExpression,
+    MemberExpression,
+    CallExpression,
+    NewExpression,
+    AwaitExpression,
+    YieldExpression,
+    UnaryExpression,
+    UpdateExpression,
+    BinaryExpression,
+    LogicalExpression,
+    ConditionalExpression,
+    AssignmentExpression,
+    SequenceExpression,
+    FunctionExpression,
+    ArrowFunctionExpression,
+
+    // --- Properties & Elements ---
+    Property, // or PropertyDefinition depending on estree version
+    SpreadElement,
+    RestElement,
+
+    // --- Misc ---
+    ThisExpression,
+    DebuggerStatement,
 } from "estree";
-
-import { QList,ReadonlyQList } from "./q-list.ts";
-
-/**
- * This is a string union of all the possible nodes the caller can query in the visit.is callback.
- * They are all estree node types.You will see type definitions shortening this to EsNode.
- * There are over 30 types of nodes that you can query and if any of the nodes dont match your needs,you can always use the 'Any' query which matches for every node.You can then use the estree node type to cast it to specific types
- */
-export type Query = 
-    | Literal['type']
-    | BinaryExpression['type']
-    | CallExpression['type']
-    | AssignmentExpression['type']
-    | UpdateExpression['type']
-    | LogicalExpression['type']
-    | MemberExpression['type']
-    | AwaitExpression['type']
-    | FunctionExpression['type']
-    | ReturnStatement['type']
-    | IfStatement['type']
-    | SwitchStatement['type']
-    | ThrowStatement['type']
-    | TryStatement['type']
-    | CatchClause['type']
-    | VariableDeclaration['type']
-    | FunctionDeclaration['type']
-    | ForStatement['type']
-    | WhileStatement['type']
-    | DoWhileStatement['type']
-    | ForOfStatement['type']
-    | ForInStatement['type']
-    | LabeledStatement['type']
-    | BreakStatement['type']
-    | ContinueStatement['type']
-    | ArrowFunctionExpression['type']
-    | ConditionalExpression['type']
-    | NewExpression['type']
-    | ExpressionStatement['type']
-    | ArrayExpression['type']
-    | ObjectExpression['type']
-    | TemplateLiteral['type']
-    | SequenceExpression['type']
-    | UnaryExpression['type']
-    | YieldExpression['type']
-    | 'Any'; // The catch all fallback
-
-/**
- * The type definiton that maps each node query to the event object you will get from that query
- * Each type has its own dedicated Event class which helps to tailor intellisense
- */
-export type EventMap = (
-    Record<Literal['type'], LiteralEvent> &
-    Record<BinaryExpression['type'], BinaryExprEvent> &
-    Record<CallExpression['type'], CallExprEvent> &
-    Record<AssignmentExpression['type'], AssignmentExprEvent> &
-    Record<UpdateExpression['type'], UpdateExprEvent> &
-    Record<LogicalExpression['type'], LogicalExprEvent> &
-    Record<MemberExpression['type'], MemberExprEvent> &
-    Record<AwaitExpression['type'], AwaitExprEvent> &
-    Record<FunctionExpression['type'], FuncExprEvent> &
-    Record<ReturnStatement['type'], ReturnStmtEvent> &
-    Record<IfStatement['type'], IfStmtEvent> &
-    Record<SwitchStatement['type'], SwitchStmtEvent> &
-    Record<ThrowStatement['type'], ThrowStmtEvent> &
-    Record<TryStatement['type'], TryStmtEvent> &
-    Record<CatchClause['type'], CatchClauseEvent> &
-    Record<VariableDeclaration['type'], VarDeclEvent> &
-    Record<FunctionDeclaration['type'], FuncDeclEvent> &
-    Record<ForStatement['type'], ForStmtEvent> &
-    Record<WhileStatement['type'], WhileStmtEvent> &
-    Record<DoWhileStatement['type'], DoWhileStmtEvent> &
-    Record<ForOfStatement['type'], ForOfStmtEvent> &
-    Record<ForInStatement['type'], ForInStmtEvent> &
-    Record<LabeledStatement['type'], LabeledStmtEvent> &
-    Record<BreakStatement['type'],BreakStmtEvent> &
-    Record<ContinueStatement['type'],ContinueStmtEvent> &
-    Record<ArrowFunctionExpression['type'],ArrowFnExprEvent> &
-    Record<ConditionalExpression['type'],TernaryExprEvent> &
-    Record<NewExpression['type'],NewExprEvent> &
-    Record<ExpressionStatement['type'],ExpressionStmtEvent> &
-    Record<ArrayExpression['type'],ArrayExprEvent> &
-    Record<ObjectExpression['type'],ObjectExprEvent> &
-    Record<TemplateLiteral['type'],TemplateLiteralEvent> &
-    Record<SequenceExpression['type'],SequenceExprEvent> &
-    Record<UnaryExpression['type'],UnaryExprEvent> &
-    Record<YieldExpression['type'],YieldExprEvent> &
-    Record<'Any', LangEvent>
-);
-
 
 type Brand<T, K extends string> = T & { __brand: K };
 
@@ -287,6 +245,9 @@ export interface SvalPlus<T extends unknown | Generator = unknown | Generator> {
     createEventScope: () => ScopeForEvent,
 }
 
+
+// The package leaves it to the caller's hands to figure out how to get the details of an event but it helps enough by narrowing down the nodes through the event classes
+
 export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short for Language Event
     public node:NodeType;
     public scope:ScopeForEvent;
@@ -296,6 +257,46 @@ export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short f
         this.scope = interpreter.createEventScope()
     }
 }
+export class IdentifierEvent extends LangEvent<Identifier> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class TaggedTemplateExprEvent extends LangEvent<TaggedTemplateExpression> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class ClassDeclEvent extends LangEvent<ClassDeclaration> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class ClassExprEvent extends LangEvent<ClassExpression> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class BlockStmtEvent extends LangEvent<BlockStatement> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class PropertyEvent extends LangEvent<Property> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class SpreadElementEvent extends LangEvent<SpreadElement> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class RestElementEvent extends LangEvent<RestElement> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class ThisExprEvent extends LangEvent<ThisExpression> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
+export class DebuggerStmtEvent extends LangEvent<DebuggerStatement> {
+    constructor(interpreter: SvalPlus) { super(interpreter); }
+}
+
 // Expressions
 export class ExpressionStmtEvent extends LangEvent<ExpressionStatement> {
     constructor(interpreter: SvalPlus) { super(interpreter); }
@@ -440,11 +441,154 @@ export class LiteralEvent extends LangEvent<Literal> {
     constructor(interpreter: SvalPlus) { super(interpreter); }
 }
 
+/**
+ * This is a string union of all the possible nodes the caller can query in the visit.is callback.
+ * They are all estree node types.You will see type definitions shortening this to EsNode.
+ * There are over 40 types of nodes that you can query and if any of the nodes dont match your needs,you can always use the 'Any' query which matches for every node.You can then use the estree node type to cast it to specific types
+ */
+export type Query = 
+    | Literal['type']
+    | Identifier['type']
+    | TaggedTemplateExpression['type']
+    | ClassDeclaration['type']
+    | ClassExpression['type']
+    | BlockStatement['type']
+    | Property['type']
+    | SpreadElement['type']
+    | RestElement['type']
+    | ThisExpression['type']
+    | DebuggerStatement['type']
+    | VariableDeclaration['type']
+    | FunctionDeclaration['type']
+    | IfStatement['type']
+    | SwitchStatement['type']
+    | TryStatement['type']
+    | CatchClause['type']
+    | ReturnStatement['type']
+    | ThrowStatement['type']
+    | ForStatement['type']
+    | WhileStatement['type']
+    | DoWhileStatement['type']
+    | ForOfStatement['type']
+    | ForInStatement['type']
+    | BreakStatement['type']
+    | ContinueStatement['type']
+    | LabeledStatement['type']
+    | BinaryExpression['type']
+    | CallExpression['type']
+    | AssignmentExpression['type']
+    | UpdateExpression['type']
+    | LogicalExpression['type']
+    | MemberExpression['type']
+    | AwaitExpression['type']
+    | FunctionExpression['type']
+    | ArrowFunctionExpression['type']
+    | ConditionalExpression['type']
+    | NewExpression['type']
+    | ExpressionStatement['type']
+    | ArrayExpression['type']
+    | ObjectExpression['type']
+    | TemplateLiteral['type']
+    | SequenceExpression['type']
+    | UnaryExpression['type']
+    | YieldExpression['type']
+    | 'Any';// the catch all fallback
 
-
+/**
+ * The type definiton that maps each node query to the event object you will get from that query
+ * Each type has its own dedicated Event class which helps to tailor intellisense
+ */
+export type EventMap = (
+    Record<Identifier['type'], IdentifierEvent> &
+    Record<TaggedTemplateExpression['type'], TaggedTemplateExprEvent> &
+    Record<ClassDeclaration['type'], ClassDeclEvent> &
+    Record<ClassExpression['type'], ClassExprEvent> &
+    Record<BlockStatement['type'], BlockStmtEvent> &
+    Record<Property['type'], PropertyEvent> &
+    Record<SpreadElement['type'], SpreadElementEvent> &
+    Record<RestElement['type'], RestElementEvent> &
+    Record<ThisExpression['type'], ThisExprEvent> &
+    Record<DebuggerStatement['type'], DebuggerStmtEvent> &
+    Record<Literal['type'], LiteralEvent> &
+    Record<BinaryExpression['type'], BinaryExprEvent> &
+    Record<CallExpression['type'], CallExprEvent> &
+    Record<AssignmentExpression['type'], AssignmentExprEvent> &
+    Record<UpdateExpression['type'], UpdateExprEvent> &
+    Record<LogicalExpression['type'], LogicalExprEvent> &
+    Record<MemberExpression['type'], MemberExprEvent> &
+    Record<AwaitExpression['type'], AwaitExprEvent> &
+    Record<FunctionExpression['type'], FuncExprEvent> &
+    Record<ReturnStatement['type'], ReturnStmtEvent> &
+    Record<IfStatement['type'], IfStmtEvent> &
+    Record<SwitchStatement['type'], SwitchStmtEvent> &
+    Record<ThrowStatement['type'], ThrowStmtEvent> &
+    Record<TryStatement['type'], TryStmtEvent> &
+    Record<CatchClause['type'], CatchClauseEvent> &
+    Record<VariableDeclaration['type'], VarDeclEvent> &
+    Record<FunctionDeclaration['type'], FuncDeclEvent> &
+    Record<ForStatement['type'], ForStmtEvent> &
+    Record<WhileStatement['type'], WhileStmtEvent> &
+    Record<DoWhileStatement['type'], DoWhileStmtEvent> &
+    Record<ForOfStatement['type'], ForOfStmtEvent> &
+    Record<ForInStatement['type'], ForInStmtEvent> &
+    Record<LabeledStatement['type'], LabeledStmtEvent> &
+    Record<BreakStatement['type'],BreakStmtEvent> &
+    Record<ContinueStatement['type'],ContinueStmtEvent> &
+    Record<ArrowFunctionExpression['type'],ArrowFnExprEvent> &
+    Record<ConditionalExpression['type'],TernaryExprEvent> &
+    Record<NewExpression['type'],NewExprEvent> &
+    Record<ExpressionStatement['type'],ExpressionStmtEvent> &
+    Record<ArrayExpression['type'],ArrayExprEvent> &
+    Record<ObjectExpression['type'],ObjectExprEvent> &
+    Record<TemplateLiteral['type'],TemplateLiteralEvent> &
+    Record<SequenceExpression['type'],SequenceExprEvent> &
+    Record<UnaryExpression['type'],UnaryExprEvent> &
+    Record<YieldExpression['type'],YieldExprEvent> &
+    Record<'Any', LangEvent>
+);
 export function createEvent<T extends Query>(query:Query,interpreter:SvalPlus):EventMap[T]  {
     let event:LangEvent | null = null;
     switch (query) {
+        case 'Identifier': {
+            event = new IdentifierEvent(interpreter);
+            break;
+        }
+        case 'TaggedTemplateExpression': {
+            event = new TaggedTemplateExprEvent(interpreter);
+            break;
+        }
+        case 'ClassDeclaration': {
+            event = new ClassDeclEvent(interpreter);
+            break;
+        }
+        case 'ClassExpression': {
+            event = new ClassExprEvent(interpreter);
+            break;
+        }
+        case 'BlockStatement': {
+            event = new BlockStmtEvent(interpreter);
+            break;
+        }
+        case 'Property': {
+            event = new PropertyEvent(interpreter);
+            break;
+        }
+        case 'SpreadElement': {
+            event = new SpreadElementEvent(interpreter);
+            break;
+        }
+        case 'RestElement': {
+            event = new RestElementEvent(interpreter);
+            break;
+        }
+        case 'ThisExpression': {
+            event = new ThisExprEvent(interpreter);
+            break;
+        }
+        case 'DebuggerStatement': {
+            event = new DebuggerStmtEvent(interpreter);
+            break;
+        }
         case 'BinaryExpression': {
             event = new BinaryExprEvent(interpreter);
             break;

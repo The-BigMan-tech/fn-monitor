@@ -164,5 +164,17 @@ export {
     ForInStmtEvent,
 
     // Data
-    LiteralEvent
+    LiteralEvent,
+
+    // New ones
+    IdentifierEvent,
+    TaggedTemplateExprEvent,
+    ClassDeclEvent,
+    ClassExprEvent,
+    BlockStmtEvent,
+    PropertyEvent,
+    SpreadElementEvent,
+    RestElementEvent,
+    ThisExprEvent,
+    DebuggerStmtEvent
 } from "./custom-types.ts"
