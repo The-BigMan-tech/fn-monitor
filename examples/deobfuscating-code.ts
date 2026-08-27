@@ -1,6 +1,6 @@
 // change the import to '@typescript-guy/fn-monitor' 
 
-import { monitor, CallExprEvent } from '../src/index.ts';
+import { monitor } from '../src/index.ts';
 
 // Typical javascript-obfuscator output: Hex-encoded strings and a math-based decoder
 
@@ -26,36 +26,51 @@ function obfuscatedSnippet() {
     console.log(part1, part2, part3);
 }
 
-let argNodes: Set<any> = new Set();
-let args: any[] = [];
+
+let decryptedList:any[] | null = null;
 let lastDecryptedValue: unknown | null = null;
 
+let argNodes: Set<any> = new Set();
+let args: any[] = [];
+
 const codeWatcher = monitor({
-    main: { ref: obfuscatedSnippet },
+    main: { 
+        ref: obfuscatedSnippet 
+    },
     beforeEachCall: () => {
-        argNodes.clear(); // O(1) clear
-        args = [];
         lastDecryptedValue = null;
+        decryptedList = null;
+        argNodes.clear(); 
+        args = [];
     },
     inspector: (visit): undefined => {
-        visit.is('CallExpression', (event: CallExprEvent) => {
+        if (!decryptedList) {
+            visit.is('VariableDeclaration', event =>{
+                visit.execute();
+                decryptedList = event.scope.variables.search('_0x2a1b') as any[];
+                console.log(`\n[DEOBFUSCATED LIST] [${decryptedList.join(', ')}]\n`);
+            });
+        }
+
+        visit.is('CallExpression', event => {
             const callee = event.node.callee;
-            if (callee.type !== "Identifier" || callee.name !== '_0xdecoder') return;
+            if (callee.type !== "Identifier") return;
+            if (callee.name !== '_0xdecoder') return;
 
             try {
                 // Add all argument nodes to the Set
                 event.node.arguments.forEach(node => argNodes.add(node));
-                
+
                 // Execute the call (which will trigger the 'Any' hook for the arguments)
                 lastDecryptedValue = visit.execute();
-                
-                console.log(`\n[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"`);
+                console.log(`[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"\n`);
             } finally {
                 args = [];
                 argNodes.clear();
             }
         });
 
+        // Only query for 'Any' if we are meant to evaluate the arguments. Else, fn-monitor will allocate unnecessary event objects for unrequired nodes
         if (argNodes.size > 0) {
             visit.is('Any', event => {
                 if (argNodes.has(event.node)) {
@@ -73,10 +88,13 @@ codeWatcher();
  * 
  * Output
  * ------
- * [DEOBFUSCATED CALL] _0xdecoder(0,1787861555751) -> "hello"
+ * [DEOBFUSCATED LIST] [hello, world, fn-monitor]
+ * 
+ * [DEOBFUSCATED CALL] _0xdecoder(0,1787862235676) -> "fn-monitor"
  *
- * [DEOBFUSCATED CALL] _0xdecoder(1,1787861555752) -> "fn-monitor"
+ * [DEOBFUSCATED CALL] _0xdecoder(1,1787862235677) -> "world"
  *
- * [DEOBFUSCATED CALL] _0xdecoder(2,1787861555752) -> "hello"
- * hello fn-monitor hello
+ * [DEOBFUSCATED CALL] _0xdecoder(2,1787862235678) -> "hello"
+ *
+ * fn-monitor world hello
 */
