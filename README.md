@@ -615,13 +615,15 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ---
 
+<a id="capabilities"></a>
+
 ## Capabilities 💪
 
 1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to mutate execution, enforce timeouts, and trace state without needing to understand the underlying mechanics.
 
 2. **Unopinionated:** Makes no assumptions about your problem domain. It provides raw, flexible primitives that can be used anywhere runtime AST analysis, tracing, or mutation is required.
    
-   > 💡 *If your problem domain is deobfuscation, see this [Dynamic Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts)*
+   > 💡 If your problem domain is deobfuscation, see this [Dynamic Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts)
    
 3. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
 
