@@ -4,21 +4,24 @@ import { monitor, CallExprEvent } from '../src/index.ts';
 
 // Typical javascript-obfuscator output: Hex-encoded strings and a math-based decoder
 
-function obfuscatedLogic() {
+function obfuscatedSnippet() {
     const _0x2a1b = [
         '\x68\x65\x6c\x6c\x6f',          // "hello"
         '\x77\x6f\x72\x6c\x64',          // "world"
         '\x66\x6e\x2d\x6d\x6f\x6e\x69\x74\x6f\x72' // "fn-monitor"
     ];
     
-    // Advanced decoder: XORs the index to hide the direct mapping
-    function _0xdecoder(idx: number, key: number) {
-        return _0x2a1b[idx ^ key];
+    function _0xdecoder(idx: number, seed: number) {
+        // Using modulo directly on the positive timestamp string
+        const timeMask = seed % 3; 
+        const targetIndex = (idx + timeMask) % 3;
+        return _0x2a1b[targetIndex];
     }
 
-    const part1 = _0xdecoder(0, 0); // 0 ^ 0 = 0 -> "hello"
-    const part2 = _0xdecoder(3, 2); // 3 ^ 2 = 1 -> "world"
-    const part3 = _0xdecoder(1, 3); // 1 ^ 3 = 2 -> "fn-monitor"
+    // The script calls the decoder passing the current timestamp live
+    const part1 = _0xdecoder(0, Date.now()); 
+    const part2 = _0xdecoder(1, Date.now()); 
+    const part3 = _0xdecoder(2, Date.now()); 
     
     console.log(part1, part2, part3);
 }
@@ -27,9 +30,9 @@ let argNodes: any[] = [];
 let args:any[] = [];
 let lastDecryptedValue:unknown | null = null;
 
-const fn = monitor({
+const codeWatcher = monitor({
     main: { 
-        ref: obfuscatedLogic 
+        ref: obfuscatedSnippet
     },
     beforeEachCall:()=>{
         argNodes = [];
@@ -46,7 +49,7 @@ const fn = monitor({
                 try {
                     argNodes = event.node.arguments;
                     lastDecryptedValue = visit.execute();
-                    console.log(`\n[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) dynamically resolved to: "${lastDecryptedValue}"`);
+                    console.log(`\n[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"`);
                 }finally {
                     args = [];
                     argNodes = [];
@@ -64,16 +67,18 @@ const fn = monitor({
         }
     }
 });
-
-fn();
+codeWatcher();
 
 /**
- * Output:
- * -------
- * [DEOBFUSCATED CALL] _0xdecoder(0,0) dynamically resolved to: "hello"
+ * The actual output will vary because the obfuscated code uses the live date. But it should
+ * look something like this:
  * 
- * [DEOBFUSCATED CALL] _0xdecoder(3,2) dynamically resolved to: "world"
- * 
- * [DEOBFUSCATED CALL] _0xdecoder(1,3) dynamically resolved to: "fn-monitor"
- * hello world fn-monitor
+ * Output
+ * ------
+ * [DEOBFUSCATED CALL] _0xdecoder(0,1787861555751) -> "hello"
+ *
+ * [DEOBFUSCATED CALL] _0xdecoder(1,1787861555752) -> "fn-monitor"
+ *
+ * [DEOBFUSCATED CALL] _0xdecoder(2,1787861555752) -> "hello"
+ * hello fn-monitor hello
 */
