@@ -26,51 +26,49 @@ function obfuscatedSnippet() {
     console.log(part1, part2, part3);
 }
 
-let argNodes: any[] = [];
-let args:any[] = [];
-let lastDecryptedValue:unknown | null = null;
+let argNodes: Set<any> = new Set();
+let args: any[] = [];
+let lastDecryptedValue: unknown | null = null;
 
 const codeWatcher = monitor({
-    main: { 
-        ref: obfuscatedSnippet
-    },
-    beforeEachCall:()=>{
-        argNodes = [];
+    main: { ref: obfuscatedSnippet },
+    beforeEachCall: () => {
+        argNodes.clear(); // O(1) clear
         args = [];
-        lastDecryptedValue = null
+        lastDecryptedValue = null;
     },
-    inspector: (visit):undefined => {
-        // Intercept the decoder function calls
+    inspector: (visit): undefined => {
         visit.is('CallExpression', (event: CallExprEvent) => {
             const callee = event.node.callee;
-            if (callee.type !== "Identifier") return;
+            if (callee.type !== "Identifier" || callee.name !== '_0xdecoder') return;
 
-            if (callee.name === '_0xdecoder') {
-                try {
-                    argNodes = event.node.arguments;
-                    lastDecryptedValue = visit.execute();
-                    console.log(`\n[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"`);
-                }finally {
-                    args = [];
-                    argNodes = [];
-                }
+            try {
+                // Add all argument nodes to the Set
+                event.node.arguments.forEach(node => argNodes.add(node));
+                
+                // Execute the call (which will trigger the 'Any' hook for the arguments)
+                lastDecryptedValue = visit.execute();
+                
+                console.log(`\n[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"`);
+            } finally {
+                args = [];
+                argNodes.clear();
             }
         });
-        if (argNodes.length > 0) {
-            visit.is('Any', event=>{
-                argNodes.forEach(node =>{
-                    if (event.node === node) {
-                        args.push(visit.execute())
-                    }
-                })
-            })
+
+        if (argNodes.size > 0) {
+            visit.is('Any', event => {
+                if (argNodes.has(event.node)) {
+                    args.push(visit.execute());
+                }
+            });
         }
     }
 });
 codeWatcher();
 
 /**
- * The actual output will vary because the obfuscated code uses the live date. But it should
+ * The actual output will vary because the obfuscated code checks the date in real time. But it should
  * look something like this:
  * 
  * Output
