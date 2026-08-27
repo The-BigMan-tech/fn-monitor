@@ -1,8 +1,9 @@
 // change the import to '@typescript-guy/fn-monitor' 
 
-import { monitor } from '../src/index.ts';
+import { monitor, CallExprEvent, LangEvent } from '../src/index.ts';
 
-// Typical javascript-obfuscator output: Hex-encoded strings and a math-based decoder
+// This is a typical javascript-obfuscator output. 
+// It swaps the original source with Hex-encoded strings and a math-based decoder
 
 function obfuscatedSnippet() {
     const _0x2a1b = [
@@ -12,7 +13,6 @@ function obfuscatedSnippet() {
     ];
     
     function _0xdecoder(idx: number, seed: number) {
-        // Using modulo directly on the positive timestamp string
         const timeMask = seed % 3; 
         const targetIndex = (idx + timeMask) % 3;
         return _0x2a1b[targetIndex];
@@ -27,7 +27,12 @@ function obfuscatedSnippet() {
 }
 
 
-let decryptedList:any[] | null = null;
+/**
+ * This is how we will use fn-monitor to deobfuscate it through runtime analysis. 
+ * For a complete deobfuscation suite, you should pair this with existing tools like REstringer
+*/
+
+let decryptedList: any[] | null = null;
 let lastDecryptedValue: unknown | null = null;
 
 let argNodes: Set<any> = new Set();
@@ -37,42 +42,63 @@ const codeWatcher = monitor({
     main: { 
         ref: obfuscatedSnippet 
     },
-    beforeEachCall: () => {
+
+    // Reset state after each function invocation to prevent memory leaks or stale data
+    afterEachCall: () => {
         lastDecryptedValue = null;
         decryptedList = null;
         argNodes.clear(); 
         args = [];
     },
+
+    /** 
+     * [Note]: The inspector callback fires for EVERY single AST node as the interpreter 
+     * walks the tree from top to bottom. 
+    */
     inspector: (visit): undefined => {
+        /**
+         * [Performance]: Only query for 'VariableDeclaration' nodes until we find the array. 
+         * Once `decryptedList` is set, this block is skipped for all subsequent nodes.
+        */
         if (!decryptedList) {
-            visit.is('VariableDeclaration', event =>{
-                visit.execute();
+            visit.is('VariableDeclaration', event => {
+                visit.execute(); // Ensure the array is evaluated and populated in scope
                 decryptedList = event.scope.variables.search('_0x2a1b') as any[];
                 console.log(`\n[DEOBFUSCATED LIST] [${decryptedList.join(', ')}]\n`);
             });
         }
 
-        visit.is('CallExpression', event => {
+        /**
+         * [Note]: visit.is is a SINGLE, IMMEDIATE check against the CURRENT node. 
+         * It evaluates the query, fires the callback if it matches and discards it instantly.
+        */
+        visit.is('CallExpression', (event: CallExprEvent) => {
             const callee = event.node.callee;
             if (callee.type !== "Identifier") return;
             if (callee.name !== '_0xdecoder') return;
 
             try {
-                // Add all argument nodes to the Set
+                // Capture the exact AST node references of the arguments BEFORE execution
                 event.node.arguments.forEach(node => argNodes.add(node));
 
-                // Execute the call (which will trigger the 'Any' hook for the arguments)
+                // Manually execute the CallExpression. 
+                // This naturally triggers the 'Any' hook below for its arguments first.
                 lastDecryptedValue = visit.execute();
                 console.log(`[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"\n`);
             } finally {
+                // Clean up immediately after execution to prevent state bleed
                 args = [];
                 argNodes.clear();
             }
         });
 
-        // Only query for 'Any' if we are meant to evaluate the arguments. Else, fn-monitor will allocate unnecessary event objects for unrequired nodes
+        /**
+         * [Performance]: Conditionally query for 'Any' ONLY when actively tracking arguments.
+         * This prevents fn-monitor from allocating unnecessary event objects for every unrelated node.
+        */
         if (argNodes.size > 0) {
             visit.is('Any', event => {
+                // Check if the interpreter is currently evaluating one of our saved argument nodes
                 if (argNodes.has(event.node)) {
                     args.push(visit.execute());
                 }
@@ -80,11 +106,12 @@ const codeWatcher = monitor({
         }
     }
 });
+
 codeWatcher();
 
 /**
- * The actual output will vary because the obfuscated code checks the date in real time. But it should
- * look something like this:
+ * The actual output will vary because the obfuscated code checks the date in real time. 
+ * But it should look something like this:
  * 
  * Output
  * ------
