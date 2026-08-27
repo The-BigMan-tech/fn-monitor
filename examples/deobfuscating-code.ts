@@ -1,6 +1,6 @@
 // change the import to '@typescript-guy/fn-monitor' 
 
-import { monitor, CallExprEvent, LangEvent } from '../src/index.ts';
+import { monitor } from '../src/index.ts';
 
 // This is a typical javascript-obfuscator output. 
 // It swaps the original source with Hex-encoded strings and a math-based decoder
@@ -72,7 +72,7 @@ const codeWatcher = monitor({
          * [Note]: visit.is is a SINGLE, IMMEDIATE check against the CURRENT node. 
          * It evaluates the query, fires the callback if it matches and discards it instantly.
         */
-        visit.is('CallExpression', (event: CallExprEvent) => {
+        visit.is('CallExpression', event => {
             const callee = event.node.callee;
             if (callee.type !== "Identifier") return;
             if (callee.name !== '_0xdecoder') return;
