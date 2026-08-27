@@ -28,8 +28,8 @@ function obfuscatedSnippet() {
 
 
 /**
- * This is how we will use fn-monitor to deobfuscate it through runtime analysis. 
- * For a complete deobfuscation suite, you should pair this with existing tools like REstringer
+ * This is how we will use fn-monitor to deobfuscate the code through runtime analysis. 
+ * For a complete deobfuscation suite, you should pair this with existing tools like REstringer.
 */
 
 let decryptedList: any[] | null = null;

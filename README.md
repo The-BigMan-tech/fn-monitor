@@ -615,18 +615,20 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ---
 
-<a id="capabilities"></a>
-
 ## Capabilities 💪
 
-1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to enforce timeouts, mutate execution, and trace state without having to understand the underlying mechanics.
-   
-2. **ES2024 Support:** The interpreter supports JavaScript syntax up to the ES2024 specification.
+1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to mutate execution, enforce timeouts, and trace state without needing to understand the underlying mechanics.
 
-3. **Zero-Dependency Runtime:** This is a pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs and its only dependencies run in pure JS.
+2. **Unopinionated:** Makes no assumptions about your problem domain. It provides raw, flexible primitives that can be used anywhere runtime AST analysis, tracing, or mutation is required.
    
-4. **Sync & Async Support:** Seamlessly interprets both synchronous and asynchronous functions.
+   > 💡 *If your problem domain is deobfuscation, see this [Dynamic Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts)*
+   
+3. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
 
+4. **Zero-Dependency Runtime:** A pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs, and its only dependencies run in pure JS.
+   
+5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
+   
 ---
 
 <a id="full-api-reference"></a>
