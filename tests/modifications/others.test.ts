@@ -4,22 +4,30 @@ import { ForbiddenDynamicImport } from '../../src/custom-types.ts';
 
 describe('Other Runtime Behaviours',()=>{
 
-    it('[Sync] should ensure that monitored functions executes in strict mode', () => {
-        const context = {value:undefined}
-        const fn = monitor({
+    it('[Sync] should enforce strict mode semantics (undeclared vars & undefined `this`)', () => {
+        // 1. Tests ReferenceError on undeclared variables
+        const fnThrow = monitor({
             main: {
-                ref:()=> {
+                ref: () => {
                     //@ts-expect-error
-                    x = 0;
-                    context.value = this;
-                },
-                captures:{
-                    context
+                    unboundVar = 42;
                 }
             }
         });
-        expect(()=>fn()).toThrow(ReferenceError);
-        expect(context.value).toBe(undefined)
+        expect(() => fnThrow()).toThrow(ReferenceError);
+
+        // 2. Tests that top-level `this` is undefined in strict mode
+        const context = { thisValue: 'not-set' as any };
+        const fnThis = monitor({
+            main: {
+                ref: function() {
+                    context.thisValue = this;
+                },
+                captures: { context }
+            }
+        });
+        fnThis();
+        expect(context.thisValue).toBe(undefined);
     });
 
     it('[Async] should ensure that dynamic imports are not supported',async() => {
