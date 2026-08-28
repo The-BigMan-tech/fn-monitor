@@ -38,14 +38,19 @@ import {
 
 
 export interface Metadata<T extends Fn> {
-    /**the reference to the function to be included in the interpreter context*/
+    /**The reference to the function to be included in the interpreter context*/
     ref:T,
 
     /** 
      *Because the function runs in an isolated interpreter context, all variables that it needs from the outside scope has to captured by mapping their names to their values and passing the object here.
      *It is important to keep in mind that the captures object itself follows the semantic of copy primitives by value and copy obects by reference.
     */
-    captures?:Record<string,any>
+    captures?:Record<string,any>,
+    /**
+     * The `this` context to bind to the function.
+     * This is required when monitoring instance methods to preserve the `this` reference.
+    */
+    bind?: unknown;
 }
 export interface FnSrc<T extends boolean> {
     fnName:string
@@ -173,6 +178,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         fnMap:getSHA256Key('simulated-functions-to-original-functions'),
         fnRef:(fnName:string)=>{
             return getSHA256Key(`fn-ref-to-${fnName}`)
+        },
+        bind:(fnName:string)=>{
+            return getSHA256Key(`binding-of-${fnName}`)
         },
         captures:(fnName:string)=>{
             return getSHA256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
@@ -320,64 +328,101 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
 
 
-    private getMainCall(fnName:string,fnRefKey:GeneratedKey) {
-        this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
-        return `
-            \n\n//This is the code that is ran each time the monitored function is called...
-            exports.${SvalPlus.commonLabels.fnMap}.set(${fnName},exports.${fnRefKey});
-            exports.${SvalPlus.commonLabels.callStack}.unshift(
-                exports.${SvalPlus.commonLabels.fnMap}.get(${fnName}) || ${fnName}
-            );
-            exports.${SvalPlus.commonLabels.resultExport} = ${fnName!}(...${SvalPlus.commonLabels.args});
-        `
+    private codeGenHelper = {
+        /**
+         * Because the offset variable is defined on the same level as the intermediate function,
+         * it must always start at 1 to ensure that it always points to the inner part of the function's body.
+         * 
+         * We then increment it by 1 because we nested the user's function's code inside a function expression wrapper to handle the `this` binding
+        */
+        getInitialOffset:():number =>{
+            let initialOffset = 1; 
+            initialOffset += 1;
+            return initialOffset;
+        },
+        /**
+         * When lookups happen in an AST , an arrow function has a lexical depth of 0 relative to its creation site, 
+         * whereas a regular function definition has a depth of 1. 
+        */
+        getAdditionalOffset:(fnString:string):number => {
+            return SvalPlus.standardFnRegex.test(fnString) ? 1 : 0
+        },
+        unpackCaptures:(capturesLabel:GeneratedKey):string => {
+            const capturedKeys = Object.keys(this.svalPlusExports[capturesLabel]).sort(); // sorted to increase cache hit rate
+            const unpackedCaptures = (capturedKeys.length > 0) 
+                ? `\nconst {${capturedKeys.join(',')}} = exports.${capturesLabel};`
+                : '';
+            return unpackedCaptures;
+        },
+        getMainCall:(fnName:string,fnRefKey:GeneratedKey):string => {
+            this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
+            return `
+                \n//This is the code that is ran each time the monitored function is called...
+                exports.${SvalPlus.commonLabels.fnMap}.set(${fnName},exports.${fnRefKey});
+                exports.${SvalPlus.commonLabels.callStack}.unshift(
+                    exports.${SvalPlus.commonLabels.fnMap}.get(${fnName}) || ${fnName}
+                );
+                exports.${SvalPlus.commonLabels.resultExport} = ${fnName!}(...${SvalPlus.commonLabels.args});
+            `
+        },
+        getBindKey:(fnName:string,bind:unknown):string => {
+            const bindKey = SvalPlus.commonLabels.bind(fnName);
+            this.svalPlusExports[bindKey] = bind;
+            return bindKey;
+        },
+        getFinalFnName:(fn:Fn,hash:GeneratedKey):string => {
+            return (fn.name.length > 0) ? fn.name : 'anonymousFn_' + hash;
+        }
     }
-    private getFnSrc<T extends boolean>(fn:Fn,capturesLabel:GeneratedKey,isMainFn:T):FnSrc<T>  {
+
+
+    private getFnSrc<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
+        const { ref: fn, bind } = metadata;
+
         const fnString = fn.toString();
         const hash = getSHA256Key(fnString);
 
-        const intermediateFnName:string = 'intermediateFn_' + hash;
-        const intermediateFnCode:string = `\nconst ${intermediateFnName} = \n${fnString};`
+        const intermediateFnName: string = 'intermediateFn_' + hash;
+        const intermediateFnCode: string = `
+            const ${intermediateFnName} = function(...args) {
+                return (${fnString}).apply(this, args);
+            };
+        `
 
-        const capturedKeys = Object.keys(this.svalPlusExports[capturesLabel]).sort();//i used sort here to increase the cache hit rate
-
-        const unpackCaptures = (capturedKeys.length > 0) 
-            ?`\nconst {${capturedKeys.join(',')}} = exports.${capturesLabel};`
-            :'';
-
-        const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
+        const finalFnName = this.codeGenHelper.getFinalFnName(fn,hash);
         const fnRefKey = SvalPlus.commonLabels.fnRef(intermediateFnName);
 
         this.svalPlusExports[SvalPlus.commonLabels.fnMap] = this.userRoot.simulatedFnsToOriginal;
-        this.svalPlusExports[fnRefKey] = fn
-            
-        const addToMap = (isMainFn)?''
-            :`exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`
+        this.svalPlusExports[fnRefKey] = fn;
+        
+        const addToMap = (isMainFn) ? ''
+            : `exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`;
 
-        //The depth offset must start at 1 to ensure that it always points to the inner part of the function's body
-        //It is important that the anchor is set after assigning the offset
-
+        const returnTarget = bind 
+            ? `${intermediateFnName}.bind(exports.${this.codeGenHelper.getBindKey(intermediateFnName,bind)})` 
+            : intermediateFnName;
+        
+        // It is important that the anchor is set after assigning the offset.
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
-            let ${this.userRoot.labels.offset} = 1;
-            ${this.userRoot.labels.offset} += ${
-                SvalPlus.standardFnRegex.test(fnString)?1:0
-            }
+            let ${this.userRoot.labels.offset} = ${this.codeGenHelper.getInitialOffset()};
+            ${this.userRoot.labels.offset} += ${this.codeGenHelper.getAdditionalOffset(fnString)};
             const ${this.userRoot.labels.anchor} = true;
 
-            ${unpackCaptures}
+            ${this.codeGenHelper.unpackCaptures(capturesLabel)}
             ${intermediateFnCode}
 
             ${addToMap}
-            return ${intermediateFnName};
+            return ${returnTarget}; 
         })();`
 
         const finalFnCall = isMainFn
-            ?this.getMainCall(finalFnName,fnRefKey)
-            :null;
+            ? this.codeGenHelper.getMainCall(finalFnName, fnRefKey)
+            : null;
 
         return { 
-            fnName:finalFnName ,
-            fnCode:finalFnCode,
-            fnCall:finalFnCall as FnSrc<T>['fnCall'] 
+            fnName: finalFnName,
+            fnCode: finalFnCode,
+            fnCall: finalFnCall as FnSrc<T>['fnCall'] 
         };
     }
     private getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
@@ -391,7 +436,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);//prepending embeddedFn ensures that it wont conflct with existing generated commonLabels
 
                 this.svalPlusExports[capturesLabel] = fn.captures || Object.create(null);
-                const fnSrc = this.getFnSrc(fn.ref,capturesLabel,false);//passing undefined here prevents infinite recursion
+                const fnSrc = this.getFnSrc(fn,capturesLabel,false);//passing undefined here prevents infinite recursion
 
                 //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
                 const scopedFn = `(()=>{ 
@@ -489,13 +534,13 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
             this.svalPlusExports[capturesLabel] = main.captures || Object.create(null);
             
-            const fnSrc = this.getFnSrc(main.ref,capturesLabel,true);
+            const fnSrc = this.getFnSrc(main,capturesLabel,true);
             fnSrc.fnCode = `
                 'use strict'
                 ${fnSrc.fnCode}
                 ${this.getFnSources(embed)}
             `;
-            
+
             const ast = this.useFn(fnSrc);
             if (sourceOut) {//only write the generated code if the interpreter could parse it
                 const indent = ''.padStart(4);

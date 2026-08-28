@@ -611,7 +611,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ---
 
->💡 **All examples** are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts). *(Note: If you copy the code, change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'`)*.
+>💡 **All examples** are available in [this file](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/quick-examples.ts).
 
 ---
 
@@ -630,6 +630,8 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 4. **Zero-Dependency Runtime:** A pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs, and its only dependencies run in pure JS.
    
 5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
+
+6. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without crashing the parser, simply use the `bind` property in the function metadata. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
    
 ---
 
@@ -660,6 +662,7 @@ The main export. Accepts a configuration object containing the target function a
 | --- | --- | --- |
 | `ref` | `T` | The reference to the function to be included in the interpreter context. |
 | `captures` | `Record<string, any>` | Maps variable names to their values stored outside the wrapped function's scope. Follows standard JS copy-by-value (primitives) and copy-by-reference (objects) semantics. |
+| `bind` | `unknown` | The `this` context to bind to the generated function. Required when monitoring instance methods to preserve the `this` reference safely. |
 
 ---
 
@@ -673,7 +676,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | `execute()` | Manually executes the current node and returns the result. Calling this is optional; if omitted, the interpreter executes the node normally after the `inspector` finishes.<br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results. Supports indexed access to previous results and is iterable. |
 | `callStack()` | Returns a read-only reference to the stack of active function calls with the latest call at the head. It holds the original function references and not internal wrappers. Supports indexed access to previous calls and is iterable. |
-| ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](#deprecated-perexecution-hook) for more detail. |
+| ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](https://github.com/The-BigMan-tech/fn-monitor/EDGE-CASES.md#deprecated-perexecution-hook) for more detail. |
 
 #### ExeResult
 | Property | Type | Description |
@@ -739,57 +742,9 @@ at the call site or where you refer to it in your code.
 
 ## Advanced Behavior 🧐
 
-These notes describe how the interpreter behaves in specific edge cases. If you encounter unexpected behavior, it is likely documented here:
+Because `fn-monitor` interprets code directly at the AST level, working with specific runtime features (such as class methods, native generators, or dynamic imports) requires specialized handling. Additionally, internal concepts like the `visit` object and `ScopeForEvent` carry specific execution rules.
 
-1. **`Visit` Object Nuances:**
-   
-    - `visit.is()` does **not** register a persistent hook for future nodes. It is an **immediate, single-use check** against the node currently being evaluated. Once checked, the callback is discarded. This keeps the interpreter fast and memory-efficient.
-
-    <a id="deprecated-perExecution-hook"></a>
-
-    - `visit.perExecution` is a single-slot API. Each assignment silently overwrites the previous owner and closure. The same behavior can be achieved explicitly with `visit.execute()`. See [the migration guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts). Will be removed in a future major release.
-
-    - `visit.localExeStack()` is ephemeral; it is mutated and cleared as the interpreter moves between node subtrees. Copy or harvest elements immediately if you need persistent history. See this [example](#getting-the-full-execution-history-of-a-function-call).
-
-2. **`ScopeForEvent` Nuances:**
-   
-    - **Type vs Runtime Class:** `ScopeForEvent` defines the compile-time contract for the scope. At runtime, the actual class implementing it may have a different name (e.g., `EventScope`), which is what you will see when logging the object.
-  
-    - **Snapshot Safety:** Modifying `variables.local` directly on `ScopeForEvent` is safe and has no effect on the interpreter's execution. However, the values are not deeply copied. Mutating an object’s nested properties *will* cause side effects in your live application code.
-  
-    - **Depth Counter:** It is strictly relative to the `main` or an `embedded` function. Entering the scope of any function defined **inside** them will not reset it to 0. This static mapping provides maximum stability for the interpreter and avoids a whole class of runtime edge cases. <br>If you need the nesting depth relative to a specific nested helper, see this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/lexical-anchoring.ts) to utilize the package's API to build your own solutions.
-  
-3. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the `inspector` hook will persist and affect all subsequent calls to that function.
-
-4. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating another monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
-
-5. **Native Generator Functions (`function*`):** Although you can directly pass a generator to `main.ref`, calling the monitored function immediately returns an Iterator object without executing the body. The interpreter cannot intercept any of its code during the subsequent `.next()` calls because they are driven by the native JS engine.
-   
-    > 💡 **Tip:** There is a workaround. 
-    >
-    > If a monitored sync or async function **consumes** a generator that was **embedded** (rather than captured), the generator's internals — including `YieldExpression` nodes — become visible to the `inspector`. See the [workaround](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/generator-workaround.ts) example for a quick demonstration.
-    > 
-    > Make sure to change the import from `'../src/index.ts'` to `'@typescript-guy/fn-monitor'` if you are copying it to a local script.
-
-6. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions and will throw an error if it detects one. You must lift your imports to the native scope and pass the resolved modules via the `captures` property.
-   
-    > 💡 **The exact error you get depends on your toolchain.**
-    >
-    > `fn-monitor` can only detect an import if it still exists as an `ImportExpression` node when it parses your function's source code. 
-    >
-    > Toolchains that preserve native `import()` (e.g., Node, Bun, tsx) will throw a clear `ForbiddenDynamicImport` error. However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. 
-    > 
-    > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
-
-7. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw an unexpected `TypeError` at runtime. This occurs because the underlying interpreter cannot always safely resolve complex internal structures across the execution boundary. 
-
-    > 💡 **Tip:** There is a simple workaround. Instead of capturing the library object itself, create a lightweight wrapper function in your outer scope and capture the wrapper.
-    > 
-    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) for a quick demonstration.
-
-8. **Build Tool Transformations:** Bundlers and JavaScript runtimes often transform source code before execution. This alters how `fn.toString()` behaves, meaning the AST nodes your inspector sees may structurally differ from the original code you wrote in your editor.
-
-9. **AST Location (`loc`) Mapping:** The `loc` and `range` properties on the AST nodes do **not** map to your original editor file. They map to an intermediate, generated code structure that is inherently unformatted, and the string you get from `sourceOut` is simply a beautified version of it. For accurate source extraction, it is highly recommended to generate it directly from the node object using a tool like [`astring`](https://github.com/davidbonnet/astring) rather than relying on string slicing.
+If you encounter unexpected behavior, it is likely documented in the **[Advanced Behavior Guide](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md)**.
 
 ---
 
