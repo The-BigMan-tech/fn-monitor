@@ -781,14 +781,16 @@ These notes describe how the interpreter behaves in specific edge cases. If you 
     > 
     > Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
 
-7. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw a `TypeError: func.apply is not a function` at runtime. This occurs because the underlying interpreter cannot safely resolve their complex internal structures across the execution boundary. 
+7. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw an unexpected `TypeError` at runtime. This occurs because the underlying interpreter cannot always safely resolve complex internal structures across the execution boundary. 
 
-    > 💡 **Tip:** There is a workaround. 
-    >   
-    > Instead of capturing the library object itself, create a simple wrapper function in your outer scope and capture the wrapper.
-    >
+    > 💡 **Tip:** There is a simple workaround. Instead of capturing the library object itself, create a lightweight wrapper function in your outer scope and capture the wrapper.
+    > 
     > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) for a quick demonstration.
-    
+
+8. **Build Tool Transformations:** Bundlers and JavaScript runtimes often transform source code before execution. This alters how `fn.toString()` behaves, meaning the AST nodes your inspector sees may structurally differ from the original code you wrote in your editor.
+
+9. **AST Location (`loc`) Mapping:** The `loc` and `range` properties on the AST nodes do **not** map to your original editor file. They map to an intermediate, generated code structure that is inherently unformatted, and the string you get from `sourceOut` is simply a beautified version of it. For accurate source extraction, it is highly recommended to generate it directly from the node object using a tool like [`astring`](https://github.com/davidbonnet/astring) rather than relying on string slicing.
+
 ---
 
 <a id="mechanics"></a>
@@ -815,7 +817,7 @@ These notes describe how the interpreter behaves in specific edge cases. If you 
 
 - 👥 **Questions & Feature Requests:** You can read my [articles](https://dev.to/typescript-guy) or open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
   
-- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases, and build tools often transform source code before execution (e.g., polyfilling syntax). This means the AST nodes your inspector sees may differ from the code you wrote in your editor. If you encounter unexpected behavior in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
+- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. If you encounter unexpected behavior in your environment, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 

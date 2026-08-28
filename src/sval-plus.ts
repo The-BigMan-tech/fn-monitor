@@ -399,7 +399,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                     return ${fnSrc.fnName};
                 })();`
 
-                sources += `\n\nvar ${name} = ${scopedFn};`;
+                sources += `\nvar ${name} = ${scopedFn};`;
             }
         }
         return sources;
