@@ -38,7 +38,9 @@ This document covers specific interpreter behaviors, edge cases, and toolchain i
  
    - **Preserving the `this` Context:** The correct way to safely monitor an instance method while preserving its `this` context is to use the dedicated `bind` property when setting up the monitored function. See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/monitoring-methods.ts).
     
-   > ⚠️ **Warning:** You **cannot** pass `obj.method.bind(obj)` directly to a `ref` property. Not only does this crash the parser by injecting invalid syntax (e.g., `const bound methodName = ...`), but JavaScript engines permanently conceal the source code of bound functions (`function () { [native code] }`), making AST extraction impossible.
+   > ⚠️ **Warning:** You **cannot** pass `obj.method.bind(obj)` directly to a `ref` property. It will throw a `WrapperError` 
+   >
+   > This is because it injects invalid syntax (e.g., `const bound methodName = ...`) and JavaScript engines permanently conceal the source code of bound functions making AST extraction impossible.
 
 7. **Dynamic Imports:** The interpreter intentionally does not support dynamic `import()` calls within monitored functions. Attempting to handle dynamic imports internally would lead to endless environment-specific bugs. It will throw an error if it detects them and you must lift your imports to the native scope and pass the resolved modules via the `captures` property. 
    

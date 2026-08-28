@@ -205,6 +205,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
 
     private static standardFnRegex = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/;
+    private static parsableFnSyntax = /^(async\s+)?(function\b|\([^)]*\)|[a-zA-Z_$][\w$]*\s*=>)/;// allow any function definition except for shorthand methods
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
     /**
@@ -330,17 +331,19 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
 
     private codeGenHelper = {
-        checkFnSyntax(fnString:string):void | never {
-            const isSupportedSyntax = (
-                fnString.startsWith('function') || 
-                fnString.startsWith('async function') || 
-                fnString.startsWith('(') || 
-                fnString.startsWith('async (')
-            )
-            if (!isSupportedSyntax) {
+        checkFnSyntax(fnString: string): void | never {
+            const trimmed = fnString.trim();
+
+            if (trimmed.includes('[native code]')) {
+                throw new WrapperError(ansis.red(
+                    `\nCannot monitor a function that has already been bound because JS engines conceal the source code.` +
+                    `\nPlease pass the raw method to 'ref' and use the 'bind' metadata property instead.`
+                ));
+            }
+            if (!SvalPlus.parsableFnSyntax.test(trimmed)) {
                 throw new WrapperError(ansis.red(
                     `\nThe interpreter cannot parse shorthand method syntax, getters, setters, or constructors. ` +
-                    `\nPlease define the method as a function expression or an arrow function`
+                    `\nPlease define the method as a function expression or an arrow function.`
                 ));
             }
         },

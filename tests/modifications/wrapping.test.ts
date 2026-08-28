@@ -170,4 +170,17 @@ describe('Wrapping Behaviour', () => {
             }
         })).toThrow(WrapperError);
     });
+
+    it('[Wrap] should reject parsing bound functions',()=>{    
+        const obj = {
+            method() {
+                //
+            }
+        }    
+        expect(()=>monitor({
+            main: {
+                ref:obj.method.bind(obj)
+            }
+        })).toThrow(WrapperError);
+    });
 });
