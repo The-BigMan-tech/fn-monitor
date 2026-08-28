@@ -1,4 +1,46 @@
 
+## v1.7.0...v1.8.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.7.0...v1.8.0)
+
+### 🚀 Features
+
+- **core:** Add 'bind' support for instance methods and refactor the code generator ([b63dd27](https://github.com/The-BigMan-tech/fn-monitor/commit/b63dd27))
+- Bump to v1.8.0 ([a156187](https://github.com/The-BigMan-tech/fn-monitor/commit/a156187))
+
+### 🩹 Fixes
+
+- Throw custom WrapperError for unsupported shorthand method syntax ([4bdc0c2](https://github.com/The-BigMan-tech/fn-monitor/commit/4bdc0c2))
+- Prevent raw parser crashes for bound functions ([f65f181](https://github.com/The-BigMan-tech/fn-monitor/commit/f65f181))
+
+### ♻️ Refactor
+
+- Lift a block to a function ([d66b53c](https://github.com/The-BigMan-tech/fn-monitor/commit/d66b53c))
+
+### 📖 Documentation
+
+- **changeog:** Update changelog for v1.7.0 ([e2e150c](https://github.com/The-BigMan-tech/fn-monitor/commit/e2e150c))
+- **examples:** Add a tip ([5591688](https://github.com/The-BigMan-tech/fn-monitor/commit/5591688))
+- **example:** Add an example to show how fn-monitor can help with deobfuscation ([cbb89b6](https://github.com/The-BigMan-tech/fn-monitor/commit/cbb89b6))
+- **deobfuscation:** Improve the example ([20d8b69](https://github.com/The-BigMan-tech/fn-monitor/commit/20d8b69))
+- **example:** Update the deobfuscation example to use a set ([58b258d](https://github.com/The-BigMan-tech/fn-monitor/commit/58b258d))
+- **deobfuscation-example:** Improve the example ([55df65b](https://github.com/The-BigMan-tech/fn-monitor/commit/55df65b))
+- **deobfuscation-example:** Add comments ([cd49baa](https://github.com/The-BigMan-tech/fn-monitor/commit/cd49baa))
+- **deobfuscation-example:** Clean the imports ([8588308](https://github.com/The-BigMan-tech/fn-monitor/commit/8588308))
+- **readme:** Update the capabilities section ([c989393](https://github.com/The-BigMan-tech/fn-monitor/commit/c989393))
+- **readme:** Add back the capabilities anchor link ([932e216](https://github.com/The-BigMan-tech/fn-monitor/commit/932e216))
+- **readme:** Tighten the capabilities section ([eacf355](https://github.com/The-BigMan-tech/fn-monitor/commit/eacf355))
+- **deobfuscation-example:** Add a warning note ([ab21de0](https://github.com/The-BigMan-tech/fn-monitor/commit/ab21de0))
+- **readme:** Upgrade the advanced behaviour section ([200fe87](https://github.com/The-BigMan-tech/fn-monitor/commit/200fe87))
+- **readme:** Update the bug report section ([d1b9ecb](https://github.com/The-BigMan-tech/fn-monitor/commit/d1b9ecb))
+- **readme:** Improve the bug report section ([6e6f43a](https://github.com/The-BigMan-tech/fn-monitor/commit/6e6f43a))
+- **readme:** Clarify the sandbox part ([62df8b1](https://github.com/The-BigMan-tech/fn-monitor/commit/62df8b1))
+- **readme:** Fix broken links ([127b3e2](https://github.com/The-BigMan-tech/fn-monitor/commit/127b3e2))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.6.0...v1.7.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.6.0...v1.7.0)
