@@ -631,7 +631,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
    
 5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
 
-6. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without crashing the parser, simply use the `bind` property in the function metadata. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
+6. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without crashing the parser, simply use the `bind` property in the function metadata. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
    
 ---
 
@@ -676,7 +676,7 @@ The rich object that gives inspectors their ability to participate in the interp
 | `execute()` | Manually executes the current node and returns the result. Calling this is optional; if omitted, the interpreter executes the node normally after the `inspector` finishes.<br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
 | `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results. Supports indexed access to previous results and is iterable. |
 | `callStack()` | Returns a read-only reference to the stack of active function calls with the latest call at the head. It holds the original function references and not internal wrappers. Supports indexed access to previous calls and is iterable. |
-| ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](https://github.com/The-BigMan-tech/fn-monitor/EDGE-CASES.md#deprecated-perexecution-hook) for more detail. |
+| ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#deprecated-perexecution-hook) for more detail. |
 
 #### ExeResult
 | Property | Type | Description |
