@@ -115,7 +115,7 @@ describe('Wrapping Behaviour', () => {
         expect(calledFn).toBe(false);
     });
 
-    it('should preserve `this` context and correctly capture class properties through the `bind` property',()=>{
+    it('[Wrap] should preserve `this` context and correctly capture class properties through the `bind` property',()=>{
         let exprCount = 0;
         const props = {
             prefix:'',
@@ -156,5 +156,18 @@ describe('Wrapping Behaviour', () => {
         expect(props.prefix).toBe('User:');
         expect(props.permission).toBe('user');
         expect(exprCount).toBe(2);
+    });
+
+    it('[Wrap] should reject parsing the shorthand method syntax',()=>{        
+        const obj = {
+            method() {
+                //
+            }
+        }
+        expect(()=>monitor({
+            main: {
+                ref:obj.method
+            }
+        })).toThrow(WrapperError);
     });
 });

@@ -26,7 +26,8 @@ import {
     PerExeFn,
     OnStep,
     VisitExecutionError,
-    GeneratedKey
+    GeneratedKey,
+    WrapperError
 } from './custom-types.ts'
 
 import { 
@@ -329,6 +330,20 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
 
     private codeGenHelper = {
+        checkFnSyntax(fnString:string):void | never {
+            const isSupportedSyntax = (
+                fnString.startsWith('function') || 
+                fnString.startsWith('async function') || 
+                fnString.startsWith('(') || 
+                fnString.startsWith('async (')
+            )
+            if (!isSupportedSyntax) {
+                throw new WrapperError(ansis.red(
+                    `\nThe interpreter cannot parse shorthand method syntax, getters, setters, or constructors. ` +
+                    `\nPlease define the method as a function expression or an arrow function`
+                ));
+            }
+        },
         /**
          * Because the offset variable is defined on the same level as the intermediate function,
          * it must always start at 1 to ensure that it always points to the inner part of the function's body.
@@ -380,6 +395,8 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const { ref: fn, bind } = metadata;
 
         const fnString = fn.toString();
+        this.codeGenHelper.checkFnSyntax(fnString);
+
         const hash = getSHA256Key(fnString);
 
         const intermediateFnName: string = 'intermediateFn_' + hash;
