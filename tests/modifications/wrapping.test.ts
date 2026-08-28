@@ -113,5 +113,48 @@ describe('Wrapping Behaviour', () => {
             }
         })
         expect(calledFn).toBe(false);
-    })
+    });
+
+    it('should preserve `this` context and correctly capture class properties through the `bind` property',()=>{
+        let exprCount = 0;
+        const props = {
+            prefix:'',
+            permission:''
+        }
+        
+        class UserService {
+            private static prefix = "User:";
+            private permission = "user";
+
+            public printName = () => {
+                props.prefix = UserService.prefix;
+                props.permission = this.permission;
+            }
+        }
+
+        const service = new UserService();
+
+        const monitoredMethod = monitor({
+            main: {
+                ref: service.printName,
+                bind: service,
+                captures: {
+                    props,
+                    UserService // Capturing the class directly for static properties
+                }
+            },
+            beforeEachCall:()=>{
+                exprCount = 0;
+            },
+            inspector: (visit) => {
+                visit.is('AssignmentExpression', () => {
+                    exprCount += 1;
+                });
+            }
+        });
+        monitoredMethod();
+        expect(props.prefix).toBe('User:');
+        expect(props.permission).toBe('user');
+        expect(exprCount).toBe(2);
+    });
 });
