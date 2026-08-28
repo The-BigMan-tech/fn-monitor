@@ -5,15 +5,21 @@ import { ForbiddenDynamicImport } from '../../src/custom-types.ts';
 describe('Other Runtime Behaviours',()=>{
 
     it('[Sync] should ensure that monitored functions executes in strict mode', () => {
+        const context = {value:undefined}
         const fn = monitor({
             main: {
                 ref:()=> {
                     //@ts-expect-error
                     x = 0;
+                    context.value = this;
+                },
+                captures:{
+                    context
                 }
             }
         });
         expect(()=>fn()).toThrow(ReferenceError);
+        expect(context.value).toBe(undefined)
     });
 
     it('[Async] should ensure that dynamic imports are not supported',async() => {
