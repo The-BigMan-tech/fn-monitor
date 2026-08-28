@@ -772,7 +772,7 @@ If you encounter unexpected behavior, it is likely documented in the **[Advanced
 
 - 👥 **Questions & Feature Requests:** You can read my [articles](https://dev.to/typescript-guy) or open a [GitHub Discussion](https://github.com/The-BigMan-tech/fn-monitor/discussions).
   
-- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. If you encounter unexpected behavior that isn't already explained in the [Important Limitations](#important-limitations) or [Advanced Behaviour](#advanced-behaviour) sections, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
+- 🐛 **Bugs:** Although the core API is stable, JavaScript interpreters inherently have deep edge cases. If you encounter unexpected behavior that isn't already explained in the [Important Limitations](#important-limitations) or [Advanced Behaviour](#advanced-behavior) sections, please open an [Issue](https://github.com/The-BigMan-tech/fn-monitor/issues).
 
 *Note: This is an open-source project maintained in my free time. I will do my best to respond, but please allow a few days for a reply. Before opening a new thread, please check existing Discussions and Issues!*
 
