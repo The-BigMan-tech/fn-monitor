@@ -320,6 +320,17 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
 
 
+    private getMainCall(fnName:string,fnRefKey:GeneratedKey) {
+        this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
+        return `
+            \n\n//This is the code that is ran each time the monitored function is called...
+            exports.${SvalPlus.commonLabels.fnMap}.set(${fnName},exports.${fnRefKey});
+            exports.${SvalPlus.commonLabels.callStack}.unshift(
+                exports.${SvalPlus.commonLabels.fnMap}.get(${fnName}) || ${fnName}
+            );
+            exports.${SvalPlus.commonLabels.resultExport} = ${fnName!}(...${SvalPlus.commonLabels.args});
+        `
+    }
     private getFnSrc<T extends boolean>(fn:Fn,capturesLabel:GeneratedKey,isMainFn:T):FnSrc<T>  {
         const fnString = fn.toString();
         const hash = getSHA256Key(fnString);
@@ -334,11 +345,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             :'';
 
         const finalFnName = (fn.name.length > 0)?fn.name:'anonymousFn_' + hash;
-        const isStandardFunction = SvalPlus.standardFnRegex.test(fnString);
-        
-        //The depth offset must start at 1 to ensure that it always points to the inner part of the function's body
-        //It is important that the anchor is set after assigning the offset
-
         const fnRefKey = SvalPlus.commonLabels.fnRef(intermediateFnName);
 
         this.svalPlusExports[SvalPlus.commonLabels.fnMap] = this.userRoot.simulatedFnsToOriginal;
@@ -347,10 +353,13 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const addToMap = (isMainFn)?''
             :`exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`
 
+        //The depth offset must start at 1 to ensure that it always points to the inner part of the function's body
+        //It is important that the anchor is set after assigning the offset
+
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
             let ${this.userRoot.labels.offset} = 1;
             ${this.userRoot.labels.offset} += ${
-                isStandardFunction?1:0
+                SvalPlus.standardFnRegex.test(fnString)?1:0
             }
             const ${this.userRoot.labels.anchor} = true;
 
@@ -361,19 +370,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return ${intermediateFnName};
         })();`
 
-        let finalFnCall = null;
+        const finalFnCall = isMainFn
+            ?this.getMainCall(finalFnName,fnRefKey)
+            :null;
 
-        if (isMainFn) {
-            this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
-            finalFnCall = `
-                \n\n//This is the code that is ran each time the monitored function is called...
-                exports.${SvalPlus.commonLabels.fnMap}.set(${finalFnName},exports.${fnRefKey});
-                exports.${SvalPlus.commonLabels.callStack}.unshift(
-                    exports.${SvalPlus.commonLabels.fnMap}.get(${finalFnName}) || ${finalFnName}
-                );
-                exports.${SvalPlus.commonLabels.resultExport} = ${finalFnName!}(...${SvalPlus.commonLabels.args});
-            `
-        }
         return { 
             fnName:finalFnName ,
             fnCode:finalFnCode,
