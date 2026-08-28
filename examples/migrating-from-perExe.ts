@@ -1,6 +1,5 @@
 /** 
- *  Historical Context
- *  __________________
+ *  HISTORICAL CONTEXT:
  * 
  *  `visit.execute()` has been a core primitive of `fn-monitor` since the alpha stages.
  *  

@@ -1,3 +1,14 @@
+/**
+ * ⚠️ SECURITY NOTE:
+ * 
+ * Scripts that deobfuscate untrusted or malicious code should **always** run within an isolated 
+ * environment (e.g., `isolated-vm`, Docker, or a restricted Node.js process) to prevent potential 
+ * sandbox escapes or environment exfiltration.
+ * 
+ * Note: The code in this specific example is completely safe and can be run directly 
+ * in your environment.
+*/
+
 // change the import to '@typescript-guy/fn-monitor' 
 
 import { monitor } from '../src/index.ts';
