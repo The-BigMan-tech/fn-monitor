@@ -1,26 +1,26 @@
 {
-  "compilerOptions": {
-    "target": "es2024",
-    "lib": ["dom", "esnext"],
-    "declaration": true,
-    "noImplicitAny": true,
-    "removeComments":false,
-    "resolveJsonModule": true,
-    "downlevelIteration": true,
-    "rootDir":"./src",
-    "declarationDir": "./types",
-    "moduleResolution": "nodenext",
-    "module": "nodenext",
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
-    "ignoreDeprecations":"6.0",
-    "types": ["node"]
-  },
-  "include": [
-    "src/**/*",
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts"
-  ]
+    "compilerOptions": {
+        "target": "es2024",
+        "lib": ["dom", "esnext"],
+        "declaration": true,
+        "noImplicitAny": true,
+        "removeComments":false,
+        "resolveJsonModule": true,
+        "downlevelIteration": true,
+        "rootDir":"./src",
+        "declarationDir": "./types",
+        "moduleResolution": "nodenext",
+        "module": "nodenext",
+        "allowImportingTsExtensions": true,
+        "emitDeclarationOnly": true,
+        "ignoreDeprecations":"6.0",
+        "types": ["node"]
+    },
+    "include": [
+        "src/**/*",
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.test.ts"
+    ]
 }
