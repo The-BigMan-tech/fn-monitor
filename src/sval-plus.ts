@@ -486,8 +486,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             for (const name of fnNames) {
                 const metadata = embed[name];
 
-                const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);//prepending embeddedFn ensures that it wont conflct with existing generated commonLabels
-                const fnSrc = this.getFnSource(metadata,capturesLabel,false);//passing undefined here prevents infinite recursion
+                // prepending the name with 'embeddedFn' ensures that it wont conflict with the captures key of the main one
+                const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);
+                const fnSrc = this.getFnSource(metadata,capturesLabel,false);
 
                 /**
                  * Declaring the fnCode within an IIFE ensures that functions with the same
