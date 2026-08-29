@@ -1,30 +1,44 @@
 // change the import path to '@typescript-guy/fn-monitor' 
 
 import { monitor } from "../src/index.ts";
+const ansis = await import("ansis");// you can quickly install this to test the example
 
-// ❌ FAILING CASE: Capturing the entire library object
+// ❌ FAILING CASE: Capturing the entire library object or one of its functions
 
-const ansis = await import("ansis");// you can quickly install ansis to test this example
+const green = ansis.green;
 
 const fn = monitor({
     main: {
-        ref: () => {
-            // This call fails because `.green` returns a complex object that
-            // the interpreter can't invoke properly
-            return ansis.green('Hello world');
+        /**
+         * It will fail at runtime because `ansis.green` and `green` return 
+         * complex objects that the interpreter can't invoke properly
+        */
+        ref: (use:'fn' | 'object') => {
+            return (use === 'fn')
+                ?green('Hello world')
+                :ansis.green('Hello world');
         },
         captures: {
-            ansis: ansis.default
+            green,
+            ansis
         }
     }
 });
 
 try {
-    console.log(fn());
+    console.log(fn('fn'));
 } catch (err) {
     console.log('Error:', (err as Error).message);
     // Output: Error: func.apply is not a function
 }
+
+try {
+    console.log(fn('object'));
+} catch (err) {
+    console.log('Error:', (err as Error).message);
+    // Output: Error: func.apply is not a function
+}
+
 
 // ✅ WORKING CASE: Capture a simple wrapper object
 
@@ -34,9 +48,11 @@ const stylize = {
 
 const fn2 = monitor({
     main: {
+        /**
+         * `stylize.green` works here because we're calling a function on a plain object
+         * that the interpreter captured directly
+        */
         ref: () => {
-            // This works because we're calling a function on a plain object
-            // that the interpreter captured directly
             return stylize.green('Hello world');
         },
         captures: {

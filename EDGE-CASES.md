@@ -50,12 +50,12 @@ This document covers specific interpreter behaviors, edge cases, and toolchain i
    >
    > However, some tools (e.g., jiti, Vite/Vitest, bundlers) rewrite `import()` into an internal helper call *before* the interpreter ever sees it. Because the import no longer exists in the source string, the failure surfaces as a `ReferenceError` for that tool's internal helper instead. Either way, the fix is the same: use `captures`.
 
-8. **Complex Library APIs:** Capturing entire library objects that rely heavily on proxies, getters, or fluent method chaining may throw an unexpected `TypeError` at runtime. This occurs because the underlying interpreter cannot always safely resolve complex internal structures across the execution boundary. 
+8. **Complex External Dependencies:** Capturing entire library objects (which may rely on proxies, getters, or fluent chaining) or functions with hidden closure dependencies may throw an unexpected `TypeError` or `ReferenceError` at runtime. This occurs because the underlying interpreter cannot always preserve complex internal structures across the execution boundary. 
 
-   > 💡 **Tip:** There is a simple workaround. Instead of capturing the library object itself, create a lightweight wrapper function in your outer scope and capture the wrapper.
-   > 
+   > 💡 **Tip:** For these dependencies, there is a workaround. Instead of capturing the object or function itself, create a lightweight wrapper in your outer scope and capture the wrapper.
+   >
    > See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/handling-libraries.ts) for a quick demonstration.
 
 9. **Build Tool Transformations:** Bundlers and JavaScript runtimes often transform source code before execution. This alters how `fn.toString()` behaves, meaning the AST nodes your inspector sees may structurally differ from the original code you wrote in your editor.
 
-10.  **AST Location (`loc`) Mapping:** The `loc` and `range` properties on the AST nodes do **not** map to your original editor file. They map to an intermediate, generated code structure that is inherently unformatted, and the string you get from `sourceOut` is simply a beautified version of it. For accurate source extraction, it is highly recommended to generate it directly from the node object using a tool like [`astring`](https://github.com/davidbonnet/astring) rather than relying on string slicing.
+10. **AST Location (`loc`) Mapping:** The `loc` and `range` properties on the AST nodes do **not** map to your original editor file. They map to an intermediate, generated code structure that is inherently unformatted, and the string you get from `sourceOut` is simply a beautified version of it. For accurate source extraction, it is highly recommended to generate it directly from the node object using a tool like [`astring`](https://github.com/davidbonnet/astring) rather than relying on string slicing.
