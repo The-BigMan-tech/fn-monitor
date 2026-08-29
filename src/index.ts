@@ -1,3 +1,6 @@
+import { Metadata, SvalPlus } from "./sval-plus.ts";
+import ansis from "ansis";
+
 import { 
     Fn, 
     Inspector, 
@@ -5,9 +8,6 @@ import {
     OnStep, 
     WrapperError 
 } from "./custom-types.ts";
-
-import { Metadata, SvalPlus } from "./sval-plus.ts";
-import ansis from "ansis";
 
 export interface MonitorFnSetup<T extends Fn> {
     /**The configuration for the main function to monitor*/
@@ -51,32 +51,28 @@ export interface MonitorFnSetup<T extends Fn> {
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
 
-
-function assertRefIsNotMonitored(metadata:Metadata<Fn>) {
-    const {ref} = metadata;
-    if ('alreadyMonitored' in ref) {//we only assert this for the refs because they are directly included in the interpreter's context. Whereas captured fns are ran by the js engine and thus,it will work without issues.
-        throw new WrapperError(ansis.red(`\nA monitored function cannot be directly included in the interpreter's context.Try to capture it instead.`))
+// We only assert this for the refs because they are directly included in the interpreter's context. Whereas captured fns are ran by the js engine and thus,it will work without issues.
+function assertIsUnmonitored(metadata:Metadata<Fn>) {
+    if ('alreadyMonitored' in metadata.ref) {
+        throw new WrapperError(ansis.red(`\nA monitored function cannot be directly included in the interpreter's context. Try to capture it instead.`))
     };
 }
+
 /**
- * This function is the only export you need to get started.It accepts a brief config that includes a function and returns a new function that can be called exactly as the original.But it is executed by a custom interpreter rather than your js engine directly.
- * The major advantage you get is that you can inject hooks at any part of the function's lifecyle and they are treated as first class citizens by the interpreter.Essentially making it a white-box.
+ * @param setup A configuration object containing the target function together with lifecycle hooks.
+ * @returns A new function that is executed by the custom interpreter while retaining the call signature of the target.
 */
 export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
     const {
-        main,
-        embed,
-        inspector,
-        onStep,
-        beforeEachCall,
-        afterEachCall,
-        sourceOut
+        main, embed,
+        inspector, onStep, sourceOut,
+        beforeEachCall, afterEachCall
     } = setup;
 
-    assertRefIsNotMonitored(main);
+    assertIsUnmonitored(main);
     if (embed !== undefined) {
         Object.values(embed).forEach(metadata=>{
-            assertRefIsNotMonitored(metadata);
+            assertIsUnmonitored(metadata);
         })
     };
 
@@ -85,7 +81,7 @@ export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonit
         inspector,
         onStep,
         fnBeforeEachCall:beforeEachCall,
-        fnAfterEachCall:afterEachCall,
+        fnAfterEachCall:afterEachCall
     });
 
     return interpreter.assemble(main,embed,sourceOut);

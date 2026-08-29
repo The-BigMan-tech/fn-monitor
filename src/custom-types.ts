@@ -136,16 +136,14 @@ export interface Visit {
      */
     is:<T extends Query>(query:T, ifMatched:(event:EventMap[T])=>void)=>void,
 
-    /** 
-     * Fires for each executed node starting from the current node (which becomes the owner). 
-     * Terminates when the interpreter reaches back to the owner.
-     * 
-     * Good for checking the local exe stack to see evaluation results in real time.
-     * 
-     * @deprecated Single-slot API. Each assignment silently overwrites the previous. 
+    /**
+     * Fires for each executed node starting from the current node (which becomes the owner).
+     * It terminates when the interpreter reaches back to the owner.
+     *
+     * @deprecated Single-slot API. Each assignment silently overwrites the previous.
      * Use `visit.execute()` instead for safer semantics.
      * {@link https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/migrating-from-perExe.ts}
-     * 
+     *
      * Will be removed in a future major release.
     */
     set perExecution(fn:PerExeFn),
