@@ -386,10 +386,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return unpackedCaptures;
         },
 
-        getFinalFnName:(fn:Fn,hash:GeneratedKey):string => {
-            return (fn.name.length > 0) ? fn.name : 'anonymousFn_' + hash;
-        },
-
         getMainCall:(finalFnName:string,fnRefKey:GeneratedKey):string => {
             const labels = SvalPlus.commonLabels;
             return `
@@ -424,28 +420,31 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
     private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
         const { ref: fn, captures, bind } = metadata;
-
-        const labels = SvalPlus.commonLabels;
         const helper = this.codeGenHelper;
-        const $exports = this.svalPlusExports;
 
         const fnString = fn.toString();
         helper.checkFnSyntax(fn,fnString);
 
-        const hash = getSHA256Key(fnString);
-        const intermediateFnName: string = 'intermediateFn_' + hash;
+        const labels = SvalPlus.commonLabels;
+        const $exports = this.svalPlusExports;
+        
+        /** 
+         * Because the `capturesLabel` of a function is guaranteed to be collision-free by the caller, 
+         * it is the perfect string to use as the input to generate the other function-scoped keys or identifiers
+        */
+        const fnRefKey = labels.fnRef(capturesLabel);
+        const bindKey = labels.bind(capturesLabel);
 
-        const fnRefKey = labels.fnRef(intermediateFnName);
-        const bindKey = labels.bind(intermediateFnName);
-
-        $exports[capturesLabel] = captures || Object.create(null);
         $exports[labels.fnMap] = this.userRoot.simulatedFnsToOriginal;
         $exports[labels.callStack] = this.userRoot.callStack;
+        $exports[capturesLabel] = captures || Object.create(null);
         $exports[bindKey] = bind;
         $exports[fnRefKey] = fn;
+        
+        const intermediateFnName: string = `intermediateFn_${capturesLabel}`;
+        const finalFnName = (fn.name === "") ? `anonymousFn_${capturesLabel}` : fn.name;
 
         // It is important that the anchor is set after assigning the offset.
-        const finalFnName = helper.getFinalFnName(fn,hash);
         const finalFnCode = `\nconst ${finalFnName} = (()=>{
 
             let ${this.userRoot.labels.offset} = ${helper.getInitialOffset()};
