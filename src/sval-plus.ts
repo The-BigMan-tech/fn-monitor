@@ -331,22 +331,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
 
     private codeGenHelper = {
-        checkFnSyntax(fnString: string): void | never {
-            const trimmed = fnString.trim();
-
-            if (trimmed.includes('[native code]')) {
-                throw new WrapperError(ansis.red(
-                    `\nCannot monitor a function that has already been bound because JS engines conceal the source code.` +
-                    `\nPlease pass the raw method to 'ref' and use the 'bind' metadata property instead.`
-                ));
-            }
-            if (!SvalPlus.parsableFnSyntax.test(trimmed)) {
-                throw new WrapperError(ansis.red(
-                    `\nThe interpreter cannot parse shorthand method syntax, getters, setters, or constructors. ` +
-                    `\nPlease define the method as a function expression or an arrow function.`
-                ));
-            }
-        },
         /**
          * Because the offset variable is defined on the same level as the intermediate function,
          * it must always start at 1 to ensure that it always points to the inner part of the function's body.
@@ -365,6 +349,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         getAdditionalOffset:(fnString:string):number => {
             return SvalPlus.standardFnRegex.test(fnString) ? 1 : 0
         },
+
         unpackCaptures:(capturesLabel:GeneratedKey):string => {
             const capturedKeys = Object.keys(this.svalPlusExports[capturesLabel]).sort(); // sorted to increase cache hit rate
             const unpackedCaptures = (capturedKeys.length > 0) 
@@ -372,71 +357,94 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 : '';
             return unpackedCaptures;
         },
-        getMainCall:(fnName:string,fnRefKey:GeneratedKey):string => {
-            this.svalPlusExports[SvalPlus.commonLabels.callStack] = this.userRoot.callStack;
-            return `
-                \n//This is the code that is ran each time the monitored function is called...
-                exports.${SvalPlus.commonLabels.fnMap}.set(${fnName},exports.${fnRefKey});
-                exports.${SvalPlus.commonLabels.callStack}.unshift(
-                    exports.${SvalPlus.commonLabels.fnMap}.get(${fnName}) || ${fnName}
-                );
-                exports.${SvalPlus.commonLabels.resultExport} = ${fnName!}(...${SvalPlus.commonLabels.args});
-            `
-        },
+
         getBindKey:(fnName:string,bind:unknown):string => {
             const bindKey = SvalPlus.commonLabels.bind(fnName);
             this.svalPlusExports[bindKey] = bind;
             return bindKey;
         },
+
         getFinalFnName:(fn:Fn,hash:GeneratedKey):string => {
             return (fn.name.length > 0) ? fn.name : 'anonymousFn_' + hash;
-        }
+        },
+
+        getMainCall:(finalFnName:string,fnRefKey:GeneratedKey):string => {
+            const labels = SvalPlus.commonLabels;
+            this.svalPlusExports[labels.callStack] = this.userRoot.callStack;
+            return `
+                exports.${labels.fnMap}.set(${finalFnName},exports.${fnRefKey});
+                exports.${labels.callStack}.unshift(
+                    exports.${labels.fnMap}.get(${finalFnName}) || ${finalFnName}
+                );
+                exports.${labels.resultExport} = ${finalFnName!}(...${labels.args});
+            `
+        },
+
+        checkFnSyntax(fnString: string): void | never {
+            const trimmed = fnString.trim();
+
+            if (trimmed.includes('[native code]')) {
+                throw new WrapperError(ansis.red(
+                    `\nCannot monitor a function that has already been bound because JS engines conceal the source code.` +
+                    `\nPlease pass the raw method to 'ref' and use the 'bind' metadata property instead.`
+                ));
+            }
+            if (!SvalPlus.parsableFnSyntax.test(trimmed)) {
+                throw new WrapperError(ansis.red(
+                    `\nThe interpreter cannot parse the shorthand method syntax, getters, setters, or constructors. ` +
+                    `\nPlease define the method as a function expression or an arrow function.`
+                ));
+            }
+        },
     }
 
 
-    private getFnSrc<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
-        const { ref: fn, bind } = metadata;
+    private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
+        const { ref: fn, captures, bind } = metadata;
+
+        const labels = SvalPlus.commonLabels;
+        const helper = this.codeGenHelper;
+        const $exports = this.svalPlusExports;
 
         const fnString = fn.toString();
-        this.codeGenHelper.checkFnSyntax(fnString);
+        helper.checkFnSyntax(fnString);
 
         const hash = getSHA256Key(fnString);
-
         const intermediateFnName: string = 'intermediateFn_' + hash;
-        const intermediateFnCode: string = `
+        const fnRefKey = labels.fnRef(intermediateFnName);
+
+        $exports[capturesLabel] = captures || Object.create(null);
+        $exports[labels.fnMap] = this.userRoot.simulatedFnsToOriginal;
+        $exports[fnRefKey] = fn;
+
+        // It is important that the anchor is set after assigning the offset.
+        const finalFnName = helper.getFinalFnName(fn,hash);
+        const finalFnCode = `\nconst ${finalFnName} = (()=>{
+
+            let ${this.userRoot.labels.offset} = ${helper.getInitialOffset()};
+            ${this.userRoot.labels.offset} += ${helper.getAdditionalOffset(fnString)};
+            
+            const ${this.userRoot.labels.anchor} = true;
+
+            ${ helper.unpackCaptures(capturesLabel) }
+
             const ${intermediateFnName} = function(...args) {
                 return (${fnString}).apply(this, args);
             };
-        `
 
-        const finalFnName = this.codeGenHelper.getFinalFnName(fn,hash);
-        const fnRefKey = SvalPlus.commonLabels.fnRef(intermediateFnName);
-
-        this.svalPlusExports[SvalPlus.commonLabels.fnMap] = this.userRoot.simulatedFnsToOriginal;
-        this.svalPlusExports[fnRefKey] = fn;
-        
-        const addToMap = (isMainFn) ? ''
-            : `exports.${SvalPlus.commonLabels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`;
-
-        const returnTarget = bind 
-            ? `${intermediateFnName}.bind(exports.${this.codeGenHelper.getBindKey(intermediateFnName,bind)})` 
-            : intermediateFnName;
-        
-        // It is important that the anchor is set after assigning the offset.
-        const finalFnCode = `\nconst ${finalFnName} = (()=>{
-            let ${this.userRoot.labels.offset} = ${this.codeGenHelper.getInitialOffset()};
-            ${this.userRoot.labels.offset} += ${this.codeGenHelper.getAdditionalOffset(fnString)};
-            const ${this.userRoot.labels.anchor} = true;
-
-            ${this.codeGenHelper.unpackCaptures(capturesLabel)}
-            ${intermediateFnCode}
-
-            ${addToMap}
-            return ${returnTarget}; 
+            ${ isMainFn ? ''
+                : `exports.${labels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`
+            }
+            
+            const target = ${ bind 
+                ? `${intermediateFnName}.bind(exports.${helper.getBindKey(intermediateFnName,bind)})` 
+                : intermediateFnName
+            }
+            return target;
         })();`
 
         const finalFnCall = isMainFn
-            ? this.codeGenHelper.getMainCall(finalFnName, fnRefKey)
+            ? helper.getMainCall(finalFnName, fnRefKey)
             : null;
 
         return { 
@@ -445,26 +453,31 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             fnCall: finalFnCall as FnSrc<T>['fnCall'] 
         };
     }
-    private getFnSources(functions:Record<string,Metadata<Fn>> | undefined):string {
+    private getEmbeddedSources(embed:Record<string,Metadata<Fn>> | undefined):string {
         let sources:string = '';
 
-        if (functions !== undefined) {
-            const fnNames = Object.keys(functions).sort();//used sort here to increase the cache hit rate
+        if (embed !== undefined) {
+            const fnNames = Object.keys(embed).sort();//used sort here to increase the cache hit rate
 
             for (const name of fnNames) {
-                const fn = functions[name];
+                const metadata = embed[name];
+
                 const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);//prepending embeddedFn ensures that it wont conflct with existing generated commonLabels
+                const fnSrc = this.getFnSource(metadata,capturesLabel,false);//passing undefined here prevents infinite recursion
 
-                this.svalPlusExports[capturesLabel] = fn.captures || Object.create(null);
-                const fnSrc = this.getFnSrc(fn,capturesLabel,false);//passing undefined here prevents infinite recursion
-
-                //doing this ensures that functions with the same but different namespaces dont collide and that they wont be unexpectedly accessible in the monitored fn
-                const scopedFn = `(()=>{ 
+                /**
+                 * Declaring the fnCode within an IIFE ensures that functions with the same name 
+                 * but come from different namespaces will not collide 
+                 * 
+                 * It also ensures that they can only be accessible through the embedded 
+                 * function's reference
+                */
+                const wrapper = `(()=>{ 
                     ${fnSrc.fnCode}
                     return ${fnSrc.fnName};
                 })();`
 
-                sources += `\nvar ${name} = ${scopedFn};`;
+                sources += `\nvar ${name} = ${wrapper};`;
             }
         }
         return sources;
@@ -490,7 +503,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             SvalPlus.fnAstCache.set(fnCodeHash, ast);
         }
         
-        //run the generated ast instead of the string to prevent re-parsing
+        // run the generated ast instead of the string to prevent re-parsing
         this.run(ast.fnCode);
         this.fnCallAst = ast.fnCall;
 
@@ -498,17 +511,20 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
     private callFn = (...args:any[])=>{
         this._stage = 'MONITORING';
+
+        const labels = SvalPlus.commonLabels;
         let result;
 
         if (this.fnBeforeEachCall) {
             this.fnBeforeEachCall(...args);
-        }
-        this.argImports[SvalPlus.commonLabels.args] = args;
+        };
+
+        this.argImports[labels.args] = args;
         this.import(this.argImports);
 
         try {
             this.run(this.fnCallAst!);
-            result = this.svalPlusExports[SvalPlus.commonLabels.resultExport];
+            result = this.svalPlusExports[labels.resultExport];
         }catch(err) {
             result = this.normalizeErr(err);
         };
@@ -552,13 +568,12 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         
         try {
             const capturesLabel = SvalPlus.commonLabels.captures('mainFn');
-            this.svalPlusExports[capturesLabel] = main.captures || Object.create(null);
-            
-            const fnSrc = this.getFnSrc(main,capturesLabel,true);
+            const fnSrc = this.getFnSource(main,capturesLabel,true);
+
             fnSrc.fnCode = `
                 'use strict'
                 ${fnSrc.fnCode}
-                ${this.getFnSources(embed)}
+                ${this.getEmbeddedSources(embed)}
             `;
 
             const ast = this.useFn(fnSrc);
