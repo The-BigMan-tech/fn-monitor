@@ -403,7 +403,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         checkFnSyntax(fn:Fn,fnString: string): void | never {
             const isBound = typeof fn === 'function' && 
-                fn.name.startsWith('bound ') && 
+                fn.name.startsWith('bound' + ' ') && // The whitespace after bound is important
                 !Object.prototype.hasOwnProperty.call(fn, 'prototype');
 
             if (isBound) {
