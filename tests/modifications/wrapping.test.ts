@@ -183,4 +183,14 @@ describe('Wrapping Behaviour', () => {
             }
         })).toThrow(WrapperError);
     });
+
+    it(`[Wrap] should not falsely flag a function that just includes '[native code]' somewhere in its source as a bound function`,()=>{    
+        expect(()=>monitor({
+            main: {
+                ref:()=>{
+                    return '[native code]'
+                }
+            }
+        })).not.toThrow(WrapperError);
+    });
 });

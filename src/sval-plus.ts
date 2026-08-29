@@ -231,10 +231,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         } satisfies SvalOptions
     }
 
-    private static standardFnRegex = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/;
-    private static parsableFnSyntax = /^(async\s+)?(function\b|\([^)]*\)|[a-zA-Z_$][\w$]*\s*=>)/;// allow any function definition except for shorthand methods
     private static fnAstCache =  new LRUCache<string,FnAst>({ max: 400 });
 
+    private static standardFnRegex = /^\s*(async\s+)?function\s*\*?\s*[a-zA-Z_$]/;
+    private static parsableFnSyntax = /^(async\s+)?(function\b|\([^)]*\)|[a-zA-Z_$][\w$]*\s*=>)/;// allow any function definition except for shorthand methods
+    
     /**
         * A strictly-typed view of `this.exports` for accessing internal, 
         * interpreter-generated state (like anchors, offsets, and captures).
@@ -400,16 +401,18 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             `
         },
 
-        checkFnSyntax(fnString: string): void | never {
-            const trimmed = fnString.trim();
+        checkFnSyntax(fn:Fn,fnString: string): void | never {
+            const isBound = typeof fn === 'function' && 
+                fn.name.startsWith('bound ') && 
+                !Object.prototype.hasOwnProperty.call(fn, 'prototype');
 
-            if (trimmed.includes('[native code]')) {
+            if (isBound) {
                 throw new WrapperError(ansis.red(
                     `\nCannot monitor a function that has already been bound because JS engines conceal the source code.` +
                     `\nPlease pass the raw method to 'ref' and use the 'bind' metadata property instead.`
                 ));
             }
-            if (!SvalPlus.parsableFnSyntax.test(trimmed)) {
+            if (!SvalPlus.parsableFnSyntax.test(fnString.trim())) {
                 throw new WrapperError(ansis.red(
                     `\nThe interpreter cannot parse the shorthand method syntax, getters, setters, or constructors. ` +
                     `\nPlease define the method as a function expression or an arrow function.`
@@ -427,7 +430,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const $exports = this.svalPlusExports;
 
         const fnString = fn.toString();
-        helper.checkFnSyntax(fnString);
+        helper.checkFnSyntax(fn,fnString);
 
         const hash = getSHA256Key(fnString);
         const intermediateFnName: string = 'intermediateFn_' + hash;
