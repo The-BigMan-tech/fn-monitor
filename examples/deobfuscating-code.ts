@@ -136,3 +136,35 @@ codeWatcher();
  *
  * fn-monitor world hello
 */
+
+
+/**
+ * 🛡️ FOOTNOTE ON SECURITY BOUNDARIES:
+ *  
+ * `fn-monitor` is best used in this domain as a runtime analysis tool, not 
+ * a cryptographically secure sandbox. 
+ * 
+ * One of its behaviors worth noting is that it isolates internal state within 
+ * the same interpreted context that runs your monitored code, using deterministic 
+ * hash keys.
+ * 
+ * Because these keys are hashed, it prevents accidental variable collisions, and 
+ * their determinism maximizes AST cache hit rates across multiple `monitor()` calls.
+ *
+ * In 99% of normal use cases, this is perfectly safe, and you will practically 
+ * never encounter these hashes naturally in your own code. 
+ * 
+ * However, if you are analyzing a highly sophisticated, actively hostile payload 
+ * that has specifically reverse-engineered this package, the subject could spoof 
+ * these internal variables to poison the analysis environment.
+ * 
+ * 🔐 Mitigation:
+ * 
+ * Because of this and other interpreter behaviors, ensure that the code you are 
+ * analyzing is pre-sanitized by other tools in your deobfuscation pipeline. 
+ * 
+ * If you are dealing with targeted, adversarial payloads, consider forking the 
+ * package and adding a simple, instance-specific salt to the internal hashes to 
+ * neutralize spoofing attempts. You can easily tailor the package to suit your 
+ * specific security needs.
+*/
