@@ -43,28 +43,35 @@ function obfuscatedSnippet() {
  * For a complete deobfuscation suite, you should pair this with existing tools like REstringer.
 */
 
-let decryptedList: any[] | null = null;
-let lastDecryptedValue: unknown | null = null;
-
+let foundTargetCall = false;
 let argNodes: Set<any> = new Set();
 let args: any[] = [];
 
-const codeWatcher = monitor({
+let decryptedList: any[] | null = null;
+let lastDecryptedValue: unknown | null = null;
+
+const analyzeCode = monitor({
     main: { 
         ref: obfuscatedSnippet 
     },
 
     // Reset state after each function invocation to prevent memory leaks or stale data
     afterEachCall: () => {
-        lastDecryptedValue = null;
-        decryptedList = null;
+        foundTargetCall = false;
         argNodes.clear(); 
         args = [];
+        lastDecryptedValue = null;
+        decryptedList = null;
     },
 
     /** 
-     * [Note]: The inspector callback fires for EVERY single AST node as the interpreter 
+     * NOTE:
+     * 
+     * - The inspector callback fires for EVERY single AST node as the interpreter 
      * walks the tree from top to bottom. 
+     * 
+     *  - `visit.is` is a SINGLE, IMMEDIATE check against the CURRENT node. 
+     *  It evaluates the query, fires the callback if it matches and discards it instantly.
     */
     inspector: (visit): undefined => {
         /**
@@ -80,29 +87,33 @@ const codeWatcher = monitor({
         }
 
         /**
-         * [Note]: visit.is is a SINGLE, IMMEDIATE check against the CURRENT node. 
-         * It evaluates the query, fires the callback if it matches and discards it instantly.
+         * [Performance]: Skip querying for 'CallExpression' nodes if we have already found our target
         */
-        visit.is('CallExpression', event => {
-            const callee = event.node.callee;
-            if (callee.type !== "Identifier") return;
-            if (callee.name !== '_0xdecoder') return;
+        if (!foundTargetCall) {
+            visit.is('CallExpression', event => {
+                const callee = event.node.callee;
+                if (callee.type !== "Identifier") return;
+                if (callee.name !== '_0xdecoder') return;
 
-            try {
-                // Capture the exact AST node references of the arguments BEFORE execution
-                event.node.arguments.forEach(node => argNodes.add(node));
+                foundTargetCall = true;
 
-                // Manually execute the CallExpression. 
-                // This naturally triggers the 'Any' hook below for its arguments first.
-                lastDecryptedValue = visit.execute();
-                console.log(`[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"\n`);
-            } finally {
-                // Clean up immediately after execution to prevent state bleed
-                args = [];
-                argNodes.clear();
-            }
-        });
+                try {
+                    // Capture the exact AST node references of the arguments BEFORE execution
+                    event.node.arguments.forEach(node => argNodes.add(node));
 
+                    // Manually execute the CallExpression. 
+                    // This will cause it to recursively call the inspector and hit the 'Any' query for all its arguments.
+                    lastDecryptedValue = visit.execute();
+                    console.log(`[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"\n`);
+                } 
+                finally {
+                    // Clean up immediately after execution to prevent state bleed
+                    args = [];
+                    argNodes.clear();
+                    foundTargetCall = false;
+                }
+            });
+        }
         /**
          * [Performance]: Conditionally query for 'Any' ONLY when actively tracking arguments.
          * This prevents fn-monitor from allocating unnecessary event objects for every unrelated node.
@@ -118,7 +129,7 @@ const codeWatcher = monitor({
     }
 });
 
-codeWatcher();
+analyzeCode();
 
 /**
  * The actual output will vary because the obfuscated code checks the date in real time. 
