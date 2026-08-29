@@ -161,8 +161,9 @@ export class Visit implements VisitContract {
 } 
 export class SvalPlus extends Sval implements SvalPlusContract {
     /**
-     * Shared, pre-computed identifier labels for the generated wrapper code.
-     *
+     * Shared, pre-computed identifier labels for the generated wrapper code and
+     * are used across various properties.
+     * 
      * - Performance: Computed once at class initialization to avoid redundant 
      *   SHA-256 hashing overhead for every new interpreter instance.
      * 
