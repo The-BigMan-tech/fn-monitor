@@ -1,4 +1,40 @@
 
+## v1.8.0...v1.8.1
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.8.0...v1.8.1)
+
+### 🩹 Fixes
+
+- Prevent false positive WrapperError for functions containing '[native code]' string ([bf57699](https://github.com/The-BigMan-tech/fn-monitor/commit/bf57699))
+- Bump to v1.8.1 ([e53d7b9](https://github.com/The-BigMan-tech/fn-monitor/commit/e53d7b9))
+
+### ♻️ Refactor
+
+- Subtly improve the code quality ([daed745](https://github.com/The-BigMan-tech/fn-monitor/commit/daed745))
+- Heavily improve the code generator's readability ([1b0ad9d](https://github.com/The-BigMan-tech/fn-monitor/commit/1b0ad9d))
+- Move extra side effects to the main code generator ([a23c53f](https://github.com/The-BigMan-tech/fn-monitor/commit/a23c53f))
+- Improve the comments about the labels ([e217367](https://github.com/The-BigMan-tech/fn-monitor/commit/e217367))
+- Optimize code generator by reusing `capturesLabel` for unique identifiers ([4ac8df0](https://github.com/The-BigMan-tech/fn-monitor/commit/4ac8df0))
+
+### 📖 Documentation
+
+- **readme:** Clarify the capabilities section ([9958b11](https://github.com/The-BigMan-tech/fn-monitor/commit/9958b11))
+- **changelog:** Update changelog for v1.8.0 ([2f616de](https://github.com/The-BigMan-tech/fn-monitor/commit/2f616de))
+- **readme:** Fix a broken link ([db25c07](https://github.com/The-BigMan-tech/fn-monitor/commit/db25c07))
+- Add extra clarity to a comment ([987ba4d](https://github.com/The-BigMan-tech/fn-monitor/commit/987ba4d))
+- Clarify an edge case ([eef6506](https://github.com/The-BigMan-tech/fn-monitor/commit/eef6506))
+- Add a comment ([4699e3a](https://github.com/The-BigMan-tech/fn-monitor/commit/4699e3a))
+- **deobfuscation-example:** Add a footer ([811df7e](https://github.com/The-BigMan-tech/fn-monitor/commit/811df7e))
+- **deobfuscation-example:** Improve the code ([2a651c8](https://github.com/The-BigMan-tech/fn-monitor/commit/2a651c8))
+
+### 🎨 Styles
+
+- **ts-config.json:** Increase the indentation ([0e52eeb](https://github.com/The-BigMan-tech/fn-monitor/commit/0e52eeb))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.7.0...v1.8.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.7.0...v1.8.0)
