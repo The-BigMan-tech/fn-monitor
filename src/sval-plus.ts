@@ -117,7 +117,7 @@ export class Visit implements VisitContract {
     public callStack = ()=>{
         return this.#interpreter.userRoot.readonlyCallStack;
     }
-    //the monitor will only create the event object for a node if it matches the query
+    // The method should only create an event object for a node if it matches the query
     public is:VisitContract['is'] = (query,cb)=>{
         const node = this.#interpreter.reusables.node!;
 
@@ -138,7 +138,7 @@ export class Visit implements VisitContract {
             throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
         };
 
-        //the node cannot be null if the handler is not null. If it is, it will rightfully fail with a loud type error
+        // The node cannot be null if the handler is not null. If it is, it will rightfully fail with a loud type error
         this.#interpreter.reusables.result = handler(
             this.#interpreter.reusables.node!,
             this.#interpreter.reusables.scope!
@@ -171,12 +171,38 @@ export class SvalPlus extends Sval implements SvalPlusContract {
      *   fully isolated within each instance.
     */
     private static commonLabels = {
+
+        /**
+         * These point to global variables in any given interpreted context.
+         * It is practically inaccessible to all functions within the context unless
+         * explicitly passed.
+        */
         resultExport:getSHA256Key('result'),
         args:getSHA256Key('args'),
+        
+        /** 
+         * These point to data structures that are shared among all functions within the
+         * same context. 
+        */
+        callStack:getSHA256Key('callStack'),
+        fnMap:getSHA256Key('copied-functions-to-the-original-ones'),
+
+        /**
+         * These are just used as stable identifiers for specific local variables under
+         * each function within the same context
+        */
         anchor:getSHA256Key('anchor'),
         offset:getSHA256Key('offset'),
-        callStack:getSHA256Key('callStack'),
-        fnMap:getSHA256Key('simulated-functions-to-original-functions'),
+        
+        /**
+         * These ones must be private to each individual function within the same context because
+         * they point to state that is unique to that function.
+         * 
+         * They include the function's name to keep it unique and it is prepended with a 
+         * fixed string to prevent accidental collisions with existing labels
+         * 
+         * Using a deterministic hash like SHA-256 preserves the cache hit rate
+        */
         fnRef:(fnName:string)=>{
             return getSHA256Key(`fn-ref-to-${fnName}`)
         },
@@ -184,13 +210,13 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return getSHA256Key(`binding-of-${fnName}`)
         },
         captures:(fnName:string)=>{
-            return getSHA256Key(`captures-of-${fnName}`);//prepending the dynamic fn name with a fixed string prevents accidental collisions with existing labels
+            return getSHA256Key(`captures-of-${fnName}`);
         }
     }
 
     private static options = {
         meriyah:{
-            module:false,    //Since im just parsing functions,i dont need the extra overhead of a module parser
+            module:false,    // Since the package is just parsing functions, it dont need the extra overhead of a module parser
             next: true,      // Modern ES support
             loc: true,    
             ranges: true,    // Good for error reporting
@@ -198,7 +224,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         } satisfies MeriyahOptions,
 
         sval:{
-            sourceType:"script",//This will prevent dynamic imports and top level await.Check README
+            sourceType:"script",//This will prevent dynamic imports and top level await. Check README
             ecmaVer:2024, 
             sandBox:true, 
         } satisfies SvalOptions
@@ -214,7 +240,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         * 
         * Note: This is the exact same object reference in memory as `this.exports`. 
         * It exists purely to enforce compile-time safety and prevent accidental 
-        * collisions with user-defined exported variables.
+        * collisions with user-defined exports like those in the `interpreter` tests
         * 
         * @internal This is meant to be used for SvalPlus internals and the code generator. 
     */
