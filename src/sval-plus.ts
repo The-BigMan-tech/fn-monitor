@@ -358,19 +358,12 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             return unpackedCaptures;
         },
 
-        getBindKey:(fnName:string,bind:unknown):string => {
-            const bindKey = SvalPlus.commonLabels.bind(fnName);
-            this.svalPlusExports[bindKey] = bind;
-            return bindKey;
-        },
-
         getFinalFnName:(fn:Fn,hash:GeneratedKey):string => {
             return (fn.name.length > 0) ? fn.name : 'anonymousFn_' + hash;
         },
 
         getMainCall:(finalFnName:string,fnRefKey:GeneratedKey):string => {
             const labels = SvalPlus.commonLabels;
-            this.svalPlusExports[labels.callStack] = this.userRoot.callStack;
             return `
                 exports.${labels.fnMap}.set(${finalFnName},exports.${fnRefKey});
                 exports.${labels.callStack}.unshift(
@@ -411,10 +404,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         const hash = getSHA256Key(fnString);
         const intermediateFnName: string = 'intermediateFn_' + hash;
+
         const fnRefKey = labels.fnRef(intermediateFnName);
+        const bindKey = labels.bind(intermediateFnName);
 
         $exports[capturesLabel] = captures || Object.create(null);
         $exports[labels.fnMap] = this.userRoot.simulatedFnsToOriginal;
+        $exports[labels.callStack] = this.userRoot.callStack;
+        $exports[bindKey] = bind;
         $exports[fnRefKey] = fn;
 
         // It is important that the anchor is set after assigning the offset.
@@ -437,7 +434,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             }
             
             const target = ${ bind 
-                ? `${intermediateFnName}.bind(exports.${helper.getBindKey(intermediateFnName,bind)})` 
+                ? `${intermediateFnName}.bind(exports.${bindKey})` 
                 : intermediateFnName
             }
             return target;
@@ -466,11 +463,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 const fnSrc = this.getFnSource(metadata,capturesLabel,false);//passing undefined here prevents infinite recursion
 
                 /**
-                 * Declaring the fnCode within an IIFE ensures that functions with the same name 
-                 * but come from different namespaces will not collide 
+                 * Declaring the fnCode within an IIFE ensures that functions with the same
+                 * name but are actually coming from different namespaces will not collide.
                  * 
                  * It also ensures that they can only be accessible through the embedded 
-                 * function's reference
+                 * function's reference.
                 */
                 const wrapper = `(()=>{ 
                     ${fnSrc.fnCode}
@@ -585,10 +582,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 )
             };
 
-            const wrappedFn = this.callFn as unknown as R;
-            (wrappedFn as { alreadyMonitored: boolean }).alreadyMonitored = true;
+            const finalFn = this.callFn as unknown as R;
+            (finalFn as { alreadyMonitored: boolean }).alreadyMonitored = true;
 
-            return wrappedFn;
+            return finalFn;
         }
         finally {
             this._stage = "IDLE";
