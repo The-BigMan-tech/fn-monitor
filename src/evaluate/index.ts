@@ -40,7 +40,8 @@ function* higherHandler(
     interpreter:SvalPlus
 ):Generator<unknown,NodeResult<unknown>> 
 {
-    const localReusables = copyReusables(interpreter,'compulsory');//capture the reusbales after the callInspector method has updated it to the local node and scope
+    // capture the reusbales after the callInspector method has updated it to the local node and scope
+    const localReusables = copyReusables(interpreter,'compulsory');
     let iterResult = iterator.next();
 
     while (!iterResult.done) {
@@ -58,9 +59,8 @@ function* higherHandler(
     return iterResult.value; 
 }
 
-//Leave the frequent access of interpreter.reusables.result the way it is.
-//Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
-//'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
+// Leave the frequent access of interpreter.reusables.result the way it is.
+// Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
 
 export default function* evaluate(
     node:AcornNode | null | undefined, 
@@ -90,7 +90,8 @@ export default function* evaluate(
         return yield* handler(node,scope);
     }
 
-    //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
+    //only run the code below after checking if it should use the modified evaluator to prevent creating unnecessary objects
+    
     const interpreter = scope.interpreter! as SvalPlus<Generator> ;
     const parentReusables = copyReusables(interpreter,'compulsory');//unlike the normalized evaluator,this one must be compulsory because making it optional failed a test concerning the handling of multiple async contexts
 

@@ -14,8 +14,7 @@ import * as program from './program.ts'
 
 import { 
     EvaluateOps, 
-    NodeResult, 
-    SvalPlus 
+    NodeResult
 } from '../custom-types.ts';
 
 import { 
@@ -35,9 +34,8 @@ import {
 
 let evaluateOps:EvaluateOps<unknown>;
 
-//Leave the frequent access of interpreter.reusables.result the way it is.
-//Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
-//'final' and the result are typed as any.so be sure to check the parameter name of the fn you are passing them to
+// Leave the frequent access of interpreter.reusables.result the way it is.
+// Dont be tempted to lift it to a variable. It is subject to mutations and it will add more overhead on how the local variable is managed
 
 export default function evaluate(
     node:AcornNode | null | undefined, 
@@ -68,14 +66,15 @@ export default function evaluate(
         return handler(node,scope);
     };
 
-    //only run this code after checking if it should use the modified evaluator to prevent creating unnecessary objects
+    //only run the code below after checking if it should use the modified evaluator to prevent creating unnecessary objects
+
     const interpreter = scope.interpreter!;// the interpreter is guaranteed to exist if useModifiedEvaluator is true
     const parentReusables = copyReusables(interpreter,'optional');
 
     try {
         evalStackHandler.start(interpreter);
 
-        const response = callInspector('eager',node, scope, handler);//call this before the node is executed
+        const response = callInspector('eager',node, scope, handler);// call this before the node is executed
         const genResult = isGenerator(response) ? response.next() : null;  
         
         const finished = (genResult === null) ? true : genResult.done
@@ -85,8 +84,6 @@ export default function evaluate(
                 ?interpreter.reusables.result
                 :handler(node,scope)
 
-            //this check must pass the value of the result directly and not the 'final' variable
-
             if (!pushedManually(interpreter)) {
                 pushResult(interpreter,final);
             }
@@ -95,7 +92,7 @@ export default function evaluate(
             return final;
         }
         else {
-            if (!executedManually(interpreter.reusables.result)) {//this assetion is the important piece that justifies the removal of the SEEN symbol in one refactor
+            if (!executedManually(interpreter.reusables.result)) {// this assetion is the important piece that justifies the removal of the SEEN symbol in one refactor
                 throw new Error(ansis.red(`[Synchronous Evaluator] Generator-based inspectors can only yield after executing the node.`))
             }
 
