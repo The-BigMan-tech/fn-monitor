@@ -701,7 +701,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 - **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes including those that don't have an event class.
   
-- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports random array access and iteration.
+- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports iteration and random access. Positive indices (starting at 0) point to the most recent entries while negative indices point to the oldest entries.
   
 - **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
   
