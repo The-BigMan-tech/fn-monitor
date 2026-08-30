@@ -516,7 +516,7 @@ From the README, the function is parsed into an AST only once. This means that a
 
 That can be powerful if you want a persistent runtime transformation but it can also surprise you if you expected the mutation to apply only to one call. 
 
-If the interpreter were to parse it on every call, it would be too slow for practical use.
+If the interpreter were to parse the function on every call, it would be too slow for practical use.
 
 ---
 ### What this package is good for
