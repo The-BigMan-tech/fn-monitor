@@ -679,8 +679,8 @@ The rich object that gives inspectors their ability to participate in the interp
 | --- | --- |
 | `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. |
 | `execute()` | Manually executes the current node and returns the result. Calling this is optional; if omitted, the interpreter executes the node normally after the `inspector` finishes.<br>Lazy nodes like `AwaitExpression`, `YieldExpression` and an awaited `ForOfStatement` defer the execution and cause it to return the `LAZY_NODE` symbol. |
-| `localExeStack()` | Returns a live, read-only reference to a stack of the latest evaluated child node results. Supports indexed access to previous results and is iterable. |
-| `callStack()` | Returns a read-only reference to the stack of active function calls with the latest call at the head. It holds the original function references and not internal wrappers. Supports indexed access to previous calls and is iterable. |
+| `localExeStack()` | Returns a live, read-only reference to the stack of the latest evaluated child node results. |
+| `callStack()` | Returns a read-only reference to the stack of active function calls. Crucially, it holds the references to the original functions and not the internal wrappers. |
 | ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#deprecated-perexecution-hook) for more detail. |
 
 #### ExeResult
@@ -701,7 +701,7 @@ The rich object that gives inspectors their ability to participate in the interp
 
 - **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes including those that don't have an event class.
   
-- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack` and `visit.callStack` respectively. They use the same underlying data structure: an optimized deque that supports iteration and random access. Positive indices (starting at 0) point to the most recent entries while negative indices point to the oldest entries.
+- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack()` and `visit.callStack()` respectively. They use the same underlying data structure: an optimized deque that supports iteration and random access via the `.get()` method. Positive indices (starting at 0) point to the most recent entries while negative indices point to the oldest entries.
   
 - **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
   
