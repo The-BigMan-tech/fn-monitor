@@ -420,9 +420,9 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
     private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
         const { ref: fn, captures, bind } = metadata;
-        const helper = this.codeGenHelper;
-
         const fnString = fn.toString();
+
+        const helper = this.codeGenHelper;
         helper.checkFnSyntax(fn,fnString);
 
         const labels = SvalPlus.commonLabels;
