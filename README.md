@@ -20,7 +20,7 @@
     <a href="https://npmx.dev/package-stats/@typescript-guy/fn-monitor/v/latest"><img src="https://img.shields.io/badge/npm_unpacked_size-320%20kB-1e7c8e?labelColor=414952" alt="npm unpacked size" /></a>
 </p>
 
-`fn-monitor` is an instrumentation layer over the `sval` JS-in-JS interpreter to monitor, intercept, and mutate a function's execution at the AST level. It allows developers to view their functions as white boxes at runtime by injecting first-class hooks into its custom execution layer.
+`fn-monitor` is an instrumentation layer over a JS-in-JS interpreter to monitor, intercept, and mutate a function's execution at the AST level. It allows developers to view their functions as white boxes at runtime by injecting first-class hooks into its custom execution layer.
 
 ## Table of Contents 📑
 
@@ -54,7 +54,7 @@ npm install @typescript-guy/fn-monitor
 
 ## API Introduction ✨
 
-The core of the package is the `monitor` function. It accepts a function through an object and returns a new function that runs through a custom interpretation layer while retaining the original's call signature.
+The core of the package is the `monitor` function. It accepts a function through an object and returns a new function that runs through a custom interpretation layer while retaining the original's call signature. Under the hood, it uses the `sval` interpreter.
 
 ```typescript
 const originalFn = ()=>{
