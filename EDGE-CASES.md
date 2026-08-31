@@ -20,7 +20,7 @@ This document covers specific interpreter behaviors, edge cases, and toolchain i
    
    - **Lexical Depth Counter:** It is strictly relative to the `main` or an `embedded` function. Entering the scope of any function defined **inside** them will not reset it to 0. This static mapping provides maximum stability for the interpreter and avoids a whole class of runtime edge cases. If you need the nesting depth relative to a specific nested helper, see this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/lexical-anchoring.ts) to utilize the package's API to build your own solutions.
   
-3. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the `inspector` hook will persist. This mutation will affect all subsequent calls, as well as any new `monitor()` calls that share the same cached AST configuration
+3. **AST Mutation Persistence:** Because the code is parsed into an AST only once, any mutations made to an AST node within the `inspector` hook will persist. This mutation will affect all subsequent calls, as well as any new monitored functions that share the same cached AST.
 
 4. **Wrapper Constraints:** A monitored function cannot be passed to the `ref` property of either `main` or any function within `embed` when creating *another* monitored function. However, you *can* include an already-monitored function in any of the `captures` objects, as it will be treated like a native object outside the interpreter's context.
 

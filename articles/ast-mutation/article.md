@@ -512,11 +512,11 @@ That design choice is intentional. It keeps the interpreter fast and memory effi
 
 ### AST mutations persist
 
-From the README, the function is parsed into an AST only once. This means that any mutations made to an AST node within the inspector hook will persist and affect all subsequent calls to that function. 
+From the README, the function is parsed into an AST only once. This means that any mutations made to an AST node within the `inspector` hook will affect all subsequent calls, as well as any new monitored functions that share the same cached AST.
 
-That can be powerful if you want a persistent runtime transformation but it can also surprise you if you expected the mutation to apply only to one call. 
+That can be powerful if you want a persistent runtime transformation, but it can also surprise you if you expected the mutation to apply only to one call. 
 
-If the interpreter were to parse the function on every call, it would be too slow for practical use.
+However, if the interpreter were to redundantly parse a function on every call, it would be too slow for practical use.
 
 ---
 ### What this package is good for
