@@ -628,7 +628,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 2. **Unopinionated:** Makes no assumptions about your problem domain. It provides flexible, raw primitives that you can use anywhere runtime AST analysis is required.
 
-  >💡 Building a deobfuscator? Check out this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts).
+    >💡 Building a deobfuscator? Check out this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts).
    
 4. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
 
