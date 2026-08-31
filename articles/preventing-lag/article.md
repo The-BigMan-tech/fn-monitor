@@ -138,7 +138,7 @@ Lag
 Lag
 Lag
 Lag
-....
+...
 ```
 
 But if we call a timed version, it should throw an error.
@@ -159,7 +159,7 @@ Error: The monitored function used 53.961ms when only given a budget of 50.000ms
 ...
 ```
 
-Because we only check the budget every now and then, and because the interpreter steps off while the native JS engine executes the logs, the timeout isn't 100% accurate. And the exact millisecond it will halt is not deterministic. 
+The timeout isn't 100% accurate because `timeFn` only checks the budget occasionally and the interpreter steps off while the native JS engine executes the logs. Thus, the exact millisecond it will halt is not deterministic. 
 
 But if we are being pragmatic, it is far better to lose a few milliseconds than to hang our main thread. 
 
@@ -260,7 +260,7 @@ Error: The monitored function used 58.440ms when only given a budget of 50.000ms
 
 This solves our immediate problem because not only does it allow the `timedGetDetails` function to call an external function without having to change its original source code, but it also allows us to put it under a strict budget.
 
-The problem with this approach, though, is that it forces us to time every single function that our timed function will call and it makes the timer fragmented — one for the outer function and one for the captured one. We can solve these problems with a more streamlined solution.
+The problem with this approach, though, is that it forces us to time every single function call within a timed function, which makes the timer fragmented — one for the outer function and one for the captured one. We can solve these problems with a more streamlined solution.
 
 ### What is Embedding?
 
