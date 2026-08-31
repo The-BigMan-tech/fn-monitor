@@ -708,7 +708,7 @@ The rich object that gives inspectors their ability to participate in the interp
   
 - **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
   
-- **`InspectorGenerator`**: The return type for generator-based inspectors. Used for type-safe `yield` expressions with `visit.execute()`.
+- **`InspectorGenerator`**: The return type for generator-based inspectors. Used to `yield` a deferred result from `visit.execute()`.
   
 - **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
   
