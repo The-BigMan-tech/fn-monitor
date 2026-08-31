@@ -660,7 +660,9 @@ The main export. Accepts a configuration object containing the target function a
 | `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
 | `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
-> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. Any type works for any function. The only difference is how you handle `visit.execute()` on lazy nodes (generators can `yield` the `LAZY_NODE` symbol to defer the result).
+> 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. 
+> 
+> Any type works for any function. The only difference is how you handle `visit.execute()` on lazy nodes — generators can `yield` the `LAZY_NODE` symbol to get the resolved value.
 
 #### Metadata`<T>`
 | Property | Type | Description |
