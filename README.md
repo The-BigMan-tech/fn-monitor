@@ -626,17 +626,17 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to mutate execution, enforce timeouts, and trace state without needing to understand the underlying mechanics.
 
-2. **Unopinionated:** Makes no assumptions about your problem domain. It provides raw, flexible primitives that can be used anywhere runtime AST analysis is required.
-   
-   > 💡 If your problem domain is deobfuscation, see this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts)
-   
-3. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
+2. **Unopinionated:** Makes no assumptions about your problem domain. It provides flexible, raw primitives that you can use anywhere runtime AST analysis is required.
 
-4. **Zero-Dependency Runtime:** A pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs, and its only dependencies run in pure JS.
+  >💡 Building a deobfuscator? Check out this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts).
    
-5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
+4. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
 
-6. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
+5. **Zero-Dependency Runtime:** A pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs, and its only dependencies run in pure JS.
+   
+6. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
+
+7. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
    
 ---
 
