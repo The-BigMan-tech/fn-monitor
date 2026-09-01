@@ -172,11 +172,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'a',
-      start: 515,
-      end: 516,
+      start: 573,
+      end: 574,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -185,11 +186,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'b',
-      start: 519,
-      end: 520,
+      start: 577,
+      end: 578,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -200,11 +202,12 @@ console.log(exeHistory);
       left: [Object],
       right: [Object],
       operator: '+',
-      start: 515,
-      end: 520,
+      start: 573,
+      end: 578,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -213,11 +216,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'a',
-      start: 525,
-      end: 526,
+      start: 583,
+      end: 584,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -226,11 +230,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'b',
-      start: 529,
-      end: 530,
+      start: 587,
+      end: 588,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -241,11 +246,12 @@ console.log(exeHistory);
       left: [Object],
       right: [Object],
       operator: '-',
-      start: 525,
-      end: 530,
+      start: 583,
+      end: 588,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -256,11 +262,12 @@ console.log(exeHistory);
       left: [Object],
       right: [Object],
       operator: '*',
-      start: 514,
-      end: 531,
+      start: 572,
+      end: 589,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -270,11 +277,12 @@ console.log(exeHistory);
       type: 'VariableDeclaration',
       kind: 'const',
       declarations: [Array],
-      start: 499,
-      end: 532,
+      start: 557,
+      end: 590,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -283,11 +291,12 @@ console.log(exeHistory);
     node: {
       type: 'Identifier',
       name: 'result',
-      start: 546,
-      end: 552,
+      start: 604,
+      end: 610,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   },
   {
@@ -296,16 +305,18 @@ console.log(exeHistory);
     node: {
       type: 'ReturnStatement',
       argument: [Object],
-      start: 539,
-      end: 553,
+      start: 597,
+      end: 611,
       range: [Array],
       loc: [Object]
     },
+    getSrc: [Function: getSrc],
     scope: EventScope { variables: [Object], depth: 0, callDepth: 0 }
   }
 ]
 ```
 </details>
+<br>
 
 > ⭐ **Enjoying** `fn-monitor`? Show your support **by** starring the [repository](https://github.com/The-BigMan-tech/fn-monitor) on GitHub! It helps the project grow and keeps the updates coming.
 
@@ -646,28 +657,29 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ### Core Configuration
 
-#### monitor`<T>`(setup: MonitorFnSetup`<T>`)
+#### `monitor<T extends (...args: any[]) => any>(setup: MonitorFnSetup<T>): T`
+
 The main export. Accepts a configuration object containing the target function and returns a new function that is executed by the interpreter while retaining the call signature of the target.
 
-#### MonitorFnSetup`<T>`
+#### `MonitorFnSetup<T>`
 | Property | Type | Description |
 | --- | --- | --- |
 | `main` | `Metadata<T>` | **Required.** The configuration for the main function to monitor. |
-| `embed` | `Record<string, Metadata<T>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
-| `inspector` | `Inspector` | The main hook passed the interpreter's context (`visit` object). Can be a regular function or a generator. *(See note below).* |
-| `onStep` | `OnStep` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it significantly faster than `inspector`. |
-| `sourceOut` | `{ value: string }` | If provided, the interpreter writes the generated source code into this object's `value` property. |
-| `beforeEachCall` | `(...args) => void` | Hook called before each execution with the passed arguments. |
-| `afterEachCall` | `(result \| Error) => void` | Hook called after each execution with the result or thrown error. |
+| `embed` | `Record<string, Metadata<Fn>>` | Alternative to capturing. Directly includes a function's source code in the interpreter context so it can also be monitored. |
+| `inspector` | `(visit: Visit) => undefined \| InspectorGenerator` | The main hook that is executed as the interpreter walks the AST. It gets passed the interpreter's context (`visit` object) and can be a regular function or a generator. *(See note below).* |
+| `onStep` | `() => void` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it much faster than the `inspector`. |
+| `sourceOut` | `{ value: string }` | If provided, the interpreter writes a formatted version of the generated source code that it uses during execution into this object's `value` property. |
+| `beforeEachCall` | `(...args: Parameters<T>) => void` | Hook called before each execution with the passed arguments. |
+| `afterEachCall` | `(result: ReturnType<T> \| Error) => void` | Hook called after each execution with the result or thrown error. |
 
 > 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. 
 > 
 > Any type works for any function. The only difference is how you handle `visit.execute()` on lazy nodes — generators can `yield` the `LAZY_NODE` symbol to get the resolved value.
 
-#### Metadata`<T>`
+#### `Metadata<T>`
 | Property | Type | Description |
 | --- | --- | --- |
-| `ref` | `T` | The reference to the function to be included in the interpreter context. |
+| `ref` | `T` | **Required.** The reference to the function to be included in the interpreter context. |
 | `captures` | `Record<string, any>` | Maps variable names to their values stored outside the wrapped function's scope. Follows standard JS copy-by-value (primitives) and copy-by-reference (objects) semantics. |
 | `bind` | `unknown` | The `this` context to bind to the generated function. Required when monitoring instance methods to preserve the `this` reference safely. |
 
@@ -677,49 +689,86 @@ The main export. Accepts a configuration object containing the target function a
 
 The rich object that gives inspectors their ability to participate in the interpretation. Every monitored function has exactly one `visit` object allocated to save memory. It must be used strictly within the `inspector` hook.
 
-| Method/Property | Description |
-| --- | --- |
-| `is(query, callback)` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. |
-| `execute()` | Manually executes the current node and returns the result. Calling this is optional; if omitted, the interpreter executes the node normally after the `inspector` finishes. |
-| `localExeStack()` | Returns a live, read-only reference to the stack of the latest evaluated child node results, where each item is of type `ExeResult`. |
-| `callStack()` | Returns a read-only reference to the stack of active function calls. Crucially, it holds the references to the original functions and not the internal wrappers. |
-| ~~`set perExecution(fn)`~~ | A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>It is currently deprecated. Check this [note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#deprecated-perexecution-hook) for more detail. |
-
-> 💡 **A note on `visit.execute`:** Lazy nodes like `AwaitExpression`, `YieldExpression`, and an awaited `ForOfStatement` cause the method to defer execution and return the `LAZY_NODE` symbol. For regular nodes, `yield`ing the result of `visit.execute()` has the exact same effect as calling it without `yield`.
-> 
-
-#### ExeResult
 | Property | Type | Description |
 | --- | --- | --- |
-| `evaluation` | `unknown` | The result of the node's evaluation. |
-| `type` | `EsNode['type']` | The type of the AST node. |
-| `node` | `EsNode` | The AST node itself. |
-| `scope` | `ScopeForEvent \| NOT_ALLOCATED` | A safe snapshot of the scope created for the result. |
+| `is` | `(query: Query, callback: (event: LangEvent) => void) => void` | Evaluates the query against the **current** node. If it matches, it allocates a scope, wraps it with the node in an event object, and fires the callback. |
+| `execute` | `() => unknown \| typeof LAZY_NODE` | Manually executes the current node and returns the result. Calling this is optional; if omitted, the interpreter executes the node normally after the `inspector` finishes. |
+| `localExeStack` | `() => LocalExeStack` | Returns a live, read-only reference to the stack of the latest evaluated child node results, where each item is of type `ExeResult`. |
+| `callStack` | `() => CallStack` | Returns a read-only reference to the stack of active function calls. Crucially, it holds the references to the original functions and not the internal wrappers. |
+| ~~`perExecution`~~ | `(fn: () => void)` | *Deprecated.* A setter for a callback fired after each executed node within the current node's subtree (including the current node itself). It is short-lived and consumed after the owner node completes. <br>Check this [note](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#deprecated-perexecution-hook) for more detail. |
+
+> 💡 **A note on `visit.execute`:** Lazy nodes like `AwaitExpression`, `YieldExpression`, and an awaited `ForOfStatement` cause the method to defer execution and return the `LAZY_NODE` symbol. 
+> 
+> The symbol can be yielded to get the resolved value but for regular nodes, yielding the result of `visit.execute()` has the exact same effect as calling it without `yield`.
+> 
 
 ---
 
 ### Utility Types & Classes
 
-- **`EsNode`**: Union of all AST nodes (alias to `Node` from `estree`).
-  
-- **Event Classes**: Over **40** specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored intellisense.
+#### `EsNode`
 
-- **`Query`**: String union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes including those that don't have an event class.
+A union of all AST nodes (alias to `Node` from `estree`).
   
-- **`LocalExeStack` and `CallStack`**: The type of the values returned from `visit.localExeStack()` and `visit.callStack()` respectively. They use the same underlying data structure: an optimized deque that supports iteration and random access via the `.get()` method. Positive indices (starting at 0) point to the most recent entries while negative indices point to the oldest entries.
-  
-- **`Fn`**: A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
-  
-- **`InspectorGenerator`**: The return type for generator-based inspectors. Used to `yield` a deferred result from `visit.execute()`.
-  
-- **`NOT_ALLOCATED`**: Symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
-  
-- **`ScopeForEvent`**: A freshly allocated snapshot of the scope. 
-    - `variables.local` is an object that maps variable identifiers to their values.
-    - `variables.search(name)` searches up the live scope chain for a variable through its identifier. 
-    - `depth` is a 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST and is measured relative to the root of the `main` function or any `embedded` function.
-    - `callDepth` is a 0-indexed value representing the current depth of the call stack starting from the monitored `main` function.
+#### `ScopeForEvent`
 
+A freshly allocated, safe snapshot of the scope for the current execution step.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `variables.local` | `Record<string, unknown>` | An object mapping variable identifiers in the current scope to their runtime values. |
+| `variables.search` | `(name: string) => unknown \| undefined` | A function that searches up the live scope chain for a variable by its identifier. |
+| `depth` | `number` | A 0-indexed measure of lexical nesting. It maps directly to the physical structure of the AST, relative to the root of the `main` or an `embedded` function. |
+| `callDepth` | `number` | A 0-indexed value representing the current depth of the call stack, starting from the monitored `main` function. |
+
+#### `ExeResult`
+
+The type of each item in the local execution stack.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `evaluation` | `unknown` | The result of the node's evaluation. |
+| `type` | `EsNode['type']` | The type of the AST node. |
+| `node` | `EsNode` | The AST node itself. |
+| `scope` | `ScopeForEvent \| typeof NOT_ALLOCATED` | A safe snapshot of the scope created for the result. |
+| `getSrc` | `() => string` | Generates the source code string for the result's AST node. |
+
+#### `LangEvent`
+
+The base class of the event object given to the callback argument in `visit.is()`.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `node` | `EsNode` | A reference to the AST node being evaluated at the time of the event. |
+| `scope` | `ScopeForEvent` | The safe scope snapshot for this specific execution step. |
+| `getSrc` | `() => string` | Generates the source code string for the event's AST node. |
+
+> 💡 **Performance Note:** Only call `getSrc()` when needed to avoid performance overhead.
+
+#### Event Classes
+
+Over **40** specific event classes extending `LangEvent` (e.g., `BinaryExprEvent`, `CallExprEvent`, `AwaitExprEvent`, `ReturnStmtEvent`, etc.) providing tailored IntelliSense.
+
+#### `Query`
+
+A string union of all possible `EsNode` types for `visit.is`. Includes `'Any'` to match all nodes, including those that don't have an event class.
+  
+#### `Fn`
+
+A type that matches all function types. It is used internally for the `Metadata<T>` and `CallStack` types.
+  
+#### `InspectorGenerator`
+
+The return type for generator-based inspectors. Used to `yield` a deferred result from `visit.execute()`.
+  
+#### `NOT_ALLOCATED`
+
+A symbol marking scopes that weren't allocated. Use `visit.is('Any', ...)` to forcefully allocate scope objects for all nodes.
+
+#### `LocalExeStack` and `CallStack`
+
+The types of the values returned from `visit.localExeStack()` and `visit.callStack()`, respectively. They use the same underlying data structure: an optimized deque that supports iteration and random access via the `.get()` method. Positive indices (starting at 0) point to the most recent entries while negative indices point to the oldest entries.
+  
 ---
 
 <a id="important-limitations"></a>
