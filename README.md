@@ -632,7 +632,7 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
    
 4. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
 
-5. **Zero-Dependency Runtime:** A pure JavaScript AST-walking interpreter. It does not rely on native binaries or environment-specific APIs, and its only dependencies run in pure JS.
+5. **Zero Native Dependencies:** Powered by a pure JavaScript AST-walking interpreter, it does not rely on native binaries or environment-specific APIs.
    
 6. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
 
@@ -762,7 +762,7 @@ If you encounter unexpected behavior, it is likely documented in the **[Advanced
 
 ## Mechanics ⚙️
 
-- **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a slight memory overhead, it strictly prevents state collision between executions.
+- **Interpreter Isolation:** Each monitored function is assigned its own dedicated interpreter instance. While this incurs a dedicated memory overhead per function, it strictly prevents state collision between executions.
   
 - **Single Parse:** A monitored function is parsed into an AST only once. The resulting nodes are reused across all calls to maximize execution speed.
   
