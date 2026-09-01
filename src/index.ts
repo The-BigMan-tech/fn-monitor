@@ -5,6 +5,7 @@ import {
     Fn, 
     Inspector, 
     InspectorGenerator as InspectorGen, 
+    monitoredMarker, 
     OnStep, 
     WrapperError 
 } from "./custom-types.ts";
@@ -61,7 +62,7 @@ export interface MonitorFnSetup<T extends Fn> {
  * instance of the package in memory.
 */
 function assertIsUnmonitored(metadata:Metadata<Fn>) {
-    if ('alreadyMonitored' in metadata.ref) {
+    if (monitoredMarker in metadata.ref) {
         throw new WrapperError(ansis.red(`\nA monitored function cannot be directly included in the interpreter's context. Try to capture it instead.`))
     };
 }

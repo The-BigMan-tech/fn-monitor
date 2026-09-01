@@ -259,6 +259,6 @@ export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>):void 
         type:node.type,
         node,
         getSrc,
-        scope:(event === NOT_ALLOCATED) ?NOT_ALLOCATED :event.scope
+        scope:(event === NOT_ALLOCATED) ? NOT_ALLOCATED : event.scope
     });
 }

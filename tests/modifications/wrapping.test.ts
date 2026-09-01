@@ -5,15 +5,6 @@ import { parse } from "meriyah"
 
 describe('Wrapping Behaviour', () => {
 
-    it('[Wrap] should augment the returned monitored function with the alreadyMonitored flag', () => {
-        const monitoredFn = monitor({
-            main: { 
-                ref:() => undefined
-            } 
-        });
-        expect(monitoredFn.alreadyMonitored).toBe(true);
-    });
-
     it('[Wrap] should throw an error if an already monitored function is directly being wrapped to create a new monitored function', () => {
         const monitoredFn = monitor({
             main: { 

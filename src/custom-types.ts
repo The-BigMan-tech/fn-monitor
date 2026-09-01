@@ -85,6 +85,7 @@ export const NOT_ALLOCATED = Symbol('NOT_ALLOCATED');
 
 //This symbol are internal and wont be encountered by the caller/library user
 export const UNASSIGNED = Symbol('UNASSIGNED');
+export const monitoredMarker = '__fn-monitor__' as const;
 
 /**
  * using unknown in the yield expr means that the user can always yield visit.execute() without 

@@ -29,7 +29,8 @@ import {
     OnStep,
     VisitExecutionError,
     GeneratedKey,
-    WrapperError
+    WrapperError,
+    monitoredMarker
 } from './custom-types.ts'
 
 import { 
@@ -587,7 +588,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
 
     private markAsMonitored<T extends Fn>(fn:Fn):T {
-        Object.defineProperty(fn, 'alreadyMonitored', {
+        Object.defineProperty(fn,monitoredMarker, {
             value: true,
             enumerable: false, // Crucial: keeps it hidden from for...in loops and Object.keys()
             writable: false,
