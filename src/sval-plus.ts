@@ -99,6 +99,7 @@ class EventScope implements ScopeForEvent {
         };
         
         this.variables = {
+            // Create a fresh closure so that it can be destructured as seen in the examples
             search:(name:string):unknown | undefined => {
                 const variable = this.#scope.find(name);
                 return (variable === null)?undefined:variable.get();

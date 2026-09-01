@@ -1,7 +1,8 @@
 import { Node as AcornNode } from "acorn";
 import Scope from "./scope/index.ts";
 import type {Node as EsNode} from "estree";
-import {sha256} from "js-sha256"
+import {sha256} from "js-sha256";
+import { generate } from 'astring';
 import ansis from "ansis";
 
 import { 
@@ -15,7 +16,8 @@ import {
     NodeResult, 
     GeneratedKey,
     ForbiddenDynamicImport,
-    Fn
+    Fn,
+    ExeResult
 } from "./custom-types.ts";
 
 
@@ -242,6 +244,11 @@ export function pushedManually(interpreter:SvalPlus):boolean {
         (!inLazyMode(interpreter))//the visit.execute method couldn't have pushed the result while the interpreter was lazy
     )
 }
+
+// This is a shared function reference to prevent creating several closures per result 
+const getSrc = function(this: ExeResult): string {
+    return generate(this.node);
+};
 export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>):void {
     const event = interpreter.reusables.event;
     const node = interpreter.reusables.node!;
@@ -251,8 +258,7 @@ export function pushResult(interpreter:SvalPlus,final:NodeResult<unknown>):void 
         evaluation:final,
         type:node.type,
         node,
-        scope:(event === NOT_ALLOCATED)
-            ?NOT_ALLOCATED
-            :event.scope
+        getSrc,
+        scope:(event === NOT_ALLOCATED) ?NOT_ALLOCATED :event.scope
     });
 }

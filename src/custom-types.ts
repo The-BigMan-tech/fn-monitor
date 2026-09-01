@@ -1,6 +1,7 @@
 import { type Node as EsTreeNode} from "estree";
 import { type Node as AcornNode} from "acorn";
-import { QList,ReadonlyQList } from "./q-list.ts";
+import { generate } from 'astring';
+import { QList, ReadonlyQList } from "./q-list.ts";
 import Scope from "./scope/index.ts";
 import ansis from "ansis"
 
@@ -194,6 +195,8 @@ export interface ExeResult {
     node:EsNode,
     /**The safe scope created for the caller, or NOT_ALLOCATED if no query matched*/
     scope:ScopeForEvent | typeof NOT_ALLOCATED;
+    /**Generates the source code string for the result's AST node. */
+    getSrc:()=>string;
 }
 
 /**
@@ -250,9 +253,12 @@ export class LangEvent<NodeType extends EsNode = EsNode> {//LangEvent is short f
     public node:NodeType;
     public scope:ScopeForEvent;
 
-    constructor(interpreter:SvalPlus) {//taking the interpreter directly rather than the node and scope separately,heavily simplifies the constructor per sub class
+    constructor(interpreter:SvalPlus) {// taking the interpreter directly rather than the node and scope separately, heavily simplifies the constructor per sub class
         this.node = interpreter.reusables.node as NodeType;
-        this.scope = interpreter.createEventScope()
+        this.scope = interpreter.createEventScope();
+    }
+    public getSrc(): string {
+        return generate(this.node);
     }
 }
 export class IdentifierEvent extends LangEvent<Identifier> {
