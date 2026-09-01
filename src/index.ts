@@ -51,7 +51,15 @@ export interface MonitorFnSetup<T extends Fn> {
     afterEachCall?:(result:ReturnType<T> | Error)=>void,
 }
 
-// We only assert this for the refs because they are directly included in the interpreter's context. Whereas captured fns are ran by the js engine and thus,it will work without issues.
+/**
+ * We assert this for the refs because they are directly included in the interpreter's context. 
+ * On the other hand, captured functions are run by the native JS engine and thus will work without issues.
+ * 
+ * The reason this uses a key check rather than a Set is to handle cases where two different 
+ * versions of the package happen to be loaded in memory. A property key will successfully 
+ * enforce this rule across package instances, whereas a Set would be limited to a specific 
+ * instance of the package in memory.
+*/
 function assertIsUnmonitored(metadata:Metadata<Fn>) {
     if ('alreadyMonitored' in metadata.ref) {
         throw new WrapperError(ansis.red(`\nA monitored function cannot be directly included in the interpreter's context. Try to capture it instead.`))
@@ -62,7 +70,7 @@ function assertIsUnmonitored(metadata:Metadata<Fn>) {
  * @param setup A configuration object containing the target function together with lifecycle hooks.
  * @returns A new function that is executed by the custom interpreter while retaining the call signature of the target.
 */
-export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T & {alreadyMonitored:true} {
+export function monitor<T extends Fn>(setup:MonitorFnSetup<T>):T {
     const {
         main, embed,
         inspector, onStep, sourceOut,

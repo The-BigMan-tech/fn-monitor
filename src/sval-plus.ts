@@ -1,4 +1,5 @@
 /* eslint-disable @stylistic/indent */
+
 import { Sval,SvalOptions } from "./sval.ts";
 import { generate } from 'astring';
 import ansis from "ansis";
@@ -584,14 +585,21 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         };
     }
 
-    public assemble = <
-        T extends Fn,
-        R = T & { alreadyMonitored: true }
-    >(
-        main:Metadata<T>,
-        embed?:Record<string,Metadata<Fn>>,
-        sourceOut?:{value:string}
-    ):R => {
+    private markAsMonitored<T extends Fn>(fn:Fn):T {
+        Object.defineProperty(fn, 'alreadyMonitored', {
+            value: true,
+            enumerable: false, // Crucial: keeps it hidden from for...in loops and Object.keys()
+            writable: false,
+            configurable: false
+        });
+        return fn as T;
+    }
+
+    public assemble = <T extends Fn>(
+        main: Metadata<T>,
+        embed?: Record<string,Metadata<Fn>>,
+        sourceOut?: { value:string }
+    ):T => {
         this._stage = "WRAPPING";
         
         try {
@@ -613,9 +621,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 )
             };
 
-            const finalFn = this.callFn as unknown as R;
-            (finalFn as { alreadyMonitored: boolean }).alreadyMonitored = true;
-
+            const finalFn = this.markAsMonitored<T>(this.callFn);
             return finalFn;
         }
         finally {
