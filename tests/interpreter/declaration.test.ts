@@ -4,9 +4,9 @@ import { describe, it, expect } from 'vitest'
 import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing declaration', () => {
-  it('should declare var normally', () => {
-    const interpreter = new SvalPlus()
-    const code = `
+    it('should declare var normally', () => {
+        const interpreter = new SvalPlus()
+        const code = `
       var a
       var a = 1
       var b = 2
@@ -56,23 +56,23 @@ describe('testing declaration', () => {
       exports.h3 = h3
       exports.h4 = h4
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBe(2)
-    expect(interpreter.exports.c).toBeUndefined()
-    expect(interpreter.exports.d()).toBe('d2')
-    expect(interpreter.exports.e()).toBe('e')
-    expect(interpreter.exports.f()).toBe('f')
-    expect(interpreter.exports.h1).toBe(1)
-    expect(interpreter.exports.h2).toBe(2)
-    expect(interpreter.exports.h3()).toBe('h3')
-    expect(interpreter.exports.h4()).toBe('h4')
-  })
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBe(2)
+        expect(interpreter.exports.c).toBeUndefined()
+        expect(interpreter.exports.d()).toBe('d2')
+        expect(interpreter.exports.e()).toBe('e')
+        expect(interpreter.exports.f()).toBe('f')
+        expect(interpreter.exports.h1).toBe(1)
+        expect(interpreter.exports.h2).toBe(2)
+        expect(interpreter.exports.h3()).toBe('h3')
+        expect(interpreter.exports.h4()).toBe('h4')
+    })
 
-  it('should declare let normally', () => {
-    const interpreter = new SvalPlus()
-    const code = `
+    it('should declare let normally', () => {
+        const interpreter = new SvalPlus()
+        const code = `
       let a = 1
       let b
       let c = function() {
@@ -86,27 +86,27 @@ describe('testing declaration', () => {
       exports.c = c
       exports.d = d
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBeUndefined()
-    expect(interpreter.exports.c()).toBe('c')
-    expect(interpreter.exports.d()).toBe('d')
-  })
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBeUndefined()
+        expect(interpreter.exports.c()).toBe('c')
+        expect(interpreter.exports.d()).toBe('d')
+    })
 
-  it('should declare const normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should declare const normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const a = 1
       exports.a = a
     `)
-    expect(interpreter.exports.a).toBe(1)
-  })
+        expect(interpreter.exports.a).toBe(1)
+    })
 
-  it('should declare var in global env normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should declare var in global env normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       var a = 1
 
       expect(Object.getOwnPropertyDescriptor(window, 'a')).toEqual({
@@ -139,56 +139,56 @@ describe('testing declaration', () => {
 
       expect(err2).toBeInstanceOf(TypeError)
     `)
-  })
+    })
 
-  it('should throw SyntaxError when declaring multiple times with `let`', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when declaring multiple times with `let`', () => {
+        const interpreter = new SvalPlus()
 
-    try {
-      interpreter.run(`
+        try {
+            interpreter.run(`
         let a = 1
         let a = 2
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(SyntaxError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(SyntaxError)
+        }
+    })
 
-  it('should throw SyntaxError when declaring multiple times with `const`', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when declaring multiple times with `const`', () => {
+        const interpreter = new SvalPlus()
 
-    let err
-    try {
-      interpreter.run(`
+        let err
+        try {
+            interpreter.run(`
         const a = 1
         const a = 2
       `)
-    } catch (ex) {
-      err = ex
-    }
+        } catch (ex) {
+            err = ex
+        }
 
-    expect(err).toBeInstanceOf(SyntaxError)
-  })
+        expect(err).toBeInstanceOf(SyntaxError)
+    })
 
-  it('should throw SyntaxError when declaring `const` without initializer', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when declaring `const` without initializer', () => {
+        const interpreter = new SvalPlus()
 
-    let err
-    try {
-      interpreter.run(`
+        let err
+        try {
+            interpreter.run(`
         const a
       `)
-    } catch (ex) {
-      err = ex
-    }
+        } catch (ex) {
+            err = ex
+        }
 
-    expect(err).toBeInstanceOf(SyntaxError)
-  })
+        expect(err).toBeInstanceOf(SyntaxError)
+    })
 
-  it('should support declare variable with sequence', () => {
-    const interpreter = new SvalPlus()
+    it('should support declare variable with sequence', () => {
+        const interpreter = new SvalPlus()
 
-    const code = `
+        const code = `
       var a = 1, b, c = function() { return 3 }
       let la = 1, lb, lc = function() { return 3 }
       const ca = 1, cb = function() { return 3 }
@@ -202,41 +202,41 @@ describe('testing declaration', () => {
       exports.ca = ca
       exports.cb = cb
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
 
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBeUndefined()
-    expect(interpreter.exports.c()).toBe(3)
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBeUndefined()
+        expect(interpreter.exports.c()).toBe(3)
 
-    expect(interpreter.exports.la).toBe(1)
-    expect(interpreter.exports.lb).toBeUndefined()
-    expect(interpreter.exports.lc()).toBe(3)
+        expect(interpreter.exports.la).toBe(1)
+        expect(interpreter.exports.lb).toBeUndefined()
+        expect(interpreter.exports.lc()).toBe(3)
 
-    expect(interpreter.exports.ca).toBe(1)
-    expect(interpreter.exports.cb()).toBe(3)
-  })
+        expect(interpreter.exports.ca).toBe(1)
+        expect(interpreter.exports.cb()).toBe(3)
+    })
 
-  it('should throw SyntaxError when const does not have initializer in sequence', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when const does not have initializer in sequence', () => {
+        const interpreter = new SvalPlus()
 
-    try {
-      interpreter.run(`
+        try {
+            interpreter.run(`
         const ca = 1, cb, cc = function() { return 3 }
 
         exports.ca = ca
         exports.cb = cb
         exports.cc = cc
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(SyntaxError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(SyntaxError)
+        }
+    })
 
-  it('should support nested variable definition within global + block', () => {
-    const interpreter = new SvalPlus()
+    it('should support nested variable definition within global + block', () => {
+        const interpreter = new SvalPlus()
 
-    const code = `
+        const code = `
       let a = 5
       const b = 5
       var c = 5
@@ -253,21 +253,21 @@ describe('testing declaration', () => {
       exports.outerB = b
       exports.outerC = c
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
 
-    expect(interpreter.exports.innerA).toBe(6)
-    expect(interpreter.exports.outerA).toBe(5)
-    expect(interpreter.exports.innerB).toBe(6)
-    expect(interpreter.exports.outerB).toBe(5)
-    expect(interpreter.exports.innerC).toBe(6)
-    expect(interpreter.exports.outerC).toBe(6)
-  })
+        expect(interpreter.exports.innerA).toBe(6)
+        expect(interpreter.exports.outerA).toBe(5)
+        expect(interpreter.exports.innerB).toBe(6)
+        expect(interpreter.exports.outerB).toBe(5)
+        expect(interpreter.exports.innerC).toBe(6)
+        expect(interpreter.exports.outerC).toBe(6)
+    })
 
-  it('should support nested variable definition within global + function', () => {
-    const interpreter = new SvalPlus()
+    it('should support nested variable definition within global + function', () => {
+        const interpreter = new SvalPlus()
 
-    interpreter.run(`
+        interpreter.run(`
       let a = 5
       const b = 5
       var c = 5; // ';' should be kept
@@ -286,18 +286,18 @@ describe('testing declaration', () => {
       exports.outerC = c
     `)
 
-    expect(interpreter.exports.innerA).toBe(6)
-    expect(interpreter.exports.outerA).toBe(5)
-    expect(interpreter.exports.innerB).toBe(6)
-    expect(interpreter.exports.outerB).toBe(5)
-    expect(interpreter.exports.innerC).toBe(6)
-    expect(interpreter.exports.outerC).toBe(5)
-  })
+        expect(interpreter.exports.innerA).toBe(6)
+        expect(interpreter.exports.outerA).toBe(5)
+        expect(interpreter.exports.innerB).toBe(6)
+        expect(interpreter.exports.outerB).toBe(5)
+        expect(interpreter.exports.innerC).toBe(6)
+        expect(interpreter.exports.outerC).toBe(5)
+    })
 
-  it('should support self executing function', () => {
-    const interpreter = new SvalPlus()
+    it('should support self executing function', () => {
+        const interpreter = new SvalPlus()
 
-    interpreter.run(`
+        interpreter.run(`
       (function x() {
         exports.func = x
       })()
@@ -305,19 +305,19 @@ describe('testing declaration', () => {
       exports.exist = typeof x === 'undefined'
     `)
 
-    // does't exist outside
-    expect(interpreter.exports.exist).toBeTruthy()
+        // does't exist outside
+        expect(interpreter.exports.exist).toBeTruthy()
 
-    // can be visited in function itself
-    expect(typeof interpreter.exports.func).toBe('function')
-  })
+        // can be visited in function itself
+        expect(typeof interpreter.exports.func).toBe('function')
+    })
 
-  it('should support module import and export', () => {
-    const interpreter = new SvalPlus({ sourceType: 'module' })
+    it('should support module import and export', () => {
+        const interpreter = new SvalPlus({ sourceType: 'module' })
 
-    interpreter.import('expect', { default: expect })
-    interpreter.import('module', () => ({ default: 1, x: 2 }))
-    interpreter.run(`
+        interpreter.import('expect', { default: expect })
+        interpreter.import('module', () => ({ default: 1, x: 2 }))
+        interpreter.run(`
       import expect from 'expect'
       import a, { x as b } from 'module'
       import * as c from 'module'
@@ -333,64 +333,64 @@ describe('testing declaration', () => {
       export function y() { return 5 }
     `)
 
-    expect(interpreter.exports.default).toBe(1)
-    expect(interpreter.exports.x).toBe(2)
-    expect(interpreter.exports.d).toBe(1)
-    expect(interpreter.exports.e).toBe(3)
-    expect(interpreter.exports.f).toBe(4)
-    expect(interpreter.exports.y()).toBe(5)
-  })
+        expect(interpreter.exports.default).toBe(1)
+        expect(interpreter.exports.x).toBe(2)
+        expect(interpreter.exports.d).toBe(1)
+        expect(interpreter.exports.e).toBe(3)
+        expect(interpreter.exports.f).toBe(4)
+        expect(interpreter.exports.y()).toBe(5)
+    })
 
-  it('should throw SyntaxError when declaring function after const', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when declaring function after const', () => {
+        const interpreter = new SvalPlus()
 
-    let err
-    try {
-      interpreter.run(`
+        let err
+        try {
+            interpreter.run(`
         const a = 1
         function a() {}
       `)
-    } catch (ex) {
-      err = ex
-    }
+        } catch (ex) {
+            err = ex
+        }
 
-    expect(err).toBeInstanceOf(SyntaxError)
-    expect(err.message).toContain("already been declared")
-  })
+        expect(err).toBeInstanceOf(SyntaxError)
+        expect(err.message).toContain("already been declared")
+    })
 
-  it('should throw SyntaxError when declaring function after let', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when declaring function after let', () => {
+        const interpreter = new SvalPlus()
 
-    let err
-    try {
-      interpreter.run(`
+        let err
+        try {
+            interpreter.run(`
         let a = 1
         function a() {}
       `)
-    } catch (ex) {
-      err = ex
-    }
+        } catch (ex) {
+            err = ex
+        }
 
-    expect(err).toBeInstanceOf(SyntaxError)
-    expect(err.message).toContain("already been declared")
-  })
+        expect(err).toBeInstanceOf(SyntaxError)
+        expect(err.message).toContain("already been declared")
+    })
 
-  it('should throw SyntaxError when redeclaring const in same scope', () => {
-    const interpreter = new SvalPlus()
+    it('should throw SyntaxError when redeclaring const in same scope', () => {
+        const interpreter = new SvalPlus()
 
-    let err
-    try {
-      interpreter.run(`
+        let err
+        try {
+            interpreter.run(`
         {
           const a = 1
           const a = 2
         }
       `)
-    } catch (ex) {
-      err = ex
-    }
+        } catch (ex) {
+            err = ex
+        }
 
-    expect(err).toBeInstanceOf(SyntaxError)
-    expect(err.message).toContain("already been declared")
-  })
+        expect(err).toBeInstanceOf(SyntaxError)
+        expect(err.message).toContain("already been declared")
+    })
 })

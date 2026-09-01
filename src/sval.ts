@@ -65,7 +65,7 @@ export class Sval {
         } = options;
         
         if (typeof ecmaVer === 'number') {
-          ecmaVer -= ecmaVer < 2015 ? 0 : 2009 // format ecma edition
+            ecmaVer -= ecmaVer < 2015 ? 0 : 2009 // format ecma edition
         }
 
         const versionIsUnsupported =(

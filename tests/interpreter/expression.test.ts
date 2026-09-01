@@ -2,26 +2,26 @@ import { describe, it, expect } from 'vitest'
 import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing src/expression.ts', () => {
-  it('should call expression run normally', () => {
-    const interpreter = new SvalPlus()
+    it('should call expression run normally', () => {
+        const interpreter = new SvalPlus()
 
-    class A {
-      a = 1
-      then() {
-        this.a++
-        return this
-      }
-    }
+        class A {
+            a = 1
+            then() {
+                this.a++
+                return this
+            }
+        }
 
-    interpreter.import({ A })
-    interpreter.run('exports.inst = new A().then()')
+        interpreter.import({ A })
+        interpreter.run('exports.inst = new A().then()')
 
-    expect(interpreter.exports.inst.a).toBe(2)
-  })
-  it('should unary expression run normally', () => {
-    const interpreter = new SvalPlus()
+        expect(interpreter.exports.inst.a).toBe(2)
+    })
+    it('should unary expression run normally', () => {
+        const interpreter = new SvalPlus()
 
-    const code = `
+        const code = `
       exports.a = !(~(+(-1)))
       exports.b = void 0
       exports.c = typeof x // shouldn't throw err
@@ -29,20 +29,20 @@ describe('testing src/expression.ts', () => {
       exports.e = delete exports.d
       exports.f = typeof exports.e
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
 
-    expect(interpreter.exports.a).toBeTruthy()
-    expect(interpreter.exports.b).toBeUndefined()
-    expect(interpreter.exports.c).toBe('undefined')
-    expect(interpreter.exports.d).toBeUndefined()
-    expect(interpreter.exports.e).toBeTruthy()
-    expect(interpreter.exports.f).toBe('boolean')
-  })
-  it('should binary expression run normally', () => {
-    const interpreter = new SvalPlus()
+        expect(interpreter.exports.a).toBeTruthy()
+        expect(interpreter.exports.b).toBeUndefined()
+        expect(interpreter.exports.c).toBe('undefined')
+        expect(interpreter.exports.d).toBeUndefined()
+        expect(interpreter.exports.e).toBeTruthy()
+        expect(interpreter.exports.f).toBe('boolean')
+    })
+    it('should binary expression run normally', () => {
+        const interpreter = new SvalPlus()
 
-    const code = `
+        const code = `
       // comparison
       exports.a = 1 == '1'
       exports.b = 1 != '1'
@@ -73,38 +73,38 @@ describe('testing src/expression.ts', () => {
       const c = new b
       exports.v = c instanceof b
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
-    // comparison
-    expect(interpreter.exports.a).toBeTruthy()
-    expect(interpreter.exports.b).toBeFalsy()
-    expect(interpreter.exports.c).toBeFalsy()
-    expect(interpreter.exports.d).toBeTruthy()
-    expect(interpreter.exports.e).toBeFalsy()
-    expect(interpreter.exports.f).toBeTruthy()
-    expect(interpreter.exports.g).toBeFalsy()
-    expect(interpreter.exports.h).toBeTruthy()
-    // bitwise offset
-    expect(interpreter.exports.i).toBe(2)
-    expect(interpreter.exports.j).toBe(0)
-    expect(interpreter.exports.k).toBe(0)
-    expect(interpreter.exports.l).toBe(3)
-    expect(interpreter.exports.m).toBe(0)
-    expect(interpreter.exports.n).toBe(0)
-    // calculate
-    expect(interpreter.exports.o).toBe(2)
-    expect(interpreter.exports.p).toBe(0)
-    expect(interpreter.exports.q).toBe(2)
-    expect(interpreter.exports.r).toBe(1)
-    expect(interpreter.exports.s).toBe(4)
-    expect(interpreter.exports.t).toBe(1)
-    // others
-    expect(interpreter.exports.u).toBeTruthy()
-    expect(interpreter.exports.v).toBeTruthy()
-  })
-  it('should assignment expression run normally', () => {
-    const interpreter = new SvalPlus()
-    const code = `
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
+        // comparison
+        expect(interpreter.exports.a).toBeTruthy()
+        expect(interpreter.exports.b).toBeFalsy()
+        expect(interpreter.exports.c).toBeFalsy()
+        expect(interpreter.exports.d).toBeTruthy()
+        expect(interpreter.exports.e).toBeFalsy()
+        expect(interpreter.exports.f).toBeTruthy()
+        expect(interpreter.exports.g).toBeFalsy()
+        expect(interpreter.exports.h).toBeTruthy()
+        // bitwise offset
+        expect(interpreter.exports.i).toBe(2)
+        expect(interpreter.exports.j).toBe(0)
+        expect(interpreter.exports.k).toBe(0)
+        expect(interpreter.exports.l).toBe(3)
+        expect(interpreter.exports.m).toBe(0)
+        expect(interpreter.exports.n).toBe(0)
+        // calculate
+        expect(interpreter.exports.o).toBe(2)
+        expect(interpreter.exports.p).toBe(0)
+        expect(interpreter.exports.q).toBe(2)
+        expect(interpreter.exports.r).toBe(1)
+        expect(interpreter.exports.s).toBe(4)
+        expect(interpreter.exports.t).toBe(1)
+        // others
+        expect(interpreter.exports.u).toBeTruthy()
+        expect(interpreter.exports.v).toBeTruthy()
+    })
+    it('should assignment expression run normally', () => {
+        const interpreter = new SvalPlus()
+        const code = `
       exports.a = 2
       expect(exports.a).toBe(2)
       exports.a -= 1
@@ -141,30 +141,30 @@ describe('testing src/expression.ts', () => {
       (exports.b = { c: { d: 1 } }).c.e = exports.b.c.d
       expect(exports.b.c.e).toBe(1)
     `
-    interpreter.import({ expect })
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
-  })
+        interpreter.import({ expect })
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
+    })
 
-  it('should throw TypeError when assigning to constant', () => {
-    const interpreter = new SvalPlus()
-    let error = null
-    try {
-      interpreter.run(`
+    it('should throw TypeError when assigning to constant', () => {
+        const interpreter = new SvalPlus()
+        let error = null
+        try {
+            interpreter.run(`
         const x = 5
         x = 6
       `)
-    } catch (ex) {
-      error = ex
-    }
+        } catch (ex) {
+            error = ex
+        }
 
-    expect(error).toBeInstanceOf(TypeError)
-  })
+        expect(error).toBeInstanceOf(TypeError)
+    })
 
-  it('should parse spread element normally', () => {
-    const interpreter = new SvalPlus()
+    it('should parse spread element normally', () => {
+        const interpreter = new SvalPlus()
 
-    interpreter.run(`
+        interpreter.run(`
       const arr = [1, 2]
       exports.a = [...arr]
       exports.b = [...[1, 2, 3]]
@@ -183,37 +183,37 @@ describe('testing src/expression.ts', () => {
       }
     `)
 
-    expect(interpreter.exports.a).toEqual([1, 2])
-    expect(interpreter.exports.b).toEqual([1, 2, 3])
-    expect(interpreter.exports.c).toBe(1)
-    expect(interpreter.exports.d).toBe(2)
-    expect(interpreter.exports.f).toEqual([1, 2])
-    expect(interpreter.exports.g).toBeInstanceOf(TypeError)
-  })
+        expect(interpreter.exports.a).toEqual([1, 2])
+        expect(interpreter.exports.b).toEqual([1, 2, 3])
+        expect(interpreter.exports.c).toBe(1)
+        expect(interpreter.exports.d).toBe(2)
+        expect(interpreter.exports.f).toEqual([1, 2])
+        expect(interpreter.exports.g).toBeInstanceOf(TypeError)
+    })
 
-  it('should parse sparse array literals normally', () => {
-    const interpreter = new SvalPlus()
+    it('should parse sparse array literals normally', () => {
+        const interpreter = new SvalPlus()
 
-    interpreter.run(`
+        interpreter.run(`
       exports.a = [, 1]
       exports.b = [1, , 2]
       exports.c = [1, , , 2]
       exports.d = [,]
     `)
 
-    expect(interpreter.exports.a).toEqual([, 1])
-    expect(0 in interpreter.exports.a).toBe(false)
-    expect(interpreter.exports.b).toEqual([1, , 2])
-    expect(1 in interpreter.exports.b).toBe(false)
-    expect(interpreter.exports.c).toEqual([1, , , 2])
-    expect(interpreter.exports.d).toEqual([,])
-    expect(interpreter.exports.d.length).toBe(1)
-  })
+        expect(interpreter.exports.a).toEqual([, 1])
+        expect(0 in interpreter.exports.a).toBe(false)
+        expect(interpreter.exports.b).toEqual([1, , 2])
+        expect(1 in interpreter.exports.b).toBe(false)
+        expect(interpreter.exports.c).toEqual([1, , , 2])
+        expect(interpreter.exports.d).toEqual([,])
+        expect(interpreter.exports.d.length).toBe(1)
+    })
 
-  it('should parse regular expression normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should parse regular expression normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       const re = /\\/\\*<([^>]+?)>\\*\\/([\\s\\S]*?)\\/\\*<\\/([^>]+?)>\\*\\//g
       exports.a = '/*<add>*//*hello*//*</add>*/ /*<add>*//*world*//*</add>*/'
         .replace(re, (_, start, content, end) => {
@@ -222,31 +222,31 @@ describe('testing src/expression.ts', () => {
           return content.match(/\\/\\*([\\s\\S]*)\\*\\//)[1]
         })
     `)
-    expect(interpreter.exports.a).toBe('hello world')
-  })
+        expect(interpreter.exports.a).toBe('hello world')
+    })
 
-  it('should create new RegExp instance for regex literals in closures', () => {
+    it('should create new RegExp instance for regex literals in closures', () => {
     // Test for issue #118: regex literals should not be cached in closures
     // When a regex has the global flag, reusing the same RegExp object causes
     // lastIndex to persist between calls, leading to incorrect results
-    const interpreter = new SvalPlus({ sourceType: 'module' })
-    interpreter.run(`
+        const interpreter = new SvalPlus({ sourceType: 'module' })
+        interpreter.run(`
       export default () => {
         return (str) => {
           return /^[1-9]\\d*$/g.test(str)
         }
       }
     `)
-    const testFn = interpreter.exports.default()
-    expect(testFn('1')).toBe(true)
-    expect(testFn('1')).toBe(true) // Should still be true, not false
-    expect(testFn('2')).toBe(true)
-    expect(testFn('2')).toBe(true) // Should still be true, not false
-  })
+        const testFn = interpreter.exports.default()
+        expect(testFn('1')).toBe(true)
+        expect(testFn('1')).toBe(true) // Should still be true, not false
+        expect(testFn('2')).toBe(true)
+        expect(testFn('2')).toBe(true) // Should still be true, not false
+    })
 
-  it('should handle regex literals with flags correctly', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should handle regex literals with flags correctly', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const re1 = /abc/gi
       const re2 = /abc/gi
       exports.test1 = re1.test('ABC')
@@ -254,16 +254,16 @@ describe('testing src/expression.ts', () => {
       exports.flags1 = re1.flags
       exports.flags2 = re2.flags
     `)
-    expect(interpreter.exports.test1).toBe(true)
-    expect(interpreter.exports.test2).toBe(true)
-    expect(interpreter.exports.flags1).toBe('gi')
-    expect(interpreter.exports.flags2).toBe('gi')
-  })
+        expect(interpreter.exports.test1).toBe(true)
+        expect(interpreter.exports.test2).toBe(true)
+        expect(interpreter.exports.flags1).toBe('gi')
+        expect(interpreter.exports.flags2).toBe('gi')
+    })
 
-  it('should support object expression', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should support object expression', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       const name = 'y'
       const values = { a: 1, b: 2 }
       const a = {
@@ -295,24 +295,24 @@ describe('testing src/expression.ts', () => {
       exports.b = b
     `)
 
-    const b = {
-      _t: 1,
-      get t() {
-        return this._t
-      },
-      set t(v) {
-        this._t = v
-      }
-    }
+        const b = {
+            _t: 1,
+            get t() {
+                return this._t
+            },
+            set t(v) {
+                this._t = v
+            }
+        }
 
-    b.t = 2
+        b.t = 2
 
-    expect(interpreter.exports.b).toEqual(b)
-  })
+        expect(interpreter.exports.b).toEqual(b)
+    })
 
-  it('should support object expression with correct property descriptor', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support object expression with correct property descriptor', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const a = {
         x: 5,
         get y() {
@@ -326,31 +326,31 @@ describe('testing src/expression.ts', () => {
       exports.a = a
     `)
 
-    const a = interpreter.exports.a
-    expect(Object.keys(a)).toEqual(['x', 'y'])
+        const a = interpreter.exports.a
+        expect(Object.keys(a)).toEqual(['x', 'y'])
 
-    const xPD = Object.getOwnPropertyDescriptor(a, 'x')
-    expect(xPD).toEqual({
-      configurable: true,
-      enumerable: true,
-      value: 5,
-      writable: true
+        const xPD = Object.getOwnPropertyDescriptor(a, 'x')
+        expect(xPD).toEqual({
+            configurable: true,
+            enumerable: true,
+            value: 5,
+            writable: true
+        })
+
+        const yPD = Object.getOwnPropertyDescriptor(a, 'y')!
+        expect({
+            configurable: yPD.configurable,
+            enumerable: yPD.enumerable,
+        }).toEqual({
+            configurable: true,
+            enumerable: true,
+        })
     })
 
-    const yPD = Object.getOwnPropertyDescriptor(a, 'y')!
-    expect({
-      configurable: yPD.configurable,
-      enumerable: yPD.enumerable,
-    }).toEqual({
-      configurable: true,
-      enumerable: true,
-    })
-  })
-
-  it('should support logic expression', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should support logic expression', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       const x = 0
       const y = true
 
@@ -359,11 +359,11 @@ describe('testing src/expression.ts', () => {
       expect(x ?? y).toBe(0)
       expect(null ?? x).toBe(0)
     `)
-  })
+    })
 
-  it('should support method call with super + getter', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support method call with super + getter', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class X {
         get say() {
           return function() { return 1}
@@ -379,12 +379,12 @@ describe('testing src/expression.ts', () => {
       exports.result = new Y().say()
     `)
 
-    expect(interpreter.exports.result).toEqual(1)
-  })
+        expect(interpreter.exports.result).toEqual(1)
+    })
 
-  it('should support method call with computed name', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support method call with computed name', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       var x = {
         say() {
           return 1
@@ -394,21 +394,21 @@ describe('testing src/expression.ts', () => {
       exports.result = x['say']()
     `)
 
-    expect(interpreter.exports.result).toEqual(1)
-  })
+        expect(interpreter.exports.result).toEqual(1)
+    })
 
-  it('should support method call with computed name', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support method call with computed name', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       exports.result = 1+!!2
     `)
 
-    expect(interpreter.exports.result).toEqual(2)
-  })
+        expect(interpreter.exports.result).toEqual(2)
+    })
 
-  it('should support all kinds of delete actions', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support all kinds of delete actions', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       var x = {}
 
       // normal behavior for 'delete' in strict mode
@@ -428,26 +428,26 @@ describe('testing src/expression.ts', () => {
       exports.result = result
     `)
 
-    expect(interpreter.exports.result).toBeTruthy()
+        expect(interpreter.exports.result).toBeTruthy()
 
-    let error = null
-    try {
-      interpreter.run(`
+        let error = null
+        try {
+            interpreter.run(`
         // trying to delete a regular identifier in strict mode
         var y = {}
         delete y
       `)
-    } catch (ex) {
-      error = ex
-    }
+        } catch (ex) {
+            error = ex
+        }
 
-    expect(error).toBeInstanceOf(SyntaxError)
-  })
+        expect(error).toBeInstanceOf(SyntaxError)
+    })
 
-  // https://github.com/Siubaak/sval/issues/83
-  it('should support optional chaining', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    // https://github.com/Siubaak/sval/issues/83
+    it('should support optional chaining', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       var x = { a: { b: 1 }, c: null, e: () => 2 }
 
       exports.has = x.a?.b
@@ -457,17 +457,17 @@ describe('testing src/expression.ts', () => {
       exports.funcnone = x.f?.()
     `)
 
-    expect(interpreter.exports.has).toBe(1)
-    expect(interpreter.exports.null).toBeUndefined()
-    expect(interpreter.exports.none).toBeUndefined()
-    expect(interpreter.exports.func).toBe(2)
-    expect(interpreter.exports.funcnone).toBeUndefined()
-  })
+        expect(interpreter.exports.has).toBe(1)
+        expect(interpreter.exports.null).toBeUndefined()
+        expect(interpreter.exports.none).toBeUndefined()
+        expect(interpreter.exports.func).toBe(2)
+        expect(interpreter.exports.funcnone).toBeUndefined()
+    })
 
-  // https://github.com/Siubaak/sval/issues/130
-  it('should propagate optional chain short-circuit through subsequent member access', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    // https://github.com/Siubaak/sval/issues/130
+    it('should propagate optional chain short-circuit through subsequent member access', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       var user = undefined
       var config = null
       var obj = { foo: { bar: { baz: 42 } } }
@@ -478,19 +478,19 @@ describe('testing src/expression.ts', () => {
       exports.hasValue = obj.foo?.bar.baz
     `)
 
-    expect(interpreter.exports.undefinedChain).toBeUndefined()
-    expect(interpreter.exports.nullChain).toBeUndefined()
-    expect(interpreter.exports.deepChain).toBeUndefined()
-    expect(interpreter.exports.hasValue).toBe(42)
-  })
+        expect(interpreter.exports.undefinedChain).toBeUndefined()
+        expect(interpreter.exports.nullChain).toBeUndefined()
+        expect(interpreter.exports.deepChain).toBeUndefined()
+        expect(interpreter.exports.hasValue).toBe(42)
+    })
 
-  it('should support dynamic import', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ sourceType: 'module' })
-      interpreter.import('done', { default: done })
-      interpreter.import('expect', { default: expect })
-      interpreter.import('module', () => ({ default: 1 }))
-      interpreter.run(`
+    it('should support dynamic import', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ sourceType: 'module' })
+            interpreter.import('done', { default: done })
+            interpreter.import('expect', { default: expect })
+            interpreter.import('module', () => ({ default: 1 }))
+            interpreter.run(`
         import done from 'done'
         import expect from 'expect'
         import('module').then(mod => {
@@ -498,28 +498,28 @@ describe('testing src/expression.ts', () => {
           done()
         })
       `)
+        })
     })
-  })
 
-  it('should support top-level await', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ sourceType: 'module' })
-      interpreter.import('done', { default: done })
-      interpreter.import('expect', { default: expect })
-      interpreter.import('module', () => ({ default: 1 }))
-      interpreter.run(`
+    it('should support top-level await', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ sourceType: 'module' })
+            interpreter.import('done', { default: done })
+            interpreter.import('expect', { default: expect })
+            interpreter.import('module', () => ({ default: 1 }))
+            interpreter.run(`
         import done from 'done'
         import expect from 'expect'
         const { default: mod } = await import('module')
         expect(mod).toBe(1)
         done()
       `)
+        })
     })
-  })
 
-  it('should throw ReferenceError when assigning to undeclared variable in module mode', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 11, sandBox: true, sourceType: 'module' })
-    interpreter.run(`
+    it('should throw ReferenceError when assigning to undeclared variable in module mode', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 11, sandBox: true, sourceType: 'module' })
+        interpreter.run(`
       let sawAssignmentError = false;
       try {
         a = "TEST VALUE";
@@ -528,13 +528,13 @@ describe('testing src/expression.ts', () => {
       }
       export { sawAssignmentError };
     `)
-    expect(interpreter.exports.sawAssignmentError).toBe(true)
-  })
+        expect(interpreter.exports.sawAssignmentError).toBe(true)
+    })
 
-  it('should include full property path in TypeError for non-function member calls (issue #143)', () => {
+    it('should include full property path in TypeError for non-function member calls (issue #143)', () => {
     // simple member expression: foo.bar is not a function
-    const interp1 = new SvalPlus()
-    interp1.run(`
+        const interp1 = new SvalPlus()
+        interp1.run(`
       const foo = { bar: 42 }
       try {
         foo.bar()
@@ -542,12 +542,12 @@ describe('testing src/expression.ts', () => {
         exports.err = e
       }
     `)
-    expect(interp1.exports.err).toBeInstanceOf(TypeError)
-    expect(interp1.exports.err.message).toBe('foo.bar is not a function')
+        expect(interp1.exports.err).toBeInstanceOf(TypeError)
+        expect(interp1.exports.err.message).toBe('foo.bar is not a function')
 
-    // nested member expression: foo.bar.baz is not a function
-    const interp2 = new SvalPlus()
-    interp2.run(`
+        // nested member expression: foo.bar.baz is not a function
+        const interp2 = new SvalPlus()
+        interp2.run(`
       const foo = { bar: { baz: 42 } }
       try {
         foo.bar.baz()
@@ -555,12 +555,12 @@ describe('testing src/expression.ts', () => {
         exports.err = e
       }
     `)
-    expect(interp2.exports.err).toBeInstanceOf(TypeError)
-    expect(interp2.exports.err.message).toBe('foo.bar.baz is not a function')
+        expect(interp2.exports.err).toBeInstanceOf(TypeError)
+        expect(interp2.exports.err.message).toBe('foo.bar.baz is not a function')
 
-    // computed member expression: foo[0] is not a function
-    const interp3 = new SvalPlus()
-    interp3.run(`
+        // computed member expression: foo[0] is not a function
+        const interp3 = new SvalPlus()
+        interp3.run(`
       const foo = [42]
       try {
         foo[0]()
@@ -568,42 +568,42 @@ describe('testing src/expression.ts', () => {
         exports.err = e
       }
     `)
-    expect(interp3.exports.err).toBeInstanceOf(TypeError)
-    expect(interp3.exports.err.message).toBe('foo[0] is not a function')
-  })
+        expect(interp3.exports.err).toBeInstanceOf(TypeError)
+        expect(interp3.exports.err.message).toBe('foo[0] is not a function')
+    })
 
-  it('should include identifier name in SyntaxError for invalid async usage (issue #143)', () => {
+    it('should include identifier name in SyntaxError for invalid async usage (issue #143)', () => {
     // async followed by identifier that is not a valid async arrow → Unexpected identifier 'name'
-    const sval1 = new SvalPlus()
-    let err1: any
-    try {
-      sval1.run("async fetch('/url')")
-    } catch (e) {
-      err1 = e
-    }
-    expect(err1).toBeInstanceOf(SyntaxError)
-    expect(err1.message).toBe("Unexpected identifier 'fetch'")
+        const sval1 = new SvalPlus()
+        let err1: any
+        try {
+            sval1.run("async fetch('/url')")
+        } catch (e) {
+            err1 = e
+        }
+        expect(err1).toBeInstanceOf(SyntaxError)
+        expect(err1.message).toBe("Unexpected identifier 'fetch'")
 
-    // async followed by bare identifier (no call, just end of input)
-    const sval2 = new SvalPlus()
-    let err2: any
-    try {
-      sval2.run('async foo')
-    } catch (e) {
-      err2 = e
-    }
-    expect(err2).toBeInstanceOf(SyntaxError)
-    expect(err2.message).toBe("Unexpected identifier 'foo'")
+        // async followed by bare identifier (no call, just end of input)
+        const sval2 = new SvalPlus()
+        let err2: any
+        try {
+            sval2.run('async foo')
+        } catch (e) {
+            err2 = e
+        }
+        expect(err2).toBeInstanceOf(SyntaxError)
+        expect(err2.message).toBe("Unexpected identifier 'foo'")
 
-    // two identifiers in a row (not async-specific)
-    const sval3 = new SvalPlus()
-    let err3: any
-    try {
-      sval3.run('foo bar')
-    } catch (e) {
-      err3 = e
-    }
-    expect(err3).toBeInstanceOf(SyntaxError)
-    expect(err3.message).toBe("Unexpected identifier 'bar'")
-  })
+        // two identifiers in a row (not async-specific)
+        const sval3 = new SvalPlus()
+        let err3: any
+        try {
+            sval3.run('foo bar')
+        } catch (e) {
+            err3 = e
+        }
+        expect(err3).toBeInstanceOf(SyntaxError)
+        expect(err3.message).toBe("Unexpected identifier 'bar'")
+    })
 })

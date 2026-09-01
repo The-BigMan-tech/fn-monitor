@@ -2,46 +2,46 @@ import { describe, it, expect } from 'vitest'
 import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing hoist', () => {
-  it('should hoist function normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should hoist function normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       function a() {}
     `)
-  })
-  it('should hoist function normally in block', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist function normally in block', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       {
         a
         function a() {}
       }
     `)
 
-    try {
-      interpreter.run(`
+        try {
+            interpreter.run(`
         a
       `)
-    } catch (err) {
-      // ReferenceError: a is not defined
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
+        } catch (err) {
+            // ReferenceError: a is not defined
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
 
-    try {
-      interpreter.run(`
+        try {
+            interpreter.run(`
         b
         {
           function b() {}
         }
       `)
-    } catch (err) {
-      // ReferenceError: b is not defined
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
-  it('should hoist function normally in function', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+        } catch (err) {
+            // ReferenceError: b is not defined
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
+    it('should hoist function normally in function', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       {
         a()
         a()
@@ -50,64 +50,64 @@ describe('testing hoist', () => {
         }
       }
     `)
-  })
-  it('should hoist var normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist var normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       var a = 1
     `)
-  })
-  it('should hoist var normally in block', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist var normally in block', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       {
         var a = 1
       }
     `)
-  })
-  it('should hoist var normally in while', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist var normally in while', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       var i = 1
       while (i--) {
         var a = 1
       }
     `)
-  })
-  it('should hoist var normally in do-while', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist var normally in do-while', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       var i = 1
       do {
         var a = 1
       } while (--i)
     `)
-  })
-  it('should hoist var normally in for', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist var normally in for', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       for (var i = 0; i < 1; i++) {
         var a = 1
       }
     `)
-  })
-  it('should hoist var normally in for-in', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    })
+    it('should hoist var normally in for-in', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       a
       for (var i in [0]) {
         var a = 1
       }
     `)
-  })
-  it('should hoist var normally in switch', () => {
-    const interpreter = new SvalPlus({ sandBox: false })
-    interpreter.run(`
+    })
+    it('should hoist var normally in switch', () => {
+        const interpreter = new SvalPlus({ sandBox: false })
+        interpreter.run(`
       a
       b
       c
@@ -124,17 +124,17 @@ describe('testing hoist', () => {
           var c = 1
       }
     `)
-    expect((window as any).a).toBe(1)
-    expect((window as any).b).toBeUndefined()
-    expect((window as any).c).toBeUndefined()
-    Reflect.deleteProperty(window, 'i')
-    Reflect.deleteProperty(window, 'a')
+        expect((window as any).a).toBe(1)
+        expect((window as any).b).toBeUndefined()
+        expect((window as any).c).toBeUndefined()
+        Reflect.deleteProperty(window, 'i')
+        Reflect.deleteProperty(window, 'a')
     // Reflect.deleteProperty(window, 'b')
     // Reflect.deleteProperty(window, 'c')
-  })
-  it('should hoist var normally in try-catch', () => {
-    const interpreter = new SvalPlus({ sandBox: false })
-    interpreter.run(`
+    })
+    it('should hoist var normally in try-catch', () => {
+        const interpreter = new SvalPlus({ sandBox: false })
+        interpreter.run(`
       a
       b
       c
@@ -146,16 +146,16 @@ describe('testing hoist', () => {
         var c = 1
       }
     `)
-    expect((window as any).a).toBe(1)
-    expect((window as any).b).toBeUndefined()
-    expect((window as any).c).toBe(1)
-    Reflect.deleteProperty(window, 'a')
-    // Reflect.deleteProperty(window, 'b')
-    Reflect.deleteProperty(window, 'c')
-  })
-  it('should hoist var normally in patterns', () => {
-    const interpreter = new SvalPlus()
-    const code = `
+        expect((window as any).a).toBe(1)
+        expect((window as any).b).toBeUndefined()
+        expect((window as any).c).toBe(1)
+        Reflect.deleteProperty(window, 'a')
+        // Reflect.deleteProperty(window, 'b')
+        Reflect.deleteProperty(window, 'c')
+    })
+    it('should hoist var normally in patterns', () => {
+        const interpreter = new SvalPlus()
+        const code = `
       a
       b
       c
@@ -172,13 +172,13 @@ describe('testing hoist', () => {
       var { x: [...f] } = { x: [1, 2] }
       var { ...g } = { a: 1, b: 2 }
     `
-    interpreter.run(`!async function(){${code}}()`) // also test for generator env
-    interpreter.run(code)
-  })
-  it('should hoist const and let and simulate temporal dead zone', () => {
-    const interpreter = new SvalPlus()
-    try {
-      interpreter.run(`
+        interpreter.run(`!async function(){${code}}()`) // also test for generator env
+        interpreter.run(code)
+    })
+    it('should hoist const and let and simulate temporal dead zone', () => {
+        const interpreter = new SvalPlus()
+        try {
+            interpreter.run(`
         const a = 1
         {
           a
@@ -186,11 +186,11 @@ describe('testing hoist', () => {
           a
         }
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-    try {
-      interpreter.run(`
+        } catch (err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+        try {
+            interpreter.run(`
         let b = 1
         {
           b
@@ -198,8 +198,8 @@ describe('testing hoist', () => {
           b
         }
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
 })

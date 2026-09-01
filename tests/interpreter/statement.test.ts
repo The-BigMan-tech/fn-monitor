@@ -2,30 +2,30 @@ import { describe, it, expect } from 'vitest'
 import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing statement', () => {
-  it('should for statement run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should for statement run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       for (let i = 0; i < 5; i++) {
         let r = i
       }
     `)
-  })
+    })
 
-  it('should for statement without initializer run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should for statement without initializer run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       let i = 0
       for (; i < 5; i++) {
         let r = i
       }
       exports.result = i
     `)
-    expect(interpreter.exports.result).toBe(5)
-  })
+        expect(interpreter.exports.result).toBe(5)
+    })
 
-  it('should break statement in switch run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should break statement in switch run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       exports.a = 0
       while (exports.a < 10) {
         exports.a++
@@ -34,12 +34,12 @@ describe('testing statement', () => {
         }
       }
     `)
-    expect(interpreter.exports.a).toEqual(10)
-  })
+        expect(interpreter.exports.a).toEqual(10)
+    })
 
-  it('should switch with default before matching case run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should switch with default before matching case run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const variant = "secondary"
       switch (variant) {
         case "primary":
@@ -51,12 +51,12 @@ describe('testing statement', () => {
           break
       }
     `)
-    expect(interpreter.exports.a).toEqual("secondary")
-  })
+        expect(interpreter.exports.a).toEqual("secondary")
+    })
 
-  it('should switch fall through from default when no case matches', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should switch fall through from default when no case matches', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       switch ("none") {
         case "a":
           exports.a = "a"
@@ -68,36 +68,36 @@ describe('testing statement', () => {
           break
       }
     `)
-    expect(interpreter.exports.a).toEqual("default+b")
-  })
+        expect(interpreter.exports.a).toEqual("default+b")
+    })
 
-  it('should for-in statement run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should for-in statement run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       exports.a = []
       for (const i in [1, 2, 3]) {
         exports.a.push(i)
       }
     `)
-    expect(interpreter.exports.a).toEqual(['0', '1', '2'])
-  })
+        expect(interpreter.exports.a).toEqual(['0', '1', '2'])
+    })
 
-  it('should for-of statement run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should for-of statement run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       exports.a = []
       for (const i of [1, 2, 3]) {
         exports.a.push(i)
       }
     `)
-    expect(interpreter.exports.a).toEqual([1, 2, 3])
-  })
+        expect(interpreter.exports.a).toEqual([1, 2, 3])
+    })
 
-  it('should for-await-of statement run normally', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ getItem, expect, done })
-      interpreter.run(`
+    it('should for-await-of statement run normally', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ getItem, expect, done })
+            interpreter.run(`
         b()
         async function* a() {
           for (const i of [1, 2, 3]) {
@@ -113,17 +113,17 @@ describe('testing statement', () => {
           done()
         }
       `)
-      function getItem(n: any) {
-        return new Promise(resolve => setTimeout(resolve, 5, n))
-      }
+            function getItem(n: any) {
+                return new Promise(resolve => setTimeout(resolve, 5, n))
+            }
+        })
     })
-  })
 
-  it('should for-await-of with manual iterator run normally', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-await-of with manual iterator run normally', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         c()
         function makeIterator(array) {
           var nextIndex = 0
@@ -145,14 +145,14 @@ describe('testing statement', () => {
           done()
         }
       `)
+        })
     })
-  })
 
-  it('should support for-await-of with sync iterables', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should support for-await-of with sync iterables', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         (async function run() {
           const res = []
           for await (const i of 'xyz') {
@@ -175,14 +175,14 @@ describe('testing statement', () => {
           done()
         })()
       `)
+        })
     })
-  })
 
-  it('should support for-await-of with sync iterator', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should support for-await-of with sync iterator', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         const iterable = {
           [Symbol.iterator]() {
             return {
@@ -207,14 +207,14 @@ describe('testing statement', () => {
           done()
         })()
       `)
+        })
     })
-  })
 
-  it('should support for-await-of with async iterator', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should support for-await-of with async iterator', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         const asyncIterable = {
           [Symbol.asyncIterator]() {
             return {
@@ -240,14 +240,14 @@ describe('testing statement', () => {
           done()
         })()
       `)
+        })
     })
-  })
 
-  it('should support for-await-of with async generator', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should support for-await-of with async generator', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function* asyncGenerator() {
           var i = 0
           while (i < 3) {
@@ -265,12 +265,12 @@ describe('testing statement', () => {
           done()
         })()
       `)
+        })
     })
-  })
 
-  it('should try statement run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should try statement run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       try {
         throw 1
       } catch (err) {
@@ -300,15 +300,15 @@ describe('testing statement', () => {
         }
       }
     `)
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBe(2)
-    expect(interpreter.exports.c).toBe(3)
-    expect(interpreter.exports.d).toBe(4)
-  })
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBe(2)
+        expect(interpreter.exports.c).toBe(3)
+        expect(interpreter.exports.d).toBe(4)
+    })
 
-  it('should with statement run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should with statement run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       const a = {
         get b() { return x },
@@ -328,17 +328,17 @@ describe('testing statement', () => {
         }
       }
     `)
-    expect(interpreter.exports.a).toBe(0)
-    expect(interpreter.exports.b).toBe(1)
-    expect(interpreter.exports.c).toBe(1)
-    expect(interpreter.exports.d).toBeTruthy()
-  })
+        expect(interpreter.exports.a).toBe(0)
+        expect(interpreter.exports.b).toBe(1)
+        expect(interpreter.exports.c).toBe(1)
+        expect(interpreter.exports.d).toBeTruthy()
+    })
 
-  it('should with statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ ecmaVer: 10 })
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should with statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ ecmaVer: 10 })
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           const a = {
@@ -366,12 +366,12 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled loop statement and continue/break run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should labeled loop statement and continue/break run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       a: while (x < 5) {
         if (x) {
@@ -391,44 +391,44 @@ describe('testing statement', () => {
       }
       exports.a = x
     `)
-    expect(interpreter.exports.a).toBe(3)
-  })
+        expect(interpreter.exports.a).toBe(3)
+    })
 
-  // it('should labeled loop statement and continue/break run normally in async function', () => {
-  //   return new Promise((done) => {
-  //     const interpreter = new SvalPlus({ ecmaVer: 10 })
-  //     interpreter.import({ expect, done })
-  //     interpreter.run(`
-  //       async function run() {
-  //         let x = 0
-  //         a: while (x < 5) {
-  //           if (x) {
-  //             x++
-  //             break
-  //           }
-  //           do {
-  //             b: for (; x < 5;) {
-  //               x++
-  //               for (const a of [0, 1, 2, 3, 4]) {
-  //                 break b
-  //               }
-  //             }
-  //             x++
-  //             continue a
-  //           } while (x < 5)
-  //         }
-  //         exports.a = x
-  //         expect(exports.a).toBe(3)
-  //         done()
-  //       }
-  //       run()
-  //     `)
-  //   })
-  // })
+    // it('should labeled loop statement and continue/break run normally in async function', () => {
+    //   return new Promise((done) => {
+    //     const interpreter = new SvalPlus({ ecmaVer: 10 })
+    //     interpreter.import({ expect, done })
+    //     interpreter.run(`
+    //       async function run() {
+    //         let x = 0
+    //         a: while (x < 5) {
+    //           if (x) {
+    //             x++
+    //             break
+    //           }
+    //           do {
+    //             b: for (; x < 5;) {
+    //               x++
+    //               for (const a of [0, 1, 2, 3, 4]) {
+    //                 break b
+    //               }
+    //             }
+    //             x++
+    //             continue a
+    //           } while (x < 5)
+    //         }
+    //         exports.a = x
+    //         expect(exports.a).toBe(3)
+    //         done()
+    //       }
+    //       run()
+    //     `)
+    //   })
+    // })
 
-  it('should labeled statement and break run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should labeled statement and break run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       a: {
         x++
@@ -484,109 +484,109 @@ describe('testing statement', () => {
       }
       exports.g = x
     `)
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBe(2)
-    expect(interpreter.exports.c).toBe(3)
-    expect(interpreter.exports.d).toBe(4)
-    expect(interpreter.exports.e).toBe(5)
-    expect(interpreter.exports.f).toBe(6)
-    expect(interpreter.exports.g).toBe(7)
-  })
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBe(2)
+        expect(interpreter.exports.c).toBe(3)
+        expect(interpreter.exports.d).toBe(4)
+        expect(interpreter.exports.e).toBe(5)
+        expect(interpreter.exports.f).toBe(6)
+        expect(interpreter.exports.g).toBe(7)
+    })
 
-  // it('should labeled statement and break run normally in async function', () => {
-  //   const interpreter = new SvalPlus({ ecmaVer: 10 })
-  //   interpreter.import({ expect, done })
-  //   interpreter.run(`
-  //     async function run() {
-  //       let x = 0
-  //       a: {
-  //         x++
-  //         break a
-  //         x++
-  //       }
-  //       exports.a = x
+    // it('should labeled statement and break run normally in async function', () => {
+    //   const interpreter = new SvalPlus({ ecmaVer: 10 })
+    //   interpreter.import({ expect, done })
+    //   interpreter.run(`
+    //     async function run() {
+    //       let x = 0
+    //       a: {
+    //         x++
+    //         break a
+    //         x++
+    //       }
+    //       exports.a = x
 
-  //       b: if (true) {
-  //         x++
-  //         break b
-  //         x++
-  //       }
-  //       exports.b = x
+    //       b: if (true) {
+    //         x++
+    //         break b
+    //         x++
+    //       }
+    //       exports.b = x
 
-  //       c: with (window) {
-  //         x++
-  //         break c
-  //         x++
-  //       }
-  //       exports.c = x
+    //       c: with (window) {
+    //         x++
+    //         break c
+    //         x++
+    //       }
+    //       exports.c = x
 
-  //       d: switch (true) {
-  //         case true:
-  //           for (;x < 10;) {
-  //             x++
-  //             break d
-  //           }
-  //         default: x++
-  //       }
-  //       exports.d = x
+    //       d: switch (true) {
+    //         case true:
+    //           for (;x < 10;) {
+    //             x++
+    //             break d
+    //           }
+    //         default: x++
+    //       }
+    //       exports.d = x
 
-  //       e: try {
-  //         x++
-  //         break e
-  //         x++
-  //       } catch {}
-  //       exports.e = x
+    //       e: try {
+    //         x++
+    //         break e
+    //         x++
+    //       } catch {}
+    //       exports.e = x
 
-  //       f: try {
-  //         throw false
-  //       } catch {
-  //         x++
-  //         break f
-  //         x++
-  //       }
-  //       exports.f = x
+    //       f: try {
+    //         throw false
+    //       } catch {
+    //         x++
+    //         break f
+    //         x++
+    //       }
+    //       exports.f = x
 
-  //       g: try {} finally {
-  //         x++
-  //         break g
-  //         x++
-  //       }
-  //       exports.g = x
-  //       expect(exports.a).toBe(1)
-  //       expect(exports.b).toBe(2)
-  //       expect(exports.c).toBe(3)
-  //       expect(exports.d).toBe(4)
-  //       expect(exports.e).toBe(5)
-  //       expect(exports.f).toBe(6)
-  //       expect(exports.g).toBe(7)
-  //     }
-  //     run()
-  //   `)
-  // })
+    //       g: try {} finally {
+    //         x++
+    //         break g
+    //         x++
+    //       }
+    //       exports.g = x
+    //       expect(exports.a).toBe(1)
+    //       expect(exports.b).toBe(2)
+    //       expect(exports.c).toBe(3)
+    //       expect(exports.d).toBe(4)
+    //       expect(exports.e).toBe(5)
+    //       expect(exports.f).toBe(6)
+    //       expect(exports.g).toBe(7)
+    //     }
+    //     run()
+    //   `)
+    // })
 
-  it('should empty statement run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should empty statement run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       ;
       ;;;;
       exports.result = 1
     `)
-    expect(interpreter.exports.result).toBe(1)
-  })
+        expect(interpreter.exports.result).toBe(1)
+    })
 
-  it('should debugger statement run normally', () => {
-    const interpreter = new SvalPlus()
-    // debugger statement should not throw
-    interpreter.run(`
+    it('should debugger statement run normally', () => {
+        const interpreter = new SvalPlus()
+        // debugger statement should not throw
+        interpreter.run(`
       debugger
       exports.result = 1
     `)
-    expect(interpreter.exports.result).toBe(1)
-  })
+        expect(interpreter.exports.result).toBe(1)
+    })
 
-  it('should switch case with continue statement run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should switch case with continue statement run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       exports.a = []
       let i = 0
       while (i < 5) {
@@ -599,12 +599,12 @@ describe('testing statement', () => {
         }
       }
     `)
-    expect(interpreter.exports.a).toEqual([3])
-  })
+        expect(interpreter.exports.a).toEqual([3])
+    })
 
-  it('should switch case with return statement run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should switch case with return statement run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       function test() {
         switch (1) {
           case 1:
@@ -615,12 +615,12 @@ describe('testing statement', () => {
       }
       exports.result = test()
     `)
-    expect(interpreter.exports.result).toBe(42)
-  })
+        expect(interpreter.exports.result).toBe(42)
+    })
 
-  it('should try statement with pattern destructuring in catch run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should try statement with pattern destructuring in catch run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       try {
         throw { code: 404, message: 'Not Found' }
       } catch ({ code, message }) {
@@ -628,13 +628,13 @@ describe('testing statement', () => {
         exports.message = message
       }
     `)
-    expect(interpreter.exports.code).toBe(404)
-    expect(interpreter.exports.message).toBe('Not Found')
-  })
+        expect(interpreter.exports.code).toBe(404)
+        expect(interpreter.exports.message).toBe('Not Found')
+    })
 
-  it('should try statement with array pattern destructuring in catch run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should try statement with array pattern destructuring in catch run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       try {
         throw [1, 2, 3]
       } catch (err) {
@@ -644,23 +644,23 @@ describe('testing statement', () => {
         exports.c = c
       }
     `)
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBe(2)
-    expect(interpreter.exports.c).toBe(3)
-  })
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBe(2)
+        expect(interpreter.exports.c).toBe(3)
+    })
 
-  it('should labeled statement throw error for unsupported types', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    expect(() => {
-      interpreter.run(`
+    it('should labeled statement throw error for unsupported types', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        expect(() => {
+            interpreter.run(`
         label: exports.result = 1
       `)
-    }).toThrow()
-  })
+        }).toThrow()
+    })
 
-  it('should block statement with invasived option run normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should block statement with invasived option run normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       let x = 0
       {
         let x = 1
@@ -668,13 +668,13 @@ describe('testing statement', () => {
       }
       exports.outer = x
     `)
-    expect(interpreter.exports.inner).toBe(1)
-    expect(interpreter.exports.outer).toBe(0)
-  })
+        expect(interpreter.exports.inner).toBe(1)
+        expect(interpreter.exports.outer).toBe(0)
+    })
 
-  it('should switch with labeled break run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should switch with labeled break run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       outer: switch (1) {
         case 1:
@@ -688,12 +688,12 @@ describe('testing statement', () => {
       }
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(2)
-  })
+        expect(interpreter.exports.result).toBe(2)
+    })
 
-  it('should if statement with labeled break run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should if statement with labeled break run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       label: if (true) {
         x++
@@ -702,12 +702,12 @@ describe('testing statement', () => {
       }
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(1)
-  })
+        expect(interpreter.exports.result).toBe(1)
+    })
 
-  it('should while statement with labeled continue run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should while statement with labeled continue run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       outer: while (x < 5) {
         x++
@@ -718,12 +718,12 @@ describe('testing statement', () => {
       }
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(5)
-  })
+        expect(interpreter.exports.result).toBe(5)
+    })
 
-  it('should do-while statement with labeled continue run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should do-while statement with labeled continue run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       outer: do {
         x++
@@ -734,12 +734,12 @@ describe('testing statement', () => {
       } while (x < 3)
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(3)
-  })
+        expect(interpreter.exports.result).toBe(3)
+    })
 
-  it('should for statement with labeled continue run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should for statement with labeled continue run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       outer: for (let i = 0; i < 3; i++) {
         x++
@@ -750,12 +750,12 @@ describe('testing statement', () => {
       }
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(6)
-  })
+        expect(interpreter.exports.result).toBe(6)
+    })
 
-  it('should for-in statement with labeled continue run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should for-in statement with labeled continue run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       outer: for (const i in [1, 2, 3]) {
         x++
@@ -766,12 +766,12 @@ describe('testing statement', () => {
       }
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(6)
-  })
+        expect(interpreter.exports.result).toBe(6)
+    })
 
-  it('should for-of statement with labeled continue run normally', () => {
-    const interpreter = new SvalPlus({ ecmaVer: 10 })
-    interpreter.run(`
+    it('should for-of statement with labeled continue run normally', () => {
+        const interpreter = new SvalPlus({ ecmaVer: 10 })
+        interpreter.run(`
       let x = 0
       outer: for (const i of [1, 2, 3]) {
         x++
@@ -782,14 +782,14 @@ describe('testing statement', () => {
       }
       exports.result = x
     `)
-    expect(interpreter.exports.result).toBe(6)
-  })
+        expect(interpreter.exports.result).toBe(6)
+    })
 
-  it('should expression statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should expression statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           exports.a = 1
           exports.b = 2
@@ -799,14 +799,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should return statement without argument run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should return statement without argument run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             return
@@ -817,14 +817,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should break statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should break statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           while (x < 5) {
@@ -838,14 +838,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should continue statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should continue statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           let sum = 0
@@ -861,14 +861,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with while run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with while run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: while (x < 5) {
@@ -882,14 +882,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with do-while run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with do-while run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: do {
@@ -903,14 +903,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with for run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with for run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: for (let i = 0; i < 5; i++) {
@@ -924,14 +924,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with for-in run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with for-in run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let count = 0
           label: for (const i in [1, 2, 3, 4, 5]) {
@@ -945,14 +945,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with for-of run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with for-of run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let count = 0
           label: for (const i of [1, 2, 3, 4, 5]) {
@@ -966,14 +966,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with block run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with block run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: {
@@ -986,14 +986,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with with run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ ecmaVer: 10 })
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with with run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ ecmaVer: 10 })
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           const obj = { a: 1 }
@@ -1007,14 +1007,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with if run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with if run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: if (true) {
@@ -1027,14 +1027,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with switch run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with switch run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: switch (1) {
@@ -1049,14 +1049,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should labeled statement with try run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should labeled statement with try run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: try {
@@ -1069,14 +1069,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should switch statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should switch statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let result = 0
           switch (2) {
@@ -1094,14 +1094,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should switch statement with default case run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should switch statement with default case run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let result = 0
           switch (5) {
@@ -1119,14 +1119,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should switch statement with fall-through run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should switch statement with fall-through run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let result = 0
           switch (1) {
@@ -1145,14 +1145,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should switch case with break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should switch case with break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           while (x < 5) {
@@ -1167,14 +1167,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should switch case with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should switch case with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -1192,14 +1192,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should switch case with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should switch case with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             switch (1) {
@@ -1215,14 +1215,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should throw statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should throw statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           try {
             throw 'error message'
@@ -1238,14 +1238,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should do-while statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should do-while statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           do {
@@ -1256,14 +1256,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should do-while statement with break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should do-while statement with break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           do {
@@ -1277,14 +1277,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should do-while statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should do-while statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -1300,14 +1300,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should do-while statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should do-while statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             let x = 0
@@ -1325,14 +1325,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let sum = 0
           for (let i = 0; i < 5; i++) {
@@ -1343,14 +1343,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement without test run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement without test run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           for (let i = 0; ; i++) {
@@ -1364,14 +1364,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement without init run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement without init run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let i = 0
           for (; i < 5; i++) {
@@ -1382,14 +1382,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement without update run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement without update run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let i = 0
           for (; i < 5; ) {
@@ -1400,14 +1400,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement with break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement with break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           for (let i = 0; i < 5; i++) {
@@ -1421,14 +1421,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let sum = 0
           for (let i = 0; i < 5; i++) {
@@ -1442,14 +1442,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             for (let i = 0; i < 5; i++) {
@@ -1465,14 +1465,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for statement with non-block body run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for statement with non-block body run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           for (let i = 0; i < 3; i++)
@@ -1482,14 +1482,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-in statement run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-in statement run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           for (const i in [1, 2, 3]) {
@@ -1500,14 +1500,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-in statement with break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-in statement with break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           for (const i in [1, 2, 3, 4, 5]) {
@@ -1521,14 +1521,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-in statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-in statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           for (const i in [1, 2, 3]) {
@@ -1542,14 +1542,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-in statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-in statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             for (const i in [1, 2, 3]) {
@@ -1565,14 +1565,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-of statement with break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-of statement with break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           for (const i of [1, 2, 3, 4, 5]) {
@@ -1586,14 +1586,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-of statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-of statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           for (const i of [1, 2, 3]) {
@@ -1607,14 +1607,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-of statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-of statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             for (const i of [1, 2, 3]) {
@@ -1630,14 +1630,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should block statement with labeled break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should block statement with labeled break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: {
@@ -1650,14 +1650,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should block statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should block statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -1675,14 +1675,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should block statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should block statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             {
@@ -1695,14 +1695,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should with statement with labeled break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ ecmaVer: 10 })
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should with statement with labeled break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ ecmaVer: 10 })
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           const obj = { a: 1 }
@@ -1716,14 +1716,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should with statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ ecmaVer: 10 })
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should with statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ ecmaVer: 10 })
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -1742,14 +1742,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should with statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ ecmaVer: 10 })
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should with statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ ecmaVer: 10 })
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             const obj = { a: 1 }
@@ -1763,14 +1763,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should if statement with else branch run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should if statement with else branch run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let result = 0
           if (false) {
@@ -1783,14 +1783,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should if statement with labeled break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should if statement with labeled break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: if (true) {
@@ -1803,14 +1803,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should if statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should if statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -1826,14 +1826,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should if statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should if statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             label: if (true) {
@@ -1847,14 +1847,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should try statement without handler run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should try statement without handler run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let caught = false
           try {
@@ -1867,14 +1867,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should try statement with finally run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should try statement with finally run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let finallyExecuted = false
           try {
@@ -1887,14 +1887,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should try statement with pattern destructuring in catch run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus({ ecmaVer: 10 })
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should try statement with pattern destructuring in catch run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus({ ecmaVer: 10 })
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           try {
             throw { code: 500, message: 'Server Error' }
@@ -1906,14 +1906,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should try statement with labeled break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should try statement with labeled break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: try {
@@ -1926,14 +1926,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should try statement with continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should try statement with continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -1951,14 +1951,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should try statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should try statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             label: try {
@@ -1972,14 +1972,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should while statement with labeled break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should while statement with labeled break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let x = 0
           label: while (x < 5) {
@@ -1993,14 +1993,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should while statement with labeled continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should while statement with labeled continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           let i = 0
@@ -2016,14 +2016,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should while statement with return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should while statement with return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             label: while (true) {
@@ -2037,14 +2037,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-of statement with labeled break run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-of statement with labeled break run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let count = 0
           label: for (const i of [1, 2, 3, 4, 5]) {
@@ -2058,14 +2058,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-of statement with labeled continue run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-of statement with labeled continue run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           label: for (const i of [1, 2, 3]) {
@@ -2079,14 +2079,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-of statement with labeled return run normally in async function', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-of statement with labeled return run normally in async function', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           function test() {
             label: for (const i of [1, 2, 3]) {
@@ -2102,14 +2102,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-await-of statement with labeled break run normally', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-await-of statement with labeled break run normally', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           let count = 0
           async function* gen() {
@@ -2128,14 +2128,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-await-of statement with labeled continue run normally', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-await-of statement with labeled continue run normally', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           const arr = []
           async function* gen() {
@@ -2154,14 +2154,14 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 
-  it('should for-await-of statement with labeled return run normally', () => {
-    return new Promise((done) => {
-      const interpreter = new SvalPlus()
-      interpreter.import({ expect, done })
-      interpreter.run(`
+    it('should for-await-of statement with labeled return run normally', () => {
+        return new Promise((done) => {
+            const interpreter = new SvalPlus()
+            interpreter.import({ expect, done })
+            interpreter.run(`
         async function run() {
           async function test() {
             async function* gen() {
@@ -2182,6 +2182,6 @@ describe('testing statement', () => {
         }
         run()
       `)
+        })
     })
-  })
 })

@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing class', () => {
-  it('should create es5 class normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should create es5 class normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       function Point(x, y) {
         this.x = x
         this.y = y
@@ -18,15 +18,15 @@ describe('testing class', () => {
       exports.cls = Point
     `)
 
-    expect(interpreter.exports.cls).toBe(interpreter.exports.cls.prototype.constructor)
-    expect(interpreter.exports.inst.x).toBe(1)
-    expect(interpreter.exports.inst.y).toBe(2)
-    expect(interpreter.exports.inst.toString()).toBe('(1, 2)')
-  })
+        expect(interpreter.exports.cls).toBe(interpreter.exports.cls.prototype.constructor)
+        expect(interpreter.exports.inst.x).toBe(1)
+        expect(interpreter.exports.inst.y).toBe(2)
+        expect(interpreter.exports.inst.toString()).toBe('(1, 2)')
+    })
 
-  it('should create es6 class normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should create es6 class normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Point {
         constructor(x, y) {
           this.x = x
@@ -44,17 +44,17 @@ describe('testing class', () => {
       exports.inst2 = new Point()
     `)
 
-    expect(interpreter.exports.cls).toBe(interpreter.exports.cls.prototype.constructor)
-    expect(interpreter.exports.inst.x).toBe(1)
-    expect(interpreter.exports.inst.y).toBe(2)
-    expect(interpreter.exports.inst.toString()).toBe('(1, 2)')
-    expect(interpreter.exports.inst1.__proto__).toBe(interpreter.exports.inst2.__proto__)
-    expect(interpreter.exports.inst1.constructor).toBe(interpreter.exports.inst2.constructor)
-  })
+        expect(interpreter.exports.cls).toBe(interpreter.exports.cls.prototype.constructor)
+        expect(interpreter.exports.inst.x).toBe(1)
+        expect(interpreter.exports.inst.y).toBe(2)
+        expect(interpreter.exports.inst.toString()).toBe('(1, 2)')
+        expect(interpreter.exports.inst1.__proto__).toBe(interpreter.exports.inst2.__proto__)
+        expect(interpreter.exports.inst1.constructor).toBe(interpreter.exports.inst2.constructor)
+    })
 
-  it('should create class with getter/setter normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should create class with getter/setter normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class A {
         constructor() {
           this.b = 1
@@ -73,13 +73,13 @@ describe('testing class', () => {
       exports.inst.g = 3
       exports.inst.p()
     `)
-    expect(interpreter.exports.inst.b).toBe(4)
-    expect(interpreter.exports.inst.k).toBe(5)
-  })
+        expect(interpreter.exports.inst.b).toBe(4)
+        expect(interpreter.exports.inst.k).toBe(5)
+    })
 
-  it('should extend class normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should extend class normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class A {
         get g() {
           return this.k + 1
@@ -106,14 +106,14 @@ describe('testing class', () => {
       }
       exports.s = new E([1, 1, 1])
     `)
-    expect(interpreter.exports.g).toBe(2)
-    expect(interpreter.exports.s.size).toBe(1)
-    expect(interpreter.exports.s.h).toEqual([1, 1, 1])
-  })
+        expect(interpreter.exports.g).toBe(2)
+        expect(interpreter.exports.s.size).toBe(1)
+        expect(interpreter.exports.s.h).toEqual([1, 1, 1])
+    })
 
-  it('should get base class normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should get base class normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class A {
         set g(val) {
           this.k = val
@@ -129,12 +129,12 @@ describe('testing class', () => {
       const k = new C()
       exports.k = k.k
     `)
-    expect(interpreter.exports.k).toBe(1)
-  })
+        expect(interpreter.exports.k).toBe(1)
+    })
 
-  it('should call base class method normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should call base class method normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class A {
         assign() {
           exports.a = 1
@@ -149,13 +149,13 @@ describe('testing class', () => {
       const a = new B()
       a.assign()
     `)
-    expect(interpreter.exports.a).toBe(1)
-    expect(interpreter.exports.b).toBe(2)
-  })
+        expect(interpreter.exports.a).toBe(1)
+        expect(interpreter.exports.b).toBe(2)
+    })
 
-  it('should support property expression', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support property expression', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const methodName = 'say'
       class Foo {
         [methodName]() {
@@ -166,13 +166,13 @@ describe('testing class', () => {
       exports.inst = new Foo()
     `)
 
-    expect(typeof interpreter.exports.inst.say).toBe('function')
-    expect(interpreter.exports.inst.say()).toBeTruthy()
-  })
+        expect(typeof interpreter.exports.inst.say).toBe('function')
+        expect(interpreter.exports.inst.say()).toBeTruthy()
+    })
 
-  it('should support returns object for constructor', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support returns object for constructor', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Foo {
         constructor() {
           exports.obj = Object.create(null)
@@ -183,30 +183,30 @@ describe('testing class', () => {
       exports.inst = new Foo()
       exports.cls = Foo
     `)
-    expect(interpreter.exports.inst).not.toBeInstanceOf(interpreter.exports.cls)
-    expect(interpreter.exports.inst).toBe(interpreter.exports.obj)
-  })
+        expect(interpreter.exports.inst).not.toBeInstanceOf(interpreter.exports.cls)
+        expect(interpreter.exports.inst).toBe(interpreter.exports.obj)
+    })
 
-  it('should throw TypeError when calling es6 class as function', () => {
-    const interpreter = new SvalPlus()
-    let error = null
-    try {
-      interpreter.run(`
+    it('should throw TypeError when calling es6 class as function', () => {
+        const interpreter = new SvalPlus()
+        let error = null
+        try {
+            interpreter.run(`
         class Foo {
           
         }
         
         Foo()
       `)
-    } catch (err) {
-      error = err
-    }
+        } catch (err) {
+            error = err
+        }
 
-    expect(error).toBeInstanceOf(TypeError)
-    error = null
+        expect(error).toBeInstanceOf(TypeError)
+        error = null
 
-    try {
-      interpreter.run(`
+        try {
+            interpreter.run(`
         class Bar {
           
         }
@@ -217,16 +217,16 @@ describe('testing class', () => {
         
         x.bar()
       `)
-    } catch (err) {
-      error = err
-    }
+        } catch (err) {
+            error = err
+        }
 
-    expect(error).toBeInstanceOf(TypeError)
-  })
+        expect(error).toBeInstanceOf(TypeError)
+    })
   
-  it('should call super normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should call super normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class X {
         constructor(x) {
           this.x = x
@@ -241,12 +241,12 @@ describe('testing class', () => {
     
       exports.y = new Y()
     `)
-    expect(interpreter.exports.y.x).toBe(2)
-  })
+        expect(interpreter.exports.y.x).toBe(2)
+    })
 
-  it('should call super automatically', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should call super automatically', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class X {
         constructor() {
           this.x = 2
@@ -257,12 +257,12 @@ describe('testing class', () => {
     
       exports.y = new Y()
     `)
-    expect(interpreter.exports.y.x).toBe(2)
-  })
+        expect(interpreter.exports.y.x).toBe(2)
+    })
 
-  it('should call super class static methods normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should call super class static methods normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class X {
         static set() {
           return 1
@@ -273,13 +273,13 @@ describe('testing class', () => {
     
       exports.y = Y.set()
     `)
-    expect(interpreter.exports.y).toBe(1)
-  })
+        expect(interpreter.exports.y).toBe(1)
+    })
 
-  it('should throw ReferenceError when super() is not called before acessing this', () => {
-    const interpreter = new SvalPlus()
-    try {
-      interpreter.run(`
+    it('should throw ReferenceError when super() is not called before acessing this', () => {
+        const interpreter = new SvalPlus()
+        try {
+            interpreter.run(`
         class X {
           constructor() {
             this.x = 1
@@ -295,15 +295,15 @@ describe('testing class', () => {
       
         const y = new Y()
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
 
-  it('should throw ReferenceError when super() is not called in constructor for derived class', () => {
-    const interpreter = new SvalPlus()
-    try {
-      interpreter.run(`
+    it('should throw ReferenceError when super() is not called in constructor for derived class', () => {
+        const interpreter = new SvalPlus()
+        try {
+            interpreter.run(`
         class X {
           constructor() {
             this.x = 1
@@ -318,15 +318,15 @@ describe('testing class', () => {
       
         const y = new Y()
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
 
-  it('should throw ReferenceError when super constructor is called multiple times', () => {
-    const interpreter = new SvalPlus()
-    try {
-      interpreter.run(`
+    it('should throw ReferenceError when super constructor is called multiple times', () => {
+        const interpreter = new SvalPlus()
+        try {
+            interpreter.run(`
         class X {
           constructor() {
             this.x = 1
@@ -342,14 +342,14 @@ describe('testing class', () => {
       
         const y = new Y()
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
 
-  it('should support class expression', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support class expression', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const MyClass = class Me {
         getClassName() {
           return Me.name // can get Me
@@ -359,13 +359,13 @@ describe('testing class', () => {
       exports.inst = new MyClass()
     `)
 
-    expect(interpreter.exports.inst.getClassName()).toBe('Me')
-  })
+        expect(interpreter.exports.inst.getClassName()).toBe('Me')
+    })
 
-  it('should hide class name from outer with class expression', () => {
-    const interpreter = new SvalPlus()
-    try {
-      interpreter.run(`
+    it('should hide class name from outer with class expression', () => {
+        const interpreter = new SvalPlus()
+        try {
+            interpreter.run(`
         const MyClass = class Me {
           getClassName() {
             return Me.name // can get Me
@@ -374,14 +374,14 @@ describe('testing class', () => {
 
         exports.cls = Me // can't get Me
       `)
-    } catch (err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
+        } catch (err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
 
-  it('should support omitting class name for class expression', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support omitting class name for class expression', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       const MyClass = class {
         say() {
           return 1
@@ -391,47 +391,47 @@ describe('testing class', () => {
       exports.inst = new MyClass()
     `)
 
-    expect(interpreter.exports.inst.say()).toBe(1)
-  })
+        expect(interpreter.exports.inst.say()).toBe(1)
+    })
 
-  it('should not support hoisting for es6 class', () => {
-    const interpreter = new SvalPlus()
-    try {
-      interpreter.run(`
+    it('should not support hoisting for es6 class', () => {
+        const interpreter = new SvalPlus()
+        try {
+            interpreter.run(`
         new Foo()
         class Foo {
 
         }
       `)
-    } catch(err) {
-      expect(err).toBeInstanceOf(ReferenceError)
-    }
-  })
+        } catch(err) {
+            expect(err).toBeInstanceOf(ReferenceError)
+        }
+    })
 
-  it('should not support hoisting for es6 class 2', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should not support hoisting for es6 class 2', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       {
         let Foo = class {}
         class Bar extends Foo {
         }
       }
     `)
-  })
+    })
 
-  it('should have correct name for class', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should have correct name for class', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Point {}
       exports.result = Point.name === 'Point'
     `)
 
-    expect(interpreter.exports.result).toBeTruthy()
-  })
+        expect(interpreter.exports.result).toBeTruthy()
+    })
 
-  it('should support static method for class', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support static method for class', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Point {
         static create() {
           return new Point()
@@ -441,12 +441,12 @@ describe('testing class', () => {
       exports.cls = Point
     `)
 
-    expect(interpreter.exports.inst).toBeInstanceOf(interpreter.exports.cls)
-  })
+        expect(interpreter.exports.inst).toBeInstanceOf(interpreter.exports.cls)
+    })
 
-  it('should set correct new.target when creating instance', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should set correct new.target when creating instance', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Point {
         constructor() {
           exports.target = new.target
@@ -458,12 +458,12 @@ describe('testing class', () => {
       exports.cls = Point
     `)
 
-    expect(interpreter.exports.target).toBe(interpreter.exports.cls)
-  })
+        expect(interpreter.exports.target).toBe(interpreter.exports.cls)
+    })
 
-  it('should support generator method', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support generator method', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Foo {
         constructor(...args) {
           this.args = args
@@ -485,12 +485,12 @@ describe('testing class', () => {
       exports.actual = result
     `)
 
-    expect(interpreter.exports.target).toEqual(interpreter.exports.actual)
-  })
+        expect(interpreter.exports.target).toEqual(interpreter.exports.actual)
+    })
 
-  it('should support async method', async () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support async method', async () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class Foo {
         constructor() {
           this.a = 1
@@ -502,13 +502,13 @@ describe('testing class', () => {
       exports.Foo = Foo
     `)
 
-    const instance = new interpreter.exports.Foo()
-    await expect(instance.getA()).resolves.toBe(1)
-  })
+        const instance = new interpreter.exports.Foo()
+        await expect(instance.getA()).resolves.toBe(1)
+    })
 
-  it('should support property accessing between parent and child class', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run(`
+    it('should support property accessing between parent and child class', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run(`
       class X {
         constructor() {
           this.x = 5
@@ -539,16 +539,16 @@ describe('testing class', () => {
       exports.y = new Y().bark()
     `)
 
-    // parent reads overrided property
-    expect(interpreter.exports.x).toBe(6)
-    // child reads parent property with this
-    expect(interpreter.exports.y).toBe(7)
-  })
+        // parent reads overrided property
+        expect(interpreter.exports.x).toBe(6)
+        // child reads parent property with this
+        expect(interpreter.exports.y).toBe(7)
+    })
 
-  it('should create class with field normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import('expect', expect)
-    interpreter.run(`
+    it('should create class with field normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import('expect', expect)
+        interpreter.run(`
       class A {
         a = 1
         #b = 2
@@ -572,12 +572,12 @@ describe('testing class', () => {
       expect(A.h()).toBe(8)
       new A()
     `)
-  })
+    })
 
-  it('should support class static block', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import('expect', expect)
-    interpreter.run(`
+    it('should support class static block', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import('expect', expect)
+        interpreter.run(`
       class A {
         static l = []
         static {
@@ -599,5 +599,5 @@ describe('testing class', () => {
       }
       expect(B.l).toEqual([3, 4])
     `)
-  })
+    })
 })

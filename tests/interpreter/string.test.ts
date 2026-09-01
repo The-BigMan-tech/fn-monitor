@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { SvalPlus } from '../../src/sval-plus'
 
 describe('testing string', () => {
-  it('should support unicode string', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should support unicode string', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       const a = "\u0061"
       const b = "\uD842\uDFB7"
       const c = "\u{20BB7}"
@@ -21,18 +21,18 @@ describe('testing string', () => {
       expect(e).toBe(f)
       expect(g).toBe('z')
     `)
-  })
+    })
 
-  it('should parse template element normally', () => {
-    const interpreter = new SvalPlus()
-    interpreter.run('const a = 1; exports.str = `a: ${a}`')
-    expect(interpreter.exports.str).toBe('a: 1')
-  })
+    it('should parse template element normally', () => {
+        const interpreter = new SvalPlus()
+        interpreter.run('const a = 1; exports.str = `a: ${a}`')
+        expect(interpreter.exports.str).toBe('a: 1')
+    })
 
-  it('should support tagged template string', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should support tagged template string', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       function tag(stringArr, value1, value2){
         expect(stringArr).toEqual(['hello ', ' sval ', ''])
         expect(value1).toEqual(15)
@@ -44,12 +44,12 @@ describe('testing string', () => {
 
       tag\`hello \${ a + b } sval \${ a * b }\`
     `)
-  })
+    })
 
-  it('should convert string to char array', () => {
-    const interpreter = new SvalPlus()
-    interpreter.import({ expect })
-    interpreter.run(`
+    it('should convert string to char array', () => {
+        const interpreter = new SvalPlus()
+        interpreter.import({ expect })
+        interpreter.run(`
       const word = 'word'
       expect([...word]).toEqual(['w', 'o', 'r', 'd'])
       expect({...word}).toEqual({ 0: 'w', 1: 'o', 2: 'r', 3: 'd' })
@@ -59,5 +59,5 @@ describe('testing string', () => {
       }
       spread(...word)
     `)
-  })
+    })
 })
