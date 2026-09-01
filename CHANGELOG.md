@@ -1,4 +1,56 @@
 
+## v1.8.1...v1.9.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.8.1...v1.9.0)
+
+### 🚀 Features
+
+- Add a property to `LangEvent` to generate the source code string for its AST node ([c714f96](https://github.com/The-BigMan-tech/fn-monitor/commit/c714f96))
+- Bump to v1.9.0 ([d4d5f2e](https://github.com/The-BigMan-tech/fn-monitor/commit/d4d5f2e))
+
+### ♻️ Refactor
+
+- Move variable declaration closer to its source initialization ([81b08cc](https://github.com/The-BigMan-tech/fn-monitor/commit/81b08cc))
+- Hide the `alreadyMonitored` flag from the caller. ([38de8c2](https://github.com/The-BigMan-tech/fn-monitor/commit/38de8c2))
+- Use namespaced '__fn-monitor__' marker to prevent property collisions ([10899e1](https://github.com/The-BigMan-tech/fn-monitor/commit/10899e1))
+
+### 🧹 Chore
+
+- Disable the indentation rule for a file ([a1b7a86](https://github.com/The-BigMan-tech/fn-monitor/commit/a1b7a86))
+
+### 🎨 Styles
+
+- **eslint:** Add indentation rule ([464b08e](https://github.com/The-BigMan-tech/fn-monitor/commit/464b08e))
+  
+### 📖 Documentation
+
+- **changelog:** Update changelog for v1.8.1 ([0548c8a](https://github.com/The-BigMan-tech/fn-monitor/commit/0548c8a))
+- **readme:** Update pkg size ([8e1dc52](https://github.com/The-BigMan-tech/fn-monitor/commit/8e1dc52))
+- **readme:** Improve the quality of an example ([3ed3adf](https://github.com/The-BigMan-tech/fn-monitor/commit/3ed3adf))
+- **article:** Tweak a sentence ([5766dc2](https://github.com/The-BigMan-tech/fn-monitor/commit/5766dc2))
+- Tweak some comments ([ab7bb0a](https://github.com/The-BigMan-tech/fn-monitor/commit/ab7bb0a))
+- **readme:** Clarify an utility type ([83d1958](https://github.com/The-BigMan-tech/fn-monitor/commit/83d1958))
+- **readme:** Clarify the stacks ([d35e1c9](https://github.com/The-BigMan-tech/fn-monitor/commit/d35e1c9))
+- **timeout-article:** Improve some blocks ([9622d40](https://github.com/The-BigMan-tech/fn-monitor/commit/9622d40))
+- **edge-cases:** Clarify the ast mutation persistence ([fe12d3f](https://github.com/The-BigMan-tech/fn-monitor/commit/fe12d3f))
+- **article:** Clarify the ast mutation persistence ([234b3a2](https://github.com/The-BigMan-tech/fn-monitor/commit/234b3a2))
+- **readme:** Tighten a point in the capabilities section ([900e835](https://github.com/The-BigMan-tech/fn-monitor/commit/900e835))
+- **readme:** Indent a tip ([57ff5ae](https://github.com/The-BigMan-tech/fn-monitor/commit/57ff5ae))
+- **readme:** Update the package's intro ([7ed0a22](https://github.com/The-BigMan-tech/fn-monitor/commit/7ed0a22))
+- **readme:** Make the table punchier ([452afa6](https://github.com/The-BigMan-tech/fn-monitor/commit/452afa6))
+- **readme:** Clairfy the type of the results in the localExeStack ([04a859e](https://github.com/The-BigMan-tech/fn-monitor/commit/04a859e))
+- **readme:** Clairfy an utility type ([d8217dc](https://github.com/The-BigMan-tech/fn-monitor/commit/d8217dc))
+- **readme:** Correct a type clarification ([f87cf81](https://github.com/The-BigMan-tech/fn-monitor/commit/f87cf81))
+- **readme:** Add a crucial detail about `visit`.execute ([5ff6cdc](https://github.com/The-BigMan-tech/fn-monitor/commit/5ff6cdc))
+- **readme:** Resolve some ambiguity ([0924959](https://github.com/The-BigMan-tech/fn-monitor/commit/0924959))
+- **readme:** Remove a dramatic alarm ([f264bd1](https://github.com/The-BigMan-tech/fn-monitor/commit/f264bd1))
+- **readme:** Update the api reference for the next version ([5559b47](https://github.com/The-BigMan-tech/fn-monitor/commit/5559b47))
+- **examples:** Upgrade the deobfuscation example ([c4c99af](https://github.com/The-BigMan-tech/fn-monitor/commit/c4c99af))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.8.0...v1.8.1
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.8.0...v1.8.1)
