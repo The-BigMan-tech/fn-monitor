@@ -1,6 +1,6 @@
 {
     "name": "@typescript-guy/fn-monitor",
-    "version": "1.8.1",
+    "version": "1.9.0",
     "description": "An instrumentation layer over a JS-in-JS interpreter to monitor, intercept, and mutate a function's execution at the AST level.",
     "type": "module",
     "main": "dist/index.js",
