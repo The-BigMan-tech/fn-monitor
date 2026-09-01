@@ -11,16 +11,17 @@
 
 // change the import to '@typescript-guy/fn-monitor' 
 
-import { monitor } from '../src/index.ts';
+import { monitor, EsNode } from '../src/index.ts';
 
 // This is a typical javascript-obfuscator output. 
 // It swaps the original source with Hex-encoded strings and a math-based decoder
 
 function obfuscatedSnippet() {
     const _0x2a1b = [
-        '\x68\x65\x6c\x6c\x6f',          // "hello"
-        '\x77\x6f\x72\x6c\x64',          // "world"
-        '\x66\x6e\x2d\x6d\x6f\x6e\x69\x74\x6f\x72' // "fn-monitor"
+        '\x68\x65' + '\x6c\x6c' + '\x6f',// "hello"
+        '\x77\x6f' + '\x72\x6c' + '\x64',// "world"
+        '\x66\x6e' + '\x2d\x6d' + '\x6f' + 
+        '\x6e\x69' + '\x74\x6f' + '\x72' // "fn-monitor"
     ];
     
     function _0xdecoder(idx: number, seed: number) {
@@ -44,10 +45,11 @@ function obfuscatedSnippet() {
 */
 
 let foundTargetCall = false;
-let argNodes: Set<any> = new Set();
-let args: any[] = [];
 
-let decryptedList: any[] | null = null;
+let argNodes = new Set<EsNode>();
+let args: unknown[] = [];
+
+let decryptedList: unknown[] | null = null;
 let lastDecryptedValue: unknown | null = null;
 
 const analyzeCode = monitor({
@@ -81,8 +83,15 @@ const analyzeCode = monitor({
         if (!decryptedList) {
             visit.is('VariableDeclaration', event => {
                 visit.execute(); // Ensure the array is evaluated and populated in scope
-                decryptedList = event.scope.variables.search('_0x2a1b') as any[];
-                console.log(`\n[DEOBFUSCATED LIST] [${decryptedList.join(', ')}]\n`);
+
+                const search = event.scope.variables.search;
+                const list = search('_0x2a1b');
+
+                if (list) {
+                    decryptedList = list as typeof decryptedList;
+                    console.log(`\n[DEOBFUSCATED LIST] [${decryptedList!.join(', ')}]`);
+                    console.log(`[SOURCE] ${event.getSrc()}\n`);
+                }
             });
         }
 
@@ -104,7 +113,9 @@ const analyzeCode = monitor({
                     // Manually execute the CallExpression. 
                     // This will cause it to recursively call the inspector and hit the 'Any' query for all its arguments.
                     lastDecryptedValue = visit.execute();
-                    console.log(`[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"\n`);
+
+                    console.log(`[DEOBFUSCATED CALL] ${callee.name}(${args.join(',')}) -> "${lastDecryptedValue}"`);
+                    console.log(`[SOURCE] ${event.getSrc()}\n`);
                 } 
                 finally {
                     // Clean up immediately after execution to prevent state bleed
@@ -137,15 +148,20 @@ analyzeCode();
  * 
  * Output
  * ------
- * [DEOBFUSCATED LIST] [hello, world, fn-monitor]
  * 
- * [DEOBFUSCATED CALL] _0xdecoder(0,1787862235676) -> "fn-monitor"
+ * [DEOBFUSCATED LIST] [hello, world, fn-monitor]
+ * [SOURCE] const _0x2a1b = ["he" + "ll" + "o", "wo" + "rl" + "d", "fn" + "-m" + "o" + "ni" + "to" + "r"];
  *
- * [DEOBFUSCATED CALL] _0xdecoder(1,1787862235677) -> "world"
+ * [DEOBFUSCATED CALL] _0xdecoder(0,1788284215450) -> "world"
+ * [SOURCE] _0xdecoder(0, Date.now())
  *
- * [DEOBFUSCATED CALL] _0xdecoder(2,1787862235678) -> "hello"
+ * [DEOBFUSCATED CALL] _0xdecoder(1,1788284215451) -> "hello"
+ * [SOURCE] _0xdecoder(1, Date.now())
  *
- * fn-monitor world hello
+ * [DEOBFUSCATED CALL] _0xdecoder(2,1788284215452) -> "fn-monitor"
+ * [SOURCE] _0xdecoder(2, Date.now())
+ * 
+ * world hello fn-monitor
 */
 
 
