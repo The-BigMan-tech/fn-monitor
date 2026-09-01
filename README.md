@@ -734,10 +734,9 @@ These are the critical constraints to understand before using `fn-monitor`:
    > on the generated source code, reusing it for identical functions to minimize 
    > redundant parsing.
 
-2. **Execution Cost:** Because `fn-monitor` interprets your function step-by-step through an interpreter, each monitored call incurs overhead compared to native execution. This is the fundamental cost of AST-level observability.
-   
-   > ⚠️ **Do not use `fn-monitor` inside high-throughput loops, real-time request 
-   > handlers, or any code path where microsecond-level latency matters.** It is designed for functions that are already slow (100ms+), run infrequently, and would be catastrophic if they hung forever.
+2. **Execution Cost:** Because fn-monitor interprets your function step-by-step, each monitored call incurs overhead compared to native execution. Do not use the package inside high-throughput loops, real-time request handlers, or any code path where microsecond-level latency matters.
+
+   > 💡 **Ideal Use Cases:** The package is best suited for scenarios where the performance overhead is negligible compared to the value of the control it provides, or for functions that are already expected to be slow (e.g., 100ms+) and run infrequently.
 
 3. **Debugging & Stack Traces:** Errors thrown inside monitored functions will not map directly to their original source locations in your editor. You may need to temporarily switch to your original function to fix any of its issues. The switching cost is minimal because you can simply change the name 
 at the call site or where you refer to it in your code.
