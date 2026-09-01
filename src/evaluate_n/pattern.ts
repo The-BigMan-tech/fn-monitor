@@ -42,7 +42,7 @@ export function ObjectPattern(node: acorn.ObjectPattern, scope: Scope, options: 
                 key = (property.key as acorn.Identifier).name
             }
             fedKeys.push(key)
-      
+
             const value = property.value
             if (value.type === 'Identifier') {
                 scope[kind](value.name, feed[key])

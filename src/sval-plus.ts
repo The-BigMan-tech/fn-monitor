@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/indent */
 import { Sval,SvalOptions } from "./sval.ts";
 import { generate } from 'astring';
 import ansis from "ansis";
