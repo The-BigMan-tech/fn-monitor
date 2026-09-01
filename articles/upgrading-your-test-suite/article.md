@@ -2,6 +2,7 @@
 title: Catch the Silent Failures Your Vitest Suite is Missing
 description: Combining Vitest with fn-monitor to assert not just what your functions return, but the work they actually do.
 tags: javascript, typescript, testing, vitest
+cover_image: https://dev-to-uploads.s3.us-east-2.amazonaws.com/uploads/articles/c7ttm9xpktp7s3zdjah6.png
 ---
 
 Imagine a tax calculator that returns the correct final number, but silently skips the mandatory high-income audit step. Your standard black-box test passes with flying colors, but you now have a compliance violation.
