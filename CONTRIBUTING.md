@@ -207,30 +207,23 @@ a deliberate safety decision that outweighs the marginal bundle size savings.
 
 > **Safety > Control > Performance > Convenience**
 
-This ordering is not aspirational — it is the decision framework behind every 
-architectural choice in this codebase. When two values conflict, the 
-higher-priority value always wins.
+Every architectural choice in this codebase follows, and must continue to follow, this decision framework. When two values conflict, the higher-priority value wins.
 
-### Decision Checklist
+A contribution that:
 
-When facing a new design decision, ask:
-
-1. Does this compromise **safety**? If yes, **reject it**.
-2. Does this reduce user **control**? If yes, only accept it if safety demands it.
-3. Does this hurt **performance**? If yes, only accept it if safety and control 
-   are unaffected.
-4. Does this sacrifice **convenience**? If yes, only accept it if safety, control, 
-   and performance are all preserved.
-
+- **Decreases safety** cannot be accepted.
+- **Increases control** must not compromise safety.
+- **Decreases control** can only be accepted if it removes manual, redundant work in a way that improves safety or performance.
+- **Increases performance** must not compromise safety or control.
+- **Decreases performance** can only be accepted if it contributes to safety or control.
+- **Increases convenience** can only be accepted if it preserves safety, control, and performance.
+- **Decreases convenience** can only be accepted if it contributes to safety or control. If sacrificed for performance, the gain must be tangible.
+  
 ### A Note on Safety Contributions
 
-Safety is the highest priority, but this does not mean every change labeled 
-"safety" is automatically welcome. A safety contribution must:
+Safety is the highest priority, but this does not mean every change labeled "safety" is automatically welcome. A safety contribution must:
 
-- Make incorrect behavior impossible or correct behavior easier, **without** 
-  regressing Control or Performance.
-
-- If regressing Control or Performance is truly unavoidable, it must address 
-  a **concrete, demonstrable harm** — not a hypothetical one.
+- Make incorrect behavior impossible or correct behavior easier, **without** regressing Control or Performance.
+- If regressing Control or Performance is truly unavoidable, it must address a **concrete, demonstrable harm** — not a hypothetical one.
 
 Contributions that violate either of these criteria will be rejected.
