@@ -64,7 +64,7 @@ function sayHello(name:string) {
     print('Hello world');
 }
 function printName(name:string) {
-    console.log('Hello ',name);
+    console.log('Hello',name);
 }
 const label = 'Printed: ';
 

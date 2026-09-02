@@ -646,8 +646,10 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
    
 5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
 
-6. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
-   
+6. **Class Method Support:** You can monitor class and instance methods just like regular functions. 
+ 
+    > 💡 To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for the exact requirements.
+    
 ---
 
 <a id="full-api-reference"></a>
