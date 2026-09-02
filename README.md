@@ -641,13 +641,13 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
     >💡 Building a deobfuscator? Check out this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts).
    
-4. **ES2024 Support:** The interpreter fully supports JavaScript syntax up to the ES2024 specification.
+3. **ES2024 Support:** The package can interprete JavaScript syntax up to the ES2024 specification.
 
-5. **Zero Native Dependencies:** Powered by a pure JavaScript AST-walking interpreter, it does not rely on native binaries or environment-specific APIs.
+4. **Zero Native Dependencies:** Powered by a pure JavaScript AST-walking interpreter, it does not rely on native binaries or environment-specific APIs.
    
-6. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
+5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
 
-7. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
+6. **Class Method Support:** You can monitor class and instance methods just like regular functions. To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for exact syntax requirements.
    
 ---
 
