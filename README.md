@@ -320,25 +320,25 @@ console.log(exeHistory);
 
 > ⭐ **Enjoying** `fn-monitor`? Show your support **by** starring the [repository](https://github.com/The-BigMan-tech/fn-monitor) on GitHub! It helps the project grow and keeps the updates coming.
 
-### Capturing values and Embedding Functions
+### Capturing Values and Embedding Functions
 
-Because a monitored function runs in an interpreted context, it needs a way to access external values. This is where we introduce the `captures` and `embed` properties when creating the function:
+Because a monitored function runs in an interpreted context, it needs a way to access external values. This is where the `captures` and `embed` properties come in:
 
-| Capturing | Embedding |
-| --- | --- |
-| Works for all data types; gives the interpreter direct references or values. | Exclusive to functions; copies the function's source code into the context to be parsed alongside the `main` function. |
-| Injects values into the context as constants. | Injects functions into the context as top-level variables. |
-| Captured functions run natively in your JS engine when called. | Embedded functions run in the interpreted context, allowing hooks like `onStep` and `inspector` to see through them. |
+| Feature | Capturing (`captures`) | Embedding (`embed`) |
+| :--- | :--- | :--- |
+| Supported Types | All data types (primitives, objects, functions, etc.). | Functions only. |
+| Injection Method | Injects values into the interpreter context as constants. | Copies the function's source code as top-level variables to be parsed alongside `main`. |
+| Runtime Behavior | Values are accessed directly from the host environment. Captured functions run natively. | Everything runs inside the interpreter's context. They are fully monitored by hooks. |
+| `this` Context | Preserved naturally across the boundary. | Lost during extraction. Must be explicitly preserved using the `bind` property. |
 
 In this example, `main` captures `printName` (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
-In the `inspector`, we add the function currently at the head of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the head (index 0).
+In the `inspector`, we add the function currently at the top of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the head (index 0).
 
 The output shows that only `sayHello` and `print` appear in the intercepted set because the `inspector` won't be able to see the captured function:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
-
 
 const interceptedFns = new Set();
 
@@ -347,7 +347,7 @@ function sayHello(name:string) {
     print('Hello world');
 }
 function printName(name:string) {
-    console.log('Hello ',name);
+    console.log('Hello',name);
 }
 const label = 'Printed: ';
 
@@ -383,7 +383,7 @@ console.log('Intercepted functions: ',interceptedFns);
 #### Output
 
 ```text
-Hello  person
+Hello person
 Printed:  Hello world
 Intercepted functions:  Set(2) { 
     [Function: sayHello], 
@@ -391,10 +391,9 @@ Intercepted functions:  Set(2) {
 }
 ```
 
-> 💡 Monitored functions automatically have access to all standard JavaScript built-in globals. 
-> You **do not** need to capture these — they're injected by the interpreter and available immediately.
+> 💡 **Built-in Globals:** Monitored functions automatically have access to all standard JavaScript built-in globals. You **do not** need to capture these — they're injected by the interpreter and available immediately.
 > 
-> This includes `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables or helper functions.
+> They include `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables or helper functions.
 
 ### Scoping: Capturing vs Embedding
 
