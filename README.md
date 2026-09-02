@@ -333,7 +333,7 @@ Because a monitored function runs in an interpreted context, it needs a way to a
 
 In this example, `main` captures `printName` (runs natively, not intercepted), while `print` is embedded (runs in the interpreted context and is intercepted). `print` captures `label` because it depends on it.
 
-In the `inspector`, we add the function currently at the top of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the head (index 0).
+In the `inspector`, we add the function currently at the top of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the top (index 0).
 
 The output shows that only `sayHello` and `print` appear in the intercepted set because the `inspector` won't be able to see the captured function:
 
