@@ -487,36 +487,27 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         let sources:string = '';
 
         if (embed !== undefined) {
-            const fnNames = Object.keys(embed).sort();//used sort here to increase the cache hit rate
+            const fnNames = Object.keys(embed).sort();// use sort here to increase the cache hit rate
 
             for (const name of fnNames) {
-                const metadata = embed[name];
-
-                // prepending the name with 'embeddedFn' ensures that it wont conflict with the captures key of the main one
+                // prepend the name with 'embeddedFn' to make it impossible to collide with the captures key of the main fn
                 const capturesLabel = SvalPlus.commonLabels.captures(`embeddedFn_${name}`);
-                const fnSrc = this.getFnSource(metadata,capturesLabel,false);
+                const fnSrc = this.getFnSource(embed[name],capturesLabel,false);
 
-                /**
-                 * Declaring the fnCode within an IIFE ensures that functions with the same
-                 * name but are actually coming from different namespaces will not collide.
-                 * 
-                 * It also ensures that they can only be accessible through the embedded 
-                 * function's reference.
-                */
-                const wrapper = `(()=>{ 
+                // Declare the fnCode within an IIFE rather than at the same level as the embedded function to prevent the top-level scope from being polluted with an intermediate function
+                sources += `\nvar ${name} = (()=>{ 
                     ${fnSrc.fnCode}
                     return ${fnSrc.fnName};
                 })();`
-
-                sources += `\nvar ${name} = ${wrapper};`;
             }
         }
         return sources;
     };
 
+
     private useFn(fnSrc:FnSrc<true>):FnAst {
         if (this.fnCallAst !== null) {
-            throw new Error(ansis.red(`The interpreter can only use one function`))
+            throw new Error(ansis.red(`Internal logic error: An interpreter instance can only use one function`))
         };
         
         const fnCodeHash = getSHA256Key(fnSrc.fnCode);
@@ -541,6 +532,10 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         return ast;
     }
     private callFn = (...args:any[])=>{
+        if (this.fnCallAst === null) {
+            throw new Error(ansis.red(`Internal logic error: There is no function call AST for the interpreter instance to run`))
+        };
+
         this._stage = 'MONITORING';
 
         const labels = SvalPlus.commonLabels;
@@ -554,7 +549,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         this.import(this.argImports);
 
         try {
-            this.run(this.fnCallAst!);
+            this.run(this.fnCallAst);
             result = this.svalPlusExports[labels.resultExport];
         }catch(err) {
             result = this.normalizeErr(err);
@@ -587,6 +582,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         };
     }
 
+
     private markAsMonitored<T extends Fn>(fn:Fn):T {
         Object.defineProperty(fn,monitoredMarker, {
             value: true,
@@ -596,7 +592,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         });
         return fn as T;
     }
-
     public assemble = <T extends Fn>(
         main: Metadata<T>,
         embed?: Record<string,Metadata<Fn>>,
@@ -615,12 +610,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             `;
 
             const ast = this.useFn(fnSrc);
-            if (sourceOut) {//only write the generated code if the interpreter could parse it
+            if (sourceOut) {
                 const indent = ''.padStart(4);
-                sourceOut.value = (
-                    generate(ast.fnCode,{ indent }) + '\n' +
-                    generate(ast.fnCall, { indent })
-                )
+                sourceOut.value = 
+                    generate(ast.fnCode,{ indent }) + '\n' + 
+                    generate(ast.fnCall, { indent });
             };
 
             const finalFn = this.markAsMonitored<T>(this.callFn);

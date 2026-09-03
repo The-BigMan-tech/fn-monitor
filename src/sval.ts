@@ -150,7 +150,7 @@ export class Sval {
         )
         const useAsyncForTopLevel = (
             versionHandlesTopAwait &&
-            (this.options.sourceType === 'module')
+            this.options.sourceType === 'module'
         );
 
         if (useAsyncForTopLevel){//this branch will fire and forget the promise. 
