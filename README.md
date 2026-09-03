@@ -634,20 +634,20 @@ Error: The monitored function used 50.745ms when only given a budget of 50.000ms
 
 ## Capabilities 💪
 
-1. **Ergonomic API:** Ships a clean, intuitive interface that can be used to mutate execution, enforce timeouts, and trace state without needing to understand the underlying mechanics.
+1. **Ergonomic API:** It ships a clean, intuitive interface that can be used to mutate execution, enforce timeouts, and trace state without needing to understand the underlying mechanics.
 
-2. **Unopinionated:** Makes no assumptions about your problem domain. It provides flexible, raw primitives that you can use anywhere runtime AST analysis is required.
+2. **Domain-Agnostic:** It provides flexible, raw primitives that can be used anywhere runtime AST analysis is required.
 
-    >💡 Building a deobfuscator? Check out this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts).
+    > 💡 Building a deobfuscator? Check out this [Runtime Deobfuscation Example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/deobfuscating-code.ts).
    
-3. **ES2024 Support:** The package can interprete JavaScript syntax up to the ES2024 specification.
+3. **ES2024 Support:** It can interpret JavaScript syntax up to the ES2024 specification.
 
-4. **Zero Native Dependencies:** Powered by a pure JavaScript AST-walking interpreter, it does not rely on native binaries or environment-specific APIs.
+4. **Zero Native Dependencies:** It is built on a pure JavaScript AST-walking interpreter, meaning it does not rely on native binaries or environment-specific APIs.
    
-5. **Sync & Async Support:** Seamlessly interprets and monitors both synchronous and asynchronous functions.
+5. **Sync & Async Support:** It can seamlessly interpret and monitor both synchronous and asynchronous functions.
 
-6. **Class Method Support:** You can monitor class and instance methods just like regular functions. 
- 
+6. **Class Method Support:** It can monitor class and instance methods just like regular functions.
+   
     > 💡 To preserve the `this` context safely without encountering runtime crashes, simply use the `bind` property alongside `ref` when configuring the monitored function. See the [Monitoring Methods](https://github.com/The-BigMan-tech/fn-monitor/blob/master/EDGE-CASES.md#monitoring-methods) guide for the exact requirements.
     
 ---
@@ -671,7 +671,7 @@ The main export. Accepts a configuration object containing the target function a
 | `onStep` | `() => void` | Lightweight hook called before each interpreted step. Does not receive the `visit` object, making it much faster than the `inspector`. |
 | `sourceOut` | `{ value: string }` | If provided, the interpreter writes a formatted version of the generated source code that it uses during execution into this object's `value` property. |
 | `beforeEachCall` | `(...args: Parameters<T>) => void` | Hook called before each execution with the passed arguments. |
-| `afterEachCall` | `(result: ReturnType<T> \| Error) => void` | Hook called after each execution with the result or thrown error. |
+| `afterEachCall` | `(result: ReturnType<T> \| Error) => void` | Hook called after each execution with the result or thrown error. If the result is an error, it will bubble up to the caller after the hook finishes. |
 
 > 💡 **Inspector Type Clarification:** You do **not** need to use a generator inspector for async functions or a normal function inspector for sync code. 
 > 
