@@ -487,7 +487,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         let sources:string = '';
 
         if (embed !== undefined) {
-            const fnNames = Object.keys(embed).sort();// use sort here to increase the cache hit rate
+            const fnNames = Object.keys(embed).sort(); // sort the keys to increase the cache hit rate
 
             for (const name of fnNames) {
                 // prepend the name with 'embeddedFn' to make it impossible to collide with the captures key of the main fn
@@ -611,7 +611,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
             const ast = this.useFn(fnSrc);
             if (sourceOut) {
-                const indent = ''.padStart(4);
+                const indent = ''.repeat(4);
                 sourceOut.value = 
                     generate(ast.fnCode,{ indent }) + '\n' + 
                     generate(ast.fnCall, { indent });
