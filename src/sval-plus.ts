@@ -462,7 +462,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
                 return (${fnString}).apply(this, args);
             };
 
-            ${ isMainFn ? ''
+            ${ isMainFn ? '' // the main function has its own special way of being added to the fnMap at its call site
                 : `exports.${labels.fnMap}.set(${intermediateFnName},exports.${fnRefKey})`
             }
             
