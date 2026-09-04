@@ -34,8 +34,8 @@ This document covers specific interpreter behaviors, edge cases, and toolchain i
 
 6. **Monitoring Class/Instance Methods:** 
 
-   - **Syntax Rules:** You can monitor methods, but they must **not** be defined using shorthand syntax (`myMethod() {}`). It will throw a `WrapperError`. Only arrow function syntax (`myMethod = () => {}`) and function expression syntax (`myMethod = function() {}`) will work. If the package tried to handle shorthand syntax, it would force the internal code generator to parse complex edge cases (getters, setters, constructors), which is highly error-prone. 
- 
+   - **Syntax Rules:** You can monitor methods, but they must **not** be defined using shorthand syntax (`myMethod() {}`). It will throw a `WrapperError`. Only arrow function syntax (`myMethod = () => {}`) and function expression syntax (`myMethod = function() {}`) will work. If the package tried to handle shorthand syntax, it would force the internal code generator to filter out complex edge cases (getters, setters, constructors), which is error-prone.
+  
    - **Preserving the `this` Context:** The correct way to safely monitor an instance method while preserving its `this` context is to use the dedicated `bind` property when setting up the monitored function. See this [example](https://github.com/The-BigMan-tech/fn-monitor/blob/master/examples/monitoring-methods.ts).
     
    > ⚠️ **Warning:** You **cannot** pass `obj.method.bind(obj)` directly to a `ref` property. It will throw a `WrapperError` 
