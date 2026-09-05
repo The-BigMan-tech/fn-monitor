@@ -123,6 +123,8 @@ intermediate result:  -15
 Result:  -15
 ```
 
+> 💡 For the best experience, ensure that the functions you wrap with `monitor` have their source code preserved and are not minified.
+
 ### Getting the full execution history of a function call
 
 Our main interest here is the execution stack, which is accessible with `visit.localExeStack()`. Every time a node is evaluated, a rich object containing the result is inserted at the head (index 0) of the stack. So we simply use the `inspector` to retrieve the head element as each node gets executed.
