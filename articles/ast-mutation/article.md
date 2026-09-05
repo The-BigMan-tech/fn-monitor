@@ -519,7 +519,7 @@ That can be powerful if you want a persistent runtime transformation, but it can
 However, if the interpreter were to redundantly parse a function on every call, it would be too slow for practical use.
 
 ---
-### What this package is good for
+### What this package can do
 
 This kind of tool is especially interesting if you are building something like:
 
