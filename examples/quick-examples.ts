@@ -157,7 +157,7 @@ const monitoredGetSqrt = monitor({
     main: {
         ref: getSqrt
     },
-    inspector:(visit):undefined => {
+    inspector:(visit) => {
         visit.is('CallExpression', (event) => {
             const scope = event.scope;
             const search = scope.variables.search;

@@ -203,7 +203,7 @@ describe('Visit.execute() Method Behaviour',()=>{
             beforeEachCall:()=>{
                 hitForAwaitNode = false;
             },
-            inspector:(visit):undefined =>{
+            inspector:(visit) =>{
                 visit.is('ForOfStatement',()=> {
                     expect(visit.execute()).toBe(LAZY_NODE);
                     hitForAwaitNode = true;
@@ -234,7 +234,7 @@ describe('Visit.execute() Method Behaviour',()=>{
             beforeEachCall:()=>{
                 hitYieldNode = false;
             },
-            inspector:(visit):undefined =>{
+            inspector:(visit) =>{
                 visit.is('YieldExpression',()=> {
                     expect(visit.execute()).toBe(LAZY_NODE);
                     hitYieldNode = true;
@@ -265,7 +265,7 @@ describe('Visit.execute() Method Behaviour',()=>{
             beforeEachCall:()=>{
                 hitCallExprNode = false;
             },
-            inspector:(visit):undefined =>{
+            inspector:(visit) =>{
                 visit.is('CallExpression',()=> {
                     const result = visit.execute();
 

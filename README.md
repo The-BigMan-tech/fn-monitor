@@ -507,7 +507,7 @@ const monitoredGetSqrt = monitor({
     main: {
         ref: getSqrt
     },
-    inspector:(visit):undefined => {
+    inspector:(visit) => {
         visit.is('CallExpression', (event) => {
             const scope = event.scope;
             const search = scope.variables.search;
@@ -859,7 +859,7 @@ This project encourages community forks and variations. Before you fork, please 
 
 ## Inspiration 🎯
 
-I built this package because I needed a reliable way to throw an error if an arbitrary function uses loops at runtime. My goal wasn't just to prevent a function from hanging the main thread — I needed to literally ban the presence of loops in the code itself. 
+I built this package because I needed a reliable way to throw an error if an arbitrary function uses loops at runtime. My goal wasn't just to prevent a function from hanging the main thread — I needed to literally ban the presence of loops in the code itself to prove that the function will eventually terminate.
 
 Existing solutions could only enforce this at build time. I later grew `fn-monitor` into a general-purpose tool for runtime AST control, far beyond that original use case. If you've ever needed to implement similar constraints, this package is for you.
 

@@ -31,7 +31,7 @@ const monitoredFn = monitor({
             ref:yieldResult
         }
     },
-    inspector:(visit):undefined =>{
+    inspector:(visit) =>{
         visit.is('YieldExpression',(event)=>{
             const yieldedVar = event.node.argument;
             const search = event.scope.variables.search;

@@ -102,7 +102,7 @@ export type InspectorGenerator<T extends 'internal' | 'user'> = Generator<
 
 export type Inspector<
     T extends 'internal' | 'user'
-> = (visit:Visit)=> undefined | InspectorGenerator<T>;
+> = (visit:Visit)=> void | undefined | InspectorGenerator<T>;
 
 export type OnStep = ()=>void;
 export type PerExeFn = ()=>void;

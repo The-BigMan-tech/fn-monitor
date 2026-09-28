@@ -57,7 +57,7 @@ describe('ExeStack Behavior',()=>{
             beforeEachCall:()=>{
                 hitDeclNode = false;
             },
-            inspector:(visit):undefined => {   
+            inspector:(visit) => {   
                 visit.is('Any',()=>undefined)//force the interpreter to alllocate all scopes
 
                 //this will hit y = 10 + x
