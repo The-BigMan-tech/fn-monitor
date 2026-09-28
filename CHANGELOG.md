@@ -1,4 +1,38 @@
 
+## v1.9.0...v1.9.1
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.9.0...v1.9.1)
+
+### 🩹 Fixes
+
+- Extended the Inspector return type to include void. This prevents false-positive TypeScript errors when writing complex inspector functions ([de6e53d](https://github.com/The-BigMan-tech/fn-monitor/commit/de6e53d))
+- Bump to v1.9.1 ([e15130d](https://github.com/The-BigMan-tech/fn-monitor/commit/e15130d))
+
+### ♻️ Refactor
+
+- Improve overall neatness and add an assertion ([ce3ca2d](https://github.com/The-BigMan-tech/fn-monitor/commit/ce3ca2d))
+- Use the .repeat method in place of .padStart as it is more readable for the same purpose ([f343dcb](https://github.com/The-BigMan-tech/fn-monitor/commit/f343dcb))
+
+### 📖 Documentation
+
+- **changelog:** Update changelog for v1.9.0 ([2c0efd2](https://github.com/The-BigMan-tech/fn-monitor/commit/2c0efd2))
+- **test-article:** Update the cover image ([e70a95c](https://github.com/The-BigMan-tech/fn-monitor/commit/e70a95c))
+- **readme:** Change the wording used to describe a capability ([055a084](https://github.com/The-BigMan-tech/fn-monitor/commit/055a084))
+- **testsuite-article:** Update the cover image ([9c24e8c](https://github.com/The-BigMan-tech/fn-monitor/commit/9c24e8c))
+- **readme:** Further clarify the `captures` vs `embed` section ([bcdcfde](https://github.com/The-BigMan-tech/fn-monitor/commit/bcdcfde))
+- **readme:** Improve the formatting of a capability ([283827d](https://github.com/The-BigMan-tech/fn-monitor/commit/283827d))
+- **readme:** Tweak a word ([970c542](https://github.com/The-BigMan-tech/fn-monitor/commit/970c542))
+- **contributing:** Clarify the design philosophy ([9d38c7c](https://github.com/The-BigMan-tech/fn-monitor/commit/9d38c7c))
+- Add a comment ([f058f72](https://github.com/The-BigMan-tech/fn-monitor/commit/f058f72))
+- **readme:** Polish the capabilities section ([c85dd2a](https://github.com/The-BigMan-tech/fn-monitor/commit/c85dd2a))
+- **edge-cases:** Make a point sound more professional ([446651c](https://github.com/The-BigMan-tech/fn-monitor/commit/446651c))
+- **article:** Tweak a heading ([f0866fe](https://github.com/The-BigMan-tech/fn-monitor/commit/f0866fe))
+- **readme:** Add a tip ([030104b](https://github.com/The-BigMan-tech/fn-monitor/commit/030104b))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.8.1...v1.9.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.8.1...v1.9.0)
