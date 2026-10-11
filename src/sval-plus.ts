@@ -4,8 +4,9 @@ import { Sval,SvalOptions } from "./sval.ts";
 import { generate } from 'astring';
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache';
-import Scope from './scope/index.ts';
 import { QList, ReadonlyQList } from './q-list.ts'
+import { applyOverwrites } from "./overwriter-helper.ts";
+import { getSHA256Key } from './lifecycle.ts';
 
 import { 
     parse as meriyahParse,
@@ -15,31 +16,17 @@ import {
 import { 
     Inspector,
     Reusables, 
-    ScopeForEvent,
     EsNode,
     Fn, 
-    createEvent, 
     SvalPlus as SvalPlusContract, 
     UNASSIGNED, 
-    LAZY_NODE, 
-    Visit as VisitContract, 
-    EventMap, 
     NOT_ALLOCATED,
-    PerExeFn,
     OnStep,
-    VisitExecutionError,
     GeneratedKey,
     WrapperError,
     monitoredMarker
 } from './custom-types.ts'
-
-import { 
-    executedManually,
-    getSHA256Key, 
-    inLazyMode, 
-    pushResult 
-} from './lifecycle.ts';
-
+import { EventScope, Visit } from "./internal-classes.ts";
 
 export interface Metadata<T extends Fn> {
     /**The reference to the function to be included in the interpreter context*/
@@ -85,96 +72,6 @@ interface SvalPlusArgs {
     fnAfterEachCall?:Fn,
 }
 
-class EventScope implements ScopeForEvent {
-    #scope:Scope;
-
-    public variables:ScopeForEvent['variables'];
-
-    public depth:number;
-    public callDepth:number;
-
-    constructor(interpreter:SvalPlus) {
-        this.#scope = interpreter.reusables.scope!;
-
-        const userRootDepth = this.#scope.userRoot.depth;
-        const rootDepthErrMsg = ansis.red(`Internal logic error: Cannot allocate a scope for an event if null is given as the user's root depth`)
-
-        if (userRootDepth === null) {
-            throw new Error(rootDepthErrMsg)
-        };
-
-        this.depth = this.#scope.depth - userRootDepth;
-        this.callDepth = interpreter.userRoot.callStack.length - 1;
-
-        const local:ScopeForEvent['variables']['local'] = Object.create(null)
-        for (const k in this.#scope.local) {
-            local[k] = this.#scope.local[k].get()
-        };
-        
-        this.variables = {
-            // Create a fresh closure so that it can be destructured as seen in the examples
-            search:(name:string):unknown | undefined => {
-                const variable = this.#scope.find(name);
-                return (variable === null)?undefined:variable.get();
-            },
-            local
-        }
-    }
-} 
-export class Visit implements VisitContract {
-    #interpreter:SvalPlus
-
-    constructor(interpreter:SvalPlus) {
-        this.#interpreter = interpreter;
-    }
-    public localExeStack = ()=>{
-        return this.#interpreter.reusables.execution.readonlyExeStack;
-    }
-    public callStack = ()=>{
-        return this.#interpreter.userRoot.readonlyCallStack;
-    }
-    // The method should only create an event object for a node if it matches the query
-    public is:VisitContract['is'] = (query,cb)=>{
-        const node = this.#interpreter.reusables.node!;
-
-        if ((query === "Any") || (node.type === query)) {
-            const event:EventMap[typeof query] = createEvent(query,this.#interpreter)
-            cb(event);
-            this.#interpreter.reusables.event = event;
-        }
-    };
-
-    public execute = () =>{
-        const handler = this.#interpreter.reusables.handler;
-
-        if (handler === null) {
-            throw new Error(ansis.red(`Cannot use visit.execute because it received null as the handler`))
-        };
-        if (executedManually(this.#interpreter.reusables.result)) {
-            throw new VisitExecutionError(ansis.red(`A node can only be executed once`))
-        };
-
-        // The node cannot be null if the handler is not null. If it is, it will rightfully fail with a loud type error
-        this.#interpreter.reusables.result = handler(
-            this.#interpreter.reusables.node!,
-            this.#interpreter.reusables.scope!
-        );
-
-        if (inLazyMode(this.#interpreter)) {
-            return LAZY_NODE;
-        }else {
-            pushResult(this.#interpreter,this.#interpreter.reusables.result);
-            return this.#interpreter.reusables.result;
-        }
-    };
-    set perExecution(fn:PerExeFn) {
-        const reusables = this.#interpreter.reusables
-        const perExe = reusables.execution.perExe;
-
-        perExe.fn = fn;
-        perExe.owner = reusables.node!;
-    }
-} 
 export class SvalPlus extends Sval implements SvalPlusContract {
     /**
      * Shared, pre-computed identifier labels for the generated wrapper code and
@@ -433,13 +330,31 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         },
     }
 
-    /**A map of the overwritten variable identifiers for a particular monitored or embedded function to their new identifiers.*/
-    private overwrittenVars:Map<Fn,Record<string,string>> = new Map();
+    // Using the overwrite property will add overhead
 
+    private getFnString(metadata:Metadata<Fn>,capturesLabel: GeneratedKey):string {
+        const { ref:fn, overwrite } = metadata;
+        if (!overwrite) return fn.toString();
+
+        // A map of the identifiers of overwritten variables to their new identifiers.
+        const renamedVars = Object.create(null);
+        for (const k in overwrite) {
+            renamedVars[k] = `overwritten_${k}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
+        }
+
+        const originalAst = meriyahParse(
+            fn.toString(),
+            SvalPlus.options.meriyah
+        );
+        const newAst = applyOverwrites(originalAst as EsNode,renamedVars);// by overwriting the identifiers to the new ones, we ensure that the variables injected into the interpreter's context takes precedence over internal ones.
+        const finalString = generate(newAst).replace(/;\s*$/, '');  // Strip trailing semicolon added by the code generator to prevent syntax error when used in conjuction with .apply later in the code generator
+        return finalString
+    }
     private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
         const { ref: fn, captures, overwrite, bind } = metadata;
-        const fnString = fn.toString();
-
+        
+        const fnString = this.getFnString(metadata,capturesLabel);
+        
         const helper = this.codeGenHelper;
         helper.checkFnSyntax(fn,fnString);
 
@@ -458,7 +373,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         $exports[capturesLabel] = {
             ...captures,
             /**
-             * Overwritten variables utilize the same infrastructure as captures to make the code more maintainable.
+             * Overwritten variables utilize the same infrastructure as captures to inject the new values. This will make the code more maintainable.
              * 'overwrite' is spread after 'captures' to ensure that it is prioritized over captured variables.
             */
             ...overwrite 
@@ -466,12 +381,6 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         $exports[bindKey] = bind;
         $exports[fnRefKey] = fn;
-
-        const oldToNewIdentifiers = Object.create(null);
-        for (const k in overwrite) {
-            oldToNewIdentifiers[k] = `overwritten_${k}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
-        }
-        this.overwrittenVars.set(fn,oldToNewIdentifiers)
         
         const intermediateFnName: string = `intermediateFn_${capturesLabel}`;
         const finalFnName = (fn.name === "") ? `anonymousFn_${capturesLabel}` : fn.name;
