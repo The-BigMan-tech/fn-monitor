@@ -16,6 +16,21 @@ describe('overwrite feature', () => {
             expect(fn()).toBe(30);
         });
 
+        it('should overwrite a function definition', () => {
+            const fn = monitor({
+                main: {
+                    ref: () => {
+                        function num() {
+                            return 10
+                        }
+                        return num()
+                    },
+                    overwrite: { num:()=>30 }
+                }
+            });
+            expect(fn()).toBe(30);
+        });
+
         it('should overwrite a const declaration', () => {
             const fn = monitor({
                 main: {
