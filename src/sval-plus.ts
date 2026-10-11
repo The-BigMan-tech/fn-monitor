@@ -43,9 +43,9 @@ export interface Metadata<T extends Fn> {
      * Forces a specific identifier to always resolve to the provided value within the monitored function.
      * 
      * It overrides internal variable declarations, function parameters, assignments, and updates,
-     * effectively locking the variable to the provided value.
+     * effectively locking the variable to the provided value. 
      * 
-     * It is prioritized over captured variables targeting the same identifiers.
+     * Note: Using this property will add overhead to the setup time of the monitored function due to AST parsing.
     */
     overwrite?: Record<string, any>,
 
@@ -330,25 +330,24 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         },
     }
 
-    // Using the overwrite property will add overhead
 
     private getFnString(metadata:Metadata<Fn>,capturesLabel: GeneratedKey):string {
         const { ref:fn, overwrite } = metadata;
-        if (!overwrite) return fn.toString();
+        const fnString = fn.toString();
+
+        if (!overwrite) return fnString;
 
         // A map of the identifiers of overwritten variables to their new identifiers.
         const renamedVars = Object.create(null);
-        for (const k in overwrite) {
-            renamedVars[k] = `overwritten_${k}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
+        for (const identifier in overwrite) {
+            renamedVars[identifier] = `dead_var_${identifier}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
         }
 
-        const originalAst = meriyahParse(
-            fn.toString(),
-            SvalPlus.options.meriyah
-        );
+        const originalAst = meriyahParse(fnString,SvalPlus.options.meriyah);
         const newAst = applyOverwrites(originalAst as EsNode,renamedVars);// by overwriting the identifiers to new ones representing dead variables, we ensure that the function forcefully looks up the variables injected into the interpreter's context.
+        
         const finalString = generate(newAst).replace(/;\s*$/, '');  // Strip trailing semicolon added by the code generator to prevent syntax error when used in conjuction with .apply later in the code generator
-        return finalString
+        return finalString;
     }
     private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
         const { ref: fn, captures, overwrite, bind } = metadata;

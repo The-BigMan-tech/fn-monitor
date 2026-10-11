@@ -122,6 +122,22 @@ const outer = monitor({
 console.log(outer());
 
 
+console.log('\nOverwriting interal variables'.toUpperCase());
+
+const overwriteTest = monitor({
+    main:{
+        ref:()=>{
+            const randomNumber = Math.random();
+            return randomNumber
+        },
+        overwrite:{
+            randomNumber:10
+        }
+    }
+})
+console.log('Overwritten random number: ',overwriteTest());
+
+
 console.log('\nSeeing the result of every awaited promise in a function call'.toUpperCase());
 
 const fetchPrice = monitor({

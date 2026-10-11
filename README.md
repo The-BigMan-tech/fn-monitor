@@ -440,7 +440,35 @@ console.log(outer());
 Hello World
 ```
 
-> 💡 Because of how the interpreter injects external values, a monitored function will always prioritize a passed argument over a captured variable, and a captured variable over an embedded function.
+### Overwriting Internal Variables
+
+If you need to force an internal variable, parameter, or assignment to always resolve to a specific value, you can use the `overwrite` property. 
+
+It functions similarly to `captures` and inherits its injection mechanics. However, unlike `captures` (which can be shadowed by internal declarations), `overwrite` bypasses standard scoping rules at setup time. It effectively locks the variable to your provided value, making it perfect for mocking internal state, disabling randomness, or enforcing specific execution paths during testing.
+
+```typescript
+const overwriteTest = monitor({
+    main: {
+        ref: () => {
+            const randomNumber = Math.random();
+            return randomNumber;
+        },
+        overwrite: {
+            randomNumber: 10
+        }
+    }
+});
+
+console.log('Overwritten random number: ', overwriteTest());
+```
+
+#### Output
+
+```text
+Overwritten random number:  10
+```
+
+> 💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: Overwritten values (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).
 
 ### Seeing the result of every awaited promise in a function call
 
@@ -686,6 +714,7 @@ The main export. Accepts a configuration object containing the target function a
 | --- | --- | --- |
 | `ref` | `T` | **Required.** The reference to the function to be included in the interpreter context. |
 | `captures` | `Record<string, any>` | Maps variable names to their values stored outside the wrapped function's scope. Follows standard JS copy-by-value (primitives) and copy-by-reference (objects) semantics. |
+| `overwrite` |  `Record<string, any>` | Forces a specific identifier to always resolve to the provided value, overriding internal declarations, parameters, and assignments at setup time. |
 | `bind` | `unknown` | The `this` context to bind to the generated function. Required when monitoring instance methods to preserve the `this` reference safely. |
 
 ---
