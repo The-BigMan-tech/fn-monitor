@@ -1,4 +1,30 @@
 
+## v1.9.1...v1.10.0
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.9.1...v1.10.0)
+
+### 🚀 Features
+
+- Laying the foundation for a new config prop ([7fc02d6](https://github.com/The-BigMan-tech/fn-monitor/commit/7fc02d6))
+- Finish implementing the overwrite feature ([4246202](https://github.com/The-BigMan-tech/fn-monitor/commit/4246202))
+- Bump to v1.10.0 ([2e7d849](https://github.com/The-BigMan-tech/fn-monitor/commit/2e7d849))
+
+### 🩹 Fixes
+
+- Fix the problems in the overwriter ([62e667e](https://github.com/The-BigMan-tech/fn-monitor/commit/62e667e))
+
+### 📖 Documentation
+
+- Update changelog for v1.9.1 ([502258a](https://github.com/The-BigMan-tech/fn-monitor/commit/502258a))
+- **readme:** Update the unpacked size badge ([ccb5b73](https://github.com/The-BigMan-tech/fn-monitor/commit/ccb5b73))
+- **readme:** Document the precedence order the interpreter uses to search for variables ([e056169](https://github.com/The-BigMan-tech/fn-monitor/commit/e056169))
+- **readme:** Shorten the precedence block ([81dc398](https://github.com/The-BigMan-tech/fn-monitor/commit/81dc398))
+- **readme:** Document the overwrite property ([7221c1c](https://github.com/The-BigMan-tech/fn-monitor/commit/7221c1c))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.9.0...v1.9.1
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.9.0...v1.9.1)
