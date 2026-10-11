@@ -66,9 +66,9 @@ export class Visit implements VisitContract {
         const node = this.#interpreter.reusables.node!;
 
         if ((query === "Any") || (node.type === query)) {
-            const event:EventMap[typeof query] = createEvent(query,this.#interpreter)
-            cb(event);
+            const event:EventMap[typeof query] = createEvent(query,this.#interpreter);
             this.#interpreter.reusables.event = event;
+            cb(event);
         }
     };
 

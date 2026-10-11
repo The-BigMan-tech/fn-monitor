@@ -5,7 +5,7 @@ import { generate } from 'astring';
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache';
 import { QList, ReadonlyQList } from './q-list.ts'
-import { applyOverwrites } from "./overwriter-helper.ts";
+import { applyOverwrites } from "./overwrite-helper.ts";
 import { getSHA256Key } from './lifecycle.ts';
 
 import { 
@@ -346,7 +346,7 @@ export class SvalPlus extends Sval implements SvalPlusContract {
             fn.toString(),
             SvalPlus.options.meriyah
         );
-        const newAst = applyOverwrites(originalAst as EsNode,renamedVars);// by overwriting the identifiers to the new ones, we ensure that the variables injected into the interpreter's context takes precedence over internal ones.
+        const newAst = applyOverwrites(originalAst as EsNode,renamedVars);// by overwriting the identifiers to new ones representing dead variables, we ensure that the function forcefully looks up the variables injected into the interpreter's context.
         const finalString = generate(newAst).replace(/;\s*$/, '');  // Strip trailing semicolon added by the code generator to prevent syntax error when used in conjuction with .apply later in the code generator
         return finalString
     }

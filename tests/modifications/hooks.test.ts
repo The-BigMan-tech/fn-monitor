@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { monitor } from '../../src/index'; 
-import { Visit } from '../../src/sval-plus';
+import { Visit } from '../../src/internal-classes';
 
 describe('Hook Behaviour',()=>{
 
