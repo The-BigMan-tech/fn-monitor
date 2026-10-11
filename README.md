@@ -337,7 +337,7 @@ In this example, `main` captures `printName` (runs natively, not intercepted), w
 
 In the `inspector`, we add the function currently at the top of the call stack to a `Set`. The call stack shares the same API as `visit.localExeStack`, but instead of tracking AST evaluations, it tracks the hierarchy of function calls. The most recently called function is always at the top (index 0).
 
-The output shows that only `sayHello` and `print` appear in the intercepted set because the `inspector` won't be able to see the captured function:
+The output shows that only `sayHello` and `print` appear in the intercepted set because the `inspector` cannot see the captured function:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
@@ -379,7 +379,6 @@ const mainFn = monitor({
 
 mainFn('person');
 console.log('Intercepted functions: ',interceptedFns);
-
 ```
 
 #### Output
@@ -395,7 +394,9 @@ Intercepted functions:  Set(2) {
 
 > 💡 **Built-in Globals:** Monitored functions automatically have access to all standard JavaScript built-in globals. You **do not** need to capture these — they're injected by the interpreter and available immediately.
 > 
-> They include `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase — variables or helper functions.
+> They include `Math`, `JSON`, `Promise`, `Array`, `Object`, `Date`, `RegExp`, `Map`, `Set`, `console`, etc. You only need to capture values from your own codebase.
+>
+> However, you can explicitly use `captures` to safely mock global objects (like `Date.now` or `Math.random`) for that specific function's execution, without affecting the rest of your application.
 
 ### Scoping: Capturing vs Embedding
 
@@ -444,7 +445,7 @@ Hello World
 
 If you need to force an internal variable, parameter, or assignment to always resolve to a specific value, you can use the `overwrite` property. 
 
-It functions similarly to `captures` and inherits its injection mechanics. However, unlike `captures` (which can be shadowed by internal declarations), `overwrite` bypasses standard scoping rules at setup time. It effectively locks the variable to your provided value, making it perfect for mocking internal state, disabling randomness, or enforcing specific execution paths during testing.
+It leverages the same injection mechanics as `captures`. However, unlike `captures` (which can be shadowed by internal declarations), `overwrite` bypasses standard scoping rules. It effectively locks the variable to your provided value, making it perfect for mocking internal state, disabling randomness, or enforcing specific execution paths during testing.
 
 ```typescript
 const overwriteTest = monitor({
@@ -468,7 +469,7 @@ console.log('Overwritten random number: ', overwriteTest());
 Overwritten random number:  10
 ```
 
-> 💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: Overwritten values (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).
+> 💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: **Overwritten values** (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).
 
 ### Seeing the result of every awaited promise in a function call
 
