@@ -46,10 +46,22 @@ export interface Metadata<T extends Fn> {
     ref:T,
 
     /** 
-     *Because the function runs in an isolated interpreter context, all variables that it needs from the outside scope has to captured by mapping their names to their values and passing the object here.
-     *It is important to keep in mind that the captures object itself follows the semantic of copy primitives by value and copy obects by reference.
+     *Because the function runs in an isolated interpreter context, all variables that it needs from the outside scope have to be captured by mapping their names to their values and passing the object here.
+     *
+     *It is important to keep in mind that the captures object itself follows the semantics of copying primitives by value and copying objects by reference.
     */
     captures?:Record<string,any>,
+
+    /**
+     * Forces a specific identifier to always resolve to the provided value within the monitored function.
+     * 
+     * It overrides internal variable declarations, function parameters, assignments, and updates,
+     * effectively locking the variable to the provided value.
+     * 
+     * It is prioritized over captured variables targeting the same identifiers.
+    */
+    overwrite?: Record<string, any>,
+
     /**
      * The `this` context to bind to the function.
      * This is required when monitoring instance methods to preserve the `this` reference.
@@ -421,9 +433,11 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         },
     }
 
+    /**A map of the overwritten variable identifiers for a particular monitored or embedded function to their new identifiers.*/
+    private overwrittenVars:Map<Fn,Record<string,string>> = new Map();
 
     private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
-        const { ref: fn, captures, bind } = metadata;
+        const { ref: fn, captures, overwrite, bind } = metadata;
         const fnString = fn.toString();
 
         const helper = this.codeGenHelper;
@@ -441,9 +455,23 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         $exports[labels.fnMap] = this.userRoot.simulatedFnsToOriginal;
         $exports[labels.callStack] = this.userRoot.callStack;
-        $exports[capturesLabel] = captures || Object.create(null);
+        $exports[capturesLabel] = {
+            ...captures,
+            /**
+             * Overwritten variables utilize the same infrastructure as captures to make the code more maintainable.
+             * 'overwrite' is spread after 'captures' to ensure that it is prioritized over captured variables.
+            */
+            ...overwrite 
+        }
+
         $exports[bindKey] = bind;
         $exports[fnRefKey] = fn;
+
+        const oldToNewIdentifiers = Object.create(null);
+        for (const k in overwrite) {
+            oldToNewIdentifiers[k] = `overwritten_${k}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
+        }
+        this.overwrittenVars.set(fn,oldToNewIdentifiers)
         
         const intermediateFnName: string = `intermediateFn_${capturesLabel}`;
         const finalFnName = (fn.name === "") ? `anonymousFn_${capturesLabel}` : fn.name;
