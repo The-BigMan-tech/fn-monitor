@@ -440,6 +440,13 @@ console.log(outer());
 Hello World
 ```
 
+> ⚠️ **Variable Resolution Precedence:** When a monitored function references a variable, the interpreter resolves it in a specific order. If you have a naming conflict, the higher-precedence source wins:
+> 
+> 1. **Internal Variables** (highest) — Variables declared inside the function (`let`, `const`, `var`).
+> 2. **Passed Arguments** — Parameters passed to the monitored function.
+> 3. **Captures** — Values injected via the `captures` property.
+> 4. **Embedded Functions** (lowest) — Functions injected via the `embed` property.
+
 ### Seeing the result of every awaited promise in a function call
 
 This example is unique because it uses a generator as the inspector rather than a regular function.
