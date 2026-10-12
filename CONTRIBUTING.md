@@ -95,7 +95,7 @@ upstream source as possible, with only minor refactors where necessary.
 
 - **`interpreter` tests**: 200+ tests derived from `sval`. These validate core 
   language semantics.
-- **`modifications` tests**: 60+ tests written specifically for the custom 
+- **`modifications` tests**: 85+ tests written specifically for the custom 
   modifications.
 
 ### Test Prefixes

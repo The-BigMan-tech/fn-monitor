@@ -331,5 +331,21 @@ describe('overwrite feature', () => {
             expect(fn()).toBe(50);
             expect(causedSideEffect.value).toBe(false);
         })
+
+        it('should provide the overwritten value within the interpreter context even if the monitored function does not declare it within its context',()=>{
+            let x;// this doesnt do anything other than to please the linter.
+
+            const fn = monitor({
+                main:{
+                    ref:()=>{
+                        return x;
+                    },
+                    overwrite:{
+                        x:10
+                    }
+                }
+            })
+            expect(fn()).toBe(10)
+        })
     });
 });
