@@ -306,5 +306,30 @@ describe('overwrite feature', () => {
             });
             expect(fn()).toBe(30);
         });
+
+        it('should ensure that an overwritten variable does not compute its original value despite looking overwritten to an observer',()=>{
+            let causedSideEffect = {value:false};
+
+            const fn = monitor({
+                main:{
+                    ref:()=>{
+                        const computeValue = ()=>{
+                            causedSideEffect.value = true;
+                            return 10
+                        }
+                        const value = computeValue();
+                        return value;
+                    },
+                    captures:{
+                        causedSideEffect
+                    },
+                    overwrite:{
+                        value:50
+                    }
+                }
+            })
+            expect(fn()).toBe(50);
+            expect(causedSideEffect.value).toBe(false);
+        })
     });
 });

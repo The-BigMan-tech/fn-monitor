@@ -5,7 +5,7 @@ import { generate } from 'astring';
 import ansis from "ansis";
 import { LRUCache } from 'lru-cache';
 import { QList, ReadonlyQList } from './q-list.ts'
-import { renameVariables } from "./overwrite-helper.ts";
+import { purgeVariables, renameVariables } from "./overwrite-helper.ts";
 import { getSHA256Key } from './lifecycle.ts';
 
 import { 
@@ -335,17 +335,25 @@ export class SvalPlus extends Sval implements SvalPlusContract {
         const { ref:fn, overwrite } = metadata;
         const fnString = fn.toString();
 
-        if (!overwrite) return fnString;
+        if (!overwrite) {
+            return fnString;
+        }
 
         // A map of the identifiers of overwritten variables to their new identifiers.
-        const renamedVars = Object.create(null);
+        const renames = Object.create(null);
+        const deadVarIdentifiers = new Set<string>();
+
         for (const identifier in overwrite) {
-            renamedVars[identifier] = `dead_var_${identifier}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
+            const deadVarIdentifier = `dead_variable_${identifier}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
+            renames[identifier] = deadVarIdentifier;
+            deadVarIdentifiers.add(deadVarIdentifier)
         }
 
         const originalAst = meriyahParse(fnString,SvalPlus.options.meriyah);
-        const newAst = renameVariables(originalAst as EsNode,renamedVars);// by overwriting the identifiers to new ones representing dead variables, we ensure that the function forcefully looks up the variables injected into the interpreter's context.
-        
+        const newAst = purgeVariables(
+            renameVariables(originalAst as EsNode,renames),// by overwriting the identifiers to new ones representing dead variables, we ensure that the function forcefully looks up the variables injected into the interpreter's context.
+            deadVarIdentifiers
+        )
         const finalString = generate(newAst).replace(/;\s*$/, '');  // Strip trailing semicolon added by the code generator to prevent syntax error when used in conjuction with .apply later in the code generator
         return finalString;
     }

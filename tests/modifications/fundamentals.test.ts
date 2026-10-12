@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { InspectorGenerator, LangEvent,monitor } from '../../src/index'; 
-import { Visit } from '../../src/sval-plus';
 
 describe('Fundamental Runtime Behaviour',()=>{
     
