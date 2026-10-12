@@ -1,4 +1,29 @@
 
+## v1.10.0...v1.10.1
+
+[compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.10.0...v1.10.1)
+
+### 🩹 Fixes
+
+- **overwrite:** Add AST pruning stage to eliminate dead variable side effects ([a16b3c7](https://github.com/The-BigMan-tech/fn-monitor/commit/a16b3c7))
+- Bump to v1.10.1 ([2fc12d4](https://github.com/The-BigMan-tech/fn-monitor/commit/2fc12d4))
+
+### ♻️ Refactor
+
+- Clean up the overwrite helper ([2cec081](https://github.com/The-BigMan-tech/fn-monitor/commit/2cec081))
+
+### 📖 Documentation
+
+- **changelog:** Update changelog for v1.10.0 ([682303d](https://github.com/The-BigMan-tech/fn-monitor/commit/682303d))
+- **readme:** Update a badge ([c528ebc](https://github.com/The-BigMan-tech/fn-monitor/commit/c528ebc))
+- **readme:** Improve the doc ([9071b7c](https://github.com/The-BigMan-tech/fn-monitor/commit/9071b7c))
+- **article:** Rename the folders for the articles ([3001816](https://github.com/The-BigMan-tech/fn-monitor/commit/3001816))
+- Properly document the overwrite mechanics ([0628181](https://github.com/The-BigMan-tech/fn-monitor/commit/0628181))
+
+### ❤️ Contributors
+
+- The-BigMan-tech
+
 ## v1.9.1...v1.10.0
 
 [compare changes](https://github.com/The-BigMan-tech/fn-monitor/compare/v1.9.1...v1.10.0)
