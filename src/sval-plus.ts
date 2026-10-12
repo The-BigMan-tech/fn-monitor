@@ -331,32 +331,48 @@ export class SvalPlus extends Sval implements SvalPlusContract {
     }
 
 
-    private getFnString(metadata:Metadata<Fn>,capturesLabel: GeneratedKey):string {
-        const { ref:fn, overwrite } = metadata;
+    /**
+     * Generates the final string representation of a function in an monitored context, applying `overwrite` mechanics if specified.
+     * 
+     * Instead of complex value substitution, the overwrite mechanics remain deterministic through a safe, 3-stage setup process:
+     * 
+     * 1. Inject: Values are injected into the interpreter context via the `captures` infrastructure (with higher precedence).
+     * 2. Rename: Internal declarations, parameters, and assignments targeting the overwritten identifiers are renamed to unique "dead" variables.
+     * 3. Purge: The AST is traversed to surgically remove statements that only interact with these dead variables, eliminating runtime side effects.
+     * 
+     * @param metadata - The configuration metadata for the function.
+     * @param capturesLabel - A unique identifier used to namespace the dead variables and prevent scope collisions.
+     * @returns The transformed function source code, ready for interpreter execution.
+    */
+    private getFnString(metadata: Metadata<Fn>, capturesLabel: GeneratedKey): string {
+        const { ref: fn, overwrite } = metadata;
         const fnString = fn.toString();
 
+        // Early return to avoid AST parsing overhead if no overwrites are specified.
         if (!overwrite) {
             return fnString;
         }
 
-        // A map of the identifiers of overwritten variables to their new identifiers.
+        // Stage 1 & 2 Setup: Map original identifiers to unique, collision-proof "dead" variable names.
         const renames = Object.create(null);
         const deadVarIdentifiers = new Set<string>();
 
         for (const identifier in overwrite) {
-            const deadVarIdentifier = `dead_variable_${identifier}_${capturesLabel}`// appending capturesLabel which is a unique key ensures that the new identifier cannot conflict with the user's own
+            const deadVarIdentifier = `dead_variable_${identifier}_${capturesLabel}`;
             renames[identifier] = deadVarIdentifier;
-            deadVarIdentifiers.add(deadVarIdentifier)
+            deadVarIdentifiers.add(deadVarIdentifier);
         }
 
-        const originalAst = meriyahParse(fnString,SvalPlus.options.meriyah);
-        const newAst = purgeVariables(
-            renameVariables(originalAst as EsNode,renames),// by overwriting the identifiers to new ones representing dead variables, we ensure that the function forcefully looks up the variables injected into the interpreter's context.
-            deadVarIdentifiers
-        )
-        const finalString = generate(newAst).replace(/;\s*$/, '');  // Strip trailing semicolon added by the code generator to prevent syntax error when used in conjuction with .apply later in the code generator
-        return finalString;
+        // Stage 2 & 3 Execution: Parse, rename bindings, and purge dead statements.
+        const originalAst = meriyahParse(fnString, SvalPlus.options.meriyah);
+        const renamedAst = renameVariables(originalAst as EsNode, renames);
+        const purgedAst = purgeVariables(renamedAst, deadVarIdentifiers);
+
+        // Stage 4: Generate final code. Strip trailing semicolon to prevent syntax errors 
+        // when the generated string is embedded inside an `.apply()` wrapper later.
+        return generate(purgedAst).replace(/;\s*$/, '');
     }
+
     private getFnSource<T extends boolean>(metadata: Metadata<Fn>, capturesLabel: GeneratedKey, isMainFn: T): FnSrc<T> {
         const { ref: fn, captures, overwrite, bind } = metadata;
         
@@ -377,17 +393,14 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
         $exports[labels.fnMap] = this.userRoot.simulatedFnsToOriginal;
         $exports[labels.callStack] = this.userRoot.callStack;
-        $exports[capturesLabel] = {
-            ...captures,
-            /**
-             * Overwritten variables utilize the same infrastructure as captures to inject the new values. This will make the code more maintainable.
-             * 'overwrite' is spread after 'captures' to ensure that it is prioritized over captured variables.
-            */
-            ...overwrite 
-        }
 
         $exports[bindKey] = bind;
         $exports[fnRefKey] = fn;
+
+        $exports[capturesLabel] = {
+            ...captures,
+            ...overwrite 
+        }
         
         const intermediateFnName: string = `intermediateFn_${capturesLabel}`;
         const finalFnName = (fn.name === "") ? `anonymousFn_${capturesLabel}` : fn.name;
