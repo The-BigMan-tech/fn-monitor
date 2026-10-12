@@ -1,55 +1,60 @@
 import { walk } from 'zimmerframe';
-import type * as estree from 'estree';
+import { EsNode } from './custom-types.ts';
 
 /**
  * Recursively renames identifiers within a binding pattern.
  * Mutates properties when mapped to avoid breaking AST traversal paths.
  */
-function renamePattern(node: estree.Node, map: Record<string, string>): estree.Node {
-    if (node.type === 'Identifier') {
-        if (map[node.name]) {
-            node.name = map[node.name];
-        }
-        return node;
-    }
-    if (node.type === 'AssignmentPattern') {
-        renamePattern(node.left, map);
-        return node;
-    }
-    if (node.type === 'ArrayPattern') {
-        node.elements.forEach(el => {
-            if (el) renamePattern(el, map);
-        });
-        return node;
-    }
-    if (node.type === 'ObjectPattern') {
-        node.properties.forEach(prop => {
-            if (prop.type === 'RestElement') {
-                renamePattern(prop.argument, map);
-            } else {
+function changeName(node: EsNode, map: Record<string, string>): EsNode {
+    switch (node.type) {
+        case "Identifier":
+            if (map[node.name]) {
+                node.name = map[node.name];
+            }
+            return node;
+        
+        case "AssignmentPattern":
+            changeName(node.left, map);
+            return node;
+        
+        case "ArrayPattern":
+            node.elements.forEach(element => {
+                if (element) {
+                    changeName(element, map);
+                }
+            });
+            return node;
+        
+        case "RestElement":
+            changeName(node.argument, map);
+            return node;
+
+        case "ObjectPattern": 
+            node.properties.forEach(prop => {
+                if (prop.type === 'RestElement') {
+                    changeName(prop.argument, map);
+                    return;
+                }
                 // If it's shorthand like { foo }, renaming the value breaks it unless we decouple it
                 if (prop.shorthand && prop.key.type === 'Identifier' && map[prop.key.name]) {
                     prop.shorthand = false; // Turn off shorthand so key stays original, value updates
                 }
-                renamePattern(prop.value, map);
-            }
-        });
-        return node;
+                changeName(prop.value, map);
+            });
+            return node;
+        
+        default: 
+            return node;
     }
-    if (node.type === 'RestElement') {
-        renamePattern(node.argument, map);
-        return node;
-    }
-    return node;
 }
 
-export function applyOverwrites(ast: estree.Node, renameMap: Record<string, string>): estree.Node {
+export function renameVariables(ast: EsNode, renameMap: Record<string, string>): EsNode {
     if (!renameMap || Object.keys(renameMap).length === 0) return ast;
 
     // We can walk the AST and apply target modifications directly
     walk(ast, null, {
         VariableDeclarator(node, { next }) {
-            renamePattern(node.id, renameMap);
+            changeName(node.id, renameMap);
             next(); // Keep walking child nodes (like the initializers!)
         },
 
@@ -57,7 +62,7 @@ export function applyOverwrites(ast: estree.Node, renameMap: Record<string, stri
             if (node.id && renameMap[node.id.name]) {
                 node.id.name = renameMap[node.id.name];
             }
-            node.params.forEach(p => renamePattern(p, renameMap));
+            node.params.forEach(param => changeName(param, renameMap));
             next();
         },
 
@@ -65,12 +70,12 @@ export function applyOverwrites(ast: estree.Node, renameMap: Record<string, stri
             if (node.id && renameMap[node.id.name]) {
                 node.id.name = renameMap[node.id.name];
             }
-            node.params.forEach(p => renamePattern(p, renameMap));
+            node.params.forEach(param => changeName(param, renameMap));
             next();
         },
 
         ArrowFunctionExpression(node, { next }) {
-            node.params.forEach(p => renamePattern(p, renameMap));
+            node.params.forEach(param => changeName(param, renameMap));
             next();
         },
 
@@ -90,7 +95,7 @@ export function applyOverwrites(ast: estree.Node, renameMap: Record<string, stri
 
         CatchClause(node, { next }) {
             if (node.param) {
-                renamePattern(node.param, renameMap);
+                changeName(node.param, renameMap);
             }
             next();
         },
@@ -101,7 +106,7 @@ export function applyOverwrites(ast: estree.Node, renameMap: Record<string, stri
                     node.left.name = renameMap[node.left.name];
                 }
             } else {
-                renamePattern(node.left, renameMap);
+                changeName(node.left, renameMap);
             }
             next();
         },
@@ -118,8 +123,8 @@ export function applyOverwrites(ast: estree.Node, renameMap: Record<string, stri
                 if (renameMap[node.left.name]) {
                     node.left.name = renameMap[node.left.name];
                 }
-            } else if (node.left.type === 'VariableDeclaration') {
-                node.left.declarations.forEach(d => renamePattern(d.id, renameMap));
+            }else if (node.left.type === 'VariableDeclaration') {
+                node.left.declarations.forEach(d => changeName(d.id, renameMap));
             }
             next();
         },
@@ -129,8 +134,8 @@ export function applyOverwrites(ast: estree.Node, renameMap: Record<string, stri
                 if (renameMap[node.left.name]) {
                     node.left.name = renameMap[node.left.name];
                 }
-            } else if (node.left.type === 'VariableDeclaration') {
-                node.left.declarations.forEach(d => renamePattern(d.id, renameMap));
+            }else if (node.left.type === 'VariableDeclaration') {
+                node.left.declarations.forEach(d => changeName(d.id, renameMap));
             }
             next();
         }
