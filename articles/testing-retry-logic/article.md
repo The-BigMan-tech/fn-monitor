@@ -1,6 +1,6 @@
 ---
 title: A New Way to Test Retry Logic Without Refactoring Your JavaScript Code
-description: Use AST node interception to inspect and mutate JavaScript functions without touching their source code
+description: Use AST node interception to inspect and mutate JavaScript functions without touching their source code.
 tags: javascript, typescript, testing, webdev
 ---
 
@@ -8,11 +8,11 @@ If you build robust JavaScript/TypeScript applications, you know that testing fu
 
 But what if you don't want to pollute your clean production API just to satisfy a test?
 
-This is exactly where the **`@typescript-guy/fn-monitor`** package shines. It's a lightweight tool that lets you monitor, intercept, and control the execution of any function at the AST level, without needing to change the code that runs in production. It achieves this by running your functions through a lightweight JS-in-JS interpreter.
+This is exactly where the **`@typescript-guy/fn-monitor`** package shines. It's a lightweight tool that lets you monitor, intercept, and control the execution of any function at the AST level, without needing to change the code that runs in production. It achieves this by running your functions through a JS-in-JS interpreter.
 
-Today, I want to highlight one of its most powerful capabilities: the **`overwrite`** property. It uses AST mutation to force variables to always resolve to your specified values.
+Today, I want to highlight one of its most powerful capabilities: the **`overwrite`** property. It uses AST mutation to force specific variables to always resolve to your specified values, bypassing internal logic.
 
-Here is a snippet of our production code:
+Consider this snippet of typical production code:
 
 ```typescript
 // 🏭 Fake API
@@ -47,12 +47,12 @@ async function fetchWithRetry(url: string) {
 }
 ```
 
-Using the fn-monitor package to make a copy of our function that fails fast:
+Now, let's use `fn-monitor` to create a test version of this function that fails instantly:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
 
-//...Our production code
+// ... `api` and `fetchWithRetry` definitions
 
 // 🧪 Test: Force instant failure (No refactoring needed!)
 const failFastFetch = monitor({
@@ -82,15 +82,15 @@ Attempt 2 failed. No retries left.
 Caught error: Network Failure
 ```
 
-### Why this approach helps your production code
+### Why this approach protects your production code
 
-- Zero Refactoring
-- No fake timers
-- Virtually any variable the function uses can be substituted with a mock
+- **Zero Refactoring:** Mock internal state without changing function signatures or adding boilerplate.
+- **No Fake Timers:** Bypasses the delay in `setTimeout` entirely, eliminating the need for complex fake timer setups in your test runner.
+- **Universal Mocking:** Virtually any variable the function uses can be seamlessly substituted with a mock value.
 
 If this approach sounds useful for your testing workflow, check out:
 
-- 📦 **The repository and documentation:** [https://github.com/The-BigMan-tech/fn-monitor](https://github.com/The-BigMan-tech/fn-monitor)
-- 📝 **My articles for in-depth tutorials:** [https://dev.to/typescript-guy](https://dev.to/typescript-guy)
+- 📦 **The repository and documentation:** https://github.com/The-BigMan-tech/fn-monitor
+- 📝 **My articles for in-depth tutorials:** https://dev.to/typescript-guy
 
 If you have questions or ideas, feel free to open a [discussion on GitHub](https://github.com/The-BigMan-tech/fn-monitor/discussions).
