@@ -124,7 +124,7 @@ console.log(outer());
 
 console.log('\nOverwriting interal variables'.toUpperCase());
 
-const overwriteTest = monitor({
+const overwriteTest = monitor({ 
     main:{
         ref:()=>{
             const randomNumber = Math.random();
