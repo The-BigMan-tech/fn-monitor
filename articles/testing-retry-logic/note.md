@@ -1,0 +1,1 @@
+The article under this folder is intentionally designed as a quick, easy to absorb post and not as an exhaustive walkthrough. This is to prevent burnout since the repository already maintains 3 in-depth articles about the package.
