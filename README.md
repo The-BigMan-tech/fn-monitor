@@ -443,9 +443,7 @@ Hello World
 
 ### Overwriting Internal Variables
 
-If you need to force an internal variable, parameter, or assignment to always resolve to a specific value, you can use the `overwrite` property. 
-
-It leverages the same injection mechanics as `captures`. However, unlike `captures` (which can be shadowed by internal declarations), `overwrite` bypasses standard scoping rules. It effectively locks the variable to your provided value, making it perfect for mocking internal state, disabling randomness, or enforcing specific execution paths during testing.
+If you need to force an internal variable, parameter, or assignment to always resolve to a specific value, you can use the `overwrite` property. It effectively locks the variable to your provided value, making it perfect for mocking internal state, disabling randomness, or enforcing specific execution paths during testing.
 
 ```typescript
 const overwriteTest = monitor({
@@ -463,13 +461,13 @@ const overwriteTest = monitor({
 console.log('Overwritten random number: ', overwriteTest());
 ```
 
-#### Output
+>💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: Overwritten values (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).
 
-```text
-Overwritten random number:  10
-```
-
-> 💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: **Overwritten values** (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).
+>⚠️ **A Note on the Overwrite Mechanics:**
+>
+>To keep the overwrite feature robust, it uses a clever trick rather than performing direct variable substitution. It leverages the same injection mechanics as `captures`, meaning that the overwritten values are always injected into the execution context.
+>
+>The implication is that the monitored function will not throw a `ReferenceError` if it uses a variable that was specified in the `overwrite` configuration but does not actually exist in the function's code. Just be mindful of this mechanic to avoid behavior drift.
 
 ### Seeing the result of every awaited promise in a function call
 
