@@ -332,17 +332,32 @@ export class SvalPlus extends Sval implements SvalPlusContract {
 
 
     /**
-     * Generates the final string representation of a function in an monitored context, applying `overwrite` mechanics if specified.
-     * 
-     * Instead of complex value substitution, the overwrite mechanics remain deterministic through a safe, 3-stage setup process:
-     * 
-     * 1. Inject: Values are injected into the interpreter context via the `captures` infrastructure (with higher precedence).
-     * 2. Rename: Internal declarations, parameters, and assignments targeting the overwritten identifiers are renamed to unique "dead" variables.
-     * 3. Purge: The AST is traversed to surgically remove statements that only interact with these dead variables, eliminating runtime side effects.
-     * 
-     * @param metadata - The configuration metadata for the function.
-     * @param capturesLabel - A unique identifier used to namespace the dead variables and prevent scope collisions.
-     * @returns The transformed function source code, ready for interpreter execution.
+     * Generates the source string of a function for execution in a monitored
+     * context, applying `overwrite` mechanics when specified.
+     *
+     * Rather than performing value substitution, `overwrite` produces the same
+     * observable result through a three-stage setup process:
+     *
+     * 1. Inject — Values are exposed through the `captures` infrastructure, spread
+     *    last so they take precedence. Handled by the caller, not this method.
+     *
+     * 2. Rename — Declarations, parameters, and assignments targeting the
+     *    overwritten identifiers are rewritten to unique "dead" variables. Once
+     *    the original name is no longer bound locally, reads fall back to the
+     *    value injected into the interpreter context.
+     *
+     * 3. Purge — Statements whose sole purpose is to bind, assign, or update a
+     *    dead variable are removed from the AST. Their initializers and
+     *    right-hand sides therefore never execute.
+     *
+     * Loop headers and function parameters are preserved during purge: the loop
+     * variable must still drive iteration, and the parameter list must still
+     * match the call signature. Renamed, they simply absorb values nobody reads.
+     *
+     * @param metadata - The function's configuration metadata.
+     * @param capturesLabel - Unique namespace for dead variables, preventing
+     * collisions with identifiers in user code.
+     * @returns The transformed function source, ready for interpreter execution.
     */
     private getFnString(metadata: Metadata<Fn>, capturesLabel: GeneratedKey): string {
         const { ref: fn, overwrite } = metadata;
