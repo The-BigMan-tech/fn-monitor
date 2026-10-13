@@ -463,11 +463,11 @@ console.log('Overwritten random number: ', overwriteTest());
 
 >💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: Overwritten values (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).
 
->⚠️ **A Note on the Overwrite Mechanics:**
+> ⚠️ **A Note on the Overwrite Mechanics:**
 >
->To keep the overwrite feature robust, it uses a clever trick rather than performing direct variable substitution. It leverages the same injection mechanics as `captures`, meaning that the overwritten values are always injected into the execution context.
+> Rather than performing direct variable substitution, fn-monitor uses a clever trick to robustly implement the overwrite mechanics. A part of this trick leverages the same injection method as `captures`, meaning that the overwritten values are always injected into the execution context.
 >
->The implication is that the monitored function will not throw a `ReferenceError` if it uses a variable that was specified in the `overwrite` configuration but does not actually exist in the function's code. Just be mindful of this mechanic to avoid behavior drift.
+> The implication is that a monitored function will not throw a `ReferenceError` if it uses a variable that was specified in the `overwrite` configuration but does not actually exist in the function's code. Just be mindful of this mechanic to avoid behavior drift.
 
 ### Seeing the result of every awaited promise in a function call
 
