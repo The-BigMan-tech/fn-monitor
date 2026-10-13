@@ -47,7 +47,15 @@ async function fetchWithRetry(url: string) {
 }
 ```
 
-Now, let's use `fn-monitor` to create a test version of this function that fails instantly:
+Now, let's use `fn-monitor` to create a test version of this function that fails instantly. 
+
+First, install the package:
+
+```bash
+npm install @typescript-guy/fn-monitor
+```
+
+Then add the following code to the same file:
 
 ```typescript
 import { monitor } from "@typescript-guy/fn-monitor";
