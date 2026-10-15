@@ -446,19 +446,18 @@ Hello World
 If you need to force an internal variable, parameter, or assignment to always resolve to a specific value, you can use the `overwrite` property. It effectively locks the variable to your provided value, making it perfect for mocking internal state, disabling randomness, or enforcing specific execution paths during testing.
 
 ```typescript
-const overwriteTest = monitor({
-    main: {
-        ref: () => {
+const getRandomNumber = monitor({ 
+    main:{
+        ref:()=>{
             const randomNumber = Math.random();
-            return randomNumber;
+            return randomNumber
         },
-        overwrite: {
-            randomNumber: 10
+        overwrite:{
+            randomNumber:10
         }
     }
-});
-
-console.log('Overwritten random number: ', overwriteTest());
+})
+console.log('Overwritten random number: ',getRandomNumber());
 ```
 
 >💡 **Variable Precedence:** When a monitored function resolves a variable identifier, the hierarchy is: Overwritten values (highest) > Internal variable declarations/assignments > Passed arguments > Captured variables > Embedded functions (lowest).

@@ -124,7 +124,7 @@ console.log(outer());
 
 console.log('\nOverwriting interal variables'.toUpperCase());
 
-const overwriteTest = monitor({ 
+const getRandomNumber = monitor({ 
     main:{
         ref:()=>{
             const randomNumber = Math.random();
@@ -135,7 +135,7 @@ const overwriteTest = monitor({
         }
     }
 })
-console.log('Overwritten random number: ',overwriteTest());
+console.log('Overwritten random number: ',getRandomNumber());
 
 
 console.log('\nSeeing the result of every awaited promise in a function call'.toUpperCase());
