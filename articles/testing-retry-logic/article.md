@@ -98,7 +98,7 @@ Caught error: Network Failure
 
 If this approach sounds useful for your testing workflow, check out:
 
-- 📦 **The repository and documentation:** https://github.com/The-BigMan-tech/fn-monitor
-- 📝 **My articles for in-depth tutorials:** https://dev.to/typescript-guy
+- 📦 [**The repository and documentation**](https://github.com/The-BigMan-tech/fn-monitor)
+- 📝 [**My articles for in-depth tutorials**](https://dev.to/typescript-guy)
 
 If you have questions or ideas, feel free to open a [discussion on GitHub](https://github.com/The-BigMan-tech/fn-monitor/discussions).
